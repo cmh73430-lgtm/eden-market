@@ -1,0 +1,7 @@
+{
+  "name": "eden-market",
+  "private": true,
+  "type": "module",
+  "description": "Eden Cockpit 자동 연동용 공개 시장 숫자 수집기",
+  "engines": { "node": ">=22" }
+}

@@ -1,0 +1,14 @@
+{
+  "_note": "미국 대응주 · 테마 전용 신호. symbols 값의 단순 평균이 대표값. th(%) 이상 오르면 '먼저 봄', 이하로 내리면 '뒤로'. th 생략 시 defaultThreshold. label은 근거 문구·링크 이름(심볼 순서대로).",
+  "defaultThreshold": 3,
+  "themes": [
+    { "key": "semi",  "name": "반도체 · AI",     "symbols": ["NVDA", "MU", "SMH"] },
+    { "key": "power", "name": "전력기기 · 전선", "symbols": ["GEV", "VRT"] },
+    { "key": "nuke",  "name": "원전",            "symbols": ["CEG", "OKLO"] },
+    { "key": "batt",  "name": "2차전지",         "symbols": ["TSLA", "ALB"] },
+    { "key": "def",   "name": "조선 · 방산",     "symbols": ["ITA"] },
+    { "key": "btc",   "name": "가상자산",        "symbols": ["BTC-USD"], "th": 4,   "label": "BTC",     "labels": ["BTC"] },
+    { "key": "gold",  "name": "금 · 귀금속",     "symbols": ["GC=F"],    "th": 1.5, "label": "금 선물",  "labels": ["금 선물"] },
+    { "key": "cu",    "name": "전선 · 구리",     "symbols": ["HG=F"],    "th": 2,   "label": "구리 선물", "labels": ["구리 선물"] }
+  ]
+}

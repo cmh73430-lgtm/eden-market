@@ -1,0 +1,13 @@
+{
+  "_note": "시장 신호 자동 수집 설정. 각 신호는 소스 목록을 순서대로 시도한다(앞이 실패하면 다음). source는 server/sources/ 의 어댑터 이름(naver, yahoo, upbit, tradingview, kis). kind: pct=전일 대비 %, diff=전일 대비 값 차이, level=현재 값, bp=금리 전일 대비 bp. themeSource는 미국 대응주 수집에 쓰는 어댑터 순서.",
+  "signals": {
+    "k200": [{ "source": "tradingview", "symbol": "K200_NIGHT", "kind": "pct" }, { "source": "kis", "symbol": "K200_NIGHT", "kind": "pct" }],
+    "fut":  [{ "source": "naver", "symbol": "futures:NQcv1", "kind": "pct" },  { "source": "yahoo", "symbol": "NQ=F",  "kind": "pct" }],
+    "fx":   [{ "source": "naver", "symbol": "market:exchange:FX_USDKRW", "kind": "diff" }, { "source": "yahoo", "symbol": "KRW=X", "kind": "diff" }],
+    "sox":  [{ "source": "naver", "symbol": "index:.SOX", "kind": "pct" },     { "source": "yahoo", "symbol": "^SOX",  "kind": "pct" }],
+    "vix":  [{ "source": "naver", "symbol": "index:.VIX", "kind": "level" },   { "source": "yahoo", "symbol": "^VIX",  "kind": "level" }],
+    "oil":  [{ "source": "naver", "symbol": "market:energy:CLcv1", "kind": "pct" }, { "source": "yahoo", "symbol": "CL=F",  "kind": "pct" }],
+    "ust":  [{ "source": "naver", "symbol": "market:bond:US10YT=RR", "kind": "bp" }, { "source": "yahoo", "symbol": "^TNX",  "kind": "bp" }]
+  },
+  "themeSource": ["naver", "upbit", "yahoo"]
+}

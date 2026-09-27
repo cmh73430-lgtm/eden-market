@@ -1,0 +1,42 @@
+# 평일 아침(07:05·08:05 KST)에 미국 지표·미국 대응주·코스피200 야간선물, 오후(16:20 KST)에 코스피·코스닥 마감·수급을 모아
+# 이 저장소 main 브랜치의 auto/<날짜>.json 에 저장한다. Eden Cockpit 앱이 열쇠 없이 raw.githubusercontent.com 으로 읽는다.
+# 주말·휴장일(data/holidays.json)은 스스로 건너뛴다. cron 은 UTC (KST -9시간). GitHub 예약 실행은 5~20분 늦을 수 있다.
+name: collect
+on:
+  schedule:
+    - cron: "5 22 * * 0-4"   # 07:05 KST 월~금
+    - cron: "5 23 * * 0-4"   # 08:05 KST 월~금
+    - cron: "20 7 * * 1-5"   # 16:20 KST 월~금
+  workflow_dispatch:
+    inputs:
+      when:
+        description: "morning(아침) 또는 close(오후) — 비우면 지금 시각으로"
+        required: false
+        default: ""
+      force:
+        description: "주말·휴장일에도 실행 (true)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: collect
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 수집해서 main 브랜치 auto/ 에 저장
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTO_BRANCH: main
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.when }}" ]; then ARGS="$ARGS --when=${{ github.event.inputs.when }}"; fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
+          node --disable-warning=ExperimentalWarning scripts/collect-auto.mjs $ARGS
