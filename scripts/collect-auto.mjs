@@ -51,13 +51,18 @@ async function readFile(path) {
   let json = null; try { json = JSON.parse(Buffer.from(j.content || "", "base64").toString("utf8")); } catch {}
   return { json, sha: j.sha };
 }
+// 공개 저장소면 jsDelivr 캐시를 비운다 (claude.ai 링크판 앱이 jsDelivr로 읽음). 실패해도 괜찮다.
+async function purgeCdn(path) {
+  if (BRANCH !== "main") return;
+  try { await fetch(`https://purge.jsdelivr.net/gh/${repo}@${BRANCH}/${path}`, { signal: AbortSignal.timeout(10000) }); } catch (e) {}
+}
 async function writeFile(path, obj, message) {
   for (let attempt = 0; attempt < 4; attempt++) {
     const cur = await readFile(path);
     const body = { message, branch: BRANCH, content: b64(JSON.stringify(obj)) };
     if (cur.sha) body.sha = cur.sha;
     const r = await api(`/repos/${repo}/contents/${path}`, { method: "PUT", body: JSON.stringify(body) });
-    if (r.ok) return;
+    if (r.ok) { await purgeCdn(path); return; }
     if (r.status === 409 || r.status === 422) { await new Promise((ok) => setTimeout(ok, 500 + attempt * 500)); continue; }
     throw new Error(path + " 저장 실패 HTTP " + r.status + " " + (await r.text()).slice(0, 200));
   }

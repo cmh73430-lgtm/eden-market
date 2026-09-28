@@ -166,6 +166,9 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .explain .brief div { padding-left: 0; text-indent: 0; }
 .explain .bchip { display: inline-block; font-size: 12.5px; padding: 2px 8px; margin: 0 4px 4px 0; border-radius: 12px; background: var(--note); }
 .explain .bchip.up { background: var(--up-bg); color: var(--up); font-weight: 700; } .explain .bchip.dn { background: var(--down-bg); color: var(--down); font-weight: 700; }
+.linknotice { border: 2px solid var(--a); background: var(--a-bg); display: grid; gap: 6px; font-size: 13.5px; }
+.linknotice .btn { justify-self: start; font-weight: 800; }
+.linknotice .muted { font-size: 12px; color: var(--muted); }
 .autobtns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 8px; }
 .autobtns .btn { font-size: 13px; padding: 4px 10px; }
 .autobtnmsg { font-size: 12px; color: var(--muted); flex-basis: 100%; }
@@ -634,6 +637,12 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
     <div class="counts" id="counts"></div>
   </section>
 
+  <div class="card linknotice" id="linkNotice" hidden>
+    <b>📌 지금 보는 곳은 Claude 링크라 자동 입력이 안 돼요</b>
+    <div>아침 지표·전일 주도 테마·마감 수급이 자동으로 들어오는 주소는 따로 있어요. 폰은 이 주소를 홈 화면에 추가해 두세요.</div>
+    <a class="btn" href="https://cmh73430-lgtm.github.io/eden-market/" target="_blank" rel="noopener">자동 입력되는 주소 열기 ↗</a>
+    <div class="muted">cmh73430-lgtm.github.io/eden-market · 이 링크에 적은 기록은 그 주소로 자동으로 옮겨지지 않아요 (맨 아래 💾 백업 → 글자로 복사 → 그 주소에서 붙여넣어 불러오기)</div>
+  </div>
   <nav class="secnav" id="secnav" aria-label="메뉴 바로 가기"></nav>
 
   <details class="card intro" id="intro">
@@ -1440,7 +1449,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-2";
+  const APP_VER = "9.29-3";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2613,9 +2622,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // ---------- 자동 연동 (열쇠 없이): 공개 저장소 eden-market 의 시장 숫자 ----------
   // 🔄 동기화(열쇠)를 연결하지 않은 PC 설치판·폰 주소에서도 자동 입력이 되게, 공개 저장소의 auto/<날짜>.json 을 읽는다.
   // raw.githubusercontent.com 은 열쇠 없이 누구나 읽을 수 있고 브라우저에서 바로 불러도 된다(CORS 허용). 시장 숫자만 있고 내 기록은 없다.
-  const PUB_REPO = "cmh73430-lgtm/eden-market", PUB_RAW = "https://raw.githubusercontent.com/" + PUB_REPO + "/main/auto/";
+  const PUB_REPO = "cmh73430-lgtm/eden-market", PUB_RAW0 = "https://raw.githubusercontent.com/" + PUB_REPO + "/main/auto/";
+  // claude.ai 링크는 밖으로 부를 수 있는 곳이 좁아서 jsDelivr(같은 파일을 나눠 주는 CDN)로 시도한다. 수집기가 저장할 때마다 jsDelivr 캐시를 비운다.
+  const PUB_CDN = "https://cdn.jsdelivr.net/gh/" + PUB_REPO + "@main/auto/";
   const PUB_SEEN_KEY = "cockpit-auto-seen-pub"; let pubTimer = null, pubListAt = 0, pubBusy = false, pubState = "";
-  const isLinkBuild = () => !!$("linkBuild"); // claude.ai 링크: 밖으로 못 부름 (빌드가 표시를 넣는다)
+  const isLinkBuild = () => !!$("linkBuild"); // claude.ai 링크 (빌드가 표시를 넣는다)
+  const PUB_RAW = isLinkBuild() ? PUB_CDN : PUB_RAW0;
   async function pubGet(url) {
     let signal; try { signal = AbortSignal.timeout(15000); } catch (e) {}
     const r = await fetch(url, { cache: "no-cache", signal });
@@ -2642,13 +2654,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     return n;
   }
   async function pubPull() {
-    if (gh || isLinkBuild() || pubBusy) return; // 열쇠가 연결돼 있으면 비공개 저장소 쪽(ghPull)이 맡는다
+    if (gh || pubBusy) return; // 열쇠가 연결돼 있으면 비공개 저장소 쪽(ghPull)이 맡는다
     pubBusy = true;
     try {
       const a = await pubGet(PUB_RAW + DATE + ".json");
       if (a) applyAuto(DATE, a);
-      await pubBackfill();
       pubState = "on";
+      if (!isLinkBuild()) { try { await pubBackfill(); } catch (e) {} } // 지난 날 몰아 받기 (GitHub 목록 API) — 링크에서는 안 함
     } catch (e) { pubState = "error"; }
     finally { pubBusy = false; paintAuto(); }
   }
@@ -2674,7 +2686,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   document.querySelectorAll(".autobtns [data-pull]").forEach((b) => b.addEventListener("click", pullNow));
   document.querySelectorAll(".autobtns [data-collect]").forEach((b) => b.addEventListener("click", watchFast));
   function pubStart() {
-    if (gh || isLinkBuild()) return;
+    if (gh) return;
     pubPull();
     clearInterval(pubTimer);
     pubTimer = setInterval(() => { if (document.visibilityState === "visible") pubPull(); }, 60000); // 1분마다 (화면을 볼 때만)
@@ -2701,7 +2713,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   function paintAuto() {
     const sig = $("autoSig"), mkt = $("autoMkt"); if (!sig || !mkt) return;
-    const noGh = isLinkBuild(); // claude.ai 링크에서는 GitHub를 못 부르므로 표시하지 않는다
+    const noGh = isLinkBuild() && pubState !== "on"; // claude.ai 링크에서 못 받아오면 자동 연동 표시를 숨기고 안내를 띄운다
+    const ln = $("linkNotice"); if (ln) ln.hidden = !(isLinkBuild() && pubState === "error");
     paintAutoAt(noGh);
     sig.hidden = mkt.hidden = noGh;
     document.querySelectorAll(".autobtns").forEach((b) => (b.hidden = noGh));
