@@ -697,7 +697,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
   </section>
 
   <section class="card" data-nav="전일 주도 테마">
-    <h2>전일 주도 테마 <small>🤖 7:05 어제 상승률 상위 테마 + 어제 저녁 애프터마켓 · 8:05 오늘 아침 NXT 프리마켓(8:00~8:50) 자동 · 고치면 고친 값이 우선</small></h2>
+    <h2>전일 주도 테마 <small>🤖 아침 7시쯤 어제 돈이 몰린 테마 + 외인·기관 + 어제 저녁 애프터마켓 · 8:05 오늘 아침 NXT 프리마켓(8:00~8:50) 자동 · 고치면 고친 값이 우선</small></h2>
     <div id="prevList"></div>
     <div class="links">열어서 보기 <a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">네이버 테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_rise.naver" target="_blank" rel="noopener">네이버 상승 종목 (KRX·NXT 탭) ↗</a><a class="lk" href="https://nextrade.co.kr/menu/transactionStatusMain/menuList.do" target="_blank" rel="noopener">넥스트레이드 거래현황 ↗</a></div>
     <div class="hint">네이버 종목 페이지 맨 위에 KRX 가격과 NXT 가격이 함께 나와요. 프리마켓·애프터마켓 값은 NXT 쪽이에요.</div>
@@ -1304,7 +1304,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["무엇인가요?", "한국 대표 회사 200개의 주가를 묶은 숫자(코스피200)의 선물을 밤에 사고파는 시장이에요. 한국거래소가 2025년 6월 9일부터 직접 열어요(그전엔 독일 유렉스 연계). 낮 시장은 8:45~15:45, 야간 시장은 저녁 6시~다음 날 새벽 6시예요. 미국장과 밤사이 뉴스를 먼저 반영해요."],
         ["정확한 계산", "(야간 종가 ÷ 전날 낮 시장 종가 − 1) × 100. 야간 종가는 새벽 5:50~6:00 동시호가(종가 단일가)로 정해져요. 기준은 거래소가 정하는 '전날 기준가(정산가)'인데 보통 오후 3시 45분 종가와 같아요. 예: 9/22 낮 종가 1,112.00 → 야간 종가 1,140.75 = +2.59%, 다음 날 낮 시장은 1,139.40에 시작했어요."],
         ["어느 종목?", "가장 가까운 만기(최근월물)를 봐요. 3·6·9·12월 둘째 목요일이 만기라, 만기 주에는 다음 월물로 바뀌어요. 미니 코스피200은 거래가 적어 참고만 해요."],
-        ["어디서 보나요?", "🤖 자동 연동이 켜져 있으면 아침 7시쯤(7:05 예약, 몇 분 늦을 수 있음) 자동으로 들어와요. 직접 볼 때: 증권사 앱의 '야간선물' 화면, 또는 KRX 정보데이터시스템 → 기본 통계 → 파생상품 → 종목 시세 → 최근월물 시세 추이(선물)에서 주간·야간이 따로 나와요."],
+        ["어디서 보나요?", "🤖 자동 연동이 켜져 있으면 아침 7시쯤(6:35·7:05 예약, 10~20분 늦을 수 있음) 자동으로 들어와요. 직접 볼 때: 증권사 앱의 '야간선물' 화면, 또는 KRX 정보데이터시스템 → 기본 통계 → 파생상품 → 종목 시세 → 최근월물 시세 추이(선물)에서 주간·야간이 따로 나와요."],
         ["왜 보나요?", "아침 9시에 주가가 어제보다 높게 시작할지, 낮게 시작할지 가장 잘 알려줘요."],
         ["이렇게 읽어요", "+0.5%면 오늘 주가가 조금 올라서 시작할 가능성이 커요. -1%보다 더 빠졌으면 아침부터 크게 떨어진 채 시작할 수 있으니 아침에 서둘러 사지 않아요."],
         ["알아 두세요", "① 미국 선물과 방향이 반대면 이 숫자를 믿어요(한국장을 직접 보여주니까요). 그때 미국 선물은 판정에서 빠져요. ② 야간 거래는 거래 규칙상 '다음 날' 거래로 쳐요. 그래서 거래 화면에 따라 야간과 다음 날 낮 시장이 한 막대로 합쳐져 보여요. ③ 가격제한은 ±8%(낮 시장보다 좁음). ④ 새벽 6시 이후 9시까지의 소식은 못 담아요. 그 사이 움직임은 미국 선물(24시간)로 봐요. ⑤ 휴장일 전날 밤에는 야간 시장이 안 열려서 값이 없어요."],
@@ -1427,7 +1427,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.28-8";
+  const APP_VER = "9.29-1";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1707,7 +1707,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (r.combo) lines.push(`<div class="a">· 환율 10원↑ + 기름값 3%↑ 같은 날 동반 급등 → <b>주의 1개</b> (둘이 함께 튈 때만 판정에 넣어요 · 14년간 23일뿐, 다음 날 평균 -0.23%)</div>`);
     const evs = [...AUTO.filter((e) => e.lv).map((e) => e.k), ...S.events];
     lines.push(`<div class="${r.statuses.ev}">· 주요 일정 ${evs.length ? esc(evs.join(", ")) : "특별한 일 없음"} → <b>${LABEL[r.statuses.ev]}</b></div>`);
-    if (r.filled === 0) return briefHtml(r) + `<div class="sub">📊 지표별 판정</div><div>아직 넣은 숫자가 없어요. 아침 7:05·8:05에 자동으로 들어와요 (직접 넣어도 돼요).</div>` + lines.join("");
+    if (r.filled === 0) return briefHtml(r) + `<div class="sub">📊 지표별 판정</div><div>아직 넣은 숫자가 없어요. 아침 7시쯤(6:35·7:05·8:05 예약, 10~20분 늦을 수 있음) 자동으로 들어와요 (직접 넣어도 돼요).</div>` + lines.join("");
     let end;
     if (r.counts.r > 0) end = `나쁨이 ${r.counts.r}개 있어요. 규칙은 <b>나쁨이 하나라도 있으면 쉼</b>이에요. 오늘은 새로 사지 말고, 가진 주식만 정리해요.`;
     else if (r.counts.a >= 2) end = `주의가 ${r.counts.a}개예요. 규칙은 <b>주의가 2개 이상이면 절반</b>이에요. 평소 돈의 반만 쓰고, 그날 산 건 그날 팔아요.`;
@@ -2651,10 +2651,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const a = S.auto || {}, md = DATE.slice(5).replace(/^0/, "").replace(/-0?/, "/");
     AUTO_FIELDS.forEach(([key, id, when]) => {
       const el = $("aa-" + key), input = $(id); if (!el || !input) return;
-      const plan = when === "morning" ? "평일 아침 7:05·8:05 (몇 분 늦을 수 있음)" : "평일 오후 4:20 (몇 분 늦을 수 있음)", at = a["at." + when], v = a[key], cur = input.value;
+      const plan = when === "morning" ? "평일 아침 6:35·7:05·8:05 (GitHub가 10~20분 늦게 돌릴 수 있음)" : "평일 오후 4:20 (몇 분 늦을 수 있음)", at = a["at." + when], v = a[key], cur = input.value;
       // 빈 칸 안에도 회색으로 몇 시에 자동으로 들어오는지 보여 준다
       el.hidden = false; if (!input.dataset.ph) input.dataset.ph = input.placeholder;
-      input.placeholder = when === "morning" ? "7:05 자동" : "16:20 자동";
+      input.placeholder = when === "morning" ? "7시쯤 자동" : "16:20 자동";
       let t;
       if (noGh) t = "🤖 " + plan + " 자동 입력 (PC 설치판·폰 주소에서 · 이 링크에서는 손 입력)";
       else if (v && cur === v) t = "🤖 " + md + " " + at + " 자동 입력됨" + (key === "signals.k200" ? " (" + (a["detail.k200"] || "야간 종가 ÷ 전날 주간 종가") + ")" : key.startsWith("prev.") && a["detail." + key.slice(0, 6)] ? " (" + a["detail." + key.slice(0, 6)] + ")" : "");
@@ -2673,7 +2673,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const a = S.auto || {};
     if (!gh && pubState === "error") { sig.textContent = "🤖 자동 연동: 인터넷이 잠시 안 돼요 · 1분 뒤 다시 확인해요 (지금은 손 입력)"; mkt.hidden = true; return; }
     sig.textContent = a["at.morning"] ? "🤖 " + a["at.morning"] + "에 자동으로 받아온 값이에요 (네이버·야간선물은 TradingView) · 칸을 고치면 고친 값이 우선해요"
-      : "🤖 자동 연동 켜짐" + (gh ? "" : " (열쇠 없이)") + " · 이 날 받아온 값은 아직 없어요 (평일 아침 7:05·8:05에 미국 지표, 오후 4:20에 마감을 받아와요)";
+      : "🤖 자동 연동 켜짐" + (gh ? "" : " (열쇠 없이)") + " · 이 날 받아온 값은 아직 없어요 (평일 아침 6:35·7:05·8:05에 미국 지표, 오후 4:20에 마감을 받아와요 · 10~20분 늦을 수 있어요)";
     mkt.textContent = a["at.close"] ? "🤖 " + a["at.close"] + "에 자동으로 받아온 마감·수급이에요 (네이버) · 고치면 고친 값이 우선해요"
       : "🤖 오후 4:20에 코스피·코스닥 마감과 수급(외국인·기관)이 자동으로 채워져요";
   }

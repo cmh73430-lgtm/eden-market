@@ -128,7 +128,8 @@ export function nxtMove(d) {
   const o = d && d.overMarketPriceInfo; if (!o) return { session: null, pct: null, raw: "NXT 없음" };
   const type = String(o.tradingSessionType || ""), status = String(o.overMarketStatus || "");
   const price = num(o.overPrice), close = num(d.closePrice);
-  const session = /AFTER/i.test(type) ? "after" : /PRE/i.test(type) && /OPEN/i.test(status) ? "pre" : null;
+  // 8시 전(프리마켓 시작 전)에는 세션 이름이 비고 상태가 PREOPEN → NXT 마지막 가격 = 어제 저녁 애프터마켓 마지막 값
+  const session = /AFTER/i.test(type) ? "after" : /PRE/i.test(type) && /^OPEN$/i.test(status) ? "pre" : /PREOPEN/i.test(status) && !/REGULAR/i.test(type) ? "after" : null;
   const pct = session && price && close ? Number(((price / close - 1) * 100).toFixed(2)) : null;
   return { session: pct === null ? null : session, pct, raw: type + "/" + status };
 }
