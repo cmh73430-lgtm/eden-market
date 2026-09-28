@@ -136,7 +136,7 @@ export const moveState = (pct) => (pct === null || pct === undefined ? "" : pct 
 const avg = (a) => (a.length ? Number((a.reduce((x, y) => x + y, 0) / a.length).toFixed(2)) : null);
 
 // keep: 같은 날 앞선 아침 수집의 prev (8:05 수집은 7:05에 고른 테마와 애프터마켓 값을 그대로 이어 쓴다)
-export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, keep = null } = {}) {
+export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, keep = null, bizdate = null } = {}) {
   const get = async (u) => {
     const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
     if (!r.ok) throw new Error("HTTP " + r.status);
@@ -144,7 +144,7 @@ export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, 
   };
   let themes = Array.isArray(keep) && keep.length ? keep.map((t) => ({ no: t.no, name: t.name, rate: t.rate, value: t.value, flow: t.flow, stocks: t.stocks || [], after: t.after })) : null;
   if (!themes) {
-    themes = await selectThemes({ get, n: 2 }); // 아침 9시 전 = 어제 마감 기준 (수급도 어제 값)
+    themes = await selectThemes({ get, n: 2, bizdate }); // 아침 9시 전 = 어제 마감 기준 (수급은 어제 날짜 값만)
   }
   const raws = [];
   for (const t of themes) {
@@ -173,9 +173,10 @@ export function leadersText(themes) {
     + (t.hotN ? " · 강세 " + t.hotN + "종목 " + eokText(t.hot) : t.value ? " · 대금 " + eokText(t.value) : "") + (t.flow ? " · " + flowText(t.flow) : "")
     + (t.stocks && t.stocks.length ? " (" + t.stocks.slice(0, 2).map((x) => x.name).join("·") + ")" : "")).join(" / ");
 }
-export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now = new Date() } = {}) {
+export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now = new Date(), bizdate = null } = {}) {
   const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
-  const themes = await selectThemes({ get, n: 3, bizdate: kstDate(now).replace(/-/g, "") }); // 종목 수급은 오늘 값만 (보통 저녁에 집계 → 18:40 수집에서 채워짐)
+  // 종목 수급은 그 날 값만. 네이버 종목별 외인·기관은 늦게(저녁~다음 날 아침) 올라와서, 없으면 다음 날 아침 수집이 어제 파일에 채운다
+  const themes = await selectThemes({ get, n: 3, bizdate: bizdate || kstDate(now).replace(/-/g, "") });
   return { text: leadersText(themes), flowReady: themes.some((t) => t.flow), themes: themes.map((t) => ({ name: t.name, rate: t.rate, value: t.value, hot: t.hot, hotN: t.hotN, flow: t.flow, stocks: t.stocks.slice(0, 2).map((x) => x.name) })) };
 }
 

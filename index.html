@@ -743,7 +743,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
   </section>
 
   <section class="card journal" id="marketCard" data-nav="📰 당일 시황">
-    <h2>📰 당일 시황 <small>장 끝나고 3분 · 지수·수급·주도 테마는 오후 4:20 자동 (종목 수급은 6:40에 다시) · 매매 안 한 날도 시황일지로 남겨요</small></h2>
+    <h2>📰 당일 시황 <small>장 끝나고 3분 · 지수·수급·주도 테마는 오후 4:20 자동 (종목 외인·기관은 저녁~다음 날 아침) · 매매 안 한 날도 시황일지로 남겨요</small></h2>
     <div class="jsec">
       <h3>① 장전 판단 <small>아침에 정한 것 (자동)</small></h3>
       <div class="mkt" id="jMorning"></div>
@@ -758,7 +758,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
         <label class="wide">수급 (외국인·기관, 억원)<input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억"><small class="autoat" id="aa-market.invest" hidden></small></label>
-        <label class="wide">오늘 주도 테마 <small>+5% 넘게 오른 종목에 돈이 몰린 순 · 외인/기관 (수급은 18:40에 채워짐)</small><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"><small class="autoat" id="aa-market.leaders" hidden></small></label>
+        <label class="wide">오늘 주도 테마 <small>+5% 넘게 오른 종목에 돈이 몰린 순 · 외인/기관 (종목 수급은 네이버가 늦게 올려서 저녁 6:40 또는 다음 날 아침에 채워짐)</small><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"><small class="autoat" id="aa-market.leaders" hidden></small></label>
       </div>
       <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a><a class="lk nv" href="https://m.stock.naver.com/news" target="_blank" rel="noopener">뉴스 ↗</a></div>
     </div>
@@ -1427,7 +1427,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.28-7";
+  const APP_VER = "9.28-8";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",

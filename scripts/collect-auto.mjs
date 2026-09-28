@@ -4,6 +4,7 @@
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
 // 옵션: --when=morning|close (기본: 지금 시각으로 판단) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
 import { loadCollectConfig } from "../server/config.js";
+import { prevBusinessDay } from "../shared/calendar.js";
 import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, collectLeaders, kstDate, mergeAuto, skipReason, summarize, whenOf } from "../server/auto.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
@@ -64,10 +65,11 @@ async function writeFile(path, obj, message) {
 }
 
 const save = !has("dry") && token && repo;
+const prevDay = prevBusinessDay(date, cfg.holidays); // 어제(직전 거래일)
 const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { json: null };
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
 const part = when === "morning"
-  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, prevThemes: () => collectPrevThemes({ keep }) })
+  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, prevThemes: () => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, "") }) })
   : await collectClose({ adapters: { naver }, now, leaders: () => collectLeaders({ now }) });
 const got = when === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
@@ -84,4 +86,16 @@ await writeFile(autoFile(date), rec, msg);
 await writeFile(AUTO_DIR + "/latest.json", rec, msg);
 console.log(summarize(rec));
 console.log(`저장: ${autoFile(date)} (${BRANCH})`);
+// 아침: 어제 파일의 '오늘 주도 테마'에 종목 외인·기관이 아직 없으면(네이버가 늦게 올림) 지금 어제 값으로 다시 계산해 채운다
+if (when === "morning") {
+  try {
+    const pf = await readFile(autoFile(prevDay));
+    const L = pf.json && pf.json.close && pf.json.close.market && pf.json.close.market.leaders;
+    if (L && !L.flowReady) {
+      const nl = await collectLeaders({ bizdate: prevDay.replace(/-/g, "") });
+      if (nl.flowReady) { pf.json.close.market.leaders = nl; pf.json.updatedAt = Date.now(); await writeFile(autoFile(prevDay), pf.json, `자동 연동 ${prevDay} 주도 테마 수급 채움`); console.log(`어제(${prevDay}) 주도 테마 수급 채움: ${nl.text}`); }
+      else console.log(`어제(${prevDay}) 종목 수급 아직 없음`);
+    }
+  } catch (e) { console.log("어제 주도 테마 수급 채우기 실패:", e.message || e); }
+}
 if (part.errors.length) console.log("일부 실패:", part.errors.join(" / "));
