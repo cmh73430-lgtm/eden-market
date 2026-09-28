@@ -68,7 +68,7 @@ const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { j
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
 const part = when === "morning"
   ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, prevThemes: () => collectPrevThemes({ keep }) })
-  : await collectClose({ adapters: { naver }, now, leaders: () => collectLeaders() });
+  : await collectClose({ adapters: { naver }, now, leaders: () => collectLeaders({ now }) });
 const got = when === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
 
