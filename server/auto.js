@@ -52,11 +52,13 @@ export async function collectMorning({ sources, themes, adapters, now = new Date
 
 // ---- 주도 테마 고르기 (오늘 주도 테마 · 다음 날 아침 전일 주도 테마 공통) ----
 // "돈이 몰린 테마" 우선: ① 네이버 테마 순위에서 종목 5개 이상 · 테마 등락률 +1% 이상 · 오른 종목 60% 이상인 후보(등락률 상위 12개)
-// ② 후보마다 테마 전체 거래대금(억)을 더하고 ③ 거래대금 큰 상승 종목 3개의 외국인·기관 순매수(억)를 본다
-// ④ 점수 = 거래대금 × (외인+기관 순매수면 1.3 · 순매도면 0.7 · 모르면 1) → 높은 순, 대장주가 같은 테마는 하나만
+// ② 후보마다 '강하게 오른 종목(+5% 이상)'에 몰린 거래대금(억)을 더한다 — 여러 테마에 걸친 대형주(예: LG화학 +2%)가
+//    넓은 테마의 거래대금을 부풀리지 않게. 강세 종목이 2개 이상인 테마만 (한 종목만 튄 건 테마가 아님)
+// ③ 거래대금 큰 상승 종목 3개의 외국인·기관 순매수(억)를 본다
+// ④ 점수 = 강세 거래대금 × (외인+기관 순매수면 1.3 · 순매도면 0.7 · 모르면 1) → 높은 순, 대장주가 같은 테마는 하나만
 // 조건에 맞는 테마가 없는 날(약세장)은 예전처럼 등락률 순으로 고른다.
 const NV_HEAD = { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" };
-export const PREV_MIN_STOCKS = 5, PREV_FLAT = 0.5, LEAD_MIN_RATE = 1, LEAD_MIN_RISE = 0.6, LEAD_POOL = 12;
+export const PREV_MIN_STOCKS = 5, PREV_FLAT = 0.5, LEAD_MIN_RATE = 1, LEAD_MIN_RISE = 0.6, LEAD_POOL = 12, HOT_RATE = 5, HOT_MIN = 2;
 const themeRow = (g) => ({ no: g.no, name: String(g.name || "").trim(), count: num(g.totalCount), rate: num(g.changeRate), rise: num(g.totalCount) ? (num(g.riseCount) || 0) / num(g.totalCount) : 0 });
 export function pickThemes(groups, n = 2) {
   return (Array.isArray(groups) ? groups : []).map(themeRow)
@@ -74,8 +76,12 @@ export function leadStocks(stocks, n = 5) {
     .filter((x) => x.code && x.rate !== null && x.rate > 0)
     .sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, n);
 }
-// 테마 전체 거래대금 (억원)
+// 테마 전체 거래대금 (억원) · 강세 종목(+5% 이상) 거래대금과 개수
 export const themeValue = (stocks) => Math.round((Array.isArray(stocks) ? stocks : []).reduce((s, x) => s + (num(x.accumulatedTradingValueRaw) || 0), 0) / 1e8);
+export function hotValue(stocks) {
+  const hot = (Array.isArray(stocks) ? stocks : []).filter((x) => (num(x.fluctuationsRatio) || 0) >= HOT_RATE);
+  return { hot: Math.round(hot.reduce((s, x) => s + (num(x.accumulatedTradingValueRaw) || 0), 0) / 1e8), hotN: hot.length };
+}
 // 종목 투자자 동향 응답(최근 날짜 먼저) → { foreign, inst } 억원. want(YYYYMMDD)를 주면 그 날 값만 (아직 집계 전이면 null)
 export function stockFlow(rows, want) {
   const r = Array.isArray(rows) ? rows[0] : null; if (!r) return null;
@@ -85,7 +91,7 @@ export function stockFlow(rows, want) {
   return { foreign: Math.round((f * px) / 1e8), inst: Math.round((o * px) / 1e8), bizdate: String(r.bizdate) };
 }
 export function rankThemes(themes, n) {
-  const score = (t) => (t.value || 0) * (t.flow ? (t.flow.foreign + t.flow.inst > 0 ? 1.3 : t.flow.foreign + t.flow.inst < 0 ? 0.7 : 1) : 1);
+  const score = (t) => (t.hot ?? t.value ?? 0) * (t.flow ? (t.flow.foreign + t.flow.inst > 0 ? 1.3 : t.flow.foreign + t.flow.inst < 0 ? 0.7 : 1) : 1);
   const out = [], tops = new Set();
   [...themes].sort((a, b) => score(b) - score(a)).forEach((t) => {
     const top = t.stocks && t.stocks[0] && t.stocks[0].code;
@@ -100,11 +106,13 @@ export async function selectThemes({ get, n = 3, bizdate = null }) {
   if (!cands.length) { cands = pickThemes(list.groups, n); relaxed = true; }
   if (!cands.length) throw new Error("테마 순위 없음");
   for (const t of cands) {
-    try { const d = await get("https://m.stock.naver.com/api/stocks/theme/" + t.no + "?page=1&pageSize=100"); t.value = themeValue(d.stocks); t.stocks = leadStocks(d.stocks); }
-    catch (e) { t.value = 0; t.stocks = []; }
+    try { const d = await get("https://m.stock.naver.com/api/stocks/theme/" + t.no + "?page=1&pageSize=100"); t.value = themeValue(d.stocks); Object.assign(t, hotValue(d.stocks)); t.stocks = leadStocks(d.stocks); }
+    catch (e) { t.value = 0; t.hot = 0; t.hotN = 0; t.stocks = []; }
   }
-  // 수급은 거래대금 상위 후보만 (요청 수 줄이기): 후보 중 거래대금 상위 6개 × 주도주 3개
-  const byValue = [...cands].sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, Math.max(n * 2, 6));
+  const strong = cands.filter((t) => t.hotN >= HOT_MIN);
+  if (!relaxed && strong.length) cands = strong; // 강세 종목 2개 이상인 테마가 없는 날은 조건 없이
+  // 수급은 강세 거래대금 상위 후보만 (요청 수 줄이기): 상위 6개 × 주도주 3개
+  const byValue = [...cands].sort((a, b) => (b.hot || 0) - (a.hot || 0) || (b.value || 0) - (a.value || 0)).slice(0, Math.max(n * 2, 6));
   for (const t of byValue) {
     const flows = [];
     for (const s of t.stocks.slice(0, 3)) { try { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) flows.push(f); } catch (e) {} }
@@ -162,13 +170,13 @@ const signed = (v) => (v > 0 ? "+" : v < 0 ? "-" : "") + eokText(Math.abs(v));
 export function flowText(flow) { return flow ? "외인 " + signed(flow.foreign) + " · 기관 " + signed(flow.inst) : ""; }
 export function leadersText(themes) {
   return themes.map((t) => t.name + " " + (t.rate > 0 ? "+" : "") + t.rate + "%"
-    + (t.value ? " · 대금 " + eokText(t.value) : "") + (t.flow ? " · " + flowText(t.flow) : "")
+    + (t.hotN ? " · 강세 " + t.hotN + "종목 " + eokText(t.hot) : t.value ? " · 대금 " + eokText(t.value) : "") + (t.flow ? " · " + flowText(t.flow) : "")
     + (t.stocks && t.stocks.length ? " (" + t.stocks.slice(0, 2).map((x) => x.name).join("·") + ")" : "")).join(" / ");
 }
 export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now = new Date() } = {}) {
   const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
   const themes = await selectThemes({ get, n: 3, bizdate: kstDate(now).replace(/-/g, "") }); // 종목 수급은 오늘 값만 (보통 저녁에 집계 → 18:40 수집에서 채워짐)
-  return { text: leadersText(themes), flowReady: themes.some((t) => t.flow), themes: themes.map((t) => ({ name: t.name, rate: t.rate, value: t.value, flow: t.flow, stocks: t.stocks.slice(0, 2).map((x) => x.name) })) };
+  return { text: leadersText(themes), flowReady: themes.some((t) => t.flow), themes: themes.map((t) => ({ name: t.name, rate: t.rate, value: t.value, hot: t.hot, hotN: t.hotN, flow: t.flow, stocks: t.stocks.slice(0, 2).map((x) => x.name) })) };
 }
 
 // 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
