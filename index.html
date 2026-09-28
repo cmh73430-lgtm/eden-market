@@ -1,0 +1,2760 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eden Cockpit</title>
+<meta name="theme-color" content="#1c1e24">
+<meta name="apple-mobile-web-app-title" content="Eden Cockpit">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAChUlEQVR42u3dwU3DABBE0S0k4pQu0n8B6YQLypUOUGIF8Mw+6Vcw+26W7bl8XKXDjQkEkAASQAJIAkgACSABJAEkgASQAJIAEkACSABJAAkgASSABJAEkAASQAJIAkgACSABJAH0Q/fb7UB2Ww3oGBqYtgN6rxuShhuSADoXnVWMBh2MADovnXpGgw5GAMXo6TM06GC0HVCinhpDQw9DewGl6ykwNPQwtBFQk55oQ0MPQ7sAteoJNTT0MLQF0AY9cYaGHob6AW3TE2QIIIDaAe3Uk2Jo6GEIIIAAoifTEEAAlQLiJsIQQAA1AiImxRBAANUBYiXIEEAAAQQQQPSEGgIIIIAAAggggOjZaAgggAACCCCAAAIIIHoYAggggAQQQAABBBBAAAEkgAACCCCAAAIIIAEEEEAAAeRpPD0AAQQQQAABBBBAAHkvjB6AEAEIIIAAAsj3gegBSAABBBBD9AAEkC/V0wMQQAAxRA9AAG0AxNDdHwsBAoghepIBXfw3HiCAAGKInmRAqwwFHSUJ0BJDWRcBCKBNgOoNxZ0jD1CxocRbRAKqNBR6iFRAZYZyrxAMqMZQ9AmyAaUzKhi/AVCooY7lSwDFGaqZvQdQCqOywdsAndxQ39qFgM7JqHXnWkDnYdS9cDmg/2W0YdsVgP5Y0qpJdwH6VUk7l1wK6F2YrAfQU7CsAZAAEkACSAJIAAkgASSAJIAEkAASQBJAAkgAvdzj61PPBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAACSCAAAIIIA9TBZAAEkASQAJIAAkgCSABJIAEkACSABJAAkgASQAJIAEkgCSABJAAEkASQAJIAAkgAWQFASSABJAAkl7qG7iMStH+upirAAAAAElFTkSuQmCC">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACXUlEQVR42u3dsU1EMRREURfyRUQX238BdEKCSAkIIUEsy5t5R7oVjE5m2T7X07P0bccEgkNwCA7BITgEh+AQHIJDcEhwCA7BITgEh+AQHIJDcAgOCQ7BITgEh+AQHIJDcCT1crv9KDiAAGUTjnuB2AnlYIHIIhyPZNFN5GCBSDmOCSz6iBwsEOnEMVlGgY+DBSJVOLJk5Po4ZPBRgiNXRqKPQwYf8Tg6ZGT5OGTwEYyjT0aKj0MGH3DA0YWjW8Z8H4cMPuCAowXHHhmTfRwy+IADjnwcO2XM9AEHHCE4NssY6AMOOBJwkDHNBxxwwAFHLg4mBvqAAw444IADjjYcNMz0AQcccMABBxxwwLEDBwdjfcABBxxwwAEHHHDAAQccggMOOOCAAw444ICDDzLggAMOOOCAAw444BAcfLiaAAcccMDBh1v2cMABBxzeBCMDDji8Q0oGHHDAwYe3z+GAg48uGXDAEYjj8o0XHHxM3h8OODJxXD4dhmOnj/nLB+Co9BExewaOMh8pm8fgqPERNHgSjgIfWWuH4Yj2ETd1Ho5QH4k7R+KI8xE6ciqOFCLR82bjGO4jfdt4HDOJdKxagmOUj5pJe3BMIFI2ZhuO/yJSOWMnjocp6V6vHMcfKVky2hYcv4eycKiNOASH4BAcgkNwCA7BITgEhwSH4BAcgkNwCI7P3t9e9TU44IADDjjggAMOOOCAAw444IADDjjggAMOOJytyNmK4BAcgkNwSHAIDsEhOASH4BAcgkNwCA4JDsEhOASH4BAcgkNwCA7BITisIDgEh+AQHIJDA/sAm/HnIbTtRV0AAAAASUVORK5CYII=">
+<!-- 이 파일은 scripts/build-standalone.js 가 standalone/template.html 로 만든다. 직접 고치지 말고 template.html 을 고칠 것 -->
+<style>
+:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+:root {
+  --paper: #f7f5f0; --surface: #ffffff; --ink: #1c1e24; --muted: #6a6e78; --line: #e3e0d8;
+  --up: #d13b3b; --down: #2c67c9; --note: #f2efe6;
+  --g: #1f7a3f; --g-bg: #eaf5ee; --a: #a86b00; --a-bg: #fbf1dc; --r: #b3261e; --r-bg: #fbe7e5;
+  --up-bg: #fbeaea; --down-bg: #e8f0fb; --focus: #2c67c9;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark;
+  --paper: #15171c; --surface: #1e2128; --ink: #ecebe6; --muted: #9a9ea8; --line: #2e323a; --up: #ef6a6a; --down: #6a9cf0; --note: #262a31;
+  --g: #8ad0a1; --g-bg: #1d3326; --a: #e6b866; --a-bg: #3a2f14; --r: #f09088; --r-bg: #3d2220; --up-bg: #3a2424; --down-bg: #1f2b40; --focus: #6a9cf0; } }
+:root[data-theme="dark"] { color-scheme: dark;
+  --paper: #15171c; --surface: #1e2128; --ink: #ecebe6; --muted: #9a9ea8; --line: #2e323a; --up: #ef6a6a; --down: #6a9cf0; --note: #262a31;
+  --g: #8ad0a1; --g-bg: #1d3326; --a: #e6b866; --a-bg: #3a2f14; --r: #f09088; --r-bg: #3d2220; --up-bg: #3a2424; --down-bg: #1f2b40; --focus: #6a9cf0; }
+
+body { background: var(--paper); color: var(--ink); font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+       font-size: 15px; line-height: 1.5; padding-block: 18px; padding-inline: 16px; font-variant-numeric: tabular-nums; }
+.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 12px; }
+header { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; padding-bottom: 10px; border-bottom: 2px solid var(--ink); }
+header h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
+header .date { font-size: 13px; color: var(--muted); }
+.eyebrow { font-size: 11px; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
+button { font: inherit; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+/* verdict */
+.verdict { border-radius: 8px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); }
+.verdict .mode { font-size: 34px; font-weight: 900; line-height: 1.1; }
+.verdict .reason { font-size: 13px; opacity: .85; }
+.verdict .act { font-size: 14px; font-weight: 700; margin-top: 2px; }
+.verdict.g { background: var(--g-bg); color: var(--g); border-color: transparent; }
+.verdict.a { background: var(--a-bg); color: var(--a); border-color: transparent; }
+.verdict.r { background: var(--r-bg); color: var(--r); border-color: transparent; }
+.counts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pill { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); white-space: nowrap; }
+.pill.g { color: var(--g); } .pill.a { color: var(--a); } .pill.r { color: var(--r); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; }
+.card h2 { margin: 0; font-size: 15px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.card h2 small { font-weight: 500; color: var(--muted); font-size: 12px; }
+
+/* signal rows */
+.sig { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 9px 0; border-top: 1px solid var(--line); align-items: center; }
+.sig:first-of-type { border-top: 0; padding-top: 0; }
+.sig .name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.core { font-size: 11px; font-weight: 900; color: var(--up); background: var(--up-bg); border-radius: 4px; padding: 0 6px; }
+.lk { font-size: 12px; font-weight: 700; color: var(--down); text-decoration: none; border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; white-space: nowrap; }
+.sig .rule { grid-column: 1 / -1; font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.rule b { font-weight: 700; } .rule .g { color: var(--g); } .rule .a { color: var(--a); } .rule .r { color: var(--r); }
+.in { display: flex; align-items: center; gap: 4px; }
+.pm { width: 34px; height: 36px; border: 1px solid var(--line); border-radius: 6px; background: var(--note); color: var(--ink); font-size: 17px; font-weight: 900; cursor: pointer; padding: 0; line-height: 1; }
+.pm:active { background: var(--line); }
+input.num { width: 78px; font: inherit; font-size: 16px; font-weight: 700; text-align: right; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+input.num.neg { color: var(--down); } input.num.pos { color: var(--up); }
+.unit { font-size: 12px; color: var(--muted); min-width: 1.6em; }
+.status { min-width: 4.2em; text-align: center; font-size: 13px; font-weight: 900; padding: 4px 8px; border-radius: 6px; background: var(--note); color: var(--muted); }
+.status.g { background: var(--g-bg); color: var(--g); } .status.a { background: var(--a-bg); color: var(--a); } .status.r { background: var(--r-bg); color: var(--r); }
+.status.up { background: var(--up-bg); color: var(--up); } .status.dn { background: var(--down-bg); color: var(--down); }
+.why { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+.why::before { content: "왜 보나 · "; font-weight: 700; letter-spacing: .04em; font-size: 11px; }
+.note { grid-column: 1 / -1; font-size: 12.5px; font-weight: 700; color: var(--a); background: var(--a-bg); border-radius: 4px; padding: 4px 8px; }
+
+/* events */
+.ev { display: grid; gap: 6px; }
+.ev .auto { display: flex; gap: 6px; flex-wrap: wrap; }
+.ev .auto span { font-size: 12.5px; padding: 3px 8px; border-radius: 4px; background: var(--note); }
+.ev .auto span.a { background: var(--a-bg); color: var(--a); font-weight: 700; } .ev .auto span.r { background: var(--r-bg); color: var(--r); font-weight: 700; }
+.hint { font-size: 12px; color: var(--muted); } .hint a { color: var(--down); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 3px 10px; font-size: 12.5px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--a-bg); color: var(--a); border-color: transparent; font-weight: 700; }
+.chip.r[aria-pressed="true"] { background: var(--r-bg); color: var(--r); }
+.chip.up[aria-pressed="true"] { background: var(--up-bg); color: var(--up); }
+.chip.dn[aria-pressed="true"] { background: var(--down-bg); color: var(--down); }
+
+/* theme today */
+.today { border-radius: 6px; background: var(--note); padding: 10px 12px; display: grid; gap: 6px; }
+.today .row { display: grid; grid-template-columns: 4.6em 1fr; gap: 8px; font-size: 14px; }
+.today .row b { font-size: 12px; letter-spacing: .04em; padding-top: 2px; }
+.today .row.first b { color: var(--up); } .today .row.back b { color: var(--down); }
+.tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.tags span { font-size: 13px; font-weight: 700; padding: 1px 8px; border-radius: 4px; background: var(--surface); border: 1px solid var(--line); }
+.tags span small { font-weight: 500; color: var(--muted); font-size: 11px; margin-left: 3px; }
+.tags .empty { font-weight: 500; color: var(--muted); border: 0; background: none; padding: 0; }
+
+.us { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 0; border-top: 1px solid var(--line); align-items: center; }
+.us:first-of-type { border-top: 0; padding-top: 0; }
+.us .name { font-weight: 700; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.prev { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 8px 0; border-top: 1px solid var(--line); }
+.prev input.txt { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+
+.sector { display: grid; gap: 6px; }
+.sector .row { display: grid; grid-template-columns: 5.5em 1fr; gap: 8px; font-size: 13.5px; padding: 6px 0; border-top: 1px solid var(--line); }
+.sector .row:first-child { border-top: 0; padding-top: 0; }
+.sector .k { font-weight: 900; } .sector .k.on { color: var(--up); }
+.sector .v small { display: block; color: var(--muted); font-size: 12px; }
+.sector .row.off { opacity: .45; }
+
+.todo { display: grid; }
+.todo label { display: grid; grid-template-columns: 22px 52px 1fr; gap: 8px; align-items: start; padding: 7px 0; border-top: 1px dashed var(--line); font-size: 14px; cursor: pointer; }
+.todo label:first-child { border-top: 0; }
+.todo input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--up); }
+.todo time { font-weight: 900; color: var(--up); font-size: 13px; }
+.todo .t b { display: block; } .todo .t span { font-size: 12.5px; color: var(--muted); }
+.todo .t a { color: var(--down); text-decoration: none; font-weight: 700; font-size: 12px; }
+.todo label.done .t { text-decoration: line-through; opacity: .55; }
+
+.hist { display: flex; gap: 4px; flex-wrap: wrap; }
+.hist span { font-size: 11.5px; padding: 2px 7px; border-radius: 4px; background: var(--note); color: var(--muted); }
+.hist span.g { background: var(--g-bg); color: var(--g); } .hist span.a { background: var(--a-bg); color: var(--a); } .hist span.r { background: var(--r-bg); color: var(--r); }
+footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+@media (max-width: 420px) { .verdict { grid-template-columns: 1fr; } .counts { justify-content: flex-start; } input.num { width: 70px; } }
+@media (prefers-reduced-motion: no-preference) { .status, .verdict { transition: background-color .2s, color .2s; } }
+
+/* --- 추가: 수집·동기화 --- */
+header .tools { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+header .tools .row { display: flex; gap: 6px; }
+.btn[disabled] { opacity: .5; cursor: progress; }
+.autoline { font-size: 12.5px; color: var(--muted); background: var(--note); border-radius: 6px; padding: 5px 9px; margin: 0 0 8px; }
+.autoat { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); font-weight: 400; margin-top: -2px; }
+.jgrid label .autoat { display: block; margin-top: 2px; }
+input.num::placeholder, input.jin::placeholder { font-size: 12px; font-weight: 400; color: var(--muted); opacity: .9; }
+input.autov { box-shadow: inset 0 0 0 2px var(--down-bg); border-color: var(--down); border-style: dashed; }
+.sync { font-size: 11.5px; color: var(--muted); text-align: right; }
+.sync.warn { color: var(--a); font-weight: 700; }
+.src { grid-column: 1 / -1; font-size: 11px; color: var(--muted); margin-top: -2px; }
+.src.fail { color: var(--a); }
+.src.manual::before { content: "✎ "; }
+.us .src { margin-top: 0; }
+.date a { color: var(--down); text-decoration: none; font-weight: 700; margin: 0 2px; }
+.slots { display: grid; gap: 4px; }
+.slots .list { display: flex; gap: 5px; flex-wrap: wrap; }
+.slots .list span { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.slots .list span.g { color: var(--g); background: var(--g-bg); border-color: transparent; }
+.slots .list span.a { color: var(--a); background: var(--a-bg); border-color: transparent; }
+.slots .list span.r { color: var(--r); background: var(--r-bg); border-color: transparent; }
+.slots .list span.now { outline: 2px solid var(--ink); outline-offset: -1px; }
+
+.links { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--muted); }
+.links .lk { font-size: 13px; padding: 2px 8px; }
+.links .lk.nv { color: #03a94d; } .links .lk.iv { color: #e05a00; }
+.what { grid-column: 1 / -1; font-size: 12.5px; background: var(--note); border-radius: 4px; padding: 4px 8px; }
+.what::before { content: "넣을 숫자 · "; font-weight: 700; font-size: 11px; color: var(--muted); }
+details.learn { grid-column: 1 / -1; font-size: 13px; border: 1px dashed var(--line); border-radius: 6px; padding: 4px 10px; }
+details.learn summary { cursor: pointer; font-weight: 700; color: var(--down); font-size: 12.5px; padding: 2px 0; }
+details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: var(--ink); }
+.explain { font-size: 13.5px; display: grid; gap: 4px; }
+.explain div { padding-left: 1em; text-indent: -1em; }
+.explain .g { color: var(--g); } .explain .a { color: var(--a); } .explain .r { color: var(--r); }
+.explain .end { margin-top: 4px; font-weight: 900; }
+.gloss dt { font-weight: 900; margin-top: 8px; } .gloss dd { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.journal textarea { width: 100%; box-sizing: border-box; min-height: 70px; font: inherit; font-size: 14px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+.journal label.kept { display: flex; gap: 6px; align-items: center; font-size: 14px; }
+.trendctl { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.trendctl select { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+.wrap > *, .card > * { min-width: 0; } /* 넓은 표가 화면 폭을 밀지 않고 칸 안에서 옆으로 밀리게 */
+.trendwrap { overflow-x: auto; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; }
+table.trend { border-collapse: collapse; font-size: 12.5px; white-space: nowrap; }
+table.trend th, table.trend td { padding: 5px 7px; border-bottom: 1px solid var(--line); text-align: right; }
+table.trend th { position: sticky; top: 0; background: var(--note); color: var(--muted); font-weight: 700; text-align: center; }
+table.trend td:first-child, table.trend th:first-child { position: sticky; left: 0; background: var(--paper); text-align: left; }
+.ins-stage { font-size: 13.5px; background: var(--note); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; }
+.ins-stage small { display: block; color: var(--muted); margin-top: 3px; }
+.ins-bar { height: 6px; background: var(--line); border-radius: 3px; margin-top: 6px; overflow: hidden; } .ins-bar i { display: block; height: 100%; background: var(--g); }
+#insight h3 { font-size: 14px; margin: 14px 0 6px; }
+.ins-line { font-size: 13px; margin: 6px 0; }
+.ins-sig { padding: 8px 0; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.6; }
+.ins-name { font-weight: 700; font-size: 14px; } .ins-name small { font-weight: 400; color: var(--muted); }
+.ins-body b.g { color: var(--g); } .ins-body b.a { color: var(--a); } .ins-body b.r { color: var(--r); }
+table.trend td.g { color: var(--g); } table.trend td.a { color: var(--a); font-weight: 700; } table.trend td.r { color: var(--r); font-weight: 700; }
+table.trend tr.sum td { background: var(--note); color: var(--muted); }
+table.trend button { font: inherit; border: 0; background: none; color: var(--down); padding: 0; cursor: pointer; text-decoration: underline; }
+table.stats { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.stats th, table.stats td { border-top: 1px solid var(--line); padding: 5px 4px; text-align: center; }
+table.stats th { color: var(--muted); font-weight: 700; font-size: 12px; }
+.row2 { display: flex; gap: 6px; flex-wrap: wrap; }
+.datebtn, .histbtn { font: inherit; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: var(--surface); color: var(--down); border-radius: 4px; padding: 1px 7px; margin: 2px 2px 0 0; cursor: pointer; }
+.histbtn { color: var(--muted); background: var(--note); border: 0; } .histbtn.g { color: var(--g); background: var(--g-bg); } .histbtn.a { color: var(--a); background: var(--a-bg); } .histbtn.r { color: var(--r); background: var(--r-bg); }
+.btn.danger { color: var(--r); border-color: var(--r); }
+textarea.backup { width: 100%; box-sizing: border-box; min-height: 80px; font: 12px ui-monospace, monospace; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+details.intro summary { cursor: pointer; font-size: 15px; }
+details.intro[open] summary { margin-bottom: 6px; }
+.ghform { display: grid; gap: 8px; }
+.ghform label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
+.ghform input { font: inherit; font-size: 15px; font-weight: 400; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); width: 100%; box-sizing: border-box; }
+.jsec { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.jsec:first-of-type { border-top: 0; padding-top: 0; }
+.jsec h3 { margin: 0; font-size: 14px; font-weight: 900; } .jsec h3 small { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 4px; }
+.mkt { font-size: 13px; background: var(--note); border-radius: 6px; padding: 8px 10px; line-height: 1.6; }
+.jgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.jgrid label, .tr label { display: grid; gap: 3px; font-size: 12px; font-weight: 700; color: var(--muted); min-width: 0; }
+.jgrid label.wide, .tr label.wide { grid-column: 1 / -1; }
+.jin { font: inherit; font-size: 14px; font-weight: 400; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%; box-sizing: border-box; min-width: 0; }
+textarea.jin { resize: vertical; }
+.jq { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
+.tr { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: var(--surface); }
+.tr .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tr .top b { font-size: 14px; }
+.tr .pnl { font-weight: 900; font-size: 15px; font-variant-numeric: tabular-nums; }
+.tr .pnl.pos { color: var(--up); } .tr .pnl.neg { color: var(--down); }
+.tr .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tr .grid label.wide { grid-column: 1 / -1; }
+.tr .chartimg { max-width: 100%; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+.tr .rowx { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.tr .rowx label.inline { display: flex; gap: 6px; align-items: center; color: var(--ink); font-size: 13px; }
+.jsum { font-size: 14px; font-weight: 700; background: var(--note); border-radius: 6px; padding: 8px 10px; font-variant-numeric: tabular-nums; }
+.jsum .pos { color: var(--up); } .jsum .neg { color: var(--down); }
+label.fee { font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.num-s { width: 70px; }
+a.btn { text-decoration: none; display: inline-block; }
+.blogprev { font-size: 13px; line-height: 1.6; overflow-x: auto; max-width: 100%; }
+details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓은 표가 화면을 밀어 확대되지 않게 */
+.blogprev table { border-collapse: collapse; font-size: 12px; } .blogprev td, .blogprev th { border: 1px solid var(--line); padding: 3px 6px; }
+.charts { display: grid; gap: 12px; }
+.chart h4 { margin: 0 0 4px; font-size: 13px; } .chart h4 small { font-weight: 500; color: var(--muted); }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart .tip { font-size: 12px; font-weight: 700; min-height: 1.4em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.chart .empty { font-size: 12.5px; color: var(--muted); }
+@media (max-width: 420px) { .tr .grid { grid-template-columns: 1fr 1fr; } }
+.archive { display: grid; gap: 6px; max-height: 420px; overflow-y: auto; }
+.arow { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.arow:first-child { border-top: 0; }
+.arow .ad { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.arow .ad .pos { color: var(--up); font-weight: 700; } .arow .ad .neg { color: var(--down); font-weight: 700; }
+.arow .ab { display: flex; gap: 6px; }
+.blogid { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+.blogid label { display: grid; gap: 3px; font-size: 12px; font-weight: 700; color: var(--muted); flex: 1 1 200px; min-width: 0; }
+.nvex { grid-column: 1 / -1; font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; color: var(--muted); }
+.nvex .px { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.nvex mark { background: var(--a-bg); color: var(--ink); font-weight: 900; padding: 0 4px; border-radius: 3px; outline: 2px solid var(--a); }
+.nvex s { color: var(--muted); }
+.nvex b { color: var(--g); font-size: 14px; }
+.helper { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.helper input.num { width: 90px; }
+.warn { grid-column: 1 / -1; font-size: 13px; font-weight: 700; color: var(--r); background: var(--r-bg); border-radius: 6px; padding: 6px 8px; }
+.backfab { position: fixed; left: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; font: inherit; font-size: 14px; font-weight: 700; color: #fff; background: var(--down); border: 0; border-radius: 999px; padding: 10px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.25); cursor: pointer; }
+.topfab { position: fixed; right: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.2); cursor: pointer; }
+.backfab, .topfab, .navtab { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+/* 오른쪽 옆 세로 메뉴: 평소엔 가장자리에 얇은 '메뉴' 손잡이만, 누르면 세로 목록이 펼쳐짐 */
+.navtab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 46; writing-mode: vertical-rl; font: inherit; font-size: 13px; font-weight: 700; letter-spacing: 2px; color: #fff; background: var(--down); border: 0; border-radius: 10px 0 0 10px; padding: 14px 7px; opacity: .85; box-shadow: -1px 1px 6px rgba(0,0,0,.2); cursor: pointer; }
+.navdim { position: fixed; inset: 0; z-index: 47; background: rgba(0,0,0,.18); }
+.secnav { position: fixed; right: 0; top: 50%; z-index: 48; display: flex; flex-direction: column; gap: 4px; width: 172px; max-height: 82vh; overflow-y: auto; padding: 8px; background: var(--paper); border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; box-shadow: -3px 0 14px rgba(0,0,0,.18); transform: translate(105%, -50%); transition: transform .18s ease; visibility: hidden; }
+.secnav.open { transform: translate(0, -50%); visibility: visible; }
+.secnav button { flex: 0 0 auto; text-align: left; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 42px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.secnav button:active { transform: scale(.97); }
+.secnav button.on { color: #fff; background: var(--down); border-color: var(--down); }
+[data-nav] { scroll-margin-top: 8px; }
+.docbtn { margin-top: 6px; font-size: 13.5px; padding: 6px 12px; border-color: var(--up); color: var(--up); }
+.chiplbl { font-size: 12px; color: var(--muted); font-weight: 700; margin-right: 2px; }
+.prev .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+.how { font-size: 13px; line-height: 1.7; } .how ol { margin: 4px 0; padding-left: 20px; }
+</style>
+</head>
+<body>
+<button class="backfab" id="backBtn" type="button" hidden>◀ 돌아가기</button>
+<button class="topfab" id="topBtn" type="button" hidden aria-label="맨 위로">▲ 맨 위</button>
+<button class="navtab" id="navTab" type="button" aria-expanded="false" aria-controls="secnav">☰ 메뉴</button>
+<div class="navdim" id="navDim" hidden></div>
+<!-- 📘 내 매매기법 (주도테마 종가매매 v7) — 맨 위 버튼으로 여는 전체 화면. 빌드 때 template.html 의 RULEDOC 자리표시 위치에 들어간다.
+     원본: claude.ai 아티팩트 "주도테마 종가매매" (2026-09-24). 스타일은 모두 #ruleDoc 안으로 한정해 앱 스타일과 섞이지 않게 했다. -->
+<style>
+#ruleDoc { position: fixed; inset: 0; z-index: 60; background: var(--paper); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+#ruleDoc[hidden] { display: none; }
+#ruleDoc .dbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--paper); border-bottom: 1px solid var(--line); }
+#ruleDoc .dbar b { font-size: 15px; flex: 1; }
+#ruleDoc .dwrap { max-width: 760px; margin: 0 auto; display: grid; gap: 14px; padding: 16px 16px 60px; font-size: 14px; line-height: 1.6; --up-soft: var(--up-bg); --down-soft: var(--down-bg); }
+#ruleDoc .dhead { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+#ruleDoc .dhead h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
+#ruleDoc .dhead p { margin: 0; color: var(--muted); font-size: 13px; }
+#ruleDoc .eyebrow { font-size: 11px; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
+#ruleDoc .flow { display: grid; gap: 10px; }
+#ruleDoc .stage { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: grid; grid-template-columns: 52px 1fr; }
+#ruleDoc .num { display: grid; place-items: center; font-size: 22px; font-weight: 900; color: var(--up); border-right: 1px solid var(--line); }
+#ruleDoc .body { padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+#ruleDoc .stage h2 { margin: 0; font-size: 16px; font-weight: 700; }
+#ruleDoc .stage h2 small { font-weight: 500; color: var(--muted); font-size: 12px; margin-left: 6px; }
+#ruleDoc ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+#ruleDoc li::marker { color: var(--muted); }
+#ruleDoc .sub { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; }
+#ruleDoc .tag { display: inline-block; padding: 0 6px; border-radius: 3px; font-size: 12px; font-weight: 700; line-height: 1.6; vertical-align: 1px; white-space: nowrap; }
+#ruleDoc .tag.up { background: var(--up-soft); color: var(--up); }
+#ruleDoc .tag.down { background: var(--down-soft); color: var(--down); }
+#ruleDoc .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#ruleDoc .box { background: var(--note); border-radius: 4px; padding: 8px 10px; min-width: 0; }
+#ruleDoc .box > b { display: block; font-size: 12px; margin-bottom: 2px; }
+#ruleDoc .box ul { font-size: 13px; }
+#ruleDoc .arrow { text-align: center; color: var(--muted); font-size: 13px; line-height: 1; }
+#ruleDoc .drule { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; margin: 0; }
+#ruleDoc .drule dt { font-weight: 700; white-space: nowrap; }
+#ruleDoc .drule dd { margin: 0; }
+#ruleDoc .kki { border-left: 3px solid var(--up); background: var(--note); border-radius: 0 4px 4px 0; padding: 8px 12px; display: grid; gap: 4px; }
+#ruleDoc .kki b { font-size: 13px; } #ruleDoc .kki ul { font-size: 13px; }
+#ruleDoc .tbl { overflow-x: auto; }
+#ruleDoc table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+#ruleDoc th, #ruleDoc td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+#ruleDoc th { font-size: 11px; letter-spacing: 0.06em; color: var(--muted); font-weight: 700; white-space: nowrap; }
+#ruleDoc td:first-child { font-weight: 700; white-space: nowrap; }
+#ruleDoc .tl { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--ink); }
+#ruleDoc .tl li { display: grid; gap: 2px; padding: 8px 8px 6px 0; border-right: 1px dashed var(--line); font-size: 12px; min-width: 0; }
+#ruleDoc .tl li:nth-child(3n) { border-right: 0; } #ruleDoc .tl li:nth-child(-n+3) { border-bottom: 1px dashed var(--line); }
+#ruleDoc .tl li + li { padding-left: 8px; } #ruleDoc .tl li:nth-child(3n+1) { padding-left: 0; }
+#ruleDoc .tl time { font-weight: 900; font-size: 13px; color: var(--up); }
+#ruleDoc .tl b { font-size: 13px; } #ruleDoc .tl span { color: var(--muted); line-height: 1.45; }
+#ruleDoc .tl em { font-style: normal; font-weight: 700; color: var(--ink); }
+#ruleDoc .tl .last { background: var(--note); border-radius: 0 0 4px 4px; }
+#ruleDoc .score { min-width: 600px; }
+#ruleDoc .score td { font-weight: 600; }
+#ruleDoc .score td:last-child { min-width: 150px; color: var(--muted); font-weight: 400; }
+#ruleDoc .score th.g { color: var(--g); } #ruleDoc .score th.a { color: var(--a); } #ruleDoc .score th.r { color: var(--r); }
+#ruleDoc .score td.g { background: var(--g-bg); color: var(--g); } #ruleDoc .score td.a { background: var(--a-bg); color: var(--a); } #ruleDoc .score td.r { background: var(--r-bg); color: var(--r); }
+#ruleDoc .dverdict { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#ruleDoc .v { border-radius: 4px; padding: 8px 10px; display: grid; gap: 1px; }
+#ruleDoc .v b { font-size: 12px; } #ruleDoc .v span { font-size: 20px; font-weight: 900; line-height: 1.2; } #ruleDoc .v small { font-size: 12px; opacity: 0.85; }
+#ruleDoc .v.r { background: var(--r-bg); color: var(--r); } #ruleDoc .v.a { background: var(--a-bg); color: var(--a); } #ruleDoc .v.g { background: var(--g-bg); color: var(--g); }
+#ruleDoc .v2note { font-size: 12.5px; background: var(--a-bg); color: var(--ink); border-radius: 4px; padding: 6px 10px; }
+#ruleDoc .dfoot { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+#ruleDoc .dfoot b { color: var(--ink); }
+@media (max-width: 640px) {
+  #ruleDoc .tl { grid-template-columns: 1fr; }
+  #ruleDoc .tl li { grid-template-columns: 52px 1fr; border-right: 0; border-bottom: 1px dashed var(--line); padding: 6px 0; }
+  #ruleDoc .tl li + li { padding-left: 0; } #ruleDoc .tl time { grid-row: 1 / span 2; } #ruleDoc .tl .last { border-radius: 4px; padding-left: 6px; }
+}
+@media (max-width: 560px) {
+  #ruleDoc .grid2, #ruleDoc .dverdict { grid-template-columns: 1fr; }
+  #ruleDoc .stage { grid-template-columns: 40px 1fr; } #ruleDoc .num { font-size: 18px; }
+  #ruleDoc .score { min-width: 0; }
+  #ruleDoc .score thead, #ruleDoc .score tbody, #ruleDoc .score tr, #ruleDoc .score th, #ruleDoc .score td { display: block; }
+  #ruleDoc .score tr { display: grid; grid-template-columns: 1fr 1fr 1fr; border-bottom: 1px solid var(--line); padding: 6px 0; }
+  #ruleDoc .score th, #ruleDoc .score td { border: 0; padding: 3px 6px; }
+  #ruleDoc .score th:first-child, #ruleDoc .score th:last-child { display: none; }
+  #ruleDoc .score td:first-child { grid-column: 1 / -1; padding-left: 0; padding-bottom: 0; font-size: 14px; }
+  #ruleDoc .score td:last-child { order: 1; grid-column: 1 / -1; padding-left: 0; padding-bottom: 5px; font-size: 13px; min-width: 0; color: var(--ink); font-weight: 500; }
+  #ruleDoc .score td:last-child::before { content: "왜 보나 · "; font-size: 11px; font-weight: 700; color: var(--muted); }
+  #ruleDoc .score td.g, #ruleDoc .score td.a, #ruleDoc .score td.r { order: 2; border-radius: 3px; margin: 0 2px; text-align: center; font-size: 13px; }
+  #ruleDoc .score thead tr { border-bottom: 2px solid var(--ink); }
+  #ruleDoc .score th.g, #ruleDoc .score th.a, #ruleDoc .score th.r { text-align: center; }
+  #ruleDoc .entry thead { display: none; }
+  #ruleDoc .entry, #ruleDoc .entry tbody, #ruleDoc .entry tr, #ruleDoc .entry td { display: block; }
+  #ruleDoc .entry tr { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; margin-bottom: 8px; background: var(--note); }
+  #ruleDoc .entry td { border: 0; padding: 2px 0; white-space: normal; font-weight: 400; }
+  #ruleDoc .entry td[data-l="방식"] { font-size: 15px; font-weight: 900; color: var(--up); padding-bottom: 4px; }
+  #ruleDoc .entry td:not([data-l="방식"]) { display: grid; grid-template-columns: 5em 1fr; gap: 6px; align-items: start; }
+  #ruleDoc .entry td:not([data-l="방식"])::before { content: attr(data-l); font-size: 11px; font-weight: 700; color: var(--muted); padding-top: 3px; }
+  #ruleDoc .entry td br { display: none; }
+}
+</style>
+<div id="ruleDoc" role="dialog" aria-modal="true" aria-label="내 매매기법" hidden>
+  <div class="dbar"><button class="btn" id="docClose" type="button">◀ 닫기</button><b>📘 내 매매기법</b></div>
+  <div class="dwrap">
+  <div class="dhead">
+    <span class="eyebrow">MY TRADING RULES · v7</span>
+    <h1>주도테마 종가매매</h1>
+    <p>장 전에 시장 모드를 정하고, 진짜 대금이 몰린 테마에서 외인·기관·프로그램이 같이 사는 종목을, 그날 시장에 맞는 진입 방식으로 산다. 파는 가격은 사기 전에 정한다.</p>
+  </div>
+
+  <div class="flow">
+
+    <section class="stage">
+      <div class="num">0</div>
+      <div class="body">
+        <h2>장전 루틴 <small>07:30 ~ 08:50 · 6개 신호를 보고 오늘 모드를 정한다</small></h2>
+        <ol class="tl">
+          <li><time>07:30</time><b>미국 마감</b><span>나스닥 · S&amp;P · <em>SOX(반도체)</em> · 10년물 · VIX</span></li>
+          <li><time>07:45</time><b>선물 · 환율 · 원자재</b><span>나스닥100 선물 · 코스피200 야간선물 · 원달러 · WTI · 구리·리튬</span></li>
+          <li><time>08:00</time><b>공시 · 뉴스 · 일정</b><span>수주는 재료, 유상증자·CB는 <em>피함</em> · 오늘 이벤트 확인</span></li>
+          <li><time>08:30</time><b>장전 시간외</b><span>08:30~08:40 단일가 상승·하락 종목 → 재료 확인</span></li>
+          <li><time>08:45</time><b>외인 포지션</b><span>5일·20일 누적 순매수 + <em>코스피200 선물 외인 포지션</em></span></li>
+          <li class="last"><time>08:50</time><b>모드 결정</b><span>아래 표에 체크 → 정상 / 절반 / 쉼</span></li>
+        </ol>
+        <div class="tbl">
+        <table class="score">
+          <thead><tr><th>신호</th><th class="g">● 좋음</th><th class="a">● 주의</th><th class="r">● 나쁨</th><th>왜 보나</th></tr></thead>
+          <tbody>
+            <tr><td>미 선물</td><td class="g">보합 이상</td><td class="a">-0.5 ~ -1%</td><td class="r">-1% 이하</td><td>시초가 갭의 방향</td></tr>
+            <tr><td>SOX 반도체</td><td class="g">플러스</td><td class="a">보합</td><td class="r">-2% 이하</td><td>삼전·하닉 시초가, 소부장 테마 강도</td></tr>
+            <tr><td>VIX</td><td class="g">20 아래</td><td class="a">20 ~ 30</td><td class="r">30 위</td><td>위험회피 정도</td></tr>
+            <tr><td>원달러 환율</td><td class="g">안정</td><td class="a">+10원 이상</td><td class="r">환율·유가 <b>동반</b> 급등</td><td>외인 매도 압력</td></tr>
+            <tr><td>WTI 유가</td><td class="g">안정</td><td class="a">급등</td><td class="r">환율·유가 <b>동반</b> 급등</td><td>외인·기관 동반 매도일 패턴</td></tr>
+            <tr><td>미 10년물</td><td class="g">안정</td><td class="a">+10bp 이상</td><td class="r">—</td><td>성장·고밸류 테마 약세</td></tr>
+            <tr><td>오늘 이벤트</td><td class="g">없음</td><td class="a">FOMC · CPI · 고용 · 금통위 · 옵션만기</td><td class="r">선물옵션 동시만기</td><td>장중 변동성</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="v2note">※ 앱 판정 규칙 v2 (2026-09-27, 2012~2026 코스피 3,614일 실제 데이터로 바꿈): 환율·유가는 혼자서는 <b>참고</b>(판정 제외), 둘이 같은 날 함께 급등(환율 +10원 이상 &amp; 유가 +3% 이상)하면 '나쁨'이 아니라 <b>주의 1개</b>. 나머지 기준은 그대로예요.</div>
+        <div class="dverdict">
+          <div class="v r"><b>● 나쁨 1개라도</b><span>쉼</span><small>신규 진입 없음, 보유분 정리만</small></div>
+          <div class="v a"><b>● 주의 2개 이상</b><span>절반</span><small>시초·장중만, 비중 절반, 종가베팅 없음</small></div>
+          <div class="v g"><b>● 그 외</b><span>정상</span><small>모든 방식, 정상 비중</small></div>
+        </div>
+        <div class="tbl">
+        <table>
+          <thead><tr><th>오늘 매크로</th><th>오르는 쪽</th><th>피할 쪽</th></tr></thead>
+          <tbody>
+            <tr><td>환율 ↑</td><td>자동차 · 조선 · 방산 · 반도체 · 화장품</td><td>항공 · 여행 · 음식료 · 전력가스 · 유통</td></tr>
+            <tr><td>유가 ↑</td><td>정유 · 조선</td><td>항공 · 화학 · 석유화학</td></tr>
+            <tr><td>금리 ↑</td><td>은행 · 보험</td><td>성장주 · 바이오</td></tr>
+            <tr><td>SOX ↑</td><td>반도체 장비 · 재료/부품</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </section>
+    <div class="arrow">▼</div>
+
+    <section class="stage">
+      <div class="num">1</div>
+      <div class="body">
+        <h2>시장 체크 <small>거래대금 기준 · 장중 방향</small></h2>
+        <ul>
+          <li>시장 전체 거래대금 확인 → 평소에는 종목 거래대금 <b>500억 이상</b>, 시장 거래대금 <b>10조 이상</b>이면 기준을 더 높인다</li>
+          <li>장중: <b>외인 선물 순매수 + 프로그램(비차익) 순매수</b>가 같이 플러스면 상승장, 둘 다 마이너스면 반등을 믿지 않는다</li>
+          <li>종가베팅 당일 14:30 이후 미 선물 다시 확인 → 마이너스로 돌아섰으면 <b>쉰다</b></li>
+        </ul>
+      </div>
+    </section>
+    <div class="arrow">▼</div>
+
+    <section class="stage">
+      <div class="num">2</div>
+      <div class="body">
+        <h2>진짜 대금이 몰린 테마 찾기 <small>실시간수급 → 테마수급 → 금액기준</small></h2>
+        <ul>
+          <li>합계(A+B) 상위 테마를 위에서부터 본다</li>
+          <li><b>시총 상위 종목이 들어 있어서</b> 합계가 큰 테마는 <span class="tag down">제외</span> (그 종목 하나 때문에 순위가 높은 것)</li>
+          <li>그걸 걷어내고 남는 테마 중 합계가 가장 큰 곳 = <b>진짜 대금이 몰린 테마</b></li>
+          <li>외인(A) &gt; 기관(B)이면 <span class="tag up">강함</span>, 기관만 큰 테마는 <span class="tag down">주의</span></li>
+          <li>오늘 매크로와 맞는 테마인가 (유가 급등일에 정유·조선, 환율 급등일에 자동차·조선처럼 재료가 받쳐주는 테마가 더 오래 간다)</li>
+        </ul>
+        <div class="box">
+          <b>교차 확인 · 테마 수익률 상위</b>
+          <ul>
+            <li>테마수급 상위 리스트와 테마 수익률 상위 리스트를 비교한다</li>
+            <li><b>양쪽에 다 있는 테마</b>만 고른다</li>
+            <li>한쪽에만 있으면 <span class="tag down">패스</span></li>
+          </ul>
+        </div>
+        <ul>
+          <li>마지막 확인: 그 테마 대장주가 <b>+25% 이상</b>이고 2등주가 바짝 따라붙으면 <b>주도테마</b></li>
+        </ul>
+        <div class="sub">강도기준 탭 = 시가총액 대비 순매수 비율 → 참고용. 소형주가 과대 표시되므로 금액기준을 먼저 본다.</div>
+      </div>
+    </section>
+    <div class="arrow">▼</div>
+
+    <section class="stage">
+      <div class="num">3</div>
+      <div class="body">
+        <h2>종목 고르기 <small>테마명을 눌러 개별종목 수급 보기 · 후보는 3~5개로 압축</small></h2>
+        <ul>
+          <li>시총 상위 종목은 빼고, <b>외인·기관 순매수가 큰 종목</b>부터 본다. 기관 순매수는 외인과 <b>동급</b>으로 본다 (추종 성과는 기관이 더 좋았다)</li>
+          <li>그중 <b>외인·기관·프로그램이 같이 사는</b> 종목 → 3박자가 맞아야 후보. 외인 혼자만 사는 종목은 뒤로</li>
+          <li>이미 너무 많이 오른 종목보다 <b>아직 덜 오른 종목</b>을 우선 (5일 누적 +35% 넘으면 제외)</li>
+          <li>신용잔고율 높은 종목(대략 7~8% 이상)은 급락 시 반대매매가 겹쳐 <span class="tag down">제외</span>, 공매도 잔고 급증 종목도 뒤로</li>
+        </ul>
+        <div class="grid2">
+          <div class="box">
+            <b>제외</b>
+            <ul>
+              <li>동전주</li>
+              <li>시총 1,000억 미만</li>
+              <li>거래대금 500억 미만</li>
+              <li>호가창 가벼운 종목</li>
+              <li>유상증자·CB 공시 직후</li>
+            </ul>
+          </div>
+          <div class="box">
+            <b>호가창</b>
+            <ul>
+              <li>체결강도 <span class="tag up">100 이상</span></li>
+              <li>호가창이 어느 정도 두터울 것</li>
+              <li>1억 이상 대량체결이 매수 쪽에 붙는가</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="arrow">▼</div>
+
+    <section class="stage">
+      <div class="num">4</div>
+      <div class="body">
+        <h2>차트 확인 <small>저항대 · 매물대 · 끼</small></h2>
+        <div class="grid2">
+          <div class="box">
+            <b>1순위 (가장 선호)</b>
+            <ul>
+              <li>일봉 직전 저항 돌파</li>
+              <li>주봉 직전 저항 돌파</li>
+              <li>신고가 / 전고점 돌파</li>
+            </ul>
+          </div>
+          <div class="box">
+            <b>2순위</b>
+            <ul>
+              <li>전고점 부근에 있고</li>
+              <li>위쪽 첫 저항대까지 <span class="tag up">10% 이상</span> 갭</li>
+            </ul>
+          </div>
+        </div>
+        <ul>
+          <li><b>매물대</b>: 현재가 바로 위에 두꺼운 매물대(과거 거래량이 몰린 가격대)가 있으면 피한다. 위가 비어 있을수록 좋다</li>
+          <li>진입 전에 <b>전일 고가·저가, 시초가, 당일 고가</b>를 차트에 표시해 둔다 (아래 진입 방식의 기준선)</li>
+        </ul>
+        <div class="kki">
+          <b>끼 있는 종목이란 — 과거에 크게, 빠르게 움직여 본 종목</b>
+          <ul>
+            <li>최근 6~12개월 안에 <b>상한가 또는 하루 +20% 이상</b> 경험이 있다</li>
+            <li>그때 <b>거래대금이 평소의 5~10배</b>로 터졌다 (돈이 붙는 종목)</li>
+            <li>과거에 어떤 테마의 <b>대장주로 뛴 이력</b>이 있다</li>
+            <li>급등 후 조정이 와도 <b>완전히 무너지지 않고</b> 바닥을 높였다</li>
+            <li>재료가 나오면 <b>다른 종목보다 먼저, 더 세게</b> 반응한다</li>
+          </ul>
+          <div class="sub">끼 없는 종목 = 같은 테마인데 늘 1~3%만 움직이고 거래대금이 안 붙는 종목. 수급이 좋아도 뒤로 미룬다.</div>
+        </div>
+      </div>
+    </section>
+    <div class="arrow">▼</div>
+
+    <section class="stage">
+      <div class="num">5</div>
+      <div class="body">
+        <h2>진입 방식 <small>종가매매 하나에 묶이지 않는다 · 시장 모드와 시간대로 고른다</small></h2>
+        <div class="tbl">
+        <table class="entry">
+          <thead><tr><th>방식</th><th>시간</th><th>언제 쓰나</th><th>진입 신호</th><th>손절</th><th>목표</th></tr></thead>
+          <tbody>
+            <tr>
+              <td data-l="방식">시초가 갭</td>
+              <td data-l="시간">09:00~09:30</td>
+              <td data-l="언제 쓰나">전일 주도테마 종목이 미 선물·SOX 호조로 갭상승 출발할 때</td>
+              <td data-l="진입 신호">09:00~09:05 첫 5분봉 고가를 거래량 실리며 돌파. 갭 +8% 넘는 출발은 추격 안 함</td>
+              <td data-l="손절">첫 5분봉 저가 이탈, 또는 -2%</td>
+              <td data-l="목표">+3~5%, 10:00 전 절반 정리</td>
+            </tr>
+            <tr>
+              <td data-l="방식">장중 돌파</td>
+              <td data-l="시간">09:30~11:00</td>
+              <td data-l="언제 쓰나">테마 대장주가 당일 고가·전고점을 다시 뚫을 때</td>
+              <td data-l="진입 신호">당일 고가 돌파 + 거래량 전 봉 대비 2배 + 체결강도 상승 중</td>
+              <td data-l="손절">돌파 봉 저가 이탈</td>
+              <td data-l="목표">다음 저항대, 또는 +5%</td>
+            </tr>
+            <tr>
+              <td data-l="방식">눌림목</td>
+              <td data-l="시간">10:30~13:30</td>
+              <td data-l="언제 쓰나">오전 급등 후 거래량 줄며 쉬는 종목. 절반 모드 날에 가장 잘 맞음</td>
+              <td data-l="진입 신호">5분봉 20선·VWAP·시초가 중 하나에서 지지 + 거래량 다시 붙으며 직전 봉 고가 돌파</td>
+              <td data-l="손절">지지선 종가 이탈, 또는 -2%</td>
+              <td data-l="목표">당일 고가 재도전</td>
+            </tr>
+            <tr>
+              <td data-l="방식">종가베팅</td>
+              <td data-l="시간">14:30~15:20<br>(15:20~15:30 단일가)</td>
+              <td data-l="언제 쓰나">정상 모드 + 미 선물 플러스 + 테마·수급·차트 다 맞을 때만</td>
+              <td data-l="진입 신호">2~4단계 통과 + 종가 근처 매수세 유지(체결강도 100↑)</td>
+              <td data-l="손절">종가 대비 -3% 또는 돌파 저항선 이탈</td>
+              <td data-l="목표">익일 시초 매도, 아니면 3일 안 정리</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="sub">한 날에 여러 방식을 섞어도 되지만, 한 종목에는 한 방식만. 시초에 산 종목을 종가베팅 명목으로 들고 넘어가지 않는다.</div>
+      </div>
+    </section>
+    <div class="arrow">▼</div>
+
+    <section class="stage">
+      <div class="num">6</div>
+      <div class="body">
+        <h2>청산 · 리스크 <small>사기 전에 파는 가격부터 정한다</small></h2>
+        <dl class="drule">
+          <dt>손절가</dt><dd><span class="tag up">필수</span> 매수 전에 먼저 정한다. 방식별 손절선(위 표) 중 가까운 쪽. 정한 손절은 <b>장중 수정 금지</b></dd>
+          <dt>1회 리스크</dt><dd>손절 맞아도 계좌의 <b>1% 이내</b>가 되도록 수량을 정한다 (수량 = 계좌×1% ÷ 손절폭)</dd>
+          <dt>비중</dt><dd>한 종목 최대 <b>25%</b>, 동시 보유 <b>3~5종목</b>. 한 종목 올인 없음</dd>
+          <dt>하루 한도</dt><dd>당일 누적 <b>-3%</b> 찍으면 그날 매매 종료. 연속 3일 손실이면 다음 날 쉼</dd>
+          <dt>익절</dt><dd>종가베팅: 익일 시초 수익 → 즉시 매도. 장중 방식: 목표가 절반 정리 후 나머지는 손절선을 본전으로 올림</dd>
+          <dt>스윙</dt><dd>시초 수익 없고 손절도 안 맞으면 최대 <b>3일</b>. 3일째 종가 무조건 정리 (오버나잇 효과는 2~3일 뒤 반전)</dd>
+          <dt>중간 정리</dt><dd>보유 중 체결강도가 무너지면(100→50) 날짜와 상관없이 정리</dd>
+          <dt>기록</dt><dd>매매마다 방식·매수가·손절가·매도가·이유 기록. 주 1회 방식별 승률·손익비 확인, 손익비 1 아래 방식은 한 달 중단</dd>
+        </dl>
+        <div class="sub">이익은 시초에 자르고 손실은 며칠 끌고 가는 구조가 개인 손실의 1번 원인(처분효과). 손절가·1% 리스크·3일 규칙이 그걸 막는다.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="dfoot">
+    <span><b>한 줄 요약</b> 장전 매크로로 오늘 모드 결정 → 시총 상위 빼고 진짜 대금 몰린 테마 ∩ 수익률 상위 테마 → 외인·기관·프로그램이 같이 사는 덜 오른 종목 → 저항·매물대 비고 끼 있는 것 → 모드·시간대에 맞는 방식으로 손절가 정하고 진입 → 목표가 절반, 3일 안 정리</span>
+    <span><b>상위권이 공통으로 하는 것</b> 후보 3~5종목으로 압축 · 매수 전 진입가·손절가·목표가·수량 확정 · 손절 -2% 즉시(슈퍼개미 인터뷰) · 기관·외인 매집 종목만 · 오전장 수급 보고 결정 · 수익금 인출·투자금 상한 고정 · 일일 손실 한도</span>
+    <span><b>근거</b> 오버나잇 갭 종목은 2~3일 지속 후 반전(KOSPI 연구) · 기관 추종이 외인 추종보다 성과 우위(2004~10 일별) · 개인 손실의 핵심은 회전율·복권형 종목·처분효과(자본시장연구원) · 돌파 자체는 한국서 장기 엣지 없음 → 타이밍 도구로만 · SOX가 삼전·하닉 시초가를 끌고 감(글로벌 펀드의 ETF 연동 매매)</span>
+  </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div>
+      <span class="eyebrow">매일 아침 7:30 · 주식 날씨 예보</span>
+      <h1>Eden Cockpit <small id="appVer" style="font-size:11px;font-weight:400;opacity:.6"></small></h1>
+      <div class="date" id="today"></div>
+      <button class="btn docbtn" id="docOpen" type="button">📘 내 매매기법</button>
+    </div>
+    <div class="tools"><div class="row"><button class="btn" id="reset" type="button">이 날 초기화</button><span id="resetAsk" class="row" hidden><button class="btn danger" id="resetYes" type="button">정말 지우기</button><button class="btn" id="resetNo" type="button">취소</button></span><button class="btn" id="undo" type="button" hidden>↩ 되돌리기</button></div><div class="sync" id="sync"></div></div>
+  </header>
+
+  <section class="verdict" id="verdict" aria-live="polite">
+    <div>
+      <div class="mode" id="modeText">—</div>
+      <div class="reason" id="modeWhy">아래 칸에 숫자를 넣으면 오늘 날씨(모드)가 나와요</div>
+      <div class="act" id="modeAct"></div>
+    </div>
+    <div class="counts" id="counts"></div>
+  </section>
+
+  <nav class="secnav" id="secnav" aria-label="메뉴 바로 가기"></nav>
+
+  <details class="card intro" id="intro">
+    <summary><b>🔰 처음이세요? 이 화면 쓰는 법 (1분)</b></summary>
+    <div class="how">
+      <p>이 화면은 <b>"오늘 주식을 얼마나 적극적으로 해도 되는지"</b> 알려주는 <b>날씨 예보</b>예요.</p>
+      <p>☀️ <b>정상</b> 평소처럼 해요 · ⛅ <b>절반</b> 평소 돈의 반만 쓰고 그날 산 건 그날 팔아요 · ☔ <b>쉼</b> 새로 사지 않아요</p>
+      <ol>
+        <li>아래 칸마다 있는 <b>초록(네이버)·주황(인베스팅) 버튼</b>을 눌러요. 새 창에 숫자가 나와요.</li>
+        <li>칸 아래 <b>"넣을 숫자"</b> 설명대로 숫자를 칸에 넣어요. 빠진 숫자(마이너스)는 <b>±</b> 버튼으로 바꿀 수 있어요.</li>
+        <li>맨 위에 <b>정상 / 절반 / 쉼</b>이 나와요. 바로 아래 <b>🧭 왜 이런 판정?</b>에 이유가 적혀요.</li>
+        <li>모르는 말은 칸 아래 <b>📘 공부하기</b>를 누르거나, 맨 아래 <b>📚 용어 사전</b>을 봐요.</li>
+        <li>장이 끝나면 <b>📓 매매 일지</b>에 결과를 체크해요. 쌓이면 나에게 맞는 공부가 돼요.</li>
+      </ol>
+      <p>넣은 숫자는 <b>자동 저장</b>돼요. 저장 버튼은 없어요.</p>
+    </div>
+  </details>
+
+  <section class="card" data-nav="판단 근거">
+    <h2>🧭 매매 모드 판단 근거 <small>넣은 숫자로 어떻게 정해졌는지</small></h2>
+    <div class="explain" id="explain"></div>
+  </section>
+
+  <section class="card" data-nav="① 장전 체크 지표">
+    <h2>① 장전 체크 지표 <small>버튼(↗)을 눌러 숫자를 보고 → 칸에 넣기 · <b>±</b>는 마이너스 전환</small></h2>
+    <div class="autoline" id="autoSig" hidden></div>
+    <div id="sigList"></div>
+    <div class="sig" data-k="ev">
+      <div class="name">오늘 특별한 일정</div>
+      <div class="in"><span class="status" id="st-ev">—</span></div>
+      <div class="ev" style="grid-column:1/-1">
+        <div class="auto" id="evAuto"></div>
+        <div class="chips" id="evChips"></div>
+      </div>
+      <div class="links">열어서 보기 <a class="lk iv" href="https://kr.investing.com/economic-calendar/" target="_blank" rel="noopener">인베스팅 경제캘린더 ↗</a><a class="lk nv" href="https://m.stock.naver.com/investment/research/economy" target="_blank" rel="noopener">네이버 경제지표 ↗</a></div>
+      <div class="what">오늘 해당하는 일정 버튼을 눌러요. 만기일·미국 금리 발표일은 날짜로 자동 표시돼요</div>
+      <div class="rule"><b class="g">없음 → 좋음</b><b class="a">아래 일정 중 하나라도 → 주의</b><b class="r">동시만기 → 나쁨</b></div>
+      <details class="learn"><summary>📘 공부하기 — 이 날들은 왜 조심하나요?</summary>
+        <p><b>한 줄 요약</b> 큰 발표가 있는 날은 결과에 따라 주가가 크게 출렁여요. 그래서 조심해요.</p>
+        <p><b>FOMC</b> 미국이 이자율을 올릴지 내릴지 정하는 회의예요. 발표는 한국 시간 새벽 3시(겨울엔 4시)예요. 전 세계 주식이 크게 흔들릴 수 있어요.</p>
+        <p><b>미 CPI</b> 미국 물가 발표예요. 물가가 생각보다 많이 오르면 "이자율을 더 올리겠구나" 해서 주식이 약해져요. 발표는 밤 9시 30분(겨울엔 10시 30분)이에요.</p>
+        <p><b>미 고용</b> 미국 일자리 발표예요(보통 매달 첫 금요일 밤). 경기가 좋은지 나쁜지 알려줘서 시장이 크게 반응해요.</p>
+        <p><b>금통위</b> 한국은행이 이자율을 정하는 날이에요. 그날 오전에 은행·건설 주식과 환율이 움직여요.</p>
+        <p><b>옵션만기</b> 매달 둘째 목요일이에요. 이날 옵션 거래는 오후 3시 20분에 끝나고, 큰손들이 계약을 정리하느라 장 마감 무렵(3시 20분~3시 30분 동시호가) 주가가 출렁이기 쉬워요. 그날이 휴일이면 하루 앞당겨져요.</p>
+        <p><b>동시만기</b> 3·6·9·12월 둘째 목요일이에요. 지수 선물과 옵션이 한꺼번에 끝나서 평소보다 크게 출렁일 수 있는 날이라, 이 앱의 규칙으로는 <b>쉼</b>이에요.</p>
+        <p><b>MSCI 리밸런싱</b> 세계적인 주식 목록에 들어가는 회사가 바뀌는 날이에요. 외국 큰 펀드가 장 끝날 때 한꺼번에 사고팔아요.</p>
+        <p><b>알아 두세요</b> 오늘 밤 미국에서 큰 발표가 있으면, 오늘 사서 밤을 넘기지 않아요. 결과를 모른 채 밤을 넘기는 건 도박이라서요.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="card" data-nav="② 관심 테마">
+    <h2>② 관심 테마 <small>아래 숫자를 넣으면 자동으로 정리돼요</small></h2>
+    <div class="today">
+      <div class="row first"><b>우선 관심</b><div class="tags" id="tFirst"></div></div>
+      <div class="row back"><b>후순위</b><div class="tags" id="tBack"></div></div>
+    </div>
+  </section>
+
+  <section class="card" data-nav="미국장 테마">
+    <h2>미국장 테마 확인 <small>미국장에서 오른 테마는 한국장에서도 같은 테마가 따라가요 · 몇 % 올랐는지 넣기</small></h2>
+    <div id="usList"></div>
+    <div class="hint">기준보다 많이 오르면 "우선 관심", 많이 내리면 "후순위"예요. 여러 종목이면 대충 평균을 넣어요. 비트코인·금·구리는 그 주식을 살 생각이 있는 날만 보면 돼요.</div>
+  </section>
+
+  <section class="card" data-nav="전일 주도 테마">
+    <h2>전일 주도 테마 <small>어제 저녁 애프터마켓 + 오늘 아침 NXT 프리마켓(8:00~8:50) 흐름</small></h2>
+    <div id="prevList"></div>
+    <div class="links">열어서 보기 <a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">네이버 테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_rise.naver" target="_blank" rel="noopener">네이버 상승 종목 (KRX·NXT 탭) ↗</a><a class="lk" href="https://nextrade.co.kr/menu/transactionStatusMain/menuList.do" target="_blank" rel="noopener">넥스트레이드 거래현황 ↗</a></div>
+    <div class="hint">네이버 종목 페이지 맨 위에 KRX 가격과 NXT 가격이 함께 나와요. 프리마켓·애프터마켓 값은 NXT 쪽이에요.</div>
+    <div class="hint">💡 실제 기록(NXT 2025.3~2026.9, 300종목 8만 9천 일): 저녁에 +3% 넘게 슈팅한 종목은 다음 날 92%가 갭업으로 시작하지만, 코스피는 60%가 시가보다 낮게 마감(평균 -0.9%)하고 장중 저가는 저녁 가격보다 평균 4% 아래예요 → <b>시초가 추격 금지</b>, 눌림과 거래대금을 보고 판단해요.</div>
+    <details class="learn"><summary>📘 공부하기 — 애프터마켓·프리마켓이 뭐예요? (실제 자료로 확인한 내용)</summary>
+      <p><b>한 줄 요약</b> 저녁(애프터마켓)에 오른 테마가 아침(프리마켓)에도 오르면 오늘 이어질 가능성이 커요. 저녁엔 올랐는데 아침에 밀리면 차익실현을 조심해요.</p>
+      <p><b>두 곳에서 거래돼요</b> 2025년 3월부터 <b>넥스트레이드(NXT)</b>가 아침 8시~8시 50분(프리마켓), 9시~3시 20분(메인), 3시 40분~8시(애프터마켓)에 열려요. 2026년 9월 14일부터는 <b>한국거래소(KRX)</b>도 저녁 4시~8시 애프터마켓을 열었어요(실시간 체결, ±30%, ETF·ETN 제외, 지정가만). 예전 "시간외 단일가"는 없어졌어요. 아침 프리마켓은 아직 NXT에만 있어요(KRX는 2027년 말 예정).</p>
+      <p><b>얼마나 거래되나요?</b> NXT는 2026년 상반기 하루 20~40조 원이 거래됐고, 그중 프리+애프터마켓이 약 40%예요. 9월 첫 주 KRX 애프터마켓은 하루 평균 1.1조(정규장의 4.5%), NXT 애프터마켓은 1.4조였어요. 저녁·아침 거래는 <b>개인이 85~90%</b>예요. 외국인·기관은 거의 9시 이후에 들어와요.</p>
+      <p><b>왜 프리마켓을 보나요?</b> 한국증권학회지(2026, 우민철) 연구에서 NXT 프리마켓 가격이 KRX 9시 시가에 뚜렷한 영향을 준다고 확인됐어요(코스닥에서 더 강함). 밤사이 미국장·뉴스가 8시부터 가격에 먼저 반영되기 때문이에요.</p>
+      <p><b>실제 기록으로 본 '저녁 슈팅' (넥스트레이드 2025년 3월~2026년 9월, 거래대금 상위 300종목 88,966 종목·일)</b> ① 저녁 애프터마켓에서 +3% 넘게 오른 종목(1,241건)은 다음 날 <b>92%가 갭업</b>으로 시작했고 시가는 저녁 마지막 가격보다 평균 +0.7% 높았어요. 아침에 '반대로' 시작하지는 않아요. ② 하지만 시가 뒤에는 밀리기 쉬워요. 코스피 종목은 <b>60%가 시가보다 낮게 마감</b>(평균 -0.9%), +8% 넘게 슈팅한 종목은 평균 -2.4%였어요. 코스닥 +3%는 오히려 평균 +0.8%로 이어졌지만 +8% 이상은 밀렸어요(-1.0%). ③ 그날 장중 저가는 저녁 가격보다 평균 <b>4~6% 아래</b>예요. 저녁 가격 근처에서 시초가에 쫓아 사면 장중에 물리기 쉬워요. ④ 저녁에 -3% 넘게 급락한 종목(1,198건)은 아침에 덜 빠진 채 시작(72%가 저녁가보다 높게)하지만 정규장에서 계속 밀렸어요(시가→종가 평균 -2.2%, 64% 하락 · -5% 이하는 -3.8%, 69%). 아침 반등에 사면 안 돼요. ⑤ 8시 프리마켓 첫 체결 방향은 9시 시가 방향과 77~84% 일치해요. 갭은 맞히지만 그날 시가→종가 방향은 못 맞혀요(평균 -0.2%).</p>
+      <p><b>조심할 점</b> ① 거래가 얇아요. 2026년 7월 28일 아침 8시에 SK하이닉스가 <b>1주</b> 체결로 -29.96% 하한가가 찍힌 일이 있었어요. 값만 보지 말고 거래량(대금)이 뒤에 있는지 봐요. ② 저녁 8시 가격은 공식 종가가 아니고, 다음 날 기준가는 3시 30분 정규장 종가예요. ③ 공시는 저녁 6시까지 나올 수 있어서, 장 마감 뒤 소식이 그날 저녁에 바로 가격에 반영돼요. ④ 9월 14일부터 NXT 프리마켓에 정적 VI가 생겨 크게 튀면 2분 단일가로 바뀌어요.</p>
+      <p><b>이렇게 써요</b> 어제 많이 오른 테마(예: 전력기기)를 적고, 첫째 줄에서 어제 저녁 애프터마켓이 어땠는지, 둘째 줄에서 오늘 아침 프리마켓(8시~8시 50분)이 어떤지 눌러요. 둘 다 강세면 "우선 관심", 저녁 강세인데 아침 약세면 "후순위(차익실현 경계)", 서로 어긋나면 중립으로 정리돼요. 프리마켓은 8시 50분에 끝나니 8시 30분쯤 한 번 보는 게 좋아요.</p>
+    </details>
+  </section>
+
+  <section class="card" data-nav="수혜 업종">
+    <h2>지표별 수혜 업종 <small>환율·유가·금리·반도체지수가 오르면 좋아지는 업종 · 해당 줄이 켜져요</small></h2>
+    <div class="sector" id="sector">
+      <div class="row" data-s="fx"><div class="k">환율 ↑</div><div class="v">자동차 · 조선 · 방산 · 반도체 · 화장품<small>피할 쪽: 항공 · 여행 · 음식료 · 전력가스 · 유통</small></div></div>
+      <div class="row" data-s="oil"><div class="k">유가 ↑</div><div class="v">정유 · 조선<small>피할 쪽: 항공 · 화학 · 석유화학</small></div></div>
+      <div class="row" data-s="ust"><div class="k">금리 ↑</div><div class="v">은행 · 보험<small>피할 쪽: 성장주 · 바이오</small></div></div>
+      <div class="row" data-s="sox"><div class="k">SOX ↑</div><div class="v">반도체 장비 · 재료/부품<small>반도체지수가 -2%보다 더 빠지면 반도체 재료·장비 주식은 오늘 뒤로</small></div></div>
+    </div>
+    <details class="learn"><summary>📘 공부하기 — 왜 이렇게 연결되나요?</summary>
+      <p><b>환율이 오르면</b> 외국에 물건을 파는 회사(자동차·배·반도체)는 같은 1달러를 벌어도 원화로 더 많이 받아서 좋아요. 반대로 외국에서 사 오는 회사(비행기 기름값, 식품 원료)는 비용이 늘어서 나빠요.</p>
+      <p><b>기름값이 오르면</b> 기름을 파는 정유 회사는 좋아요. 기름을 쓰는 비행기·화학 회사는 비용이 늘어서 나빠요.</p>
+      <p><b>이자율이 오르면</b> 은행·보험 회사는 이자로 버는 돈이 늘어서 좋아요. '나중에 크게 벌 거라'는 기대로 오른 회사(성장주·바이오)는 약해져요.</p>
+      <p><b>미국 반도체가 오르면</b> 한국 반도체 장비·재료 회사에도 사려는 사람이 몰려요.</p>
+    </details>
+  </section>
+
+  <section class="card" data-nav="체크리스트">
+    <h2>장전 체크리스트 <small>하나씩 체크하면서 진행해요</small></h2>
+    <div class="todo" id="todo">
+      <label><input type="checkbox" id="td1"><time>07:30</time><span class="t"><b>미국장 결과 보기</b><span>반도체지수 · 미국 금리 · 공포지수 · 미국장 테마 → 위 칸에 넣기</span></span></label>
+      <label><input type="checkbox" id="td2"><time>07:45</time><span class="t"><b>선물 · 환율 · 기름값 보기</b><span>코스피200 야간선물 · 나스닥 선물 · 원달러 환율 · 기름값 · 구리</span></span></label>
+      <label><input type="checkbox" id="td3"><time>08:00</time><span class="t"><b>회사 소식 · 뉴스 보기</b><span>큰 계약(수주)은 좋은 소식, 새 주식 발행(유상증자·CB)은 피해요 · <a href="https://kind.krx.co.kr/" target="_blank" rel="noopener">KIND ↗</a> <a href="https://dart.fss.or.kr/" target="_blank" rel="noopener">DART ↗</a> <a href="https://m.stock.naver.com/news" target="_blank" rel="noopener">네이버 뉴스 ↗</a></span></span></label>
+      <label><input type="checkbox" id="td7"><time>08:10</time><span class="t"><b>NXT 프리마켓 보기 (8:00~8:50)</b><span>전일 주도 테마·관심 종목이 프리마켓에서 어느 쪽인지 보고 위 '전일 주도 테마' 칸의 프리마켓 칩을 눌러요. 1~2주짜리 체결은 무시하고 거래대금을 같이 봐요 · 네이버 종목 페이지(KRX/NXT 가격 함께) · <a href="https://nextrade.co.kr/menu/transactionStatusMain/menuList.do" target="_blank" rel="noopener">넥스트레이드 거래현황 ↗</a></span></span></label>
+      <label><input type="checkbox" id="td4"><time>08:30</time><span class="t"><b>아침 미리 거래 보기</b><span>8:30~9:00 장 시작 동시호가의 예상 체결가로 오르는·내리는 종목 확인 (8:30~8:40 장전 시간외는 어제 종가로만 거래돼요) · 어제 인기 주식이 어땠는지 위 칸에 적기</span></span></label>
+      <label><input type="checkbox" id="td5"><time>08:45</time><span class="t"><b>외국인이 사는지 파는지 보기</b><span>최근 5일·20일 동안 외국인이 더 샀는지 · <a href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">네이버 투자자별 매매 ↗</a></span></span></label>
+      <label><input type="checkbox" id="td6"><time>08:50</time><span class="t"><b>오늘 모드 정하기</b><span>맨 위 매매 모드(정상·절반·쉼)와 관심 테마를 확인하고 시작해요</span></span></label>
+    </div>
+  </section>
+
+  <section class="card journal" id="journal" data-nav="📓 매매 일지">
+    <h2>📓 매매 일지 <small>장 끝나고 5분 · 쌓이면 최고의 공부</small></h2>
+
+    <div class="jsec">
+      <h3>① 오늘 시황 <small>장전 시황 판단은 자동으로 들어와요</small></h3>
+      <div class="mkt" id="jMorning"></div>
+      <div class="autoline" id="autoMkt" hidden></div>
+      <div class="jgrid">
+        <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
+        <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
+        <label class="wide">수급 (외국인·기관, 억원)<input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억"><small class="autoat" id="aa-market.invest" hidden></small></label>
+        <label class="wide">오늘 주도 테마<input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label>
+        <label class="wide">한 줄 시황<input class="jin" id="j-mktNote" placeholder="예: 외국인 매도로 오후에 밀림, 반도체 약세"></label>
+      </div>
+      <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a></div>
+      <div class="jq">장전 판단이 맞았나요?
+        <div class="chips" id="verdictChips"><button class="chip up" type="button" data-v="right">맞았다</button><button class="chip" type="button" data-v="half">반쯤</button><button class="chip dn" type="button" data-v="wrong">틀렸다</button></div>
+      </div>
+    </div>
+
+    <div class="jsec">
+      <h3>② 매매 내역 <small>한 번 매수·매도한 것마다 하나씩</small></h3>
+      <div id="trades"></div>
+      <div class="row2"><button class="btn" id="addTrade" type="button">＋ 매매 추가</button></div>
+      <div class="jsum" id="jSum"></div>
+      <label class="fee">수수료+세금 <input class="jin num-s" id="feePct" inputmode="decimal"> % <small>(파는 금액 기준. 2026년 증권거래세 0.20% + 증권사 수수료(보통 0.015% 안팎) → 약 0.2~0.23)</small></label>
+    </div>
+
+    <div class="jsec">
+      <h3>③ 오늘 돌아보기</h3>
+      <div class="chips" id="resultChips">
+        <button class="chip up" type="button" data-r="win">수익</button>
+        <button class="chip" type="button" data-r="even">본전</button>
+        <button class="chip dn" type="button" data-r="loss">손실</button>
+        <button class="chip" type="button" data-r="none">매매 안 함</button>
+      </div>
+      <div class="hint" id="resultHint"></div>
+      <label class="kept"><input type="checkbox" id="kept"> 오늘 날씨(정상·절반·쉼) 규칙을 지켰어요</label>
+      <div class="jgrid">
+        <label class="wide">잘한 점<textarea class="jin" id="j-good" rows="2" placeholder="예: 손절가에서 망설이지 않고 팔았다"></textarea></label>
+        <label class="wide">아쉬운 점 · 실수<textarea class="jin" id="j-bad" rows="2" placeholder="예: 오른 걸 보고 급하게 따라 샀다"></textarea></label>
+        <label class="wide">내일 할 일<textarea class="jin" id="j-tomorrow" rows="2" placeholder="예: 시초 5분은 지켜보고 들어가기"></textarea></label>
+        <label>오늘 마음 상태
+          <select class="jin" id="j-mood"><option value="">고르기</option><option>차분했다</option><option>조급했다</option><option>욕심났다</option><option>무서웠다</option><option>복수하고 싶었다</option><option>지루했다</option></select></label>
+        <label class="wide">자유 메모<textarea class="jin" id="memo" rows="3" placeholder="예: 반도체 주식을 샀다가 점심 전에 팔았다. 판정은 절반이었는데 실제로도 오후에 떨어졌다."></textarea></label>
+      </div>
+    </div>
+
+    <div class="jsec blog">
+      <h3>④ 네이버 블로그에 올리기 <small>그날 입력한 전체 내용 · 3번 클릭</small></h3>
+      <div class="blogid">
+        <label>내 블로그 아이디<input class="jin" id="blogId" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="예: blog.naver.com/○○○ 의 ○○○"></label>
+        <a class="btn" id="blogHome" href="https://blog.naver.com/" target="_blank" rel="noopener" hidden>내 블로그 열기 ↗</a>
+      </div>
+      <div class="hint" id="blogIdHint">아이디를 넣어 두면 버튼 하나로 내 블로그가 열려요. 이 기기에만 저장되고 다른 곳으로 보내지 않아요.</div>
+      <div class="row2">
+        <button class="btn" id="blogCopy" type="button">1. 블로그용으로 복사</button>
+        <a class="btn" id="blogOpen" href="https://blog.naver.com/GoBlogWrite.naver" target="_blank" rel="noopener">2. 네이버 블로그 글쓰기 열기 ↗</a>
+      </div>
+      <div class="hint">3. 글쓰기 화면 본문에 붙여넣기(Ctrl+V, 폰은 길게 눌러 붙여넣기) → 발행. 제목은 첫 줄에 들어가 있어요. 네이버가 2020년에 자동 올리기(글쓰기 API)를 없애서, 붙여넣기만 직접 해 주셔야 해요.</div>
+      <div class="sync" id="blogMsg" style="text-align:left"></div>
+      <details class="learn" id="blogPrevBox"><summary>미리 보기</summary><div id="blogPreview" class="blogprev"></div><button class="btn" id="blogPrevClose" type="button">미리 보기 닫기 ▲</button></details>
+    </div>
+  </section>
+
+  <section class="card" data-nav="📊 성적표">
+    <h2>📊 나의 성적표 <small>일지가 쌓이면 채워져요</small></h2>
+    <div class="charts" id="charts"></div>
+    <table class="stats" id="stats"></table>
+    <div class="hist" id="hist"></div>
+    <div class="hint">승률은 수익 ÷ (수익+손실+본전)이에요. 손익은 매매 내역에 매도가까지 적은 날만 계산돼요. 기록 버튼을 누르면 그날로 가요. "쉼"인 날 매매해서 자주 잃었다면, 규칙을 지키는 것부터가 공부예요.</div>
+  </section>
+
+  <section class="card" id="trendCard" data-nav="📈 지표 기록표">
+    <h2>📈 지표 기록표 <small>지난 며칠 지표를 한눈에 비교 · 엑셀로 옮기기</small></h2>
+    <div class="trendctl">
+      <select id="trendDays" aria-label="기간"><option value="5">최근 5일</option><option value="10">최근 10일</option><option value="20" selected>최근 20일</option><option value="60">최근 60일</option><option value="0">전체</option></select>
+      <select id="trendCols" aria-label="보는 지표"><option value="core">핵심 지표만</option><option value="all">전체 지표 (미국장 테마 포함)</option></select>
+    </div>
+    <div class="trendwrap"><table id="trend" class="trend"></table></div>
+    <div class="row2">
+      <button class="btn" id="trendCopy" type="button">표 복사 (엑셀·구글시트에 붙여넣기)</button>
+      <button class="btn" id="trendCsv" type="button">엑셀 파일(CSV)로 받기</button>
+    </div>
+    <div class="sync" id="trendMsg" style="text-align:left"></div>
+    <div class="hint">초록은 좋음, 노랑은 주의, 빨강은 나쁨이에요. 맨 아래에 기간 평균·최고·최저가 나와요. 날짜를 누르면 그날로 가요. 엑셀에서 그래프를 그리거나 "VIX가 20을 넘은 날 내 손익" 같은 비교를 할 수 있어요.</div>
+  </section>
+
+  <section class="card" id="insightCard" data-nav="🔍 내 기준 찾기">
+    <h2>🔍 내 기준 찾기 <small>쌓인 기록으로 지금 기준이 나에게도 맞는지 · 나에게 맞는 기준은 어디인지</small></h2>
+    <div id="insight"></div>
+  </section>
+
+  <section class="card" id="archiveCard" data-nav="🗂 날짜별 기록">
+    <h2>🗂 날짜별 기록 <small id="archiveCount"></small></h2>
+    <div class="hint">입력한 내용은 날짜마다 따로 저장되고, 날이 바뀌어도 지워지지 않아요. 지난 날을 열어 보거나, 그날 전체 내용을 블로그용으로 바로 복사할 수 있어요.</div>
+    <div class="sync" id="archiveMsg" style="text-align:left"></div>
+    <div id="archive" class="archive"></div>
+    <div class="row2"><a class="btn" href="https://blog.naver.com/GoBlogWrite.naver" target="_blank" rel="noopener">네이버 블로그 글쓰기 열기 ↗</a><a class="btn" id="blogHome2" href="https://blog.naver.com/" target="_blank" rel="noopener" hidden>내 블로그 열기 ↗</a></div>
+  </section>
+
+  <section class="card" data-nav="📚 용어">
+    <h2>📚 용어 사전</h2>
+    <dl class="gloss" id="gloss"></dl>
+  </section>
+
+  <section class="card" id="syncCard" data-nav="🔄 동기화">
+    <h2>🔄 PC·폰 동기화 <small>Claude 없이 내 GitHub로 · 처음 한 번만 설정 · 연결하면 🤖 자동 연동도 켜져요</small></h2>
+    <div class="sync" id="ghState" style="text-align:left"></div>
+    <div class="ghform">
+      <label>GitHub 열쇠(토큰)<input type="password" id="ghToken" autocomplete="off" placeholder="github_pat_ 로 시작하는 글자"></label>
+      <label>기록 보관할 저장소<input type="text" id="ghRepo" value="cmh73430-lgtm/-" autocomplete="off"></label>
+      <div class="row2"><button class="btn" id="ghConnect" type="button">연결하기</button><button class="btn" id="ghDisconnect" type="button" hidden>연결 끊기</button></div>
+    </div>
+    <details class="learn"><summary>📘 열쇠(토큰) 만드는 법 · 3분, 처음 한 번</summary>
+      <p><b>왜 필요해요?</b> PC와 폰이 같은 기록을 보려면 인터넷 어딘가에 보관해야 해요. 이미 있는 내 GitHub 비공개 저장소에 보관하고, 열쇠는 "이 저장소에 기록을 넣어도 돼"라는 허락증이에요.</p>
+      <p><b>1.</b> PC에서 GitHub에 로그인한 채로 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">열쇠 만들기 페이지 ↗</a>를 열어요.</p>
+      <p><b>2.</b> <b>Token name</b>: EdenCockpit · <b>Expiration</b>: 가장 긴 기간(끝나면 이 화면이 알려줘요)</p>
+      <p><b>3.</b> <b>Repository access</b>: Only select repositories → <b>-</b> 저장소 선택</p>
+      <p><b>4.</b> <b>Permissions</b> → Repository permissions → <b>Contents</b>를 <b>Read and write</b>로</p>
+      <p><b>5.</b> 맨 아래 <b>Generate token</b> → 나온 글자(github_pat_…)를 복사해서 위 칸에 붙여넣고 <b>연결하기</b></p>
+      <p><b>6.</b> 폰에서도 이 화면을 열고 같은 열쇠를 붙여넣어요. (카톡 나에게 보내기로 옮기면 편해요. 옮긴 뒤 그 메시지는 지워 주세요.)</p>
+      <p><b>알아 두세요</b> 열쇠는 비밀번호처럼 다른 사람에게 보여주지 마세요. 이 열쇠로는 고른 저장소 하나만 만질 수 있어요. 기록은 저장소의 <b>cockpit-data</b> 칸(브랜치)에 따로 쌓여서 프로그램 코드와 섞이지 않아요.</p>
+    </details>
+  </section>
+
+  <section class="card" data-nav="💾 백업">
+    <h2>💾 기록 지키기 (백업) <small>기록은 이 기기에만 저장돼요</small></h2>
+    <div class="row2">
+      <button class="btn" id="export" type="button">파일로 받기</button>
+      <button class="btn" id="copyOut" type="button">글자로 복사</button>
+      <button class="btn" id="importBtn" type="button">파일 불러오기</button>
+      <button class="btn" id="pasteIn" type="button">붙여넣어 불러오기</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <div class="sync" id="backupMsg" style="text-align:left"></div>
+    <textarea id="backupBox" class="backup" hidden aria-label="백업 글자"></textarea>
+    <div class="hint">인터넷 기록을 지우면 일지도 같이 지워질 수 있어요. 한 달에 한 번 "글자로 복사"를 눌러 메모장이나 카톡 나에게 보내기에 붙여넣어 두세요. 다른 기기로 옮길 때는 그 글자를 "붙여넣어 불러오기"하면 돼요.</div>
+  </section>
+
+  <section class="card how" data-nav="🖥 바로가기">
+    <h2>🖥 바로가기 만들기</h2>
+    <ol>
+      <li><b>링크로 열었다면</b>: 크롬 주소창 오른쪽 ☆(북마크)을 누르거나, 휴대폰은 공유 → 홈 화면에 추가.</li>
+      <li><b>파일(EdenCockpit.html)로 받았다면</b>: 바탕화면에 두고 더블클릭 → 크롬(또는 엣지)으로 열린다. 메모장으로 열리면 파일을 마우스 오른쪽 클릭 → 연결 프로그램 → Chrome.</li>
+      <li>기록은 같은 기기·같은 브라우저에서 열 때 이어진다. 링크와 파일은 기록을 따로 저장한다.</li>
+    </ol>
+  </section>
+
+  <footer>규칙 한눈에: 나쁨이 하나라도 있으면 → 쉼(새로 사지 않기) · 주의가 2개 이상이면 → 절반(돈 반만, 그날 산 건 그날 팔기) · 그 외 → 정상. 환율·기름값은 참고로만 보고, 둘이 같은 날 함께 급등할 때만 주의 1개. 야간선물과 미국 선물 방향이 반대면 미국 선물은 빼고 계산. "먼저 볼 주식"은 날씨에 영향을 주지 않고 어디를 볼지만 알려줘요. 이 화면은 참고용이고, 투자 결정과 책임은 본인에게 있어요.</footer>
+</div>
+
+<script>
+// 장전 콕핏 판정 규칙 — 순수 함수 모듈 (브라우저·Node 공용, 외부 의존 없음)
+// 기준: docs/SPEC.md 3장. 2026-09-27 v2: 환율·유가는 혼자서는 참고, 동반 급등 때만 주의 1개 (실제 데이터 검증 결과 반영).
+
+const SIGNAL_KEYS = ["k200", "fut", "fx", "sox", "vix", "oil", "ust"];
+const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
+
+const MODES = {
+  rest: { mode: "쉼", cls: "r", act: "신규 진입 없음 · 보유분 정리만" },
+  half: { mode: "절반", cls: "a", act: "시초·장중만 · 비중 절반 · 종가베팅 없음" },
+  normal: { mode: "정상", cls: "g", act: "모든 방식 가능 · 정상 비중" },
+  none: { mode: "—", cls: "", act: "" },
+};
+
+// 수동 이벤트 목록. 동시만기만 나쁨, 나머지는 주의.
+const MANUAL_EVENTS = ["FOMC", "CPI", "고용", "금통위", "옵션만기", "동시만기", "MSCI"];
+const eventLevel = (name) => (name === "동시만기" ? "r" : "a");
+
+// 숫자 해석: 유니코드 마이너스·쉼표 허용. 숫자가 아니면 null.
+function parseNum(raw) {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === "number") return Number.isFinite(raw) ? raw : null;
+  const v = String(raw).trim().replace(/[−–—﹣－]/g, "-").replace(/,/g, ".").replace(/[^0-9.\-+]/g, "");
+  if (v === "" || v === "-" || v === "+" || v === ".") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+// 3-1 단일 신호 판정 (동반 급등·방향 엇갈림은 evaluate에서 처리)
+const RULES = {
+  k200: (v) => (v > -0.5 ? "g" : v > -1 ? "a" : "r"),
+  fut: (v) => (v > -0.5 ? "g" : v > -1 ? "a" : "r"),
+  fx: (v) => (v < 10 ? "g" : "a"),
+  sox: (v) => (v > 0 ? "g" : v > -2 ? "a" : "r"),
+  vix: (v) => (v < 20 ? "g" : v <= 30 ? "a" : "r"),
+  oil: (v) => (v < 3 ? "g" : "a"),
+  ust: (v) => (v < 10 ? "g" : "a"),
+};
+
+function signalStatus(key, value) {
+  const v = parseNum(value);
+  return v === null ? null : RULES[key](v);
+}
+
+const round = (v, d = 2) => Number(v.toFixed(d));
+const signed = (v) => (v > 0 ? "+" : "") + round(v) + "%";
+
+// 테마 대표값: 숫자 하나 또는 여러 심볼 값 배열(단순 평균)
+function themeValue(raw) {
+  if (Array.isArray(raw)) {
+    const nums = raw.map(parseNum).filter((n) => n !== null);
+    return nums.length ? round(nums.reduce((a, b) => a + b, 0) / nums.length) : null;
+  }
+  return parseNum(raw);
+}
+
+/**
+ * @param {object} input  { signals: {k200..ust}, us: {themeKey: number|number[]}, prev: [{name, state: "up"|"flat"|"down"}] }
+ * @param {Array}  events 오늘 이벤트. 문자열(수동 선택) 또는 {k, lv} (자동 감지; lv ""는 참고용이라 판정 제외)
+ * @param {object} config { themes: [{key, name, th?, label?}], defaultThreshold }
+ */
+function evaluate(input = {}, events = [], config = {}) {
+  const signals = input.signals || {};
+  const v = {};
+  SIGNAL_KEYS.forEach((k) => (v[k] = parseNum(signals[k])));
+
+  const statuses = {};
+  SIGNAL_KEYS.forEach((k) => (statuses[k] = v[k] === null ? null : RULES[k](v[k])));
+
+  // 1) 환율·유가는 혼자서는 '참고'(집계 제외). 2012~2026 코스피 3,614일 실제 데이터에서 단독 신호는 다음 날 예측력이 없었다
+  //    (scripts/backtest.mjs: 유가 3%↑ 다음 날 평균 +0.21%, 환율 10원↑ 다음 날 보통 날과 같음).
+  //    둘이 같은 날 함께 급등(환율 ≥10원 & 유가 ≥3%)할 때만 '동반 급등'으로 주의 1개를 넣는다 (14년간 23일, 다음 날 평균 -0.23%).
+  const combo = statuses.fx === "a" && statuses.oil === "a";
+  const excluded = { fx: true, oil: true };
+
+  // 2) 방향 엇갈림
+  const diverge = v.k200 !== null && v.fut !== null && v.k200 !== 0 && v.fut !== 0 && Math.sign(v.k200) !== Math.sign(v.fut);
+  if (diverge) excluded.fut = true;
+
+  // 3) 이벤트
+  const levels = events
+    .map((e) => (typeof e === "string" ? eventLevel(e) : e && e.lv))
+    .filter((lv) => lv === "a" || lv === "r");
+  statuses.ev = levels.includes("r") ? "r" : levels.length ? "a" : "g";
+
+  // 4) 최종 모드
+  const counts = { g: 0, a: 0, r: 0 };
+  Object.keys(statuses).forEach((k) => {
+    if (statuses[k] && !excluded[k]) counts[statuses[k]]++;
+  });
+  if (combo) counts.a++; // 동반 급등 = 주의 1개
+  const filled = SIGNAL_KEYS.filter((k) => statuses[k]).length;
+
+  let m, why;
+  if (counts.r > 0) { m = MODES.rest; why = "나쁨 " + counts.r + "개"; }
+  else if (counts.a >= 2) { m = MODES.half; why = "주의 " + counts.a + "개"; }
+  else if (filled === 0) { m = MODES.none; why = "신호를 입력하면 오늘 모드가 정해집니다"; }
+  else {
+    m = MODES.normal;
+    why = filled < SIGNAL_KEYS.length ? "입력 " + filled + "/" + SIGNAL_KEYS.length + " · 아직 나쁨·주의 1개 이하" : "나쁨 0 · 주의 " + counts.a;
+  }
+
+  // 매크로 → 업종
+  const sectorOn = {
+    fx: (v.fx ?? 0) >= 10,
+    oil: (v.oil ?? 0) >= 3,
+    ust: (v.ust ?? 0) >= 10,
+    sox: (v.sox ?? 0) > 0,
+  };
+
+  // 테마 정리 (모드 판정과 무관)
+  const themeFirst = [], themeBack = [], themeStatus = {};
+  const defTh = config.defaultThreshold ?? 3;
+  (config.themes || []).forEach((t) => {
+    const val = themeValue((input.us || {})[t.key]);
+    if (val === null) { themeStatus[t.key] = null; return; }
+    const th = t.th ?? defTh;
+    const why = (t.label || "미국") + " " + signed(val);
+    if (val >= th) { themeStatus[t.key] = "first"; themeFirst.push([t.name, why]); }
+    else if (val <= -th) { themeStatus[t.key] = "back"; themeBack.push([t.name, why]); }
+    else themeStatus[t.key] = "flat";
+  });
+  // 전일 주도 테마: state = 전날 저녁 애프터마켓(up/flat/down), pre = 오늘 아침 NXT 프리마켓 08:00~08:50 (up/flat/down, 없으면 "")
+  // 프리마켓이 있으면 프리마켓을 우선한다 (프리마켓 가격이 KRX 시가에 유의한 영향 — 우민철 2026, 한국증권학회지).
+  // 애프터마켓 강세 + 프리마켓 약세 = 차익실현 경계(후순위). 애프터마켓 약세 + 프리마켓 강세 = 서로 어긋나 중립.
+  (input.prev || []).forEach((p) => {
+    const nm = ((p && p.name) || "").trim();
+    if (!nm) return;
+    const am = p.state, pre = p.pre || "";
+    if (pre === "down") themeBack.push([nm, am === "up" ? "애프터마켓 강세였지만 프리마켓 약세 · 차익실현 경계" : "프리마켓 약세"]);
+    else if (pre === "up") { if (am !== "down") themeFirst.push([nm, am === "up" ? "전일 주도 · 애프터마켓·프리마켓 모두 강세" : "프리마켓 강세"]); }
+    else if (am === "up") themeFirst.push([nm, pre === "flat" ? "전일 주도 · 애프터마켓 강세 (프리마켓 보합)" : "전일 주도 · 애프터마켓 강세"]);
+    else if (am === "down") themeBack.push([nm, "애프터마켓 약세 · 차익실현 우선"]);
+  });
+  if (sectorOn.fx) themeFirst.push(["자동차 · 조선 · 방산", "환율 ↑"]);
+  if (sectorOn.oil) themeFirst.push(["정유 · 조선", "유가 ↑"]);
+  if (sectorOn.ust) themeBack.push(["성장주 · 바이오", "금리 ↑"]);
+  if (v.sox !== null && v.sox <= -2) themeBack.push(["반도체 소부장", "SOX " + round(v.sox) + "%"]);
+
+  return {
+    mode: m.mode, cls: m.cls, act: m.act, why,
+    statuses, excluded, diverge, combo, counts, filled,
+    sectorOn, themeStatus, themeFirst, themeBack,
+  };
+}
+
+// 날짜·이벤트 계산 — 순수 함수 (브라우저·Node 공용)
+// 날짜는 모두 "YYYY-MM-DD" 문자열(한국 세션 날짜)로 다루고, 내부 계산은 UTC로 해서 기기 시간대 영향을 받지 않는다.
+
+const pad = (n) => String(n).padStart(2, "0");
+const toUTC = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+const fromUTC = (d) => d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate());
+
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+function kstNow(now = new Date()) {
+  return new Date(now.getTime() + 9 * 3600 * 1000); // UTC 필드로 읽으면 KST
+}
+function kstDate(now = new Date()) { return fromUTC(kstNow(now)); }
+function kstTime(now = new Date()) {
+  const k = kstNow(now);
+  return pad(k.getUTCHours()) + ":" + pad(k.getUTCMinutes()) + ":" + pad(k.getUTCSeconds());
+}
+
+function addDays(s, n) { const d = toUTC(s); d.setUTCDate(d.getUTCDate() + n); return fromUTC(d); }
+function weekday(s) { return toUTC(s).getUTCDay(); }
+const isValidDate = (s) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && fromUTC(toUTC(s)) === s;
+
+// holidays: Set 또는 배열 (주말은 자동으로 휴장)
+const toSet = (h) => (h instanceof Set ? h : new Set(h || []));
+function isBusinessDay(s, holidays) {
+  const wd = weekday(s);
+  return wd !== 0 && wd !== 6 && !toSet(holidays).has(s);
+}
+function prevBusinessDay(s, holidays) {
+  const set = toSet(holidays);
+  let d = addDays(s, -1);
+  while (!isBusinessDay(d, set)) d = addDays(d, -1);
+  return d;
+}
+
+// n번째 특정 요일 (month 1~12, wd 0=일)
+function nthWeekday(year, month, wd, n) {
+  const first = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+  return fromUTC(new Date(Date.UTC(year, month - 1, 1 + ((wd - first + 7) % 7) + 7 * (n - 1))));
+}
+const secondThursday = (year, month) => nthWeekday(year, month, 4, 2);
+
+// 월물 옵션만기: 둘째 목요일, 휴장이면 직전 영업일
+function monthlyExpiry(year, month, holidays) {
+  const d = secondThursday(year, month);
+  return isBusinessDay(d, holidays) ? d : prevBusinessDay(d, holidays);
+}
+
+// 미국 서머타임: 3월 둘째 일요일 ~ 11월 첫째 일요일 (한국 날짜 기준 근사)
+function isUsDst(s) {
+  const y = Number(s.slice(0, 4));
+  return s >= nthWeekday(y, 3, 0, 2) && s < nthWeekday(y, 11, 0, 1);
+}
+// 미 경제지표(08:30 ET) 발표 시각, KST
+const usReleaseKst = (s) => (isUsDst(s) ? "21:30" : "22:30");
+// FOMC 성명(14:00 ET) 발표 시각, KST 다음 날 새벽
+const fomcKst = (s) => (isUsDst(s) ? "03:00" : "04:00");
+
+/**
+ * 날짜로 자동 감지되는 이벤트
+ * @param {string} s  한국 세션 날짜
+ * @param {object} cal { events: {fomc:[], cpi:[], jobs:[], bok:[], msci:[]}, holidays: string[]|Set, holidayNames?: {date: name} }
+ * @returns {{k: string, lv: "a"|"r"|"", ev?: string}[]}  lv ""는 참고 표시(판정 제외), ev는 대응하는 수동 이벤트 칩
+ */
+function autoEvents(s, cal = {}) {
+  const holidays = toSet(cal.holidays);
+  const ev = cal.events || {};
+  const out = [];
+  const [y, m] = s.split("-").map(Number);
+
+  if (!isBusinessDay(s, holidays)) {
+    const wd = weekday(s);
+    const name = (cal.holidayNames || {})[s];
+    out.push({ k: wd === 0 || wd === 6 ? "주말 · 휴장" : "휴장" + (name ? " · " + name : ""), lv: "" });
+  }
+
+  const exp = monthlyExpiry(y, m, holidays);
+  if (exp === s) {
+    const moved = exp !== secondThursday(y, m) ? " (둘째 목 휴장 → 앞당김)" : "";
+    out.push([3, 6, 9, 12].includes(m)
+      ? { k: "동시만기" + moved, lv: "r", ev: "동시만기" }
+      : { k: "옵션만기" + moved, lv: "a", ev: "옵션만기" });
+  }
+
+  const has = (key) => (ev[key] || []).includes(s);
+  if (has("fomc")) out.push({ k: "FOMC (오늘 밤 발표 · " + fomcKst(s) + " KST)", lv: "a", ev: "FOMC" });
+  if (has("cpi")) out.push({ k: "미 CPI (" + usReleaseKst(s) + " KST)", lv: "a", ev: "CPI" });
+  if (has("jobs")) out.push({ k: "미 고용 (" + usReleaseKst(s) + " KST)", lv: "a", ev: "고용" });
+  if (has("bok")) out.push({ k: "금통위", lv: "a", ev: "금통위" });
+  if (has("msci")) out.push({ k: "MSCI 리밸런싱", lv: "a", ev: "MSCI" });
+  return out;
+}
+
+// data/holidays.json → {set, names}
+function holidayIndex(json) {
+  const names = {};
+  Object.values(json || {}).forEach((list) => {
+    if (Array.isArray(list)) list.forEach((h) => (names[h.date] = h.name));
+  });
+  return { list: Object.keys(names), names };
+}
+
+// 하루 자동 수집 시점 (장전·오전·오후·장후). 시각은 .env 로 바꿀 수 있다 (server/app.js loadSessions).
+const DEFAULT_SESSIONS = [
+  { key: "pre", label: "장전", at: "07:25" },
+  { key: "am", label: "오전", at: "10:00" },
+  { key: "pm", label: "오후", at: "13:30" },
+  { key: "post", label: "장후", at: "15:40" },
+];
+
+// "HH:MM(:SS)" 시각이 속한 수집 시점 = 이미 지난 것 중 가장 늦은 것 (첫 시점 전이면 첫 시점)
+function sessionAt(time, sessions = DEFAULT_SESSIONS) {
+  const t = time.slice(0, 5);
+  let cur = sessions[0] || null;
+  for (const s of sessions) if (s.at <= t) cur = s;
+  return cur;
+}
+
+// 내 기준 찾기 — 쌓인 기록(지표·코스피 마감·내 손익)으로 지금 기준이 나에게도 맞는지, 나에게 맞는 기준은 어디인지 계산한다.
+// 순수 함수 모듈 (브라우저·Node 공용). 화면은 standalone/app.js 의 renderInsight 가 그린다.
+//
+// 입력 days: [{ d, signals: {k200..ust: number|null}, status: {k: "g"|"a"|"r"|null}, mode: "정상"|"절반"|"쉼"|"—",
+//               kospi: number|null (그날 코스피 마감 %), pnl: number|null (그날 매매 손익, 매매 안 했으면 null),
+//               kept: bool, verdict: "right"|"half"|"wrong"|"" }]
+// 원칙
+//  - 결과는 두 가지로 본다: ① 시장(그날 코스피 마감) — 매매를 안 해도 매일 쌓인다, ② 내 매매(손익) — 매매한 날만.
+//  - 표본이 적으면 우연이 크다. 각 쪽 최소 MIN_SIDE 일, 전체 STAGES 로 단계를 나누고, 차이를 흔들림(표준오차)과 비교해 신뢰도를 붙인다.
+//  - 기준을 바꾸라고 자동으로 정하지 않는다. '후보'와 근거 숫자만 보여 준다.
+
+const MIN_SIDE = 5;
+const STAGES = [
+  { min: 0, key: "collect", label: "모으는 중", note: "10일까지는 결과를 보지 마세요. 우연이 너무 커요." },
+  { min: 10, key: "early", label: "초기 경향 (참고만)", note: "방향만 참고하세요. 기준을 바꾸기엔 아직 일러요." },
+  { min: 20, key: "usable", label: "판단 가능", note: "신뢰도 '높음'이 나온 항목만 기준 후보로 생각해 보세요." },
+  { min: 40, key: "solid", label: "믿을 만함", note: "두 달 치예요. 신뢰도 '높음' 항목은 내 기준으로 써 볼 만해요." },
+];
+const stageOf = (n) => STAGES.filter((s) => n >= s.min).pop();
+
+// 지표마다: 나쁜 쪽 방향(낮을수록 나쁨 = "low", 높을수록 나쁨 = "high"), 지금 앱 기준(주의 시작점), 시험해 볼 기준 후보
+const SIG_META = {
+  k200: { bad: "low", now: -0.5, cands: [-0.2, -0.3, -0.5, -0.7, -1, -1.5], unit: "%" },
+  fut: { bad: "low", now: -0.5, cands: [-0.2, -0.3, -0.5, -0.7, -1, -1.5], unit: "%" },
+  sox: { bad: "low", now: 0, cands: [0, -0.5, -1, -1.5, -2, -3], unit: "%" },
+  vix: { bad: "high", now: 20, cands: [16, 18, 20, 22, 25, 30], unit: "점" },
+  ust: { bad: "high", now: 10, cands: [3, 5, 7, 10, 15], unit: "bp" },
+  fx: { bad: "high", now: 10, cands: [3, 5, 7, 10, 15], unit: "원" },
+  oil: { bad: "high", now: 3, cands: [1, 2, 3, 4, 5], unit: "%" },
+};
+
+const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
+function sd(a) {
+  if (a.length < 2) return null;
+  const m = mean(a);
+  return Math.sqrt(a.reduce((s, x) => s + (x - m) ** 2, 0) / (a.length - 1));
+}
+// 두 무리 평균 차이를 흔들림과 비교한 값 (웰치 t). 2 이상이면 우연일 가능성이 낮다.
+function tStat(a, b) {
+  if (a.length < 2 || b.length < 2) return null;
+  const va = sd(a) ** 2 / a.length, vb = sd(b) ** 2 / b.length;
+  const se = Math.sqrt(va + vb);
+  return se > 0 ? (mean(a) - mean(b)) / se : null;
+}
+function confidence(t, nBad, nGood) {
+  if (t === null || nBad < MIN_SIDE || nGood < MIN_SIDE) return { key: "none", label: "표본 부족" };
+  const x = Math.abs(t);
+  if (x >= 2 && nBad + nGood >= 20) return { key: "high", label: "높음" };
+  if (x >= 1) return { key: "mid", label: "보통" };
+  return { key: "low", label: "낮음" };
+}
+
+// 한 무리 요약: 코스피 평균·하락 비율, 내 매매 일수·승률·평균 손익
+function summarize(days) {
+  const k = days.map((x) => num(x.kospi)).filter((v) => v !== null);
+  const p = days.map((x) => num(x.pnl)).filter((v) => v !== null);
+  return {
+    n: days.length,
+    kN: k.length, kAvg: mean(k), kDown: k.length ? k.filter((v) => v < 0).length / k.length : null,
+    tN: p.length, win: p.length ? p.filter((v) => v > 0).length / p.length : null, pAvg: mean(p), pSum: p.reduce((a, b) => a + b, 0),
+    k, p,
+  };
+}
+
+const isBad = (meta, v, cut) => (meta.bad === "low" ? v <= cut : v >= cut);
+
+// 기준 하나로 나눴을 때: 나쁜 쪽 vs 좋은 쪽
+function splitAt(days, key, cut) {
+  const meta = SIG_META[key];
+  const has = days.filter((x) => num(x.signals && x.signals[key]) !== null);
+  const bad = has.filter((x) => isBad(meta, x.signals[key], cut)), good = has.filter((x) => !isBad(meta, x.signals[key], cut));
+  const B = summarize(bad), G = summarize(good);
+  // 시장: 나쁜 쪽 코스피가 더 낮아야 기준이 맞는 것 → gap = 좋은 쪽 - 나쁜 쪽 (클수록 잘 가른다)
+  const kGap = B.kAvg !== null && G.kAvg !== null ? G.kAvg - B.kAvg : null;
+  const pGap = B.pAvg !== null && G.pAvg !== null ? G.pAvg - B.pAvg : null;
+  const kT = tStat(G.k, B.k), pT = tStat(G.p, B.p);
+  return { key, cut, bad: B, good: G, kGap, pGap, kConf: confidence(kT, B.kN, G.kN), pConf: confidence(pT, B.tN, G.tN), kT, pT };
+}
+
+// 지표 하나: 지금 기준 점검 + 후보 기준 중 가장 잘 가르는 곳
+function scanSignal(days, key) {
+  const meta = SIG_META[key];
+  const now = splitAt(days, key, meta.now);
+  const tries = meta.cands.map((c) => splitAt(days, key, c));
+  // 내 손익으로 고를 수 있으면 손익, 아니면 코스피로 (양쪽 표본이 모자라는 후보는 제외)
+  const byP = tries.filter((s) => s.bad.tN >= MIN_SIDE && s.good.tN >= MIN_SIDE && s.pT !== null);
+  const byK = tries.filter((s) => s.bad.kN >= MIN_SIDE && s.good.kN >= MIN_SIDE && s.kT !== null);
+  const use = byP.length ? "pnl" : byK.length ? "kospi" : null;
+  const pool = use === "pnl" ? byP : byK;
+  // 가르는 힘(t)이 가장 큰 곳. 똑같이 가르면(그 사이에 기록이 없으면) 지금 기준에 더 가까운 쪽 — 데이터가 말하는 만큼만 바꾼다
+  const tOf = (s) => (use === "pnl" ? s.pT : s.kT);
+  const best = pool.length ? pool.reduce((a, b) => {
+    const d = tOf(b) - tOf(a);
+    if (Math.abs(d) < 1e-9) return Math.abs(b.cut - meta.now) < Math.abs(a.cut - meta.now) ? b : a;
+    return d > 0 ? b : a;
+  }) : null;
+  // 지금 기준 평가: 시장 기준으로 '잘 가름 / 약함 / 반대 / 표본 부족'
+  const verdict = (s, t, conf) => (conf.key === "none" ? "표본 부족" : t >= 2 ? "잘 맞음" : t >= 1 ? "약하게 맞음" : t <= -1 ? "반대로 나옴" : "차이 없음");
+  return {
+    key, meta, now, best, use,
+    nowK: verdict(now, now.kT, now.kConf), nowP: verdict(now, now.pT, now.pConf),
+    bestConf: best ? (use === "pnl" ? best.pConf : best.kConf) : { key: "none", label: "표본 부족" },
+    differs: !!best && best.cut !== meta.now,
+  };
+}
+
+// 모드별 성적 + 규칙 지킴 효과 + 장전 판단 적중
+function analyze(days) {
+  const withK = days.filter((x) => num(x.kospi) !== null).length;
+  const traded = days.filter((x) => num(x.pnl) !== null).length;
+  const n = Math.max(withK, traded);
+  const modes = ["정상", "절반", "쉼"].map((m) => ({ mode: m, ...summarize(days.filter((x) => x.mode === m)) }));
+  const tdays = days.filter((x) => num(x.pnl) !== null);
+  const kept = summarize(tdays.filter((x) => x.kept)), broke = summarize(tdays.filter((x) => !x.kept));
+  const vd = days.filter((x) => x.verdict);
+  const verdict = { n: vd.length, right: vd.filter((x) => x.verdict === "right").length, half: vd.filter((x) => x.verdict === "half").length, wrong: vd.filter((x) => x.verdict === "wrong").length };
+  const signals = Object.keys(SIG_META).map((k) => scanSignal(days, k));
+  return { n, withK, traded, stage: stageOf(n), modes, kept, broke, keptT: tStat(kept.p, broke.p), verdict, signals };
+}
+
+const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). 연 1회 KRX 공지로 확인 후 갱신. 공휴일이 주말과 겹친 대체공휴일 포함."}};
+// Eden Cockpit (구 장전 콕핏) — 손 입력 + 공부용 단일 파일 버전의 화면 코드.
+// 판정 규칙(shared/rules.js)과 달력(shared/calendar.js)은 빌드 때 이 파일 앞에 그대로 붙는다.
+(function () {
+  const NV = "https://m.stock.naver.com";
+  const IV = "https://kr.investing.com";
+
+  // 시장 신호 8개 중 숫자 7개: 링크 · 넣을 숫자 · 기준 · 공부 내용 (초보자도 알 수 있게 쉬운 말로)
+  const SIGNALS = [
+    { k: "k200", name: "코스피200 야간선물", core: "한국 예고편", unit: "%", ph: "0.0",
+      links: [["인베스팅", IV + "/indices/korea-200-futures", "iv"], ["밤사이코스피", "https://nightkospi.com/", ""], ["KRX 정보데이터시스템", "http://data.krx.co.kr/contents/MDC/MAIN/main/index.cmd", ""], ["네이버(낮 시장 선물)", NV + "/domestic/index/FUT/total", "nv"]],
+      what: "야간선물이 전날 낮 시장 마감(오후 3시 45분) 가격보다 몇 % 올랐는지·내렸는지. 예: 0.62% 내렸으면 -0.62. 새벽 6시에 끝난 '야간 종가'로 봐요",
+      rule: { g: "-0.5%보다 덜 빠짐 → 좋음", a: "-0.5% ~ -1% 빠짐 → 주의", r: "-1% 넘게 빠짐 → 나쁨" },
+      learn: [
+        ["한 줄 요약", "오늘 한국장이 어떻게 시작할지 미리 보여주는 '예고편'이에요."],
+        ["무엇인가요?", "한국 대표 회사 200개의 주가를 묶은 숫자(코스피200)의 선물을 밤에 사고파는 시장이에요. 한국거래소가 2025년 6월 9일부터 직접 열어요(그전엔 독일 유렉스 연계). 낮 시장은 8:45~15:45, 야간 시장은 저녁 6시~다음 날 새벽 6시예요. 미국장과 밤사이 뉴스를 먼저 반영해요."],
+        ["정확한 계산", "(야간 종가 ÷ 전날 낮 시장 종가 − 1) × 100. 야간 종가는 새벽 5:50~6:00 동시호가(종가 단일가)로 정해져요. 기준은 거래소가 정하는 '전날 기준가(정산가)'인데 보통 오후 3시 45분 종가와 같아요. 예: 9/22 낮 종가 1,112.00 → 야간 종가 1,140.75 = +2.59%, 다음 날 낮 시장은 1,139.40에 시작했어요."],
+        ["어느 종목?", "가장 가까운 만기(최근월물)를 봐요. 3·6·9·12월 둘째 목요일이 만기라, 만기 주에는 다음 월물로 바뀌어요. 미니 코스피200은 거래가 적어 참고만 해요."],
+        ["어디서 보나요?", "🤖 자동 연동이 켜져 있으면 아침 7시쯤(7:05 예약, 몇 분 늦을 수 있음) 자동으로 들어와요. 직접 볼 때: 증권사 앱의 '야간선물' 화면, 또는 KRX 정보데이터시스템 → 기본 통계 → 파생상품 → 종목 시세 → 최근월물 시세 추이(선물)에서 주간·야간이 따로 나와요."],
+        ["왜 보나요?", "아침 9시에 주가가 어제보다 높게 시작할지, 낮게 시작할지 가장 잘 알려줘요."],
+        ["이렇게 읽어요", "+0.5%면 오늘 주가가 조금 올라서 시작할 가능성이 커요. -1%보다 더 빠졌으면 아침부터 크게 떨어진 채 시작할 수 있으니 아침에 서둘러 사지 않아요."],
+        ["알아 두세요", "① 미국 선물과 방향이 반대면 이 숫자를 믿어요(한국장을 직접 보여주니까요). 그때 미국 선물은 판정에서 빠져요. ② 야간 거래는 거래 규칙상 '다음 날' 거래로 쳐요. 그래서 거래 화면에 따라 야간과 다음 날 낮 시장이 한 막대로 합쳐져 보여요. ③ 가격제한은 ±8%(낮 시장보다 좁음). ④ 새벽 6시 이후 9시까지의 소식은 못 담아요. 그 사이 움직임은 미국 선물(24시간)로 봐요. ⑤ 휴장일 전날 밤에는 야간 시장이 안 열려서 값이 없어요."],
+      ] },
+    { k: "fut", name: "미국 선물 (나스닥100)", core: "미국 분위기", unit: "%", ph: "0.0",
+      links: [["네이버", NV + "/worldstock/futures/NQcv1", "nv"], ["인베스팅", IV + "/indices/nq-100-futures", "iv"], ["S&P500 선물", IV + "/indices/us-spx-500-futures", "iv"]],
+      what: "나스닥100 선물이 어제보다 몇 % 올랐는지·내렸는지. 예: 0.3% 내렸으면 -0.3",
+      rule: { g: "-0.5%보다 덜 빠짐 → 좋음", a: "-0.5% ~ -1% 빠짐 → 주의", r: "-1% 넘게 빠짐 → 나쁨" },
+      learn: [
+        ["한 줄 요약", "미국 큰 기술회사들(애플, 엔비디아 등)의 지금 분위기예요."],
+        ["무엇인가요?", "미국 기술회사 100곳의 주가를 묶은 숫자(나스닥100)를 거의 24시간 사고파는 시장이에요. 미국장이 닫힌 뒤에도 움직여서, 지금 분위기를 알 수 있어요."],
+        ["왜 보나요?", "미국 기술주가 좋으면 한국 반도체·IT 주식도 따라서 좋게 시작하는 경우가 많아요."],
+        ["이렇게 읽어요", "-0.5%만 넘게 빠져도 한국 주식이 약하게 시작하기 쉬워요."],
+        ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "나스닥100 선물이 -1% 넘게 빠진 다음 날 코스피는 71%가 하락 마감(평균 -0.65%), -0.5%~-1%일 때 62%(평균 -0.25%)였어요. 보통 날은 40%(평균 +0.22%)예요. 이 기준은 실제로 잘 맞았어요."],
+      ] },
+    { k: "fx", name: "원달러 환율", core: "외국인 돈의 방향", unit: "원", ph: "0",
+      links: [["네이버", NV + "/marketindex/exchange/FX_USDKRW", "nv"], ["인베스팅", IV + "/currencies/usd-krw", "iv"], ["달러인덱스", IV + "/indices/usdollar", "iv"]],
+      what: "▲(또는 ▼) 옆의 '원' 숫자를 넣어요. 오른쪽 %(등락률)는 넣지 않아요",
+      example: { parts: ["1,392.50", "▲3.50", "+0.26%"], put: "3.5", not: "0.26" },
+      rule: { g: "10원 미만 오름 → 참고", a: "10원 이상 오름 → 참고 (유가도 3% 이상 급등하면 함께 주의 1개)", r: "(나쁨 없음)" },
+      learn: [
+        ["한 줄 요약", "환율이 크게 오르면 외국인이 한국 주식을 팔고 나가기 쉬워요."],
+        ["무엇인가요?", "1달러를 사려면 원화가 얼마 필요한지예요. 숫자가 오르면 우리 돈(원화)의 힘이 약해진 거예요."],
+        ["왜 보나요?", "외국인은 한국 주식으로 번 돈을 나중에 달러로 바꿔 가요. 환율이 오르면 바꿀 때 손해를 보니까, 손해가 더 커지기 전에 주식을 파는 경향이 있어요. 거꾸로 외국인이 팔아서 환율이 오르기도 해요."],
+        ["이렇게 읽어요", "하루에 10원 넘게 오르면 주의예요. 달러인덱스(세계에서 달러가 얼마나 강한지)는 그대로인데 원달러만 오르면, 한국만 문제가 있다는 뜻이라 더 조심해요."],
+        ["알아 두세요", "환율은 혼자서는 판정에 넣지 않고 참고로만 봐요. 환율과 기름값이 같은 날 함께 크게 오를 때만(10원↑ + 3%↑) '주의 1개'로 넣어요. 아래 실제 데이터를 보면 이유를 알 수 있어요."],
+        ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "주의: 해외에서 원달러가 10원 넘게 오른 다음 날만 따로 보면 코스피는 평균 +0.08%, 하락 마감 47%로 보통 날과 거의 같았어요(-1% 넘게 빠진 날만 17%로 조금 많음). 환율 단독으로는 약한 신호예요. 환율+유가 동시 급등은 14년간 23일뿐이었고 평균 -0.23%였어요."],
+      ] },
+    { k: "sox", name: "SOX 반도체지수", core: "반도체 주식이면 꼭", unit: "%", ph: "0.0",
+      links: [["네이버", NV + "/worldstock/index/.SOX", "nv"], ["인베스팅", IV + "/indices/phlx-semiconductor", "iv"]],
+      what: "미국 반도체지수가 어제보다 몇 % 올랐는지·내렸는지. 예: 1.2% 내렸으면 -1.2",
+      rule: { g: "올랐음 → 좋음", a: "0 ~ -2% 내림 → 주의", r: "-2% 넘게 내림 → 나쁨" },
+      learn: [
+        ["한 줄 요약", "미국 반도체 회사들의 성적표예요. 삼성전자·SK하이닉스가 이걸 많이 따라가요."],
+        ["무엇인가요?", "엔비디아, 마이크론, TSMC 같은 반도체 회사 30곳의 주가를 묶은 숫자예요."],
+        ["왜 보나요?", "한국장에서 반도체가 가장 큰 비중이에요. 미국 반도체가 오르면 한국 반도체와 반도체 재료·장비 회사도 따라 오르기 쉬워요."],
+        ["이렇게 읽어요", "올랐으면 반도체 쪽 분위기가 좋아요. -2%보다 더 빠졌으면 오늘은 반도체 관련 주식을 뒤로 미뤄요."],
+        ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "SOX가 -2% 넘게 빠진 다음 날 코스피는 74%가 하락 마감(평균 -0.89%)했어요. SOX가 오른 날 다음은 37%만 하락(평균 +0.32%). 7개 신호 중 가장 잘 맞았어요."],
+      ] },
+    { k: "vix", name: "VIX (공포지수)", core: "겁먹은 정도", unit: "점", ph: "숫자", noPm: true,
+      links: [["네이버", NV + "/worldstock/index/.VIX", "nv"], ["인베스팅", IV + "/indices/volatility-s-p-500", "iv"]],
+      what: "VIX 숫자 그대로 넣어요(%가 아니에요). 예: 22.4",
+      rule: { g: "20 아래 → 좋음", a: "20 ~ 30 → 주의", r: "30 넘음 → 나쁨" },
+      learn: [
+        ["한 줄 요약", "미국 투자자들이 지금 얼마나 겁먹었는지 보여주는 숫자예요."],
+        ["무엇인가요?", "'앞으로 한 달 동안 주가가 얼마나 크게 흔들릴 것 같은지'를 계산한 숫자예요. 그래서 '공포지수'라고 불러요."],
+        ["왜 보나요?", "사람들이 겁먹은 날에는 작은 나쁜 소식에도 주가가 크게 떨어져요."],
+        ["이렇게 읽어요", "20 아래는 차분해요. 20~30은 긴장한 상태예요. 30이 넘으면 겁을 많이 먹은 상태라 조심해요. 20·30은 시장에서 흔히 쓰는 기준이에요(Cboe 공식 구분은 아니에요). 오랜 평균은 19~20 정도예요."],
+        ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "VIX 30 초과 다음 날 코스피가 -1% 넘게 빠진 비율은 32%, 20~30일 때 19%, 20 미만일 때 10%였어요. 숫자가 클수록 크게 빠지는 날이 늘어요."],
+      ] },
+    { k: "oil", name: "WTI 유가 (기름값)", core: "", unit: "%", ph: "0.0",
+      links: [["네이버", NV + "/marketindex/energy/CLcv1", "nv"], ["인베스팅", IV + "/commodities/crude-oil", "iv"]],
+      what: "기름값이 어제보다 몇 % 올랐는지. 예: 3.4% 올랐으면 +3.4",
+      rule: { g: "3% 미만 오름 → 참고", a: "3% 이상 오름 → 참고 (환율도 10원 이상 오르면 함께 주의 1개)", r: "(나쁨 없음)" },
+      learn: [
+        ["한 줄 요약", "기름값이 갑자기 오르면 회사들의 비용이 늘어나요."],
+        ["무엇인가요?", "미국 원유(기름) 가격의 기준이에요. 영국 북해산 브렌트유와 함께 세계 양대 유가 지표예요."],
+        ["왜 보나요?", "기름값이 오르면 물건값과 회사 비용이 올라요. 보통 정유 회사(갖고 있던 기름 재고의 값이 올라서)와 조선 회사(유전·가스 설비 주문 기대)에는 좋고, 비행기 회사와 화학 회사에는 비용이 늘어 나빠요. 다만 정유 회사는 기름값 자체보다 정제 마진이 더 중요해요."],
+        ["이렇게 읽어요", "하루에 3% 넘게 오르면 큰 움직임이에요. 중동 전쟁 같은 이유가 있는지 뉴스도 같이 봐요. 기름값은 혼자서는 판정에 넣지 않고 참고로만 봐요. 환율도 같은 날 10원 넘게 오를 때만 '주의 1개'로 넣어요."],
+        ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "주의: 유가가 3% 넘게 오른 다음 날 코스피는 오히려 평균 +0.21%, 하락 마감 33%였어요(연 18일). 유가 급등만으로는 코스피가 약하다는 근거가 약해요. 이유(전쟁·공급 차질)를 같이 보세요."],
+      ] },
+    { k: "ust", name: "미국 10년 금리 (이자율)", core: "", unit: "bp", ph: "0",
+      links: [["네이버", NV + "/marketindex/bond/US10YT=RR", "nv"], ["인베스팅", IV + "/rates-bonds/u.s.-10-year-bond-yield", "iv"]],
+      what: "▲(또는 ▼) 옆 숫자에 100을 곱해서 넣어요. 오른쪽 %(등락률)는 넣지 않아요. 아래 '네이버 ▲ 숫자 그대로' 칸에 넣으면 ×100을 대신 계산해요",
+      example: { parts: ["4.183", "▲0.003", "+0.08%"], put: "0.3", not: "0.08" }, helper: 100,
+      rule: { g: "10 미만 오름 → 좋음", a: "10 이상 오름 → 주의", r: "(나쁨 없음)" },
+      learn: [
+        ["한 줄 요약", "미국 이자율이 크게 오르면 주식, 특히 성장주가 약해져요."],
+        ["무엇인가요?", "미국 정부가 10년 동안 돈을 빌릴 때 주는 이자율이에요. 전 세계 이자율의 기준이에요."],
+        ["왜 보나요?", "이자율이 오르면 은행에 돈을 넣어도 이자를 많이 받으니, 위험한 주식에서 돈이 빠져나가요. 특히 '나중에 크게 벌 거라'는 기대로 오른 회사(성장주, 바이오)가 약해져요. 반대로 은행·보험 회사는 이자로 버는 돈이 늘어요."],
+        ["숫자 넣는 법", "금리가 4.20% → 4.30%가 되면 0.10 오른 거예요. 여기에 100을 곱한 10을 넣어요. 이 단위를 bp(비피)라고 불러요."],
+        ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "10년 금리가 10bp 넘게 오른 날은 1년에 8일 정도로 드물어요. 그다음 날 코스피는 58%가 하락(평균 -0.38%), -1% 넘게 빠진 날은 27%로 보통 날(12%)의 두 배였어요."],
+      ] },
+  ];
+
+  const nvStock = (code, etf) => NV + "/worldstock/" + (etf ? "etf/" : "stock/") + code + (etf ? "" : "/total");
+  const US = [
+    { k: "semi", name: "반도체 · AI", th: 3, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
+      learn: "엔비디아(AI 칩 회사), 마이크론(메모리 회사), SMH(반도체 회사 묶음)가 오르면 삼성전자·SK하이닉스 같은 한국 반도체 주식도 따라 오르기 쉬워요." },
+    { k: "power", name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
+      learn: "AI 컴퓨터(데이터센터)는 전기를 엄청 많이 써요. 전기 설비를 만드는 미국 회사(GE버노바, 버티브)가 오르면 한국의 변압기·전선 회사도 따라가기 쉬워요." },
+    { k: "nuke", name: "원전 (원자력 발전)", th: 3, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
+      learn: "미국 원자력 발전 회사(컨스텔레이션, 오클로)가 오르면 한국 원전 부품 회사에도 관심이 몰려요." },
+    { k: "batt", name: "2차전지 (배터리)", th: 3, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
+      learn: "테슬라(전기차)와 앨버말(배터리 재료인 리튬 회사)을 보면 한국 배터리 회사들의 분위기를 알 수 있어요." },
+    { k: "def", name: "조선 · 방산 (배·무기)", th: 3, label: "미국", links: [["ITA", nvStock("ITA", true)]],
+      learn: "ITA는 미국 무기·항공 회사 묶음이에요. 전쟁 같은 긴장이 커지면 한국 무기·배 만드는 회사도 같이 움직여요." },
+    { k: "btc", name: "가상자산 (비트코인)", th: 4, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
+      learn: "비트코인이 크게 움직이면 코인 거래소와 관련된 한국 회사 주식이 따라 움직여요. 코인은 원래 많이 흔들려서 기준을 ±4%로 넓게 잡았어요." },
+    { k: "gold", name: "금", th: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
+      learn: "사람들이 불안할 때 금을 사요. 금값이 오르면 금 관련 주식이 움직여요. 금은 잘 안 흔들려서 기준을 ±1.5%로 좁게 잡았어요." },
+    { k: "cu", name: "구리", th: 2, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
+      learn: "구리는 전선을 만드는 재료예요. 구리값이 오르면 전선 회사 주식이 강해지기 쉬워요. 기준은 ±2%예요." },
+  ];
+  const THEMES = { defaultThreshold: 3, themes: US.map((u) => ({ key: u.k, name: u.name, th: u.th, label: u.label })) };
+
+  const GLOSS = [
+    ["시가 · 종가", "시가는 아침 9시에 처음 정해진 가격, 종가는 오후 3시 30분 정규장이 끝날 때 가격이에요. 저녁 8시 애프터마켓 가격은 공식 종가가 아니고, 다음 날 기준가(±30% 기준)도 3시 30분 종가예요."],
+    ["넥스트레이드 (NXT)", "2025년 3월에 생긴 두 번째 거래소예요. 같은 주식을 한국거래소(KRX)와 넥스트레이드 두 곳에서 사고팔 수 있어요. 큰 회사 약 600개만 거래되고, 증권사 앱에서 '12H' 표시가 붙어요. 아침 8시부터 저녁 8시까지 열려요."],
+    ["프리마켓", "아침 8시~8시 50분, 넥스트레이드에서만 열리는 이른 거래예요. 밤사이 미국장·뉴스가 여기 먼저 반영돼서 9시 KRX 시가의 방향을 미리 보여줘요. 다만 거래가 얇아서 1~2주짜리 체결이 값을 크게 튀게 할 수 있어요."],
+    ["애프터마켓", "정규장이 끝난 뒤 저녁 8시까지 이어지는 거래예요. KRX는 4시~8시, 넥스트레이드는 3시 40분~8시예요. 장 끝나고 나온 공시·뉴스가 여기서 먼저 반영돼요. 개인이 90% 넘게 거래하고 거래가 얇아서, 큰 움직임은 거래대금과 함께 봐요."],
+    ["갭상승 · 갭하락", "아침에 주가가 어제 종가보다 높게 시작하면 갭상승, 낮게 시작하면 갭하락이에요."],
+    ["장중 매매", "그날 사서 그날 안에 파는 거예요. '절반' 날에는 이렇게만 해요."],
+    ["종가베팅", "장 끝날 때쯤 사서 밤을 넘기고 다음 날 파는 거예요. 밤사이 나쁜 뉴스가 나오면 그대로 손해라서, '절반'·'쉼' 날에는 하지 않아요. 이제 저녁 8시까지 애프터마켓에서 팔 수는 있지만, 저녁 거래는 얇아서 원하는 가격에 못 팔 수 있어요."],
+    ["VI (변동성완화장치)", "주가가 갑자기 크게 튀면 2분 동안 거래를 멈추고 한 번에 값을 정하는 장치예요. 애프터마켓·프리마켓에서 자주 걸려요."],
+    ["비중", "한 번에 넣는 돈의 크기예요. '비중 절반'은 평소 100만 원 넣었다면 50만 원만 넣는다는 뜻이에요."],
+    ["테마", "같은 이유로 함께 움직이는 주식 묶음이에요. 예: 반도체 테마, 원전 테마."],
+    ["선물", "'나중에 이 가격에 사고팔자'고 미리 약속하는 거래예요. 진짜 주식보다 먼저 움직여서 예고편 역할을 해요."],
+    ["지수", "여러 회사 주가를 하나로 묶은 숫자예요. 코스피는 한국, 나스닥은 미국 기술주 지수예요."],
+    ["%와 %p", "4%가 5%로 오르면 '1%p(퍼센트포인트) 올랐다'고 해요. 이자율처럼 %끼리 비교할 때 써요."],
+    ["bp (비피)", "0.01%p예요. 이자율이 0.10%p 오르면 '10bp 올랐다'고 해요."],
+    ["외국인 순매수", "외국인이 산 돈에서 판 돈을 뺀 거예요. 플러스면 더 많이 샀다는 뜻이에요."],
+    ["차익실현", "오른 주식을 팔아서 번 돈을 챙기는 거예요. 많이 오른 다음 날 아침에 자주 나와요."],
+    ["소부장", "소재·부품·장비의 줄임말이에요. 반도체를 만드는 데 필요한 재료와 기계를 만드는 회사들이에요."],
+    ["공시", "회사가 투자자에게 꼭 알려야 하는 중요한 소식이에요. 큰 계약을 따냈다(수주) 같은 소식이 여기 올라와요."],
+    ["유상증자 · CB", "회사가 새 주식을 더 찍어서 돈을 모으는 거예요. 주식 수가 늘어나 기존 주식 값이 떨어지기 쉬워서 피해요."],
+    ["리밸런싱", "지수에 들어가는 회사를 바꾸는 날이에요. 지수를 따라 하는 큰 펀드들이 한꺼번에 사고팔아서 주가가 출렁여요."],
+  ];
+
+  const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
+  // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
+  // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
+  const APP_VER = "9.28-2";
+  const EASY_ACT = {
+    "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
+    "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
+    "정상": "☀️ 평소처럼 해도 돼요.",
+    "—": "",
+  };
+  const MODE_CLS = { 쉼: "r", 절반: "a", 정상: "g" };
+  const RESULT = { win: "수익", even: "본전", loss: "손실", none: "매매 안 함" };
+  const $ = (id) => document.getElementById(id);
+  $("appVer").textContent = "버전 " + APP_VER;
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const PREFIX = "cockpit-local:";
+  // 기기 저장소(localStorage) + 메모리. 폰 앱처럼 저장소가 막힌 곳에서도 동기화로 받은 날짜들이
+  // 날짜별 기록·성적표에 보이도록, 쓴 값은 메모리에도 둔다.
+  const mem = new Map();
+  let LS = null;
+  try { localStorage.setItem(PREFIX + "__test", "1"); localStorage.removeItem(PREFIX + "__test"); LS = localStorage; } catch (e) {}
+  const store = {
+    get(k) {
+      if (mem.has(k)) return JSON.parse(mem.get(k));
+      try { const v = LS && LS.getItem(PREFIX + k); if (v) { mem.set(k, v); return JSON.parse(v); } } catch (e) {}
+      return null;
+    },
+    set(k, v) { const t = JSON.stringify(v); mem.set(k, t); try { if (LS) { LS.setItem(PREFIX + k, t); return true; } } catch (e) {} return false; }, // false = 기기에는 못 남김(메모리만)
+    keys() {
+      const out = new Set(mem.keys());
+      try { if (LS) for (let i = 0; i < LS.length; i++) { const k = LS.key(i); if (k && k.startsWith(PREFIX)) out.add(k.slice(PREFIX.length)); } } catch (e) {}
+      return [...out];
+    },
+  };
+
+  const hol = holidayIndex(DATA.holidays);
+  const CAL = { events: DATA.events, holidays: hol.list, holidayNames: hol.names };
+
+  // 시작 날짜: ?date=YYYY-MM-DD 또는 #YYYY-MM-DD (없으면 오늘). 이후 날짜 이동은 버튼으로 한다.
+  let qDate = null;
+  try { qDate = new URLSearchParams(location.search).get("date") || location.hash.slice(1); } catch (e) {}
+  let DATE = isValidDate(qDate) ? qDate : kstDate();
+
+  const blankJournal = () => ({ memo: "", result: "", kept: false, verdict: "", good: "", bad: "", tomorrow: "", mood: "",
+    market: { kospi: "", kosdaq: "", invest: "", leaders: "", note: "" }, trades: [] });
+  // auto: 자동 연동으로 채운 값(칸 이름 → 값). 칸의 지금 값이 이 값과 같으면 '자동으로 받아온 그대로'이고, 다르면 손으로 고친 것.
+  const blank = () => ({ signals: {}, us: {}, prev: [{ name: "", state: "", pre: "" }, { name: "", state: "", pre: "" }], events: [], todo: {}, journal: blankJournal(), auto: {} });
+  const fixJournal = (j) => { const b = blankJournal(); j = Object.assign(b, j || {}); j.market = Object.assign(blankJournal().market, j.market || {}); if (!Array.isArray(j.trades)) j.trades = []; return j; };
+  const loadDay = (d) => { const s = Object.assign(blank(), store.get(d) || {}); s.journal = fixJournal(s.journal); return s; };
+  let S = loadDay(DATE);
+  let AUTO = autoEvents(DATE, CAL);
+
+  // ---------- 화면 만들기 ----------
+  const linkHtml = (links) => links.map(([t, u, c]) => `<a class="lk ${c || "nv"}" href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("");
+  const learnHtml = (title, items) => `<details class="learn"><summary>📘 공부하기 — ${esc(title)}</summary>${items.map(([h, p]) => `<p><b>${esc(h)}</b> ${esc(p)}</p>`).join("")}</details>`;
+
+  $("sigList").innerHTML = SIGNALS.map((s) => `
+    <div class="sig" data-k="${s.k}">
+      <div class="name">${esc(s.name)} ${s.core ? `<span class="core">${esc(s.core)}</span>` : ""}</div>
+      <div class="in">${s.noPm ? "" : `<button class="pm" type="button" data-for="${s.k}" aria-label="부호 바꾸기">±</button>`}<input class="num" type="text" inputmode="decimal" id="in-${s.k}" placeholder="${esc(s.ph)}" autocomplete="off"><span class="unit">${esc(s.unit)}</span><span class="status" id="st-${s.k}">—</span></div>
+      <div class="autoat" id="aa-signals.${s.k}" hidden></div>
+      <div class="links">열어서 보기 ${linkHtml(s.links)}</div>
+      <div class="what">${esc(s.what)}</div>
+      ${s.example ? `<div class="nvex" aria-label="네이버 화면 예시">네이버 화면 예시 <span class="px">${esc(s.example.parts[0])}</span> <mark>${esc(s.example.parts[1])}</mark> <s>${esc(s.example.parts[2])}</s> → <b>${esc(s.example.put)}</b> 넣기 <small>(✗ ${esc(s.example.not)} 아님)</small></div>` : ""}
+      ${s.helper ? `<label class="helper">네이버 ▲ 숫자 그대로 <input class="num" type="text" inputmode="decimal" id="hp-${s.k}" placeholder="예: 0.003" autocomplete="off"> × ${s.helper} → 위 칸에 자동 입력 <small>(내리면 ▼, 앞에 − 붙이기)</small></label>` : ""}
+      <div class="warn" id="warn-${s.k}" hidden></div>
+      <div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div>
+      ${s.k === "fut" ? `<div class="note" id="note-div" hidden>야간선물과 방향이 엇갈림 → 오늘은 야간선물 기준, 미 선물은 판정에서 뺌</div>` : ""}
+      ${learnHtml(s.name, s.learn)}
+    </div>`).join("");
+
+  $("usList").innerHTML = US.map((u) => `
+    <div class="us">
+      <div class="name">${esc(u.name)} <span class="unit">기준 ±${u.th}%</span></div>
+      <div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div>
+      <div class="autoat" id="aa-us.${u.k}" hidden></div>
+      <div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div>
+      <details class="learn"><summary>📘 왜 이 종목?</summary><p>${esc(u.learn)}</p></details>
+    </div>`).join("");
+
+  $("prevList").innerHTML = [0, 1].map((i) => `
+    <div class="prev">
+      <input class="txt" type="text" id="pv-${i}" placeholder="어제 주도테마 ${i + 1} (예: 전력기기)" autocomplete="off">
+      <div class="chips"><span class="chiplbl">어제 저녁 애프터마켓</span>
+        <button class="chip up" type="button" data-pv="${i}" data-s="up">강세</button>
+        <button class="chip" type="button" data-pv="${i}" data-s="flat">보합</button>
+        <button class="chip dn" type="button" data-pv="${i}" data-s="down">약세</button>
+      </div>
+      <div class="chips"><span class="chiplbl">오늘 아침 NXT 프리마켓 (8:00~8:50)</span>
+        <button class="chip up" type="button" data-pre="${i}" data-s="up">강세</button>
+        <button class="chip" type="button" data-pre="${i}" data-s="flat">보합</button>
+        <button class="chip dn" type="button" data-pre="${i}" data-s="down">약세</button>
+      </div>
+    </div>`).join("");
+
+  $("evChips").innerHTML = [["FOMC", "FOMC"], ["CPI", "미 CPI"], ["고용", "미 고용"], ["금통위", "금통위"], ["옵션만기", "옵션만기"], ["동시만기", "선물옵션 동시만기"], ["MSCI", "MSCI 리밸런싱"]]
+    .map(([k, t]) => `<button class="chip${k === "동시만기" ? " r" : ""}" type="button" data-ev="${k}">${esc(t)}</button>`).join("");
+
+  $("gloss").innerHTML = GLOSS.map(([t, d]) => `<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("");
+
+  // 날짜 머리글 · 자동 이벤트 (날짜를 바꿀 때마다 다시 그림)
+  function paintDate() {
+    const isToday = DATE === kstDate();
+    const nav = (d, t) => `<button class="datebtn" type="button" data-go="${d}">${t}</button>`;
+    $("today").innerHTML = esc(DATE.replace(/-/g, ".") + " (" + WEEKDAYS[weekday(DATE)] + ") · 07:30~08:50 KST") + " " +
+      nav(addDays(DATE, -1), "‹ 전날") + (isToday ? "" : nav(kstDate(), "오늘") + nav(addDays(DATE, 1), "다음 날 ›"));
+    $("evAuto").innerHTML = AUTO.length ? AUTO.map((e) => `<span class="${e.lv}">${esc(e.k)}</span>`).join("") : `<span>자동 감지된 이벤트 없음</span>`;
+  }
+  // 날짜 이동 + 뒤로 가기: 어디서(날짜·화면 위치) 왔는지 기억해 두고, '◀ 돌아가기' 버튼이나
+  // 폰·브라우저의 뒤로 가기로 원래 날짜의 원래 자리로 돌아간다.
+  const BACK = [];
+  let histOk = false;
+  function goto(d, opt) {
+    if (!isValidDate(d)) return;
+    opt = opt || {};
+    if (!opt.back && d !== DATE) {
+      // 누른 곳이 있던 카드와 화면 속 위치도 기억한다 (날마다 내용 길이가 달라도 같은 카드로 돌아오게)
+      const cards = [...document.querySelectorAll("section.card, details.card")], card = opt.from && opt.from.closest("section.card, details.card");
+      BACK.push({ date: DATE, y: window.scrollY || 0, card: card ? cards.indexOf(card) : -1, off: card ? card.getBoundingClientRect().top : 0 });
+      if (BACK.length > 50) BACK.shift();
+      try { history.pushState({ eden: BACK.length }, "", "#" + d); histOk = true; } catch (e) { histOk = false; }
+    } else { try { history.replaceState(history.state, "", "#" + d); } catch (e) {} } // 새로고침해도 이 날짜가 열리게
+    DATE = d; S = loadDay(d); AUTO = autoEvents(d, CAL);
+    paintDate(); fill(); render(); renderStats(); cancelReset();
+    setStatus(); paintBack();
+    if (gh) ghPull(); else pubPull(); // 이 날짜의 자동 연동 값도 바로 확인
+    try {
+      const card = opt.back && opt.card >= 0 && document.querySelectorAll("section.card, details.card")[opt.card];
+      if (card) window.scrollTo(0, card.getBoundingClientRect().top + window.scrollY - opt.off);
+      else window.scrollTo(0, opt.back ? opt.y || 0 : 0);
+    } catch (e) {}
+  }
+  function goBack() { const p = BACK.pop(); if (p) goto(p.date, { back: true, y: p.y, card: p.card, off: p.off }); else paintBack(); }
+  function paintBack() {
+    const b = $("backBtn"), p = BACK[BACK.length - 1];
+    b.hidden = !p;
+    if (p) b.textContent = "◀ 돌아가기 (" + p.date.slice(5).replace("-", "/") + ")";
+  }
+  $("backBtn").addEventListener("click", () => { if (histOk) { try { history.back(); return; } catch (e) {} } goBack(); });
+  // 📘 내 매매기법: 맨 위 버튼으로 전체 화면을 열고, ◀ 닫기·폰 뒤로 가기로 닫는다
+  let docOpen = false;
+  function showDoc(open, fromPop) {
+    if (open === docOpen) return;
+    docOpen = open; $("ruleDoc").hidden = !open;
+    document.documentElement.style.overflow = open ? "hidden" : "";
+    if (open) { $("ruleDoc").scrollTop = 0; try { history.pushState({ eden: "doc" }, "", location.hash || "#" + DATE); } catch (e) {} $("docClose").focus(); }
+    else if (!fromPop) { try { history.back(); } catch (e) {} }
+  }
+  $("docOpen").addEventListener("click", () => showDoc(true));
+  $("docClose").addEventListener("click", () => showDoc(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && docOpen) showDoc(false); });
+  window.addEventListener("popstate", () => {
+    if (docOpen) return showDoc(false, true); // 뒤로 가기는 먼저 매매기법 화면을 닫는다
+    if (BACK.length) return goBack();
+    const h = location.hash.slice(1); if (isValidDate(h) && h !== DATE) goto(h, { back: true });
+  });
+  // ---------- 메뉴 바로 가기(오른쪽 세로) · 맨 위로 ----------
+  const NAV = [...document.querySelectorAll("[data-nav]")].filter((el) => !el.hidden);
+  $("secnav").innerHTML = NAV.map((el, i) => `<button type="button" data-sec="${i}">${esc(el.dataset.nav)}</button>`).join("");
+  const toTop = () => { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } };
+  function openNav(open) {
+    $("secnav").classList.toggle("open", open); $("navDim").hidden = !open;
+    $("navTab").setAttribute("aria-expanded", String(open)); $("navTab").hidden = open;
+    if (open) { const b = $("secnav").querySelector(".on"); if (b) b.scrollIntoView({ block: "nearest" }); }
+  }
+  $("navTab").addEventListener("click", () => openNav(true));
+  $("navDim").addEventListener("click", () => openNav(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") openNav(false); });
+  $("secnav").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sec]"); if (!b) return;
+    const el = NAV[+b.dataset.sec]; if (el.tagName === "DETAILS") el.open = true;
+    navPin = { i: +b.dataset.sec, until: Date.now() + 1200 }; setActive(+b.dataset.sec);
+    openNav(false);
+    try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err) { el.scrollIntoView(); }
+  });
+  $("topBtn").addEventListener("click", toTop);
+  let navTick = 0, navPin = null;
+  function paintNav() {
+    navTick = 0;
+    $("topBtn").hidden = (window.scrollY || 0) < 600;
+    if (navPin && Date.now() < navPin.until) return setActive(navPin.i); // 방금 누른 메뉴는 이동하는 동안 그대로
+    // 지금 보고 있는 메뉴 표시: 화면 맨 위에 보이는 카드 (아래 끝이 화면 위쪽 120px보다 아래에 있는 첫 카드)
+    let cur = -1;
+    if (NAV[0].getBoundingClientRect().top < window.innerHeight * 0.6) cur = NAV.findIndex((el) => el.getBoundingClientRect().bottom > 120);
+    if (window.innerHeight + (window.scrollY || 0) >= document.documentElement.scrollHeight - 4) cur = NAV.length - 1;
+    setActive(cur);
+  }
+  function setActive(cur) {
+    $("secnav").querySelectorAll("[data-sec]").forEach((b) => b.classList.toggle("on", +b.dataset.sec === cur));
+  }
+  window.addEventListener("scroll", () => { if (!navTick) navTick = requestAnimationFrame(paintNav); }, { passive: true });
+  paintNav();
+
+  document.addEventListener("click", (e) => { const b = e.target.closest("[data-go]"); if (b) { e.preventDefault(); goto(b.dataset.go, { from: b }); } });
+
+  // ---------- 입력값 채우기 ----------
+  const tint = (el) => { const n = parseNum(el.value); el.classList.toggle("neg", n !== null && n < 0); el.classList.toggle("pos", n !== null && n > 0); };
+  function fill() {
+    const put = (el, v) => { if (el !== document.activeElement) el.value = v; };
+    SIGNALS.forEach((s) => { const el = $("in-" + s.k); put(el, S.signals[s.k] || ""); tint(el); markAuto(el, "signals." + s.k); if (s.helper) put($("hp-" + s.k), ""); });
+    US.forEach((u) => { const el = $("us-" + u.k); put(el, S.us[u.k] || ""); tint(el); markAuto(el, "us." + u.k); });
+    [0, 1].forEach((i) => put($("pv-" + i), S.prev[i].name || ""));
+    for (let i = 1; i <= 7; i++) { const c = $("td" + i); c.checked = !!S.todo["td" + i]; c.closest("label").classList.toggle("done", c.checked); }
+    put($("memo"), S.journal.memo || ""); $("kept").checked = !!S.journal.kept;
+    JFIELDS.forEach((k) => put($("j-" + k), S.journal[k] || ""));
+    MFIELDS.forEach((k) => { const el = $(k === "note" ? "j-mktNote" : "j-" + k); put(el, S.journal.market[k] || ""); markAuto(el, "market." + k); });
+    renderTrades();
+    paintChips();
+    paintAuto();
+  }
+  // 자동으로 받아온 값 그대로인 칸은 연하게 표시한다 (고치면 표시가 사라진다)
+  function markAuto(el, key) { el.classList.toggle("autov", !!el.value && !!(S.auto && S.auto[key]) && S.auto[key] === el.value); }
+  function paintChips() {
+    document.querySelectorAll(".chip[data-pv]").forEach((b) => b.setAttribute("aria-pressed", S.prev[+b.dataset.pv].state === b.dataset.s ? "true" : "false"));
+    document.querySelectorAll(".chip[data-pre]").forEach((b) => b.setAttribute("aria-pressed", (S.prev[+b.dataset.pre].pre || "") === b.dataset.s ? "true" : "false"));
+    document.querySelectorAll("#evChips .chip").forEach((b) => b.setAttribute("aria-pressed", S.events.includes(b.dataset.ev) ? "true" : "false"));
+    document.querySelectorAll("#resultChips .chip").forEach((b) => b.setAttribute("aria-pressed", S.journal.result === b.dataset.r ? "true" : "false"));
+    document.querySelectorAll("#verdictChips .chip").forEach((b) => b.setAttribute("aria-pressed", S.journal.verdict === b.dataset.v ? "true" : "false"));
+  }
+
+  // ---------- 판정 + 해설 ----------
+  function render() {
+    const r = evaluate({ signals: S.signals, us: S.us, prev: S.prev }, [...AUTO, ...S.events], THEMES);
+    $("note-div").hidden = !r.diverge;
+    paintUnitWarnings();
+    Object.keys(r.statuses).forEach((k) => {
+      const el = $("st-" + k);
+      if (r.excluded[k]) { // 참고 신호: 환율·유가(혼자서는 집계 제외), 방향이 엇갈린 미국 선물
+        const st = r.statuses[k], both = r.combo && (k === "fx" || k === "oil");
+        el.className = "status " + (both ? "a" : k === "fut" ? "" : st || "");
+        el.textContent = both ? "동반 주의" : st ? "참고" : "—"; return;
+      }
+      el.className = "status " + (r.statuses[k] || ""); el.textContent = r.statuses[k] ? LABEL[r.statuses[k]] : "—";
+    });
+    const refN = Object.keys(r.excluded).filter((k) => r.excluded[k] && r.statuses[k]).length;
+    $("verdict").className = "verdict " + r.cls;
+    $("modeText").textContent = r.mode; $("modeWhy").textContent = r.mode === "—" ? "아래 칸에 숫자를 넣으면 오늘 날씨(모드)가 나와요" : r.why; $("modeAct").textContent = EASY_ACT[r.mode] ?? r.act;
+    $("counts").innerHTML = `<span class="pill g">좋음 ${r.counts.g}</span><span class="pill a">주의 ${r.counts.a}</span><span class="pill r">나쁨 ${r.counts.r}</span>` + (refN ? `<span class="pill">참고 ${refN}</span>` : "");
+    document.querySelectorAll("#sector .row").forEach((row) => { const on = !!r.sectorOn[row.dataset.s]; row.classList.toggle("off", !on); row.querySelector(".k").classList.toggle("on", on); });
+    US.forEach((u) => {
+      const el = $("uss-" + u.k), st = r.themeStatus[u.k];
+      el.className = "status" + (st === "first" ? " up" : st === "back" ? " dn" : "");
+      el.textContent = st === "first" ? "우선 관심" : st === "back" ? "후순위" : st === "flat" ? "중립" : "—";
+    });
+    const tagHtml = (a) => (a.length ? a.map(([t, s]) => `<span>${esc(t)}<small>${esc(s)}</small></span>`).join("") : `<span class="empty">아직 없음</span>`);
+    $("tFirst").innerHTML = tagHtml(r.themeFirst); $("tBack").innerHTML = tagHtml(r.themeBack);
+    $("explain").innerHTML = explain(r);
+    lastEval = r;
+    $("jMorning").innerHTML = morningSummary(r).html;
+    return r;
+  }
+
+  // 헷갈리기 쉬운 단위 확인: 원달러에 %를 넣었거나, 10년 금리에 ×100을 안 한 값을 넣은 것 같을 때
+  function paintUnitWarnings() {
+    const show = (k, msg) => { const el = $("warn-" + k); if (!el) return; el.hidden = !msg; el.textContent = msg || ""; };
+    const fx = parseNum(S.signals.fx), ust = parseNum(S.signals.ust);
+    show("fx", fx !== null && fx !== 0 && Math.abs(fx) < 1
+      ? "⚠ 혹시 %(등락률)를 넣으셨나요? 원달러는 ▲ 옆의 '원' 숫자를 넣어요. 예: ▲3.50 +0.26% 이면 0.26이 아니라 3.5" : "");
+    const decimals = (String(S.signals.ust || "").split(".")[1] || "").length;
+    show("ust", ust !== null && ust !== 0 && Math.abs(ust) < 0.1 && decimals >= 2
+      ? "⚠ ×100을 안 한 값 같아요. ▲0.003 이면 0.3을 넣어요. 아래 '네이버 ▲ 숫자 그대로' 칸에 넣으면 자동으로 바꿔 줘요" : "");
+  }
+
+  // 참고 신호인 이유 (칩·해설·블로그 공용)
+  const REF_WHY = {
+    fut: () => "야간선물과 방향이 반대라 이번엔 빼고 계산해요",
+    fx: (st) => (st === "a" ? "10원 넘게 올랐지만 혼자서는 판정에 안 넣어요. 실제 14년 데이터에서 근거가 약했어요" : "참고용이에요. 기름값과 같이 급등할 때만 판정에 넣어요"),
+    oil: (st) => (st === "a" ? "3% 넘게 올랐지만 혼자서는 판정에 안 넣어요. 실제 14년 데이터에서 근거가 약했어요" : "참고용이에요. 환율과 같이 급등할 때만 판정에 넣어요"),
+  };
+  function explain(r) {
+    const lines = [];
+    SIGNALS.forEach((s) => {
+      const v = parseNum(S.signals[s.k]); const st = r.statuses[s.k];
+      if (v === null || !st) return;
+      const val = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit;
+      if (r.excluded[s.k]) { lines.push(`<div class="${s.k === "fut" ? "" : st}">· ${esc(s.name)} ${esc(val)} → <b>참고</b> (${esc(REF_WHY[s.k](st))})</div>`); return; }
+      const why = s.rule[st].split(" → ")[0];
+      lines.push(`<div class="${st}">· ${esc(s.name)} ${esc(val)} → <b>${LABEL[st]}</b> (${esc(why)})</div>`);
+    });
+    if (r.combo) lines.push(`<div class="a">· 환율 10원↑ + 기름값 3%↑ 같은 날 동반 급등 → <b>주의 1개</b> (둘이 함께 튈 때만 판정에 넣어요 · 14년간 23일뿐, 다음 날 평균 -0.23%)</div>`);
+    const evs = [...AUTO.filter((e) => e.lv).map((e) => e.k), ...S.events];
+    lines.push(`<div class="${r.statuses.ev}">· 주요 일정 ${evs.length ? esc(evs.join(", ")) : "특별한 일 없음"} → <b>${LABEL[r.statuses.ev]}</b></div>`);
+    if (r.filled === 0) return `<div>아직 넣은 숫자가 없어요. 아래 칸 옆의 초록·주황 버튼(↗)을 눌러 숫자를 보고, 칸에 넣어 보세요.</div>` + lines.join("");
+    let end;
+    if (r.counts.r > 0) end = `나쁨이 ${r.counts.r}개 있어요. 규칙은 <b>나쁨이 하나라도 있으면 쉼</b>이에요. 오늘은 새로 사지 말고, 가진 주식만 정리해요.`;
+    else if (r.counts.a >= 2) end = `주의가 ${r.counts.a}개예요. 규칙은 <b>주의가 2개 이상이면 절반</b>이에요. 평소 돈의 반만 쓰고, 그날 산 건 그날 팔아요.`;
+    else end = `나쁨 0개, 주의 ${r.counts.a}개예요. 그래서 <b>정상</b>이에요. 평소처럼 해도 돼요.` + (r.filled < 7 ? ` (아직 ${7 - r.filled}칸을 안 넣었어요. 다 넣으면 더 정확해요)` : "");
+    return lines.join("") + `<div class="end">➜ ${end}</div>`;
+  }
+
+  // ---------- 매매 일지 ----------
+  const JFIELDS = ["good", "bad", "tomorrow", "mood"];
+  const MFIELDS = ["kospi", "kosdaq", "invest", "leaders", "note"];
+  const METHODS = ["프리마켓", "시초", "장중", "종가", "애프터마켓"];
+  const EMOTIONS = ["차분", "조급", "욕심", "두려움", "복수심", "지루함"];
+  const VERDICT = { right: "맞았다", half: "반쯤", wrong: "틀렸다" };
+  let lastEval = null;
+  const money = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(Math.round(n)).toLocaleString("ko-KR") + "원";
+  const pct = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(2) + "%";
+  const pnum = (v) => parseNum(String(v ?? "").replace(/[,\s원주]/g, "")); // 12,300 같은 쉼표 숫자
+  const FEE_KEY = "cockpit-fee";
+  const feePct = () => { let v = null; try { v = pnum(localStorage.getItem(FEE_KEY)); } catch (e) {} return v === null ? 0.2 : v; };
+
+  // 한 건의 손익: 수수료·세금은 파는 금액 기준
+  function tradeCalc(t) {
+    const buy = pnum(t.buy), sell = pnum(t.sell), qty = pnum(t.qty), stop = pnum(t.stop);
+    if (buy === null || qty === null || buy <= 0 || qty <= 0) return { ok: false };
+    if (sell === null) return { ok: false, holding: true };
+    const gross = (sell - buy) * qty, fee = (sell * qty * feePct()) / 100, net = gross - fee;
+    const rate = (net / (buy * qty)) * 100;
+    const risk = stop !== null && stop < buy ? (buy - stop) * qty : null;
+    return { ok: true, net, rate, r: risk ? net / risk : null };
+  }
+  function dayTotals(j) {
+    const done = (j.trades || []).map(tradeCalc).filter((c) => c.ok);
+    const total = done.reduce((a, c) => a + c.net, 0);
+    const invested = (j.trades || []).reduce((a, t) => { const c = tradeCalc(t); return c.ok ? a + pnum(t.buy) * pnum(t.qty) : a; }, 0);
+    return { n: done.length, wins: done.filter((c) => c.net > 0).length, losses: done.filter((c) => c.net < 0).length, total, rate: invested ? (total / invested) * 100 : 0 };
+  }
+  const nvChart = (code) => "https://ssl.pstatic.net/imgfinance/chart/item/candle/day/" + code + ".png";
+  const nvPage = (code) => "https://m.stock.naver.com/domestic/stock/" + code + "/total";
+
+  function tradeHtml(t, i) {
+    const f = (k, label, ph, cls) => `<label class="${cls || ""}">${label}<input class="jin" data-t="${i}" data-f="${k}" value="${esc(t[k] || "")}" placeholder="${esc(ph || "")}" ${/buy|sell|qty|stop|target/.test(k) ? 'inputmode="decimal"' : ""}></label>`;
+    const code = /^\d{6}$/.test(String(t.code || "").trim()) ? String(t.code).trim() : "";
+    return `<div class="tr" data-i="${i}">
+      <div class="top"><b>#${i + 1} ${esc(t.name || "종목")}</b><span class="pnl" id="pnl-${i}"></span></div>
+      <div class="grid">
+        ${f("name", "종목명", "예: 삼성전자")}${f("code", "종목코드(차트용)", "예: 005930")}
+        <label>방식<select class="jin" data-t="${i}" data-f="method"><option value="">고르기</option>${METHODS.map((m) => `<option ${t.method === m ? "selected" : ""}>${m}</option>`).join("")}</select></label>
+        ${f("buy", "매수가(원)", "예: 71,200")}${f("qty", "수량(주)", "예: 10")}${f("sell", "매도가(원)", "비우면 보유 중")}
+        ${f("stop", "손절가(원)", "여기 오면 판다")}${f("target", "목표가(원)", "여기서 판다")}
+        ${f("tIn", "매수 시점", "예: 09:05, 전일 종가")}${f("tOut", "매도 시점", "예: 14:00", "")}
+        ${f("why", "매수 이유", "예: 전력기기 테마 애프터마켓 강세 + 5분봉 돌파", "wide")}
+        ${f("whyOut", "매도 이유", "예: 목표가 도달 / 손절가 이탈", "wide")}
+        ${f("lesson", "배운 점", "예: 거래량 없이 오른 건 금방 빠진다", "wide")}
+      </div>
+      <div class="rowx">
+        <label class="inline"><input type="checkbox" data-t="${i}" data-f="kept" ${t.kept ? "checked" : ""}> 계획(손절·목표)대로 했다</label>
+        <label class="inline">감정 <select class="jin" data-t="${i}" data-f="emotion" style="width:auto"><option value="">고르기</option>${EMOTIONS.map((m) => `<option ${t.emotion === m ? "selected" : ""}>${m}</option>`).join("")}</select></label>
+        <span class="del-wrap"><button class="btn" type="button" data-del="${i}">삭제</button></span>
+      </div>
+      ${code ? `<a href="${nvPage(code)}" target="_blank" rel="noopener"><img class="chartimg" src="${nvChart(code)}" alt="${esc(t.name || code)} 일봉 차트" loading="lazy" onerror="this.parentNode.hidden=true"></a>` : ""}
+    </div>`;
+  }
+  function renderTrades(force) {
+    const box = $("trades");
+    if (!force && box.contains(document.activeElement)) { paintTradeNumbers(); return; } // 입력 중엔 목록을 다시 그리지 않는다
+    const ts = S.journal.trades || [];
+    box.innerHTML = ts.length ? ts.map(tradeHtml).join("") : `<div class="hint">아직 적은 매매가 없어요. 매매했다면 "＋ 매매 추가"를 눌러요. 매매를 안 한 날도 "매매 안 함"을 눌러 두면 기록이 돼요.</div>`;
+    paintTradeNumbers();
+  }
+  function paintTradeNumbers() {
+    (S.journal.trades || []).forEach((t, i) => {
+      const el = $("pnl-" + i); if (!el) return;
+      const c = tradeCalc(t);
+      el.className = "pnl" + (c.ok ? (c.net > 0 ? " pos" : c.net < 0 ? " neg" : "") : "");
+      el.textContent = c.ok ? money(c.net) + " (" + pct(c.rate) + (c.r !== null ? " · " + (c.r > 0 ? "+" : "") + c.r.toFixed(1) + "R" : "") + ")" : c.holding ? "보유 중" : "";
+    });
+    const T = dayTotals(S.journal);
+    $("jSum").innerHTML = T.n
+      ? `오늘 ${T.n}번 매매 · ${T.wins}승 ${T.losses}패 · 합계 <span class="${T.total > 0 ? "pos" : T.total < 0 ? "neg" : ""}">${money(T.total)} (${pct(T.rate)})</span>`
+      : "매도가까지 적으면 수수료·세금을 뺀 손익이 자동 계산돼요.";
+    // 매매 내역이 있으면 결과(수익/본전/손실)를 자동으로
+    if (T.n) {
+      const auto = T.total > 0 ? "win" : T.total < 0 ? "loss" : "even";
+      if (S.journal.result !== auto) { S.journal.result = auto; paintChips(); }
+      $("resultHint").textContent = "매매 내역으로 자동 표시했어요.";
+    } else $("resultHint").textContent = "";
+  }
+
+  // 장전 시황 판단 → 일지 시황 (자동). st·auto를 넘기면 다른 날짜 것도 만든다.
+  function morningSummary(r, st, auto) {
+    st = st || S; auto = auto || AUTO;
+    const vals = SIGNALS.map((s) => { const v = parseNum(st.signals[s.k]); return v === null ? null : [s.name.replace(/ \(.*\)/, ""), (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit, r.excluded[s.k] ? "참고" : LABEL[r.statuses[s.k]] || ""]; }).filter(Boolean);
+    const evs = [...auto.filter((e) => e.lv).map((e) => e.k), ...(st.events || [])];
+    const first = r.themeFirst.map((t) => t[0]), back = r.themeBack.map((t) => t[0]);
+    if (!vals.length) return { html: "장전 신호 칸에 숫자를 넣으면 여기에 장전 시황 판단이 자동으로 들어와요.", vals, evs, first, back };
+    const html = `<b>매매 모드: ${esc(r.mode)}</b> (${esc(r.why)})<br>` +
+      vals.map(([n, v, s2]) => `${esc(n)} ${esc(v)}(${esc(s2)})`).join(" · ") + (r.combo ? " · 환율+유가 동반 급등(주의)" : "") +
+      `<br>주요 일정: ${evs.length ? esc(evs.join(", ")) : "없음"}` +
+      (first.length ? `<br>우선 관심: ${esc(first.join(", "))}` : "") + (back.length ? ` · 후순위: ${esc(back.join(", "))}` : "");
+    return { html, vals, evs, first, back };
+  }
+
+  // 날짜 하나의 전체 기록과 판정
+  function dayView(d) {
+    const st = d === DATE ? S : loadDay(d), auto = d === DATE ? AUTO : autoEvents(d, CAL);
+    const r = evaluate({ signals: st.signals, us: st.us, prev: st.prev }, [...auto, ...(st.events || [])], THEMES);
+    return { d, st, auto, r };
+  }
+  // 어떤 지표가 올라서 → 어떤 업종이 좋아지는지 (반대로 불리한 업종도 함께)
+  const SECTOR_NAMES = {
+    fx: ["원달러 환율", "자동차·조선·방산·반도체·화장품 (수출주)", "항공·여행·음식료"],
+    oil: ["WTI 유가", "정유·조선", "항공·화학"],
+    ust: ["미국 10년 금리", "은행·보험", "성장주·바이오"],
+    sox: ["SOX 반도체지수", "반도체 장비·재료", ""],
+  };
+  const sectorLine = (k, sigs) => {
+    const [name, good, bad] = SECTOR_NAMES[k], s = SIGNALS.find((x) => x.k === k), v = parseNum((sigs || {})[k]);
+    return `${name} 상승${v === null ? "" : " (" + (v > 0 ? "+" : "") + v + s.unit + ")"} → ${good} 수혜${bad ? " · " + bad + " 불리" : ""}`;
+  };
+  const PREV_NAMES = { up: "애프터마켓 강세", flat: "애프터마켓 보합", down: "애프터마켓 약세" };
+  const PRE_NAMES = { up: "프리마켓 강세", flat: "프리마켓 보합", down: "프리마켓 약세" };
+  const prevLabel = (p) => { const bits = [PREV_NAMES[p.state], PRE_NAMES[p.pre]].filter(Boolean); return p.name.trim() + (bits.length ? " (" + bits.join(" · ") + ")" : ""); };
+
+  // 네이버 블로그용 글: 그날 입력한 전체 내용 (서식 유지 HTML + 글자만)
+  // 네이버 글쓰기에 붙여넣어도 줄이 흐트러지지 않게, 한 줄에 하나씩 <p>로 나눈다.
+  function blogPost(d) {
+    const { st, auto, r } = dayView(d || DATE), dd0 = d || DATE;
+    const m = morningSummary(r, st, auto), j = fixJournal(st.journal), T = dayTotals(j);
+    const dd = dd0.replace(/-/g, ".") + " (" + WEEKDAYS[weekday(dd0)] + ")";
+    const trades = (j.trades || []).filter((t) => t.name || t.buy);
+    // 매매나 돌아보기를 적은 날은 [매매일지], 장전 판단·시황만 있는 날은 [시황일지]
+    const isJournal = trades.length > 0 || (j.result && j.result !== "none") || j.kept || ["good", "bad", "tomorrow", "mood", "memo"].some((k) => (j[k] || "").trim());
+    const kind = isJournal ? "매매일지" : "시황일지";
+    const title = `[${kind}] ${dd} · ${r.mode === "—" ? "판정 전" : r.mode}${T.n ? " · " + money(T.total) : ""}`;
+    const mk = j.market;
+    let h = "";
+    const txt = [];
+    const P = (html, text) => { h += `<p>${html}</p>`; txt.push(text); };
+    const say = (text) => P(esc(text), text);
+    const blank = () => { h += "<p>&nbsp;</p>"; txt.push(""); };
+    const head = (text) => { blank(); blank(); h += `<h3>${esc(text)}</h3>`; txt.push("■ " + text); };
+    const sub = (text) => P(`<b>${esc(text)}</b>`, "[" + text + "]");
+    const line = (label, v) => { if (v) P(`<b>${esc(label)}</b> ${esc(v)}`, label + " " + v); };
+    const list = (label, items) => { sub(label); (items.length ? items : ["없음"]).forEach((x) => say("• " + x)); };
+    // 표 대신 한 줄에 하나씩: 네이버 앱·메모장·카톡 등 어디에 붙여넣어도 표가 깨지지 않고 똑같이 보이게
+    const table = (cols, rows, toText) => rows.forEach((row) => say("• " + toText(row)));
+    h += `<h2>${esc(title)}</h2>`; txt.push(title);
+
+    // 문단(묶음) 사이에만 빈 줄 한 칸: 이미 빈 줄이거나 제목 바로 밑이면 넣지 않는다
+    const gap = () => { const last = txt[txt.length - 1]; if (last !== "" && !last.startsWith("■ ")) blank(); };
+
+    // 1. 장전 시황 판단 · 이유
+    head("📊 장전 시황 판단");
+    if (m.vals.length) {
+      P(`<b>매매 모드:</b> <b>${esc(r.mode)}</b> (${esc(r.why)})`, `매매 모드: ${r.mode} (${r.why})`);
+      gap();
+      table(["신호", "값", "판정", "기준"], SIGNALS.map((s) => {
+        const v = parseNum(st.signals[s.k]); if (v === null) return null;
+        const s2 = r.statuses[s.k];
+        return [s.name, (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit, r.excluded[s.k] ? "참고" : LABEL[s2] || "", r.excluded[s.k] ? (s.k === "fut" ? "야간선물과 방향 반대라 제외" : "혼자서는 판정 제외") : (s2 && s.rule[s2] ? s.rule[s2].split(" → ")[0] : "")];
+      }).filter(Boolean), ([n, v, s2, why]) => `${n}: ${v} → ${s2}${why ? " (" + why + ")" : ""}`);
+      if (r.combo) { gap(); say("환율과 기름값이 같은 날 함께 급등해 주의 1개로 넣었다."); }
+    } else say("아침 신호를 넣지 않았다.");
+    gap();
+    line("주요 일정:", m.evs.join(", ") || "특별한 일 없음");
+
+    // 2. 관심 테마 · 미국장 테마 · 전일 주도 테마 · 지표별 수혜 업종 (묶음마다 한 칸 띄움)
+    head("🎯 관심 테마");
+    list("우선 관심", r.themeFirst.map((t) => t[0] + " (" + t[1] + ")"));
+    gap(); list("후순위", r.themeBack.map((t) => t[0] + " (" + t[1] + ")"));
+    const usRows = US.map((u) => { const v = parseNum((st.us || {})[u.k]); if (v === null) return null; const s2 = r.themeStatus[u.k]; return [u.name, (v > 0 ? "+" : "") + v + "%", "±" + u.th + "%", s2 === "first" ? "우선 관심" : s2 === "back" ? "후순위" : "중립"]; }).filter(Boolean);
+    if (usRows.length) { gap(); sub("미국장 테마"); table(["테마", "등락", "기준", "판정"], usRows, ([n, v, th, s2]) => `${n}: ${v} (기준 ${th}) → ${s2}`); }
+    const prevs = (st.prev || []).filter((p) => p && (p.name || "").trim());
+    if (prevs.length) { gap(); list("전일 주도 테마", prevs.map(prevLabel)); }
+    const sectors = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]).map((k) => sectorLine(k, st.signals));
+    if (sectors.length) { gap(); list("지표별 수혜 업종", sectors); }
+
+    // 3. 장 마감 시황 (항목마다 한 칸 띄움)
+    head("📌 장 마감 시황");
+    const close = [mk.kospi && "코스피 " + pct(pnum(mk.kospi) ?? 0), mk.kosdaq && "코스닥 " + pct(pnum(mk.kosdaq) ?? 0)].filter(Boolean).join(" · ");
+    const n0 = txt.length;
+    [["지수:", close], ["수급:", mk.invest], ["주도 테마:", mk.leaders], ["한 줄 시황:", mk.note], ["장전 판단 적중:", VERDICT[j.verdict]]]
+      .filter(([, v]) => v).forEach(([k, v]) => { gap(); line(k, v); });
+    if (txt.length === n0) say("장 마감 시황을 적지 않았다.");
+
+    // 시황일지: 매매·돌아보기 칸은 넣지 않는다
+    if (!isJournal) {
+      if (j.result === "none") { gap(); say("💹 오늘은 매매하지 않았다."); }
+      blank(); blank();
+      say(`#시황일지 #주식시황 #장전체크 #EdenCockpit #${dd0.replace(/-/g, "")}`);
+      return { title, kind, html: h, text: txt.join("\n") };
+    }
+
+    // 4. 매매 내역: 종목마다 한 묶음 (매수 · 매도 · 수량 · 손익 · 이유), 묶음 사이 한 칸
+    head("💹 매매 내역");
+    if (trades.length) {
+      // 가격·수량은 쉼표를 넣어 보기 좋게 (숫자가 아니면 적은 그대로)
+      const won = (v) => { const n = pnum(v); return n === null ? v || "" : n.toLocaleString("ko-KR") + "원"; };
+      const cnt = (v) => { const n = pnum(v); return n === null ? v || "" : n.toLocaleString("ko-KR") + "주"; };
+      trades.forEach((t, i) => {
+        const c = tradeCalc(t);
+        gap();
+        sub(`#${i + 1} ${t.name || ""}${t.code ? " (" + t.code + ")" : ""}${t.method ? " · " + t.method : ""}`);
+        [["매수:", [t.tIn, won(t.buy)].filter(Boolean).join(" · ")],
+          ["매도:", t.sell ? [t.tOut, won(t.sell)].filter(Boolean).join(" · ") : "보유 중"],
+          ["수량:", cnt(t.qty)],
+          ["손익:", c.ok ? `${money(c.net)} (${pct(c.rate)}${c.r !== null ? " · " + c.r.toFixed(1) + "R" : ""})` : ""],
+          ["손절가 / 목표가:", (t.stop || t.target) ? `${t.stop ? won(t.stop) : "-"} / ${t.target ? won(t.target) : "-"}` : ""],
+          ["매수 이유:", t.why], ["매도 이유:", t.whyOut],
+          ["계획:", t.kept ? "계획(손절·목표)대로 함" : ""], ["감정:", t.emotion], ["배운 점:", t.lesson]]
+          .filter(([, v]) => v).forEach(([k, v]) => P(`• <b>${esc(k)}</b> ${esc(v)}`, `• ${k} ${v}`));
+      });
+      gap();
+      sub("합계");
+      say(`${T.n}번 · ${T.wins}승 ${T.losses}패 · ${money(T.total)} (${pct(T.rate)}) · 수수료·세금 ${feePct()}% 반영`);
+    } else say(j.result === "none" ? "오늘은 매매하지 않았다." : "매매 기록 없음");
+
+    // 5. 돌아보기 (항목마다 한 칸 띄움)
+    head("📝 돌아보기");
+    [["결과:", RESULT[j.result]], ["규칙:", j.kept ? "오늘 날씨 규칙을 지켰다" : "지키지 못했거나 체크 안 함"], ["잘한 점:", j.good], ["아쉬운 점:", j.bad],
+      ["내일 할 일:", j.tomorrow], ["마음 상태:", j.mood], ["메모:", j.memo]].filter(([, v]) => v).forEach(([k, v]) => { gap(); line(k, v); });
+    blank(); blank();
+    say(`#매매일지 #주식일지 #단타일지 #EdenCockpit #${dd0.replace(/-/g, "")}`);
+    return { title, kind, html: h, text: txt.join("\n") };
+  }
+  async function copyBlog(d, msgEl) {
+    const post = blogPost(d);
+    $("blogPreview").innerHTML = post.html;
+    const msg = (t) => ((msgEl || $("blogMsg")).textContent = t);
+    const done = () => msg("복사했어요 ✅ (버전 " + APP_VER + ") " + post.title + " · 이제 '네이버 블로그 글쓰기 열기'를 누르고 본문에 붙여넣기 하세요.");
+    try {
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "text/html": new Blob([post.html], { type: "text/html" }), "text/plain": new Blob([post.text], { type: "text/plain" }) })]);
+        return done();
+      }
+    } catch (e) {}
+    try { // 예비: 미리 보기를 선택해서 복사
+      const el = $("blogPreview"); el.closest("details").open = true;
+      const range = document.createRange(); range.selectNodeContents(el);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      if (document.execCommand("copy")) { sel.removeAllRanges(); return done(); }
+    } catch (e) {}
+    msg("자동 복사가 막혀 있어요. 일지의 '미리 보기'를 길게 눌러(또는 드래그해서) 복사해 주세요.");
+    $("blogPreview").closest("details").open = true;
+  }
+
+  // ---------- 날짜별 기록 목록 ----------
+  function renderArchive() {
+    const days = store.keys().filter(isValidDate).sort().reverse().map((d) => ({ d, st: loadDay(d) }))
+      .filter(({ st }) => Object.keys(st.signals || {}).some((k) => parseNum(st.signals[k]) !== null) || fixJournal(st.journal).trades.length || fixJournal(st.journal).memo || fixJournal(st.journal).result);
+    $("archiveCount").textContent = days.length ? "모두 " + days.length + "일" : "";
+    $("archive").innerHTML = days.length ? days.map(({ d, st }) => {
+      const j = fixJournal(st.journal), T = dayTotals(j), mode = st.mode && st.mode !== "—" ? st.mode : "";
+      return `<div class="arow"><div class="ad"><b>${d.replace(/-/g, ".")} (${WEEKDAYS[weekday(d)]})</b>
+        ${mode ? `<span class="pill ${MODE_CLS[mode] || ""}">${esc(mode)}</span>` : ""}
+        ${T.n ? `<span class="${T.total > 0 ? "pos" : T.total < 0 ? "neg" : ""}">${money(T.total)}</span> · ${T.n}건` : j.result ? esc(RESULT[j.result]) : ""}</div>
+        <div class="ab"><button class="btn" type="button" data-go="${d}">열기</button><button class="btn" type="button" data-blog="${d}">블로그용 복사</button></div></div>`;
+    }).join("") : `<div class="hint">아직 저장된 날이 없어요. 숫자나 일지를 넣으면 그날 날짜로 저장돼요.</div>`;
+  }
+  $("archive").addEventListener("click", (e) => { const b = e.target.closest("[data-blog]"); if (b) copyBlog(b.dataset.blog, $("archiveMsg")); });
+
+  // ---------- 지표 기록표: 지난 며칠 지표 비교 · 엑셀로 ----------
+  const CORE_SIG = ["k200", "fut", "fx", "sox", "vix"];
+  function trendData() {
+    const n = +$("trendDays").value, all = $("trendCols").value === "all";
+    const sigs = all ? SIGNALS : SIGNALS.filter((s) => CORE_SIG.includes(s.k));
+    const cols = [
+      { h: "날짜", get: (x) => x.d },
+      { h: "매매 모드", get: (x) => (x.r.mode === "—" ? "" : x.r.mode), cls: (x) => MODE_CLS[x.r.mode] || "" },
+      ...sigs.map((s) => ({ h: s.name.replace(/ \(.*\)/, "") + " (" + s.unit + ")", num: true, get: (x) => parseNum(x.st.signals[s.k]), cls: (x) => (x.r.diverge && s.k === "fut" ? "" : x.r.statuses[s.k] || "") })),
+      ...(all ? US.map((u) => ({ h: "미국장 " + u.name.split(" (")[0] + " (%)", num: true, get: (x) => parseNum((x.st.us || {})[u.k]), cls: (x) => ({ first: "g", back: "r" })[x.r.themeStatus[u.k]] || "" })) : []),
+      { h: "코스피 (%)", num: true, get: (x) => pnum(x.st.journal.market.kospi) },
+      { h: "코스닥 (%)", num: true, get: (x) => pnum(x.st.journal.market.kosdaq) },
+      { h: "매매 수", num: true, get: (x) => (x.T.n || null) },
+      { h: "손익 (원)", num: true, get: (x) => (x.T.n ? Math.round(x.T.total) : null), cls: (x) => (x.T.total > 0 ? "g" : x.T.total < 0 ? "r" : "") },
+      { h: "장전 판단 적중", get: (x) => VERDICT[x.st.journal.verdict] || "" },
+    ];
+    let days = store.keys().filter(isValidDate).sort().reverse().map((d) => { const v = dayView(d); return { ...v, T: dayTotals(v.st.journal) }; })
+      .filter((x) => SIGNALS.some((s) => parseNum(x.st.signals[s.k]) !== null) || x.T.n || x.st.journal.market.kospi);
+    if (n) days = days.slice(0, n);
+    return { cols, days };
+  }
+  const fmtCell = (v, c) => (v === null || v === undefined || v === "" ? "" : c.num ? (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("ko-KR") : String(+v.toFixed(2))) : String(v));
+  function trendStats(cols, days) {
+    const pick = (f) => cols.map((c, i) => (i === 0 ? f.label : c.num ? (() => { const vs = days.map((x) => c.get(x)).filter((v) => v !== null && v !== undefined && !isNaN(v)); return vs.length ? f.calc(vs) : null; })() : ""));
+    return [
+      pick({ label: "평균", calc: (vs) => vs.reduce((a, b) => a + b, 0) / vs.length }),
+      pick({ label: "최고", calc: (vs) => Math.max(...vs) }),
+      pick({ label: "최저", calc: (vs) => Math.min(...vs) }),
+    ];
+  }
+  function renderTrend() {
+    const { cols, days } = trendData();
+    if (!days.length) { $("trend").innerHTML = `<tr><td>아직 기록이 없어요. 장전 지표를 넣은 날부터 쌓여요.</td></tr>`; return; }
+    const head = `<tr>${cols.map((c) => `<th>${esc(c.h)}</th>`).join("")}</tr>`;
+    const body = days.map((x) => `<tr>${cols.map((c, i) => i === 0
+      ? `<td><button type="button" data-go="${x.d}">${x.d.slice(5).replace("-", "/")} (${WEEKDAYS[weekday(x.d)]})</button></td>`
+      : `<td class="${c.cls ? c.cls(x) : ""}">${esc(fmtCell(c.get(x), c))}</td>`).join("")}</tr>`).join("");
+    const sums = days.length > 1 ? trendStats(cols, days).map((row) => `<tr class="sum">${row.map((v, i) => `<td>${esc(i === 0 ? v : fmtCell(v, cols[i]))}</td>`).join("")}</tr>`).join("") : "";
+    $("trend").innerHTML = head + body + sums;
+  }
+  // 엑셀용: 오래된 날이 위로 오게 (그래프 그리기 좋게), 숫자는 단위 없이
+  function trendRows() {
+    const { cols, days } = trendData();
+    const rows = [cols.map((c) => c.h)];
+    days.slice().reverse().forEach((x) => rows.push(cols.map((c) => { const v = c.get(x); return v === null || v === undefined ? "" : c.num ? String(+(+v).toFixed(4)) : String(v); })));
+    return rows;
+  }
+  $("trendDays").addEventListener("change", renderTrend);
+  $("trendCols").addEventListener("change", renderTrend);
+  $("trendCopy").addEventListener("click", async () => {
+    const tsv = trendRows().map((r) => r.map((v) => v.replace(/[\t\n]/g, " ")).join("\t")).join("\n");
+    try { await navigator.clipboard.writeText(tsv); $("trendMsg").textContent = "복사했어요 ✅ 엑셀이나 구글 시트의 빈 칸(A1)을 누르고 붙여넣기(Ctrl+V) 하세요."; }
+    catch (e) { $("trendMsg").textContent = "자동 복사가 막혀 있어요. 표를 길게 눌러(또는 드래그해서) 복사해 주세요."; }
+  });
+  $("trendCsv").addEventListener("click", () => {
+    const csv = "\ufeff" + trendRows().map((r) => r.map((v) => (/[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v)).join(",")).join("\r\n");
+    try {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      a.download = "EdenCockpit-지표-" + DATE + ".csv"; document.body.appendChild(a); a.click(); a.remove();
+      $("trendMsg").textContent = "파일을 받았어요. 엑셀로 열면 돼요.";
+    } catch (e) { $("trendMsg").textContent = "파일 받기가 막혀 있어요. '표 복사'를 써 주세요."; }
+  });
+
+  // ---------- 성적 차트 (일별 손익 막대 · 누적 손익 선) ----------
+  function dayPnl(d) { const T = dayTotals(fixJournal(d.journal)); return T.n ? T.total : null; }
+  function chartSvg(points, kind) {
+    const W = 360, H = 150, L = 8, R = 8, Tp = 10, B = 22;
+    const vals = points.map((p) => p.v), lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), span = hi - lo || 1;
+    const x = (i) => L + (points.length === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (points.length - 1));
+    const y = (v) => Tp + ((hi - v) * (H - Tp - B)) / span;
+    const bw = Math.max(3, Math.min(18, ((W - L - R) / points.length) * 0.6));
+    let g = `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1" opacity=".5"/>`;
+    if (kind === "bar") {
+      points.forEach((p, i) => {
+        const top = Math.min(y(p.v), y(0)), h = Math.max(1, Math.abs(y(p.v) - y(0)));
+        g += `<rect x="${x(i) - bw / 2}" y="${top}" width="${bw}" height="${h}" rx="2" fill="${p.v >= 0 ? "var(--up)" : "var(--down)"}"/>`;
+      });
+    } else {
+      const d = points.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+      g += `<path d="${d} L${x(points.length - 1).toFixed(1)} ${y(0)} L${x(0).toFixed(1)} ${y(0)} Z" fill="var(--ink)" opacity=".08"/>`;
+      g += `<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      const last = points.length - 1;
+      g += `<circle cx="${x(last)}" cy="${y(points[last].v)}" r="4" fill="${points[last].v >= 0 ? "var(--up)" : "var(--down)"}" stroke="var(--surface)" stroke-width="2"/>`;
+    }
+    const lab = (i) => `<text x="${x(i)}" y="${H - 6}" font-size="10" text-anchor="middle" fill="var(--muted)">${points[i].d.slice(5).replace("-", "/")}</text>`;
+    g += lab(0) + (points.length > 1 ? lab(points.length - 1) : "");
+    g += `<rect x="0" y="0" width="${W}" height="${H}" fill="transparent" class="hit"/>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${kind === "bar" ? "일별 손익" : "누적 손익"} 차트">${g}</svg>`;
+  }
+  function renderCharts(days) {
+    const pts = days.slice().reverse().map((d) => ({ d: d.date, v: dayPnl(d) })).filter((p) => p.v !== null).slice(-30);
+    if (!pts.length) { $("charts").innerHTML = `<div class="chart"><h4>손익 차트</h4><div class="empty">매매 내역에 매도가까지 적으면 날마다 손익 차트가 그려져요.</div></div>`; return; }
+    let acc = 0; const cum = pts.map((p) => ({ d: p.d, v: (acc += p.v) }));
+    $("charts").innerHTML = `<div class="chart" data-k="bar"><h4>일별 손익 <small>최근 ${pts.length}일 · 빨강 수익, 파랑 손실</small></h4>${chartSvg(pts, "bar")}<div class="tip"></div></div>` +
+      `<div class="chart" data-k="line"><h4>누적 손익 <small>지금까지 ${money(acc)}</small></h4>${chartSvg(cum, "line")}<div class="tip"></div></div>`;
+    document.querySelectorAll("#charts .chart").forEach((c) => {
+      const svg = c.querySelector("svg"), tip = c.querySelector(".tip"), data = c.dataset.k === "bar" ? pts : cum;
+      const show = (ev) => {
+        const b = svg.getBoundingClientRect(); const rel = (ev.clientX - b.left) / b.width;
+        const i = Math.max(0, Math.min(data.length - 1, Math.round(rel * (data.length - 1))));
+        tip.textContent = data[i].d.slice(5).replace("-", "/") + "  " + money(data[i].v) + (c.dataset.k === "bar" ? "" : " (누적)");
+      };
+      svg.addEventListener("pointermove", show); svg.addEventListener("pointerdown", show);
+      svg.addEventListener("pointerleave", () => (tip.textContent = ""));
+    });
+  }
+
+  // ---------- 저장 ----------
+  function save() {
+    const r = render();
+    S.mode = r.mode;
+    const now = Date.now(), before = flat(loadDay(DATE)), after = flat(S);
+    S.ft = Object.assign({}, S.ft || {});
+    Object.keys(after).forEach((k) => { if (before[k] !== after[k]) S.ft[k] = now; });
+    Object.keys(before).forEach((k) => { if (!(k in after)) S.ft[k] = now; });
+    S.updatedAt = now;
+    localOk = store.set(DATE, S);
+    queuePush(DATE);
+    setStatus();
+    renderStats();
+  }
+
+  function renderStats() {
+    const days = store.keys().filter(isValidDate).sort().reverse().map((d) => Object.assign({ date: d }, store.get(d) || {}));
+    const hist = days.filter((d) => d.date <= DATE).slice(0, 10).filter((d) => d.mode && d.mode !== "—");
+    $("hist").innerHTML = hist.length ? hist.map((d) => `<button type="button" class="histbtn ${MODE_CLS[d.mode] || ""}" data-go="${d.date}">${d.date.slice(5).replace("-", "/")} ${esc(d.mode)}${d.journal && d.journal.result ? " · " + esc(RESULT[d.journal.result]) : ""}</button>`).join("") : `<span>아직 기록 없음</span>`;
+    const rows = ["정상", "절반", "쉼"].map((m) => {
+      const ds = days.filter((d) => d.mode === m);
+      const c = (k) => ds.filter((d) => d.journal && d.journal.result === k).length;
+      const traded = c("win") + c("loss") + c("even");
+      const kept = ds.filter((d) => d.journal && d.journal.kept).length;
+      const sum = ds.reduce((a, d) => a + (dayPnl(d) || 0), 0);
+      return `<tr><td class="${MODE_CLS[m]}"><b>${m}</b></td><td>${ds.length}</td><td>${c("win")}</td><td>${c("loss")}</td><td>${traded ? Math.round((c("win") / traded) * 100) + "%" : "—"}</td><td>${sum ? money(sum) : "—"}</td><td>${ds.length ? kept + "/" + ds.length : "—"}</td></tr>`;
+    });
+    $("stats").innerHTML = `<tr><th>모드</th><th>일수</th><th>수익</th><th>손실</th><th>승률</th><th>손익</th><th>규칙 지킴</th></tr>` + rows.join("");
+    renderCharts(days);
+    renderArchive();
+    renderTrend();
+    renderInsight();
+  }
+
+  // ---------- 🔍 내 기준 찾기: 쌓인 기록으로 기준이 나에게도 맞는지 (shared/insight.js) ----------
+  function insightDays() {
+    return store.keys().filter(isValidDate).sort().map((d) => {
+      const v = dayView(d), j = v.st.journal, T = dayTotals(j);
+      const signals = {}; SIGNALS.forEach((s) => (signals[s.k] = parseNum(v.st.signals[s.k])));
+      return { d, signals, status: v.r.statuses, mode: v.r.mode, kospi: pnum(j.market.kospi), pnl: T.n ? T.total : null, kept: !!j.kept, verdict: j.verdict || "" };
+    }).filter((x) => x.kospi !== null || x.pnl !== null);
+  }
+  function renderInsight() {
+    const box = $("insight"); if (!box) return;
+    const A = analyze(insightDays());
+    const pctS = (v) => (v === null ? "—" : pct(v)), rate = (v) => (v === null ? "—" : Math.round(v * 100) + "%"), won = (v) => (v === null ? "—" : money(v));
+    const goal = A.n < 20 ? 20 : 40, bar = Math.min(100, Math.round((A.n / goal) * 100));
+    let h = `<div class="ins-stage"><b>기록 ${A.n}일</b> (코스피 마감 있는 날 ${A.withK}일 · 매매한 날 ${A.traded}일) · 단계: <b>${esc(A.stage.label)}</b>
+      <div class="ins-bar"><i style="width:${bar}%"></i></div><small>${esc(A.stage.note)} ${A.n < 40 ? "다음 단계까지 " + (goal - A.n) + "일" : ""}</small></div>`;
+    // 1) 매매 모드별
+    h += `<h3>① 매매 모드가 맞았나</h3><div class="trendwrap"><table class="trend"><tr><th>모드</th><th>날</th><th>코스피 평균</th><th>코스피 하락</th><th>매매한 날</th><th>승률</th><th>평균 손익</th></tr>` +
+      A.modes.map((m) => `<tr><td class="${MODE_CLS[m.mode] || ""}"><b>${m.mode}</b></td><td>${m.n}</td><td>${pctS(m.kAvg)}</td><td>${rate(m.kDown)}</td><td>${m.tN}</td><td>${rate(m.win)}</td><td>${won(m.pAvg)}</td></tr>`).join("") + `</table></div>`;
+    h += `<p class="ins-line">잘 맞으면 <b>쉼 → 절반 → 정상</b> 순서로 코스피 평균이 높아지고 하락 비율이 낮아져요.</p>`;
+    if (A.kept.tN || A.broke.tN) h += `<p class="ins-line">📏 계획대로 한 날 평균 손익 <b>${won(A.kept.pAvg)}</b> (${A.kept.tN}일, 승률 ${rate(A.kept.win)}) · 안 지킨 날 <b>${won(A.broke.pAvg)}</b> (${A.broke.tN}일, 승률 ${rate(A.broke.win)})</p>`;
+    if (A.verdict.n) h += `<p class="ins-line">🎯 장전 판단 적중: 맞았다 ${A.verdict.right} · 반쯤 ${A.verdict.half} · 틀렸다 ${A.verdict.wrong} (적중 ${Math.round(((A.verdict.right + A.verdict.half / 2) / A.verdict.n) * 100)}%)</p>`;
+    // 2) 지표별
+    h += `<h3>② 지표별 기준 점검</h3>`;
+    const confCls = { high: "g", mid: "a", low: "", none: "" };
+    h += A.signals.map((x) => {
+      const s = SIGNALS.find((q) => q.k === x.key), name = s ? s.name.replace(/ \(.*\)/, "") : x.key, u = x.meta.unit;
+      const side = (cut) => (x.meta.bad === "low" ? cut + u + " 이하" : cut + u + " 이상");
+      const N = x.now, k = N.bad, g = N.good;
+      if (!k.kN && !g.kN && !k.tN && !g.tN) return `<div class="ins-sig"><div class="ins-name">${esc(name)} <small>지금 기준: ${esc(side(x.meta.now))}이면 주의</small></div><div class="ins-body">아직 이 지표를 넣은 날이 없어요.</div></div>`;
+      const mk = `시장: ${side(x.meta.now)}인 날 코스피 <b>${pctS(k.kAvg)}</b> (${k.kN}일, 하락 ${rate(k.kDown)}) · 그 외 <b>${pctS(g.kAvg)}</b> (${g.kN}일) → <b class="${x.nowK === "잘 맞음" ? "g" : x.nowK === "반대로 나옴" ? "r" : ""}">${x.nowK}</b>`;
+      const my = k.tN + g.tN ? `<br>내 매매: ${side(x.meta.now)}인 날 평균 <b>${won(k.pAvg)}</b> (${k.tN}일, 승률 ${rate(k.win)}) · 그 외 <b>${won(g.pAvg)}</b> (${g.tN}일) → ${x.nowP}` : "";
+      let cand = "";
+      const B = x.best, bT = B ? (x.use === "pnl" ? B.pT : B.kT) : null;
+      if (!B) cand = `<br>🔎 내 기준 후보: 기준 양쪽에 5일 이상 쌓이면 찾아요`;
+      else if (bT < 1) cand = `<br>🔎 뚜렷한 내 기준 후보 없음 (어느 기준으로 나눠도 차이가 우연 수준)`;
+      else {
+        const by = x.use === "pnl" ? "내 손익" : "코스피";
+        cand = x.differs
+          ? `<br>🔎 내 기준 후보: <b>${side(B.cut)}</b> — ${by} 차이가 가장 커요 (${x.use === "pnl" ? won(B.bad.pAvg) + " vs " + won(B.good.pAvg) : pctS(B.bad.kAvg) + " vs " + pctS(B.good.kAvg)}, ${x.use === "pnl" ? B.bad.tN : B.bad.kN}일·${x.use === "pnl" ? B.good.tN : B.good.kN}일) · 신뢰도 <b class="${confCls[x.bestConf.key]}">${x.bestConf.label}</b>`
+          : `<br>🔎 지금 기준(${side(x.meta.now)})이 내 기록에서도 가장 잘 갈라요 · 신뢰도 <b class="${confCls[x.bestConf.key]}">${x.bestConf.label}</b>`;
+      }
+      return `<div class="ins-sig"><div class="ins-name">${esc(name)} <small>지금 기준: ${esc(side(x.meta.now))}이면 주의</small></div><div class="ins-body">${mk}${my}${cand}</div></div>`;
+    }).join("");
+    h += `<details class="learn"><summary>📘 이 계산은 어떻게 하나요? (꼭 읽어 주세요)</summary>
+      <p><b>무엇을 비교하나요?</b> 지표가 기준보다 나빴던 날과 아니었던 날을 나눠서, ① 그날 코스피 마감(매매를 안 해도 자동 연동으로 매일 쌓여요)과 ② 내 매매 손익(매도가까지 적은 날)을 비교해요. 나빴던 날이 더 떨어졌다면 그 기준은 나에게도 맞는 거예요.</p>
+      <p><b>내 기준 후보</b> 여러 기준(예: 나스닥 선물 -0.2%, -0.3%, -0.5%, -0.7%, -1%, -1.5%)으로 나눠 보고 차이가 가장 큰 곳을 보여 줘요. 매매한 날이 양쪽 5일 이상이면 내 손익으로, 아니면 코스피로 골라요.</p>
+      <p><b>신뢰도</b> 두 무리의 차이를 날마다의 흔들림과 비교했어요(통계에서 t값). 차이가 흔들림의 2배 이상이고 20일 이상 쌓였으면 '높음', 1배 이상이면 '보통', 그보다 작으면 '낮음'(우연일 수 있음), 한쪽이 5일 미만이면 '표본 부족'이에요.</p>
+      <p><b>조심할 점</b> ① 기록이 짧으면 우연이 커요. 최소 20일, 되도록 40일 이상 보고 판단해요. ② 후보를 여러 개 시험하면 우연히 좋아 보이는 게 하나쯤 나와요. 그래서 '높음'만 믿고, 지금 기준과 크게 다르면 두세 주 더 지켜봐요. ③ 이 화면은 기준을 자동으로 바꾸지 않아요. 판단은 직접 해요.</p>
+    </details>`;
+    box.innerHTML = h;
+  }
+
+  // ---------- 입력 연결 ----------
+  function flip(el, set) {
+    let v = el.value.trim().replace(/[−–—﹣－]/g, "-");
+    if (v.startsWith("-")) v = v.slice(1); else if (v.startsWith("+")) v = "-" + v.slice(1); else v = "-" + v;
+    el.value = v; set(v); tint(el); save();
+    try { el.focus({ preventScroll: true }); el.setSelectionRange(v.length, v.length); } catch (e) {}
+  }
+  // 10년 금리: 네이버 ▲ 숫자 그대로 넣으면 ×100 해서 위 칸에 넣는다
+  SIGNALS.filter((s) => s.helper).forEach((s) => {
+    const hp = $("hp-" + s.k), main = $("in-" + s.k);
+    hp.addEventListener("input", () => {
+      const v = parseNum(hp.value);
+      if (v === null) return;
+      const bp = Math.round(v * s.helper * 100) / 100;
+      main.value = String(bp); S.signals[s.k] = main.value; tint(main); save();
+    });
+  });
+  SIGNALS.forEach((s) => {
+    const el = $("in-" + s.k), set = (v) => (S.signals[s.k] = v);
+    el.addEventListener("input", () => { set(el.value); tint(el); markAuto(el, "signals." + s.k); if (s.helper) $("hp-" + s.k).value = ""; save(); paintAuto(); });
+    const pm = document.querySelector(`.pm[data-for="${s.k}"]`); if (pm) pm.addEventListener("click", () => flip(el, set));
+  });
+  US.forEach((u) => {
+    const el = $("us-" + u.k), set = (v) => (S.us[u.k] = v);
+    el.addEventListener("input", () => { set(el.value); tint(el); markAuto(el, "us." + u.k); save(); paintAuto(); });
+    document.querySelector(`.pm[data-us="${u.k}"]`).addEventListener("click", () => flip(el, set));
+  });
+  [0, 1].forEach((i) => $("pv-" + i).addEventListener("input", (e) => { S.prev[i].name = e.target.value; save(); }));
+  document.querySelectorAll(".chip[data-pv]").forEach((b) => b.addEventListener("click", () => { const p = S.prev[+b.dataset.pv]; p.state = p.state === b.dataset.s ? "" : b.dataset.s; paintChips(); save(); }));
+  document.querySelectorAll(".chip[data-pre]").forEach((b) => b.addEventListener("click", () => { const p = S.prev[+b.dataset.pre]; p.pre = p.pre === b.dataset.s ? "" : b.dataset.s; paintChips(); save(); }));
+  document.querySelectorAll("#evChips .chip").forEach((b) => b.addEventListener("click", () => { const a = new Set(S.events); a.has(b.dataset.ev) ? a.delete(b.dataset.ev) : a.add(b.dataset.ev); S.events = [...a]; paintChips(); save(); }));
+  document.querySelectorAll("#resultChips .chip").forEach((b) => b.addEventListener("click", () => { S.journal.result = S.journal.result === b.dataset.r ? "" : b.dataset.r; paintChips(); save(); }));
+  for (let i = 1; i <= 7; i++) { const c = $("td" + i); c.addEventListener("change", () => { S.todo["td" + i] = c.checked; c.closest("label").classList.toggle("done", c.checked); save(); }); }
+  $("memo").addEventListener("input", (e) => { S.journal.memo = e.target.value; save(); });
+  JFIELDS.forEach((k) => { const el = $("j-" + k); el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => { S.journal[k] = el.value; save(); }); });
+  MFIELDS.forEach((k) => { const el = $(k === "note" ? "j-mktNote" : "j-" + k); el.addEventListener("input", () => { S.journal.market[k] = el.value; markAuto(el, "market." + k); save(); paintAuto(); }); });
+  document.querySelectorAll("#verdictChips .chip").forEach((b) => b.addEventListener("click", () => { S.journal.verdict = S.journal.verdict === b.dataset.v ? "" : b.dataset.v; paintChips(); save(); }));
+  $("addTrade").addEventListener("click", () => {
+    S.journal.trades = (S.journal.trades || []).concat([{ name: "", code: "", method: "", buy: "", qty: "", sell: "", stop: "", target: "", tIn: "", tOut: "", why: "", whyOut: "", lesson: "", kept: false, emotion: "" }]);
+    renderTrades(true); save();
+    const inputs = document.querySelectorAll('#trades [data-f="name"]'); if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+  $("trades").addEventListener("input", (e) => {
+    const el = e.target; if (!el.dataset || el.dataset.t === undefined) return;
+    const t = S.journal.trades[+el.dataset.t]; if (!t) return;
+    t[el.dataset.f] = el.type === "checkbox" ? el.checked : el.value;
+    if (el.dataset.f === "name") { const b = el.closest(".tr").querySelector(".top b"); b.textContent = "#" + (+el.dataset.t + 1) + " " + (el.value || "종목"); }
+    paintTradeNumbers(); save();
+  });
+  $("trades").addEventListener("click", (e) => {
+    const del = e.target.closest("[data-del]"), yes = e.target.closest("[data-del-yes]"), no = e.target.closest("[data-del-no]");
+    if (del) { delAsk = true; del.parentNode.innerHTML = `<button class="btn danger" type="button" data-del-yes="${del.dataset.del}">정말 삭제</button><button class="btn" type="button" data-del-no="1">취소</button>`; }
+    else if (no) { delAsk = false; renderTrades(); }
+    else if (yes) { delAsk = false; S.journal.trades.splice(+yes.dataset.delYes, 1); renderTrades(true); save(); }
+  });
+  // 입력을 마치고 다른 곳을 누르면 목록을 새로 그린다 (종목 이름·차트 반영). 삭제 확인 중에는 그대로 둔다.
+  let delAsk = false;
+  $("trades").addEventListener("focusout", () => setTimeout(() => { if (!delAsk && !$("trades").contains(document.activeElement)) renderTrades(); }, 0));
+  $("feePct").value = feePct();
+  $("feePct").addEventListener("input", () => { try { localStorage.setItem(FEE_KEY, $("feePct").value); } catch (e) {} paintTradeNumbers(); renderStats(); });
+  $("blogCopy").addEventListener("click", () => copyBlog(DATE));
+  // 미리 보기: 열 때마다 최신 내용으로, 아래 '닫기' 버튼으로도 접기
+  $("blogPrevBox").addEventListener("toggle", (e) => { if (e.target.open) $("blogPreview").innerHTML = blogPost(DATE).html; });
+  $("blogPrevClose").addEventListener("click", () => { $("blogPrevBox").open = false; $("blogPrevBox").scrollIntoView({ block: "nearest" }); });
+
+  // 내 블로그 아이디: 이 기기에만 저장 (네이버 아이디는 영문 소문자·숫자·-·_ 5~20자)
+  const BLOG_KEY = "cockpit-blog-id";
+  const DEFAULT_BLOG_ID = "my0107343"; // 기본 블로그 (칸을 비우면 비운 채로 유지)
+  function paintBlogId() {
+    let id = DEFAULT_BLOG_ID; try { const v = localStorage.getItem(BLOG_KEY); if (v !== null) id = v; } catch (e) {}
+    if ($("blogId") !== document.activeElement) $("blogId").value = id;
+    const ok = /^[a-z0-9_-]{3,20}$/.test(id);
+    ["blogHome", "blogHome2"].forEach((k) => { $(k).hidden = !ok; if (ok) $(k).href = "https://blog.naver.com/" + id; });
+    $("blogIdHint").textContent = !id ? "아이디를 넣어 두면 버튼 하나로 내 블로그가 열려요. 이 기기에만 저장되고 다른 곳으로 보내지 않아요."
+      : ok ? "저장됐어요 ✅ 글쓰기 버튼은 지금 네이버에 로그인된 계정의 블로그로 열려요."
+      : "아이디는 영문 소문자·숫자·-·_ 로 되어 있어요. blog.naver.com/ 뒤의 글자만 넣어 주세요.";
+  }
+  $("blogId").addEventListener("input", () => {
+    // 주소를 통째로 붙여넣어도 아이디만 골라낸다 (예: https://m.blog.naver.com/abc123/2233 → abc123)
+    let v = $("blogId").value.trim();
+    const m = v.match(/blog\.naver\.com\/(?:PostList\.naver\?blogId=)?([A-Za-z0-9_-]+)/);
+    if (m) v = m[1];
+    v = v.replace(/^@/, "").toLowerCase();
+    try { localStorage.setItem(BLOG_KEY, v); } catch (e) {}
+    paintBlogId();
+  });
+  $("blogId").addEventListener("blur", paintBlogId);
+  paintBlogId();
+  $("kept").addEventListener("change", (e) => { S.journal.kept = e.target.checked; save(); });
+  // 초기화는 화면 안에서 한 번 더 확인한다 (confirm 창이 막힌 환경에서도 동작하도록)
+  function cancelReset() { $("resetAsk").hidden = true; $("reset").hidden = false; }
+  $("reset").addEventListener("click", () => { $("resetAsk").hidden = false; $("reset").hidden = true; });
+  $("resetNo").addEventListener("click", cancelReset);
+  let undoDay = null;
+  $("resetYes").addEventListener("click", () => {
+    undoDay = { d: DATE, st: JSON.parse(JSON.stringify(S)) }; // 되돌리기용으로 지우기 전 내용을 잠시 들고 있는다
+    S = blank(); fill(); save(); cancelReset();
+    $("sync").textContent = DATE + " 입력을 지웠어요"; $("undo").hidden = false;
+  });
+  $("undo").addEventListener("click", () => {
+    if (!undoDay) return;
+    if (undoDay.d !== DATE) goto(undoDay.d);
+    const keepFt = S.ft; S = Object.assign(blank(), undoDay.st); S.ft = keepFt; S.journal = fixJournal(S.journal);
+    undoDay = null; $("undo").hidden = true; fill(); save(); $("sync").textContent = "되돌렸어요 ✅";
+  });
+
+  // 백업: 파일 받기(바탕화면 파일에서 동작) + 글자로 복사/붙여넣기(어디서나 동작)
+  const backupText = () => { const all = {}; store.keys().forEach((k) => (all[k] = store.get(k))); return JSON.stringify({ app: "jangjeon-cockpit", exportedAt: new Date().toISOString(), days: all }); };
+  const say = (t) => ($("backupMsg").textContent = t);
+  $("export").addEventListener("click", () => {
+    try {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([backupText()], { type: "application/json" }));
+      a.download = "EdenCockpit-backup-" + kstDate() + ".json"; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      say("파일 받기를 시작했어요. 받아지지 않으면 '글자로 복사'를 쓰세요.");
+    } catch (e) { say("파일 받기가 막혀 있어요. '글자로 복사'를 쓰세요."); }
+  });
+  $("copyOut").addEventListener("click", async () => {
+    const box = $("backupBox"); box.hidden = false; box.value = backupText();
+    try { await navigator.clipboard.writeText(box.value); say("복사했어요. 메모장이나 카카오톡 나에게 보내기에 붙여넣어 보관하세요."); }
+    catch (e) { box.focus(); box.select(); say("아래 글자가 선택됐어요. Ctrl+C(휴대폰은 길게 눌러 복사)로 복사하세요."); }
+  });
+  function importText(text) {
+    try {
+      const j = JSON.parse(text);
+      const days = (j && j.days) || {};
+      let n = 0; Object.entries(days).forEach(([k, v]) => { if (isValidDate(k) && v && typeof v === "object") { store.set(k, v); n++; } });
+      if (!n) throw new Error("empty");
+      Object.keys(days).forEach((k) => { if (isValidDate(k)) queuePush(k); });
+      goto(DATE); say(n + "일치 기록을 불러왔어요.");
+    } catch (err) { say("불러오기 실패: Eden Cockpit 백업(파일 또는 복사한 글자)이 맞는지 확인해 주세요."); }
+  }
+  $("importBtn").addEventListener("click", () => $("importFile").click());
+  $("importFile").addEventListener("change", async (e) => { const f = e.target.files[0]; if (f) importText(await f.text()); e.target.value = ""; });
+  $("pasteIn").addEventListener("click", () => { const box = $("backupBox"); if (box.hidden || !box.value.trim()) { box.hidden = false; box.value = ""; box.focus(); say("복사해 둔 백업 글자를 아래 칸에 붙여넣고 한 번 더 누르세요."); } else importText(box.value); });
+
+  // ---------- 칸 단위 합치기 ----------
+  // 두 기기가 같은 날짜의 다른 칸을 동시에 고쳐도 둘 다 남도록, 칸마다 마지막 수정 시각(ft)을 두고 칸별로 더 늦은 값을 고른다.
+  function flat(s) {
+    const o = {};
+    Object.entries(s.signals || {}).forEach(([k, v]) => (o["signals." + k] = v));
+    Object.entries(s.us || {}).forEach(([k, v]) => (o["us." + k] = v));
+    Object.entries(s.todo || {}).forEach(([k, v]) => (o["todo." + k] = v));
+    Object.entries(s.auto || {}).forEach(([k, v]) => (o["auto." + k] = v));
+    o.prev = JSON.stringify(s.prev || []); o.events = JSON.stringify(s.events || []);
+    const j = fixJournal(JSON.parse(JSON.stringify(s.journal || {})));
+    Object.entries(j).forEach(([k, v]) => { if (v && typeof v === "object") o["journalj." + k] = JSON.stringify(v); else o["journal." + k] = k === "kept" ? !!v : (v ?? ""); });
+    return o;
+  }
+  function unflat(o) {
+    const s = blank();
+    Object.entries(o).forEach(([k, v]) => {
+      const [g, f] = k.split(".");
+      if (g === "signals" || g === "us" || g === "todo") s[g][f] = v;
+      else if (g === "auto") s.auto[k.slice(5)] = v; // 칸 이름에 점이 있음 (signals.fut)
+      else if (k === "prev") { try { s.prev = JSON.parse(v); } catch (e) {} }
+      else if (k === "events") { try { s.events = JSON.parse(v); } catch (e) {} }
+      else if (g === "journal") s.journal[f] = v;
+      else if (g === "journalj") { try { s.journal[f] = JSON.parse(v); } catch (e) {} }
+    });
+    return s;
+  }
+  const fieldTime = (s, k) => ((s.ft && s.ft[k]) || s.updatedAt || 0);
+  function mergeDays(a, b) {
+    const fa = flat(a), fb = flat(b), keys = new Set([...Object.keys(fa), ...Object.keys(fb)]);
+    const out = {}, ft = {};
+    // 한쪽에 없는 칸은 '지운 시각'(ft)이 있으면 그 시각에 지운 것으로 본다
+    const t = (s, f, k) => (k in f ? fieldTime(s, k) : (s.ft && s.ft[k]) || -1);
+    [...keys, ...Object.keys(a.ft || {}), ...Object.keys(b.ft || {})].forEach((k) => {
+      const ta = t(a, fa, k), tb = t(b, fb, k);
+      const v = ta >= tb ? fa[k] : fb[k];
+      if (v !== undefined) out[k] = v;
+      ft[k] = Math.max(ta, tb, 0);
+    });
+    const m = unflat(out);
+    m.ft = ft; m.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0);
+    return m;
+  }
+  const sameDay = (a, b) => JSON.stringify(flat(a)) === JSON.stringify(flat(b));
+
+  // ---------- PC·폰 실시간 동기화 ----------
+  // 화면은 이 기기 저장값으로 바로 그리고(로딩 없음), claude.ai 링크에서 열렸을 때만 뒤에서 클라우드와 맞춘다.
+  // 클라우드: 이 사람만 보는 개인 저장 공간 data/users/<id>/cockpit/days/<날짜>. 더 늦게 고친 쪽(updatedAt)이 이긴다.
+  // 파일·다른 주소로 열면 클라우드가 없으니 지금처럼 이 기기에만 저장한다.
+  let cloud = null, cloudState = "off", lastSyncAt = "", localOk = true;
+  const pending = new Map(); let pushTimer = null, pushing = Promise.resolve();
+  function setStatus() {
+    const t = kstTime().slice(0, 5);
+    const el = $("sync");
+    if (!localOk && cloudState !== "on") { el.textContent = "⚠ 이 브라우저는 저장이 막혀 있어요"; return; }
+    if (cloudState === "on") el.textContent = "☁️ PC·폰 동기화됨 " + (lastSyncAt || t);
+    else if (cloudState === "auth") el.textContent = "⚠ 동기화 열쇠를 확인해 주세요 (아래 🔄)";
+    else if (cloudState === "connecting") el.textContent = "자동 저장됨 · 동기화 연결 중";
+    else if (cloudState === "error") el.textContent = "자동 저장됨 · 동기화 잠시 안 됨(자동 재시도)";
+    else el.textContent = store.get(DATE) ? "이 기기에 자동 저장됨" : "입력하면 자동 저장돼요";
+  }
+  function queuePush(d) {
+    if (gh) return ghQueue(d);
+    if (!cloud) return;
+    pending.set(d, true);
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(flushPush, 700); // 타이핑 중엔 모아서 한 번만 보낸다
+  }
+  function flushPush() {
+    if (!cloud || !pending.size) return pushing;
+    const dates = [...pending.keys()]; pending.clear();
+    pushing = pushing.then(async () => {
+      for (const d of dates) {
+        const v = store.get(d); if (!v) continue;
+        try { await cloud.days.doc(d).set(JSON.parse(JSON.stringify(v))); cloudState = "on"; lastSyncAt = kstTime().slice(0, 5); }
+        catch (e) {
+          if (e && (e.code === "revoked" || e.code === "not_granted" || e.code === "capability_disabled")) { cloud = null; cloudState = "off"; break; }
+          if (e && e.code === "invalid_argument") continue; // 이 기록은 클라우드에 못 쓰는 형태 — 기기에는 남아 있다
+          cloudState = "error"; pending.set(d, true); // 잠시 뒤 다시 시도
+          clearTimeout(pushTimer); pushTimer = setTimeout(flushPush, 5000);
+        }
+      }
+      setStatus();
+    });
+    return pushing;
+  }
+  // 받은 기록 하나를 이 기기 기록과 칸 단위로 합친다. {changed: 이 기기 기록이 바뀜, ahead: 이 기기에만 있는 칸이 있음}
+  function mergeIntoLocal(d, remoteRaw) {
+    const remote = JSON.parse(JSON.stringify(remoteRaw || {}));
+    const local = store.get(d);
+    if (!local) { store.set(d, remote); return { changed: true, ahead: false }; }
+    const merged = mergeDays(local, remote);
+    merged.mode = local.mode;
+    let changed = false;
+    if (!sameDay(merged, local)) { // 다른 기기에서 고친 칸이 있다
+      const r2 = evaluate({ signals: merged.signals, us: merged.us, prev: merged.prev }, [...autoEvents(d, CAL), ...merged.events], THEMES);
+      merged.mode = r2.mode;
+      store.set(d, merged); changed = true;
+    }
+    return { changed, ahead: !sameDay(merged, remote) };
+  }
+  function afterRemote(changedDates) {
+    if (changedDates.includes(DATE)) { S = loadDay(DATE); fill(); render(); }
+    if (changedDates.length) renderStats();
+    setStatus();
+  }
+  function applyRemote(snap) {
+    const changedDates = [], remoteDates = new Set();
+    // 캐시에서 온 스냅숏은 서버 확정본이 아니므로 받기만 하고 올리지는 않는다 (새 기록을 옛 기록으로 덮지 않게)
+    const definitive = !(snap.metadata && snap.metadata.fromCache);
+    snap.docs.forEach((doc) => {
+      const d = doc.id; if (!isValidDate(d) || !doc.exists) return;
+      remoteDates.add(d);
+      const r = mergeIntoLocal(d, doc.data());
+      if (r.changed) changedDates.push(d);
+      if (r.ahead && definitive) queuePush(d); // 이 기기에만 있는 칸이 있으면 올린다
+    });
+    // 이 기기에만 있는 기록(예전에 쓴 것)도 클라우드로 올린다
+    if (definitive) store.keys().filter(isValidDate).forEach((d) => { if (!remoteDates.has(d)) queuePush(d); });
+    if (definitive) { cloudState = "on"; lastSyncAt = kstTime().slice(0, 5); }
+    afterRemote(changedDates);
+  }
+  async function startCloud() {
+    try {
+      if (!window.claude || typeof window.claude.use !== "function") return;
+      cloudState = "connecting"; setStatus();
+      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      const uid = user ? await user.id() : null;
+      if (!db || !uid) { cloudState = "off"; setStatus(); return; }
+      cloud = { days: db.doc("data/users/" + uid + "/cockpit").collection("days") };
+      const listen = () => cloud.days.onSnapshot(applyRemote, (e) => {
+        if (e && (e.code === "revoked" || e.code === "not_granted")) { cloud = null; cloudState = "off"; setStatus(); return; }
+        cloudState = "error"; setStatus();
+        setTimeout(() => { if (cloud) listen(); }, 5000); // 연결이 끊기면 새로 구독
+      });
+      listen();
+    } catch (e) { cloud = null; cloudState = "off"; setStatus(); }
+  }
+  // ---------- GitHub 동기화 (Claude 없이, 파일·내 주소에서) ----------
+  // 내 GitHub 비공개 저장소의 cockpit-data 브랜치에 연도별 파일(cockpit-data/2026.json)로 기록을 둔다.
+  // 20초마다(화면을 보고 있을 때만) 바뀐 게 있는지 확인하고, 입력하면 1.5초 뒤 올린다. 겹치면 칸 단위로 합쳐서 다시 올린다.
+  const GH_KEY = "cockpit-sync-github", GH_BRANCH = "cockpit-data";
+  let gh = null; const ghEtag = {}, ghPending = new Set(); let ghTimer = null, ghChain = Promise.resolve(), ghPoll = null;
+  const ghLoad = () => { try { return JSON.parse(localStorage.getItem(GH_KEY) || "null"); } catch (e) { return null; } };
+  const ghSave = (v) => { try { v ? localStorage.setItem(GH_KEY, JSON.stringify(v)) : localStorage.removeItem(GH_KEY); } catch (e) {} };
+  const b64enc = (str) => { const by = new TextEncoder().encode(str); let bin = ""; for (let i = 0; i < by.length; i += 8192) bin += String.fromCharCode.apply(null, by.subarray(i, i + 8192)); return btoa(bin); };
+  const b64dec = (b64) => new TextDecoder().decode(Uint8Array.from(atob(String(b64).replace(/\s/g, "")), (c) => c.charCodeAt(0)));
+  const yearFile = (y) => "cockpit-data/" + y + ".json";
+  const ghErr = (status, msg) => Object.assign(new Error(msg || "HTTP " + status), { status });
+
+  async function ghApi(path, opts) {
+    opts = opts || {};
+    let signal; try { signal = AbortSignal.timeout(15000); } catch (e) {}
+    const res = await fetch("https://api.github.com" + path, Object.assign({ cache: "no-store", signal }, opts, {
+      headers: Object.assign({ Accept: "application/vnd.github+json", Authorization: "Bearer " + gh.token }, opts.headers || {}),
+    }));
+    return res;
+  }
+  // 기록용 브랜치가 없으면 기본 브랜치에서 만든다 (연결 확인도 겸함)
+  async function ghEnsureBranch() {
+    const repo = gh.repo;
+    let r = await ghApi("/repos/" + repo + "/branches/" + GH_BRANCH);
+    if (r.ok) return;
+    if (r.status !== 404) throw ghErr(r.status);
+    r = await ghApi("/repos/" + repo);
+    if (!r.ok) throw ghErr(r.status);
+    const base = (await r.json()).default_branch;
+    r = await ghApi("/repos/" + repo + "/git/ref/heads/" + encodeURIComponent(base));
+    if (!r.ok) throw ghErr(r.status);
+    const sha = (await r.json()).object.sha;
+    r = await ghApi("/repos/" + repo + "/git/refs", { method: "POST", body: JSON.stringify({ ref: "refs/heads/" + GH_BRANCH, sha }) });
+    if (!r.ok && r.status !== 422) throw ghErr(r.status); // 422 = 그 사이 다른 기기가 만듦
+  }
+  // 한 해 파일 읽기 → {days, sha, notModified}
+  async function ghRead(y, useEtag) {
+    const headers = useEtag && ghEtag[y] ? { "If-None-Match": ghEtag[y] } : {};
+    const r = await ghApi("/repos/" + gh.repo + "/contents/" + yearFile(y) + "?ref=" + GH_BRANCH, { headers });
+    if (r.status === 304) return { notModified: true };
+    if (r.status === 404) { ghEtag[y] = null; return { days: {}, sha: null }; }
+    if (!r.ok) throw ghErr(r.status);
+    const j = await r.json();
+    ghEtag[y] = r.headers.get("ETag");
+    let days = {};
+    try { days = (JSON.parse(b64dec(j.content || "")) || {}).days || {}; } catch (e) {}
+    return { days, sha: j.sha };
+  }
+  const ghYears = () => { const ys = new Set([kstDate().slice(0, 4)]); store.keys().filter(isValidDate).forEach((d) => ys.add(d.slice(0, 4))); return [...ys]; };
+
+  // ---------- 자동 연동 (GitHub Actions 가 모아 둔 auto/<날짜>.json) ----------
+  // 평일 아침 7:05·8:05 에 미국 지표·미국 대응주, 오후 4:20 에 코스피·코스닥 마감·수급을 저장소가 받아 둔다 (.github/workflows/auto.yml).
+  // 여기서는 화면에 보이는 날짜 파일만 읽어(바뀐 게 없으면 304) 빈 칸이나 '지난번 자동 값 그대로인 칸'만 채운다. 손으로 고친 칸은 건드리지 않는다.
+  const autoEtag = {};
+  async function ghAuto(d) {
+    const headers = autoEtag[d] ? { "If-None-Match": autoEtag[d] } : {};
+    const r = await ghApi("/repos/" + gh.repo + "/contents/auto/" + d + ".json?ref=" + GH_BRANCH, { headers });
+    if (r.status === 304 || r.status === 404) return null;
+    if (!r.ok) throw ghErr(r.status);
+    const j = await r.json();
+    autoEtag[d] = r.headers.get("ETag");
+    try { return JSON.parse(b64dec(j.content || "")); } catch (e) { return null; }
+  }
+  // 받아 둔 자동 값(a)을 하루 기록(st)에 채운다. 빈 칸이나 '지난번 자동 값 그대로인 칸'만. 바뀐 칸 목록 [칸, 받아온 시각]
+  function fillAuto(st, a) {
+    st.auto = st.auto || {};
+    const changed = [];
+    const fillOne = (key, cur, set, val, ts) => {
+      if (val === null || val === undefined || val === "") return;
+      val = String(val); cur = cur || "";
+      const prev = st.auto[key];
+      if (cur === "" || cur === prev) { if (cur !== val) { set(val); changed.push([key, ts]); } } // 손으로 넣은 값은 그대로 두고, 자동 값만 기억해 둔다
+      if (prev !== val) { st.auto[key] = val; changed.push(["auto." + key, ts]); }
+    };
+    const m = a.morning || {}, c = (a.close || {}).market || {};
+    Object.entries(m.signals || {}).forEach(([k, v]) => { if (SIGNALS.some((s) => s.k === k) && v) fillOne("signals." + k, st.signals[k], (x) => (st.signals[k] = x), v.value, m.ts); });
+    const kd = m.signals && m.signals.k200 && m.signals.k200.detail; // 야간선물 근거: 야간 종가 · 전날 주간 종가
+    if (kd && kd.night && kd.dayClose) { const t = "야간 종가 " + kd.night.toLocaleString("ko-KR", { minimumFractionDigits: 2 }) + " ÷ 전날 주간 종가 " + kd.dayClose.toLocaleString("ko-KR", { minimumFractionDigits: 2 }); if (st.auto["detail.k200"] !== t) { st.auto["detail.k200"] = t; changed.push(["auto.detail.k200", m.ts]); } }
+    Object.entries(m.us || {}).forEach(([k, v]) => { if (US.some((u) => u.k === k) && v) fillOne("us." + k, st.us[k], (x) => (st.us[k] = x), v.value, m.ts); });
+    ["kospi", "kosdaq"].forEach((k) => { if (c[k]) fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), c[k].value, a.close.ts); });
+    if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
+    [["at.morning", m.at, m.ts], ["at.close", (a.close || {}).at, (a.close || {}).ts]].forEach(([k, v, ts]) => { if (v && st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, ts]); } });
+    return changed;
+  }
+  // 하루치 자동 값을 그 날짜 기록에 넣고 저장·동기화한다 (화면 날짜가 아니어도 된다 → 앱을 안 연 날도 기록이 쌓인다)
+  function applyAuto(d, a) {
+    if (!a || typeof a !== "object" || !isValidDate(d)) return false;
+    const cur = d === DATE, st = cur ? S : loadDay(d);
+    const before = flat(JSON.parse(JSON.stringify(st)));
+    const changed = fillAuto(st, a);
+    if (!changed.length) return false;
+    if (cur) save();
+    else {
+      const r = evaluate({ signals: st.signals, us: st.us, prev: st.prev }, [...autoEvents(d, CAL), ...(st.events || [])], THEMES);
+      st.mode = r.mode;
+      const now = Date.now(), after = flat(st);
+      st.ft = Object.assign({}, st.ft || {});
+      Object.keys(after).forEach((k) => { if (before[k] !== after[k]) st.ft[k] = now; });
+      st.updatedAt = now;
+      queuePush(d);
+    }
+    // 수정 시각은 '받아온 시각'으로 둔다 → 그 뒤에 다른 기기에서 손으로 고친 값이 늘 이긴다
+    changed.forEach(([k, ts]) => { const f = k.startsWith("market.") ? "journalj.market" : k; if (ts && st.ft && st.ft[f] > ts) st.ft[f] = ts; }); // 마감 칸은 시황 묶음(journalj.market)으로 저장된다
+    store.set(d, st);
+    if (cur) { fill(); render(); }
+    return true;
+  }
+  // 지난 평일 자동 값 몰아 받기: auto 폴더 목록을 보고, 아직 안 받은(또는 바뀐) 날짜 파일만 받아 그 날 기록에 넣는다.
+  // 앱을 안 연 날도 지표·코스피 마감이 쌓여서 '내 기준 찾기'에 쓰인다. 처음엔 최근 120일, 한 번에 최대 40개.
+  const AUTO_SEEN_KEY = "cockpit-auto-seen"; let autoListAt = 0;
+  const autoSeen = () => { try { return JSON.parse(localStorage.getItem(AUTO_SEEN_KEY) || "{}") || {}; } catch (e) { return {}; } };
+  async function ghAutoBackfill() {
+    if (Date.now() - autoListAt < 30 * 60 * 1000) return 0; // 30분에 한 번만 목록 확인
+    autoListAt = Date.now();
+    const r = await ghApi("/repos/" + gh.repo + "/contents/auto?ref=" + GH_BRANCH);
+    if (r.status === 404) return 0;
+    if (!r.ok) throw ghErr(r.status);
+    const list = await r.json(), seen = autoSeen(), from = addDays(kstDate(), -120);
+    const todo = (Array.isArray(list) ? list : []).map((f) => ({ d: String(f.name || "").replace(/\.json$/, ""), sha: f.sha, path: f.path }))
+      .filter((f) => isValidDate(f.d) && f.d >= from && f.d !== DATE && seen[f.d] !== f.sha).sort((a, b) => (a.d < b.d ? 1 : -1)).slice(0, 40);
+    let n = 0;
+    for (const f of todo) {
+      const fr = await ghApi("/repos/" + gh.repo + "/contents/" + f.path + "?ref=" + GH_BRANCH);
+      if (!fr.ok) continue;
+      let a = null; try { a = JSON.parse(b64dec((await fr.json()).content || "")); } catch (e) {}
+      if (a && applyAuto(f.d, a)) n++;
+      seen[f.d] = f.sha;
+    }
+    try { localStorage.setItem(AUTO_SEEN_KEY, JSON.stringify(seen)); } catch (e) {}
+    if (n) { renderStats(); if (gh) ghSchedule(500); }
+    return n;
+  }
+  // ---------- 자동 연동 (열쇠 없이): 공개 저장소 eden-market 의 시장 숫자 ----------
+  // 🔄 동기화(열쇠)를 연결하지 않은 PC 설치판·폰 주소에서도 자동 입력이 되게, 공개 저장소의 auto/<날짜>.json 을 읽는다.
+  // raw.githubusercontent.com 은 열쇠 없이 누구나 읽을 수 있고 브라우저에서 바로 불러도 된다(CORS 허용). 시장 숫자만 있고 내 기록은 없다.
+  const PUB_REPO = "cmh73430-lgtm/eden-market", PUB_RAW = "https://raw.githubusercontent.com/" + PUB_REPO + "/main/auto/";
+  const PUB_SEEN_KEY = "cockpit-auto-seen-pub"; let pubTimer = null, pubListAt = 0, pubBusy = false, pubState = "";
+  const isLinkBuild = () => !$("syncCard") || $("syncCard").hidden; // claude.ai 링크: 밖으로 못 부름
+  async function pubGet(url) {
+    let signal; try { signal = AbortSignal.timeout(15000); } catch (e) {}
+    const r = await fetch(url, { cache: "no-cache", signal });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }
+  async function pubBackfill() {
+    if (Date.now() - pubListAt < 30 * 60 * 1000) return 0; // 목록은 30분에 한 번 (열쇠 없는 요청은 시간당 60번 제한)
+    pubListAt = Date.now();
+    const list = await pubGet("https://api.github.com/repos/" + PUB_REPO + "/contents/auto?ref=main");
+    let seen = {}; try { seen = JSON.parse(localStorage.getItem(PUB_SEEN_KEY) || "{}") || {}; } catch (e) {}
+    const from = addDays(kstDate(), -120);
+    const todo = (Array.isArray(list) ? list : []).map((f) => ({ d: String(f.name || "").replace(/\.json$/, ""), sha: f.sha }))
+      .filter((f) => isValidDate(f.d) && f.d >= from && f.d !== DATE && seen[f.d] !== f.sha).sort((a, b) => (a.d < b.d ? 1 : -1)).slice(0, 40);
+    let n = 0;
+    for (const f of todo) {
+      let a = null; try { a = await pubGet(PUB_RAW + f.d + ".json"); } catch (e) { continue; }
+      if (a && applyAuto(f.d, a)) n++;
+      seen[f.d] = f.sha;
+    }
+    try { localStorage.setItem(PUB_SEEN_KEY, JSON.stringify(seen)); } catch (e) {}
+    if (n) renderStats();
+    return n;
+  }
+  async function pubPull() {
+    if (gh || isLinkBuild() || pubBusy) return; // 열쇠가 연결돼 있으면 비공개 저장소 쪽(ghPull)이 맡는다
+    pubBusy = true;
+    try {
+      const a = await pubGet(PUB_RAW + DATE + ".json");
+      if (a) applyAuto(DATE, a);
+      await pubBackfill();
+      pubState = "on";
+    } catch (e) { pubState = "error"; }
+    finally { pubBusy = false; paintAuto(); }
+  }
+  function pubStart() {
+    if (gh || isLinkBuild()) return;
+    pubPull();
+    clearInterval(pubTimer);
+    pubTimer = setInterval(() => { if (document.visibilityState === "visible") pubPull(); }, 60000); // 1분마다 (화면을 볼 때만)
+  }
+  // 칸마다 회색 글씨로: 언제 자동으로 들어왔는지(날짜·시각) / 아직이면 몇 시에 들어오는지 / 손으로 고쳤는지
+  const AUTO_FIELDS = [].concat(SIGNALS.map((x) => ["signals." + x.k, "in-" + x.k, "morning"]), US.map((u) => ["us." + u.k, "us-" + u.k, "morning"]), ["kospi", "kosdaq", "invest"].map((k) => ["market." + k, "j-" + k, "close"]));
+  function paintAutoAt(noGh) {
+    const a = S.auto || {}, md = DATE.slice(5).replace(/^0/, "").replace(/-0?/, "/");
+    AUTO_FIELDS.forEach(([key, id, when]) => {
+      const el = $("aa-" + key), input = $(id); if (!el || !input) return;
+      const plan = when === "morning" ? "평일 아침 7:05·8:05 (몇 분 늦을 수 있음)" : "평일 오후 4:20 (몇 분 늦을 수 있음)", at = a["at." + when], v = a[key], cur = input.value;
+      // 빈 칸 안에도 회색으로 몇 시에 자동으로 들어오는지 보여 준다
+      el.hidden = false; if (!input.dataset.ph) input.dataset.ph = input.placeholder;
+      input.placeholder = when === "morning" ? "7:05 자동" : "16:20 자동";
+      let t;
+      if (noGh) t = "🤖 " + plan + " 자동 입력 (PC 설치판·폰 주소에서 · 이 링크에서는 손 입력)";
+      else if (v && cur === v) t = "🤖 " + md + " " + at + " 자동 입력됨" + (key === "signals.k200" ? " (" + (a["detail.k200"] || "야간 종가 ÷ 전날 주간 종가") + ")" : "");
+      else if (key === "signals.k200" && at && !v) t = "🤖 " + md + " " + at + " 야간 거래 값을 못 받음 (휴장 다음 날 등) · 손 입력";
+      else if (v && cur !== "") t = "✏️ 손으로 고침 (자동 " + at + " 값: " + v + ")";
+      else if (v && cur === "") t = "🤖 " + md + " " + at + " 자동 값 " + v + " (지움)";
+      else t = "🤖 " + plan + " 자동 입력 · 아직 안 들어옴";
+      el.textContent = t;
+    });
+  }
+  function paintAuto() {
+    const sig = $("autoSig"), mkt = $("autoMkt"); if (!sig || !mkt) return;
+    const noGh = !$("syncCard") || $("syncCard").hidden; // claude.ai 링크에서는 GitHub를 못 부르므로 표시하지 않는다
+    paintAutoAt(noGh);
+    sig.hidden = mkt.hidden = noGh; if (noGh) return;
+    const a = S.auto || {};
+    if (!gh && pubState === "error") { sig.textContent = "🤖 자동 연동: 인터넷이 잠시 안 돼요 · 1분 뒤 다시 확인해요 (지금은 손 입력)"; mkt.hidden = true; return; }
+    sig.textContent = a["at.morning"] ? "🤖 " + a["at.morning"] + "에 자동으로 받아온 값이에요 (네이버·야간선물은 TradingView) · 칸을 고치면 고친 값이 우선해요"
+      : "🤖 자동 연동 켜짐" + (gh ? "" : " (열쇠 없이)") + " · 이 날 받아온 값은 아직 없어요 (평일 아침 7:05·8:05에 미국 지표, 오후 4:20에 마감을 받아와요)";
+    mkt.textContent = a["at.close"] ? "🤖 " + a["at.close"] + "에 자동으로 받아온 마감·수급이에요 (네이버) · 고치면 고친 값이 우선해요"
+      : "🤖 오후 4:20에 코스피·코스닥 마감과 수급(외국인·기관)이 자동으로 채워져요";
+  }
+
+  // 받아오기 (바뀐 게 없으면 GitHub가 304로 가볍게 답한다)
+  function ghPull() {
+    if (!gh) return ghChain;
+    ghChain = ghChain.then(async () => {
+      if (!gh) return;
+      try {
+        const changedDates = [];
+        for (const y of ghYears()) {
+          const res = await ghRead(y, true);
+          if (res.notModified) continue;
+          const remoteDates = new Set(Object.keys(res.days));
+          Object.entries(res.days).forEach(([d, rec]) => {
+            if (!isValidDate(d)) return;
+            const r = mergeIntoLocal(d, rec);
+            if (r.changed) changedDates.push(d);
+            if (r.ahead) ghPending.add(d);
+          });
+          store.keys().filter((d) => isValidDate(d) && d.slice(0, 4) === y && !remoteDates.has(d)).forEach((d) => ghPending.add(d));
+        }
+        cloudState = "on"; lastSyncAt = kstTime().slice(0, 5);
+        afterRemote(changedDates);
+        const auto = await ghAuto(DATE); // 화면 날짜는 20초마다 (합친 뒤에 채워야 다른 기기 값을 덮지 않는다)
+        if (auto) applyAuto(DATE, auto);
+        await ghAutoBackfill(); // 지난 날짜는 30분에 한 번
+        if (ghPending.size) ghSchedule(300);
+      } catch (e) { ghFail(e); }
+    });
+    return ghChain;
+  }
+  function ghQueue(d) { ghPending.add(d); ghSchedule(1500); }
+  function ghSchedule(ms) { clearTimeout(ghTimer); ghTimer = setTimeout(ghPush, ms); }
+  // 올리기: 최신 파일을 받아 칸 단위로 합친 뒤 올린다. 그 사이 다른 기기가 올렸으면(409) 다시 합쳐서 재시도.
+  function ghPush() {
+    if (!gh || !ghPending.size) return ghChain;
+    const dates = [...ghPending]; ghPending.clear();
+    const byYear = {}; dates.forEach((d) => (byYear[d.slice(0, 4)] = byYear[d.slice(0, 4)] || []).push(d));
+    ghChain = ghChain.then(async () => {
+      if (!gh) return;
+      try {
+        const changedDates = [];
+        for (const [y, ds] of Object.entries(byYear)) {
+          for (let attempt = 0; attempt < 4; attempt++) {
+            const cur = await ghRead(y, false);
+            const days = Object.assign({}, cur.days);
+            Object.entries(cur.days).forEach(([d, rec]) => { if (isValidDate(d) && mergeIntoLocal(d, rec).changed) changedDates.push(d); });
+            ds.forEach((d) => { const v = store.get(d); if (v) days[d] = v; });
+            store.keys().filter((d) => isValidDate(d) && d.slice(0, 4) === y).forEach((d) => { const v = store.get(d); if (v) days[d] = v; });
+            if (JSON.stringify(days) === JSON.stringify(cur.days)) break; // 이미 같다
+            const body = { message: "Eden Cockpit 기록 " + y + " (" + kstDate() + " " + kstTime().slice(0, 5) + ")", branch: GH_BRANCH,
+              content: b64enc(JSON.stringify({ app: "jangjeon-cockpit", year: y, days }, null, 0)) };
+            if (cur.sha) body.sha = cur.sha;
+            const r = await ghApi("/repos/" + gh.repo + "/contents/" + yearFile(y), { method: "PUT", body: JSON.stringify(body) });
+            if (r.ok) { ghEtag[y] = null; break; }
+            if (r.status === 409 || r.status === 422) { await new Promise((ok) => setTimeout(ok, 400 + Math.random() * 600)); continue; }
+            throw ghErr(r.status);
+          }
+        }
+        cloudState = "on"; lastSyncAt = kstTime().slice(0, 5);
+        afterRemote(changedDates);
+      } catch (e) { dates.forEach((d) => ghPending.add(d)); ghFail(e); ghSchedule(15000); }
+    });
+    return ghChain;
+  }
+  function ghFail(e) {
+    const st = e && e.status;
+    cloudState = st === 401 || st === 403 || st === 404 ? "auth" : "error";
+    setStatus(); paintGh(ghMessage(e));
+  }
+  function ghMessage(e) {
+    const st = e && e.status;
+    if (st === 401) return "열쇠(토큰)가 틀렸거나 기간이 끝났어요. 새로 만들어 붙여넣어 주세요.";
+    if (st === 403) return "열쇠에 권한이 부족해요. 'Contents: Read and write'를 줬는지 확인해 주세요.";
+    if (st === 404) return "저장소를 찾을 수 없어요. 저장소 이름과, 열쇠를 만들 때 이 저장소를 골랐는지 확인해 주세요.";
+    return "인터넷이 잠시 안 돼요. 입력한 값은 이 기기에 저장돼 있고, 연결되면 자동으로 맞춰요.";
+  }
+  function paintGh(msg) {
+    const on = !!gh;
+    $("ghToken").closest("label").hidden = on; $("ghRepo").closest("label").hidden = on;
+    $("ghConnect").hidden = on; $("ghDisconnect").hidden = !on;
+    $("ghState").textContent = msg || (on ? "연결됨 · " + gh.repo + " · 20초마다 자동으로 맞춰요 · 🤖 자동 연동 켜짐" : "아직 연결 안 됨 · 지금은 이 기기에만 저장돼요");
+    paintAuto();
+  }
+  function ghStart(cfg) {
+    gh = cfg; clearInterval(pubTimer); paintGh(); // 열쇠가 있으면 비공개 저장소 쪽으로
+    cloudState = "connecting"; setStatus();
+    ghChain = ghChain.then(() => ghEnsureBranch()).catch((e) => ghFail(e)); // 실패해도 다음 시도는 계속된다
+    ghPull().then(() => { store.keys().filter(isValidDate).forEach((d) => ghPending.add(d)); ghSchedule(500); });
+    clearInterval(ghPoll);
+    ghPoll = setInterval(() => { if (document.visibilityState === "visible") ghPull(); }, 20000);
+  }
+  $("ghConnect").addEventListener("click", async () => {
+    const token = $("ghToken").value.trim(), repo = $("ghRepo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/$/, "");
+    if (!/^(github_pat_|ghp_)/.test(token)) { $("ghState").textContent = "열쇠는 github_pat_ 로 시작해요. 다시 복사해 붙여넣어 주세요."; return; }
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { $("ghState").textContent = "저장소는 '아이디/이름' 모양이에요. 예: cmh73430-lgtm/-"; return; }
+    $("ghState").textContent = "연결 확인 중…";
+    gh = { token, repo };
+    try { await ghEnsureBranch(); } catch (e) { gh = null; paintGh(ghMessage(e)); return; }
+    ghSave({ token, repo }); $("ghToken").value = "";
+    ghStart({ token, repo });
+  });
+  $("ghDisconnect").addEventListener("click", () => {
+    gh = null; ghSave(null); clearInterval(ghPoll); clearTimeout(ghTimer);
+    cloudState = "off"; setStatus(); paintGh("연결을 끊었어요. 이 기기 기록은 그대로 있어요."); pubStart();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") { flushPush(); if (gh && ghPending.size) ghPush(); }
+    else if (gh) ghPull(); // 다시 화면을 보면 바로 맞춘다
+  });
+  window.addEventListener("online", () => { if (gh) ghPull(); else pubPull(); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !gh) pubPull(); });
+
+  // 브라우저가 저장 공간을 정리할 때 이 기록을 지우지 않도록 '영구 보관'을 요청한다 (지원하는 브라우저만)
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+
+  paintDate(); fill(); render(); renderStats();
+  if (!store.keys().length) $("intro").open = true; // 처음 쓰는 사람에게는 사용법을 펼쳐서 보여준다
+  setStatus();
+  const ghCfg = ghLoad();
+  if (ghCfg && ghCfg.token && ghCfg.repo) ghStart(ghCfg); // GitHub 동기화가 설정돼 있으면 그걸 쓴다
+  else { paintGh(); startCloud(); pubStart(); }             // 아니면 claude.ai 링크일 때만 Claude 저장소 사용 + 열쇠 없이 공개 시장 숫자
+})();
+
+</script>
+</body>
+</html>
