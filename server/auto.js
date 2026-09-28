@@ -114,8 +114,20 @@ export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, 
   return { themes, raw: raws.join(", ") };
 }
 
+// 오늘 주도 테마 (장 마감 뒤): 등락률 상위 3개 테마 + 테마마다 거래대금 큰 상승 종목 2개
+export function leadersText(themes) {
+  return themes.map((t) => t.name + " " + (t.rate > 0 ? "+" : "") + t.rate + "%" + (t.stocks && t.stocks.length ? " (" + t.stocks.slice(0, 2).map((x) => x.name).join("·") + ")" : "")).join(" · ");
+}
+export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000 } = {}) {
+  const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+  const themes = pickThemes((await get("https://m.stock.naver.com/api/stocks/theme?page=1&pageSize=60")).groups, 3);
+  if (!themes.length) throw new Error("테마 순위 없음");
+  for (const t of themes) { try { t.stocks = leadStocks((await get("https://m.stock.naver.com/api/stocks/theme/" + t.no + "?page=1&pageSize=40")).stocks, 2); } catch (e) { t.stocks = []; } }
+  return { text: leadersText(themes), themes: themes.map((t) => ({ name: t.name, rate: t.rate, stocks: t.stocks.map((x) => x.name) })) };
+}
+
 // 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
-export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000 }) {
+export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, leaders = null }) {
   const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), market: {}, errors: [] };
   const inv = {};
   for (const k of ["kospi", "kosdaq"]) {
@@ -134,6 +146,10 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
     } catch (e) { out.errors.push(k + " 수급: " + (e.message || e)); }
   }
   if (Object.keys(inv).length) out.market.invest = Object.assign({ text: investText(inv) }, inv);
+  if (leaders) {
+    try { const l = await leaders(); if (l.text) out.market.leaders = l; }
+    catch (e) { out.errors.push("주도 테마: " + (e.message || e)); }
+  }
   return out;
 }
 
@@ -158,6 +174,7 @@ export function summarize(rec) {
   if (c) {
     ["kospi", "kosdaq"].forEach((k) => { const v = c.market && c.market[k]; if (v) lines.push(`오후 ${c.at} ${k.padEnd(6)} ${String(v.value).padStart(7)}%  종가 ${v.close}`); });
     if (c.market && c.market.invest) lines.push(`오후 ${c.at} 수급 ${c.market.invest.text}`);
+    if (c.market && c.market.leaders) lines.push(`오후 ${c.at} 주도 테마 ${c.market.leaders.text}`);
     (c.errors || []).forEach((e) => lines.push("오후 실패 " + e));
   }
   return lines.join("\n");

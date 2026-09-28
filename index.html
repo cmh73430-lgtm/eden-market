@@ -131,7 +131,7 @@ header .tools .row { display: flex; gap: 6px; }
 .autoline { font-size: 12.5px; color: var(--muted); background: var(--note); border-radius: 6px; padding: 5px 9px; margin: 0 0 8px; }
 .autoat { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); font-weight: 400; margin-top: -2px; }
 .jgrid label .autoat { display: block; margin-top: 2px; }
-input.num::placeholder, input.jin::placeholder { font-size: 12px; font-weight: 400; color: var(--muted); opacity: .9; }
+input.num::placeholder, input.jin::placeholder, textarea.jin::placeholder { font-size: 12px; font-weight: 400; color: var(--muted); opacity: .9; }
 input.autov { box-shadow: inset 0 0 0 2px var(--down-bg); border-color: var(--down); border-style: dashed; }
 .sync { font-size: 11.5px; color: var(--muted); text-align: right; }
 .sync.warn { color: var(--a); font-weight: 700; }
@@ -160,8 +160,9 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .explain div { padding-left: 1em; text-indent: -1em; }
 .explain .g { color: var(--g); } .explain .a { color: var(--a); } .explain .r { color: var(--r); }
 .explain .end { margin-top: 4px; font-weight: 900; }
-.explain .briefs { display: grid; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
-.explain .brief { padding-left: 0; text-indent: 0; } .explain .brief > b { display: block; font-size: 13px; margin-bottom: 3px; }
+.explain .briefs { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 6px; }
+.explain .brief { padding: 8px 10px; text-indent: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.explain .sub { padding-left: 0; text-indent: 0; font-weight: 800; font-size: 13px; margin-top: 4px; } .explain .brief > b { display: block; font-size: 13px; margin-bottom: 3px; }
 .explain .brief div { padding-left: 0; text-indent: 0; }
 .explain .bchip { display: inline-block; font-size: 12.5px; padding: 2px 8px; margin: 0 4px 4px 0; border-radius: 12px; background: var(--note); }
 .explain .bchip.up { background: var(--up-bg); color: var(--up); font-weight: 700; } .explain .bchip.dn { background: var(--down-bg); color: var(--down); font-weight: 700; }
@@ -649,7 +650,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
   </details>
 
   <section class="card" data-nav="판단 근거">
-    <h2>🧭 매매 모드 판단 근거 <small>넣은 숫자로 어떻게 정해졌는지 · 오늘 일정·테마·수혜 업종 한눈에</small></h2>
+    <h2>🧭 매매 모드 판단 근거 <small>오늘 일정 · 미국장 테마 · 전일 주도 테마 · 수혜 업종 한눈에 + 지표별 판정</small></h2>
     <div class="explain" id="explain"></div>
   </section>
 
@@ -741,28 +742,50 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
     </div>
   </section>
 
-  <section class="card journal" id="journal" data-nav="📓 매매 일지">
-    <h2>📓 매매 일지 <small>장 끝나고 5분 · 쌓이면 최고의 공부</small></h2>
-
+  <section class="card journal" id="marketCard" data-nav="📰 당일 시황">
+    <h2>📰 당일 시황 <small>장 끝나고 3분 · 지수·수급·주도 테마는 오후 4:20 자동 · 매매 안 한 날도 시황일지로 남겨요</small></h2>
     <div class="jsec">
-      <h3>① 오늘 시황 <small>장전 시황 판단은 자동으로 들어와요</small></h3>
+      <h3>① 장전 판단 <small>아침에 정한 것 (자동)</small></h3>
       <div class="mkt" id="jMorning"></div>
+      <div class="jq">장전 판단이 맞았나요?
+        <div class="chips" id="verdictChips"><button class="chip up" type="button" data-v="right">맞았다</button><button class="chip" type="button" data-v="half">반쯤</button><button class="chip dn" type="button" data-v="wrong">틀렸다</button></div>
+      </div>
+    </div>
+    <div class="jsec">
+      <h3>② 장 마감 <small>🤖 오후 4:20 자동 · 고치면 고친 값이 우선</small></h3>
       <div class="autoline" id="autoMkt" hidden></div>
       <div class="jgrid">
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
         <label class="wide">수급 (외국인·기관, 억원)<input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억"><small class="autoat" id="aa-market.invest" hidden></small></label>
-        <label class="wide">오늘 주도 테마<input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label>
-        <label class="wide">한 줄 시황<input class="jin" id="j-mktNote" placeholder="예: 외국인 매도로 오후에 밀림, 반도체 약세"></label>
+        <label class="wide">오늘 주도 테마<input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"><small class="autoat" id="aa-market.leaders" hidden></small></label>
       </div>
-      <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a></div>
-      <div class="jq">장전 판단이 맞았나요?
-        <div class="chips" id="verdictChips"><button class="chip up" type="button" data-v="right">맞았다</button><button class="chip" type="button" data-v="half">반쯤</button><button class="chip dn" type="button" data-v="wrong">틀렸다</button></div>
+      <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a><a class="lk nv" href="https://m.stock.naver.com/news" target="_blank" rel="noopener">뉴스 ↗</a></div>
+    </div>
+    <div class="jsec">
+      <h3>③ 오늘 시장 이야기 <small>짧게 적어도 쌓이면 흐름이 보여요</small></h3>
+      <div class="jgrid">
+        <label class="wide">장 흐름 (오전 → 오후)<textarea class="jin" id="j-flow" rows="2" placeholder="예: 갭상승 출발 → 10시부터 외국인 매도로 밀림 → 오후 반도체 반등"></textarea></label>
+        <label class="wide">특징주 · 이슈 · 뉴스<textarea class="jin" id="j-issues" rows="2" placeholder="예: 루닛 +20% (의료AI 정책 기대), 삼성전자 -4% (외국인 매도)"></textarea></label>
+        <label class="wide">한 줄 시황<input class="jin" id="j-mktNote" placeholder="예: 외국인 매도로 오후에 밀림, 반도체 약세"></label>
+        <label class="wide">내일 볼 것<textarea class="jin" id="j-next" rows="2" placeholder="예: 의료AI 이어지는지 프리마켓 확인, 밤 미국 CPI"></textarea></label>
       </div>
     </div>
+    <div class="jsec blog">
+      <h3>④ 시황일지로 블로그에 올리기 <small>매매 내역 없이 시황만</small></h3>
+      <div class="row2">
+        <button class="btn" id="mktBlogCopy" type="button">1. 시황일지 복사</button>
+        <a class="btn" href="https://blog.naver.com/GoBlogWrite.naver" target="_blank" rel="noopener">2. 네이버 블로그 글쓰기 열기 ↗</a>
+      </div>
+      <div class="sync" id="mktBlogMsg" style="text-align:left"></div>
+    </div>
+  </section>
+
+  <section class="card journal" id="journal" data-nav="📓 매매 일지">
+    <h2>📓 매매 일지 <small>장 끝나고 5분 · 쌓이면 최고의 공부</small></h2>
 
     <div class="jsec">
-      <h3>② 매매 내역 <small>한 번 매수·매도한 것마다 하나씩</small></h3>
+      <h3>① 매매 내역 <small>한 번 매수·매도한 것마다 하나씩</small></h3>
       <div id="trades"></div>
       <div class="row2"><button class="btn" id="addTrade" type="button">＋ 매매 추가</button></div>
       <div class="jsum" id="jSum"></div>
@@ -770,7 +793,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
     </div>
 
     <div class="jsec">
-      <h3>③ 오늘 돌아보기</h3>
+      <h3>② 오늘 돌아보기</h3>
       <div class="chips" id="resultChips">
         <button class="chip up" type="button" data-r="win">수익</button>
         <button class="chip" type="button" data-r="even">본전</button>
@@ -790,7 +813,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
     </div>
 
     <div class="jsec blog">
-      <h3>④ 네이버 블로그에 올리기 <small>그날 입력한 전체 내용 · 3번 클릭</small></h3>
+      <h3>③ 네이버 블로그에 올리기 <small>그날 입력한 전체 내용 · 3번 클릭</small></h3>
       <div class="blogid">
         <label>내 블로그 아이디<input class="jin" id="blogId" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="예: blog.naver.com/○○○ 의 ○○○"></label>
         <a class="btn" id="blogHome" href="https://blog.naver.com/" target="_blank" rel="noopener" hidden>내 블로그 열기 ↗</a>
@@ -1399,7 +1422,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.28-4";
+  const APP_VER = "9.28-6";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1440,7 +1463,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   let DATE = isValidDate(qDate) ? qDate : kstDate();
 
   const blankJournal = () => ({ memo: "", result: "", kept: false, verdict: "", good: "", bad: "", tomorrow: "", mood: "",
-    market: { kospi: "", kosdaq: "", invest: "", leaders: "", note: "" }, trades: [] });
+    market: { kospi: "", kosdaq: "", invest: "", leaders: "", flow: "", issues: "", note: "", next: "" }, trades: [] });
   // auto: 자동 연동으로 채운 값(칸 이름 → 값). 칸의 지금 값이 이 값과 같으면 '자동으로 받아온 그대로'이고, 다르면 손으로 고친 것.
   const blank = () => ({ signals: {}, us: {}, prev: [{ name: "", state: "", pre: "" }, { name: "", state: "", pre: "" }], events: [], todo: {}, journal: blankJournal(), auto: {} });
   const fixJournal = (j) => { const b = blankJournal(); j = Object.assign(b, j || {}); j.market = Object.assign(blankJournal().market, j.market || {}); if (!Array.isArray(j.trades)) j.trades = []; return j; };
@@ -1679,12 +1702,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (r.combo) lines.push(`<div class="a">· 환율 10원↑ + 기름값 3%↑ 같은 날 동반 급등 → <b>주의 1개</b> (둘이 함께 튈 때만 판정에 넣어요 · 14년간 23일뿐, 다음 날 평균 -0.23%)</div>`);
     const evs = [...AUTO.filter((e) => e.lv).map((e) => e.k), ...S.events];
     lines.push(`<div class="${r.statuses.ev}">· 주요 일정 ${evs.length ? esc(evs.join(", ")) : "특별한 일 없음"} → <b>${LABEL[r.statuses.ev]}</b></div>`);
-    if (r.filled === 0) return `<div>아직 넣은 숫자가 없어요. 아래 칸 옆의 초록·주황 버튼(↗)을 눌러 숫자를 보고, 칸에 넣어 보세요.</div>` + lines.join("") + briefHtml(r);
+    if (r.filled === 0) return briefHtml(r) + `<div class="sub">📊 지표별 판정</div><div>아직 넣은 숫자가 없어요. 아침 7:05·8:05에 자동으로 들어와요 (직접 넣어도 돼요).</div>` + lines.join("");
     let end;
     if (r.counts.r > 0) end = `나쁨이 ${r.counts.r}개 있어요. 규칙은 <b>나쁨이 하나라도 있으면 쉼</b>이에요. 오늘은 새로 사지 말고, 가진 주식만 정리해요.`;
     else if (r.counts.a >= 2) end = `주의가 ${r.counts.a}개예요. 규칙은 <b>주의가 2개 이상이면 절반</b>이에요. 평소 돈의 반만 쓰고, 그날 산 건 그날 팔아요.`;
     else end = `나쁨 0개, 주의 ${r.counts.a}개예요. 그래서 <b>정상</b>이에요. 평소처럼 해도 돼요.` + (r.filled < 7 ? ` (아직 ${7 - r.filled}칸을 안 넣었어요. 다 넣으면 더 정확해요)` : "");
-    return lines.join("") + `<div class="end">➜ ${end}</div>` + briefHtml(r);
+    return briefHtml(r) + `<div class="sub">📊 지표별 판정</div>` + lines.join("") + `<div class="end">➜ ${end}</div>`;
   }
   // 판단 근거 아래 한눈에 보기: 오늘 특별 일정 · 미국장 테마 · 전일 주도 테마(애프터·프리마켓) · 지표별 수혜 업종
   function briefHtml(r) {
@@ -1705,7 +1728,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
   // ---------- 매매 일지 ----------
   const JFIELDS = ["good", "bad", "tomorrow", "mood"];
-  const MFIELDS = ["kospi", "kosdaq", "invest", "leaders", "note"];
+  const MFIELDS = ["kospi", "kosdaq", "invest", "leaders", "flow", "issues", "note", "next"];
   const METHODS = ["프리마켓", "시초", "장중", "종가", "애프터마켓"];
   const EMOTIONS = ["차분", "조급", "욕심", "두려움", "복수심", "지루함"];
   const VERDICT = { right: "맞았다", half: "반쯤", wrong: "틀렸다" };
@@ -1821,13 +1844,14 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
   // 네이버 블로그용 글: 그날 입력한 전체 내용 (서식 유지 HTML + 글자만)
   // 네이버 글쓰기에 붙여넣어도 줄이 흐트러지지 않게, 한 줄에 하나씩 <p>로 나눈다.
-  function blogPost(d) {
+  function blogPost(d, only) {
     const { st, auto, r } = dayView(d || DATE), dd0 = d || DATE;
     const m = morningSummary(r, st, auto), j = fixJournal(st.journal), T = dayTotals(j);
     const dd = dd0.replace(/-/g, ".") + " (" + WEEKDAYS[weekday(dd0)] + ")";
     const trades = (j.trades || []).filter((t) => t.name || t.buy);
     // 매매나 돌아보기를 적은 날은 [매매일지], 장전 판단·시황만 있는 날은 [시황일지]
-    const isJournal = trades.length > 0 || (j.result && j.result !== "none") || j.kept || ["good", "bad", "tomorrow", "mood", "memo"].some((k) => (j[k] || "").trim());
+    let isJournal = trades.length > 0 || (j.result && j.result !== "none") || j.kept || ["good", "bad", "tomorrow", "mood", "memo"].some((k) => (j[k] || "").trim());
+    if (only === "시황일지") isJournal = false; // 당일 시황 칸의 버튼: 매매 내역 없이 시황만
     const kind = isJournal ? "매매일지" : "시황일지";
     const title = `[${kind}] ${dd} · ${r.mode === "—" ? "판정 전" : r.mode}${T.n ? " · " + money(T.total) : ""}`;
     const mk = j.market;
@@ -1877,7 +1901,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     head("📌 장 마감 시황");
     const close = [mk.kospi && "코스피 " + pct(pnum(mk.kospi) ?? 0), mk.kosdaq && "코스닥 " + pct(pnum(mk.kosdaq) ?? 0)].filter(Boolean).join(" · ");
     const n0 = txt.length;
-    [["지수:", close], ["수급:", mk.invest], ["주도 테마:", mk.leaders], ["한 줄 시황:", mk.note], ["장전 판단 적중:", VERDICT[j.verdict]]]
+    [["지수:", close], ["수급:", mk.invest], ["주도 테마:", mk.leaders], ["장 흐름:", mk.flow], ["특징주·이슈:", mk.issues], ["한 줄 시황:", mk.note], ["내일 볼 것:", mk.next], ["장전 판단 적중:", VERDICT[j.verdict]]]
       .filter(([, v]) => v).forEach(([k, v]) => { gap(); line(k, v); });
     if (txt.length === n0) say("장 마감 시황을 적지 않았다.");
 
@@ -1921,8 +1945,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     say(`#매매일지 #주식일지 #단타일지 #EdenCockpit #${dd0.replace(/-/g, "")}`);
     return { title, kind, html: h, text: txt.join("\n") };
   }
-  async function copyBlog(d, msgEl) {
-    const post = blogPost(d);
+  async function copyBlog(d, msgEl, only) {
+    const post = blogPost(d, only);
     $("blogPreview").innerHTML = post.html;
     const msg = (t) => ((msgEl || $("blogMsg")).textContent = t);
     const done = () => msg("복사했어요 ✅ (버전 " + APP_VER + ") " + post.title + " · 이제 '네이버 블로그 글쓰기 열기'를 누르고 본문에 붙여넣기 하세요.");
@@ -1945,7 +1969,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // ---------- 날짜별 기록 목록 ----------
   function renderArchive() {
     const days = store.keys().filter(isValidDate).sort().reverse().map((d) => ({ d, st: loadDay(d) }))
-      .filter(({ st }) => Object.keys(st.signals || {}).some((k) => parseNum(st.signals[k]) !== null) || fixJournal(st.journal).trades.length || fixJournal(st.journal).memo || fixJournal(st.journal).result);
+      .filter(({ st }) => Object.keys(st.signals || {}).some((k) => parseNum(st.signals[k]) !== null) || fixJournal(st.journal).trades.length || fixJournal(st.journal).memo || fixJournal(st.journal).result || ["flow", "issues", "note"].some((k) => fixJournal(st.journal).market[k]));
     $("archiveCount").textContent = days.length ? "모두 " + days.length + "일" : "";
     $("archive").innerHTML = days.length ? days.map(({ d, st }) => {
       const j = fixJournal(st.journal), T = dayTotals(j), mode = st.mode && st.mode !== "—" ? st.mode : "";
@@ -2211,6 +2235,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   $("feePct").value = feePct();
   $("feePct").addEventListener("input", () => { try { localStorage.setItem(FEE_KEY, $("feePct").value); } catch (e) {} paintTradeNumbers(); renderStats(); });
   $("blogCopy").addEventListener("click", () => copyBlog(DATE));
+  $("mktBlogCopy").addEventListener("click", () => copyBlog(DATE, $("mktBlogMsg"), "시황일지"));
   // 미리 보기: 열 때마다 최신 내용으로, 아래 '닫기' 버튼으로도 접기
   $("blogPrevBox").addEventListener("toggle", (e) => { if (e.target.open) $("blogPreview").innerHTML = blogPost(DATE).html; });
   $("blogPrevClose").addEventListener("click", () => { $("blogPrevBox").open = false; $("blogPrevBox").scrollIntoView({ block: "nearest" }); });
@@ -2514,6 +2539,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (st.auto["detail.prev." + i] !== d) { st.auto["detail.prev." + i] = d; changed.push(["auto.detail.prev." + i, m.ts]); }
     });
     ["kospi", "kosdaq"].forEach((k) => { if (c[k]) fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), c[k].value, a.close.ts); });
+    if (c.leaders && c.leaders.text) fillOne("market.leaders", st.journal.market.leaders, (x) => (st.journal.market.leaders = x), c.leaders.text, a.close.ts);
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
     [["at.morning", m.at, m.ts], ["at.close", (a.close || {}).at, (a.close || {}).ts]].forEach(([k, v, ts]) => { if (v && st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, ts]); } });
     return changed;
@@ -2615,7 +2641,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     pubTimer = setInterval(() => { if (document.visibilityState === "visible") pubPull(); }, 60000); // 1분마다 (화면을 볼 때만)
   }
   // 칸마다 회색 글씨로: 언제 자동으로 들어왔는지(날짜·시각) / 아직이면 몇 시에 들어오는지 / 손으로 고쳤는지
-  const AUTO_FIELDS = [].concat(SIGNALS.map((x) => ["signals." + x.k, "in-" + x.k, "morning"]), US.map((u) => ["us." + u.k, "us-" + u.k, "morning"]), ["kospi", "kosdaq", "invest"].map((k) => ["market." + k, "j-" + k, "close"]), [0, 1].map((i) => ["prev." + i + ".name", "pv-" + i, "morning"]));
+  const AUTO_FIELDS = [].concat(SIGNALS.map((x) => ["signals." + x.k, "in-" + x.k, "morning"]), US.map((u) => ["us." + u.k, "us-" + u.k, "morning"]), ["kospi", "kosdaq", "invest", "leaders"].map((k) => ["market." + k, "j-" + k, "close"]), [0, 1].map((i) => ["prev." + i + ".name", "pv-" + i, "morning"]));
   function paintAutoAt(noGh) {
     const a = S.auto || {}, md = DATE.slice(5).replace(/^0/, "").replace(/-0?/, "/");
     AUTO_FIELDS.forEach(([key, id, when]) => {

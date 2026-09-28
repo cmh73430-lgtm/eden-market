@@ -1,10 +1,10 @@
 // 자동 연동 수집기 — GitHub Actions(.github/workflows/auto.yml)가 평일 아침·오후에 실행한다.
 //   아침(KST 12시 전): 미국 선물·환율·SOX·VIX·유가·금리 + 미국 대응주 (네이버 → 야후 순) + 전일 주도 테마(애프터·프리마켓)
-//   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
+//   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 + 오늘 주도 테마 (네이버)
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
 // 옵션: --when=morning|close (기본: 지금 시각으로 판단) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
 import { loadCollectConfig } from "../server/config.js";
-import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, kstDate, mergeAuto, skipReason, summarize, whenOf } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, collectLeaders, kstDate, mergeAuto, skipReason, summarize, whenOf } from "../server/auto.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -68,7 +68,7 @@ const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { j
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
 const part = when === "morning"
   ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, prevThemes: () => collectPrevThemes({ keep }) })
-  : await collectClose({ adapters: { naver }, now });
+  : await collectClose({ adapters: { naver }, now, leaders: () => collectLeaders() });
 const got = when === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
 
