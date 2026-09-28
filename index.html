@@ -264,9 +264,11 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 /* 오른쪽 옆 세로 메뉴: 평소엔 가장자리에 얇은 '메뉴' 손잡이만, 누르면 세로 목록이 펼쳐짐 */
 .navtab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 46; writing-mode: vertical-rl; font: inherit; font-size: 13px; font-weight: 700; letter-spacing: 2px; color: #fff; background: var(--down); border: 0; border-radius: 10px 0 0 10px; padding: 14px 7px; opacity: .85; box-shadow: -1px 1px 6px rgba(0,0,0,.2); cursor: pointer; }
 .navdim { position: fixed; inset: 0; z-index: 47; background: rgba(0,0,0,.18); }
-.secnav { position: fixed; right: 0; top: 50%; z-index: 48; display: flex; flex-direction: column; gap: 4px; width: 172px; max-height: 82vh; overflow-y: auto; padding: 8px; background: var(--paper); border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; box-shadow: -3px 0 14px rgba(0,0,0,.18); transform: translate(105%, -50%); transition: transform .18s ease; visibility: hidden; }
-.secnav.open { transform: translate(0, -50%); visibility: visible; }
-.secnav button { flex: 0 0 auto; text-align: left; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 42px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+/* 메뉴: 폰 브라우저·Claude 앱의 위아래 막대에 가리지 않게 '보이는 화면' 안에 위아래 여백을 두고 붙인다 (넘치면 메뉴 안에서 스크롤) */
+.secnav { position: fixed; right: 0; top: calc(env(safe-area-inset-top, 0px) + 76px); bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); height: auto; max-height: none; z-index: 48; display: flex; flex-direction: column; gap: 4px; width: 172px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 8px 8px 12px; background: var(--paper); border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; box-shadow: -3px 0 14px rgba(0,0,0,.18); transform: translateX(105%); transition: transform .18s ease; visibility: hidden; }
+.secnav.open { transform: translateX(0); visibility: visible; }
+@media (min-height: 820px) { .secnav { top: 50%; bottom: auto; max-height: calc(100dvh - 160px); transform: translate(105%, -50%); } .secnav.open { transform: translate(0, -50%); } }
+.secnav button { flex: 0 0 auto; text-align: left; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-height: 38px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .secnav button:active { transform: scale(.97); }
 .secnav button.on { color: #fff; background: var(--down); border-color: var(--down); }
 [data-nav] { scroll-margin-top: 8px; }
@@ -1449,7 +1451,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-3";
+  const APP_VER = "9.29-4";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
