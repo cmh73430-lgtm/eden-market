@@ -166,6 +166,9 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .explain .brief div { padding-left: 0; text-indent: 0; }
 .explain .bchip { display: inline-block; font-size: 12.5px; padding: 2px 8px; margin: 0 4px 4px 0; border-radius: 12px; background: var(--note); }
 .explain .bchip.up { background: var(--up-bg); color: var(--up); font-weight: 700; } .explain .bchip.dn { background: var(--down-bg); color: var(--down); font-weight: 700; }
+.autobtns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 8px; }
+.autobtns .btn { font-size: 13px; padding: 4px 10px; }
+.autobtnmsg { font-size: 12px; color: var(--muted); flex-basis: 100%; }
 .explain .muted { color: var(--muted); font-size: 12.5px; }
 .gloss dt { font-weight: 900; margin-top: 8px; } .gloss dd { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .journal textarea { width: 100%; box-sizing: border-box; min-height: 70px; font: inherit; font-size: 14px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
@@ -657,6 +660,11 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
   <section class="card" data-nav="① 장전 체크 지표">
     <h2>① 장전 체크 지표 <small>버튼(↗)을 눌러 숫자를 보고 → 칸에 넣기 · <b>±</b>는 마이너스 전환</small></h2>
     <div class="autoline" id="autoSig" hidden></div>
+    <div class="autobtns" id="autoBtns" hidden>
+      <button class="btn" type="button" data-pull>🔄 지금 받아오기</button>
+      <a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener">⚡ 지금 새로 수집 ↗</a>
+      <span class="autobtnmsg" data-msg></span>
+    </div>
     <div id="sigList"></div>
     <div class="sig" data-k="ev">
       <div class="name">오늘 특별한 일정</div>
@@ -754,6 +762,11 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
     <div class="jsec">
       <h3>② 장 마감 <small>🤖 오후 4:20 자동 · 고치면 고친 값이 우선</small></h3>
       <div class="autoline" id="autoMkt" hidden></div>
+      <div class="autobtns" id="autoBtns2" hidden>
+      <button class="btn" type="button" data-pull>🔄 지금 받아오기</button>
+      <a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener">⚡ 지금 새로 수집 ↗</a>
+      <span class="autobtnmsg" data-msg></span>
+    </div>
       <div class="jgrid">
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
@@ -1427,7 +1440,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-1";
+  const APP_VER = "9.29-2";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2639,6 +2652,27 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     } catch (e) { pubState = "error"; }
     finally { pubBusy = false; paintAuto(); }
   }
+  // 🔄 지금 받아오기: 저장소에 이미 있는 값을 바로 다시 읽는다 (1분 기다리지 않고)
+  // ⚡ 지금 새로 수집: 앱은 열쇠가 없어 수집을 직접 못 시키므로 GitHub 수집 화면을 열어 준다 → 'Run workflow' 누르면 1~2분 뒤 들어옴. 그동안 15초마다 확인
+  let fastUntil = 0, fastTimer = null;
+  const autoMsg = (t) => document.querySelectorAll(".autobtns [data-msg]").forEach((m) => (m.textContent = t));
+  async function pullNow() {
+    autoMsg("받아오는 중…");
+    pubListAt = 0;
+    for (let i = 0; i < 40 && pubBusy; i++) await new Promise((ok) => setTimeout(ok, 250)); // 이미 받는 중이면 끝날 때까지
+    try { if (gh) await ghPull(); else await pubPull(); } catch (e) {}
+    const a = S.auto || {};
+    autoMsg(pubState === "error" ? "인터넷이 안 돼요. 잠시 뒤 다시 눌러 주세요."
+      : "받아왔어요 ✅ " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) + (a["at.morning"] ? " · 아침 수집 " + a["at.morning"] : " · 오늘 아침 수집은 아직 없어요") + (a["at.close"] ? " · 오후 수집 " + a["at.close"] : ""));
+  }
+  function watchFast() {
+    fastUntil = Date.now() + 5 * 60 * 1000;
+    autoMsg("GitHub 화면 오른쪽 'Run workflow' → 초록 'Run workflow' 버튼을 누르세요 (GitHub 로그인 필요). 1~2분 뒤 여기에 자동으로 들어와요. 5분 동안 15초마다 확인해요.");
+    clearInterval(fastTimer);
+    fastTimer = setInterval(() => { if (Date.now() > fastUntil) { clearInterval(fastTimer); return; } pubListAt = 0; if (gh) ghPull(); else pubPull(); }, 15000);
+  }
+  document.querySelectorAll(".autobtns [data-pull]").forEach((b) => b.addEventListener("click", pullNow));
+  document.querySelectorAll(".autobtns [data-collect]").forEach((b) => b.addEventListener("click", watchFast));
   function pubStart() {
     if (gh || isLinkBuild()) return;
     pubPull();
@@ -2669,7 +2703,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const sig = $("autoSig"), mkt = $("autoMkt"); if (!sig || !mkt) return;
     const noGh = isLinkBuild(); // claude.ai 링크에서는 GitHub를 못 부르므로 표시하지 않는다
     paintAutoAt(noGh);
-    sig.hidden = mkt.hidden = noGh; if (noGh) return;
+    sig.hidden = mkt.hidden = noGh;
+    document.querySelectorAll(".autobtns").forEach((b) => (b.hidden = noGh));
+    if (noGh) return;
     const a = S.auto || {};
     if (!gh && pubState === "error") { sig.textContent = "🤖 자동 연동: 인터넷이 잠시 안 돼요 · 1분 뒤 다시 확인해요 (지금은 손 입력)"; mkt.hidden = true; return; }
     sig.textContent = a["at.morning"] ? "🤖 " + a["at.morning"] + "에 자동으로 받아온 값이에요 (네이버·야간선물은 TradingView) · 칸을 고치면 고친 값이 우선해요"
