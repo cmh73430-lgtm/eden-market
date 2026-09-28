@@ -1,10 +1,10 @@
 // 자동 연동 수집기 — GitHub Actions(.github/workflows/auto.yml)가 평일 아침·오후에 실행한다.
-//   아침(KST 12시 전): 미국 선물·환율·SOX·VIX·유가·금리 + 미국 대응주 (네이버 → 야후 순)
+//   아침(KST 12시 전): 미국 선물·환율·SOX·VIX·유가·금리 + 미국 대응주 (네이버 → 야후 순) + 전일 주도 테마(애프터·프리마켓)
 //   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
 // 옵션: --when=morning|close (기본: 지금 시각으로 판단) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
 import { loadCollectConfig } from "../server/config.js";
-import { autoFile, AUTO_DIR, collectClose, collectMorning, kstDate, mergeAuto, skipReason, summarize, whenOf } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, kstDate, mergeAuto, skipReason, summarize, whenOf } from "../server/auto.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -21,12 +21,6 @@ const cfg = loadCollectConfig();
 
 const skip = skipReason(date, cfg.holidays, cfg.holidayNames);
 if (skip && !has("force")) { console.log(`${date} ${skip} — 건너뜀`); process.exit(0); }
-
-const part = when === "morning"
-  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now })
-  : await collectClose({ adapters: { naver }, now });
-const got = when === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
-if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
 
 // ---- GitHub 저장 (contents API) ----
 const token = process.env.GITHUB_TOKEN, repo = process.env.GITHUB_REPOSITORY;
@@ -69,14 +63,21 @@ async function writeFile(path, obj, message) {
   throw new Error(path + " 저장 실패 (충돌 반복)");
 }
 
-if (has("dry") || !token || !repo) {
+const save = !has("dry") && token && repo;
+const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { json: null };
+const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
+const part = when === "morning"
+  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, prevThemes: () => collectPrevThemes({ keep }) })
+  : await collectClose({ adapters: { naver }, now });
+const got = when === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
+if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
+
+if (!save) {
   const rec = mergeAuto(null, date, when, part);
   console.log(summarize(rec));
   console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
-await ensureBranch();
-const prev = await readFile(autoFile(date));
 const rec = mergeAuto(prev.json, date, when, part);
 const msg = `자동 연동 ${date} ${when === "morning" ? "아침" : "오후"} ${part.at}`;
 await writeFile(autoFile(date), rec, msg);

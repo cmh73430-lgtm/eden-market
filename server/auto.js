@@ -39,10 +39,79 @@ export function investText(inv) {
 }
 
 // 아침: 시장 신호 + 미국 대응주 (야간선물 k200 은 KIS 없이는 못 받으므로 실패해도 그대로 둔다)
-export async function collectMorning({ sources, themes, adapters, now = new Date() }) {
+export async function collectMorning({ sources, themes, adapters, now = new Date(), prevThemes = null }) {
   const got = await collectAll({ sources, themes, adapters, now });
   const strip = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { value: v.value, src: v.src, time: v.time || undefined, detail: v.detail }]));
-  return { at: kstTime(now).slice(0, 5), ts: now.getTime(), signals: strip(got.signals), us: strip(got.us), errors: got.errors.map((e) => e.key + ": " + e.error) };
+  const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), signals: strip(got.signals), us: strip(got.us), errors: got.errors.map((e) => e.key + ": " + e.error) };
+  if (prevThemes) {
+    try { const p = await prevThemes(); out.prev = p.themes; out.prevRaw = p.raw; }
+    catch (e) { out.errors.push("prev: " + (e.message || e)); }
+  }
+  return out;
+}
+
+// ---- 전일 주도 테마 (네이버 테마 순위 + 주도주 NXT 애프터·프리마켓) ----
+// 아침 9시 전 테마 순위 = 어제 마감 기준. 종목 5개 이상 테마 중 등락률 상위 2개,
+// 테마마다 거래대금 큰 상승 종목 5개를 주도주로 (NXT에 없는 종목은 빠짐) 보고 NXT 가격(애프터마켓 마지막 값 · 프리마켓 값)을 어제 KRX 종가와 비교한다.
+const NV_HEAD = { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" };
+export const PREV_MIN_STOCKS = 5, PREV_FLAT = 0.5;
+export function pickThemes(groups, n = 2) {
+  return (Array.isArray(groups) ? groups : [])
+    .map((g) => ({ no: g.no, name: String(g.name || "").trim(), count: num(g.totalCount), rate: num(g.changeRate) }))
+    .filter((g) => g.no !== undefined && g.name && g.rate !== null && (g.count || 0) >= PREV_MIN_STOCKS)
+    .sort((a, b) => b.rate - a.rate).slice(0, n);
+}
+export function leadStocks(stocks, n = 5) {
+  return (Array.isArray(stocks) ? stocks : [])
+    .map((x) => ({ code: x.itemCode, name: x.stockName, rate: num(x.fluctuationsRatio), value: num(x.accumulatedTradingValueRaw) ?? num(x.accumulatedTradingValue) }))
+    .filter((x) => x.code && x.rate !== null && x.rate > 0)
+    .sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, n);
+}
+// 종목 실시간 응답 → { session: "after"|"pre"|null, pct } (NXT 가격 ÷ 어제 KRX 종가)
+export function nxtMove(d) {
+  const o = d && d.overMarketPriceInfo; if (!o) return { session: null, pct: null, raw: "NXT 없음" };
+  const type = String(o.tradingSessionType || ""), status = String(o.overMarketStatus || "");
+  const price = num(o.overPrice), close = num(d.closePrice);
+  const session = /AFTER/i.test(type) ? "after" : /PRE/i.test(type) && /OPEN/i.test(status) ? "pre" : null;
+  const pct = session && price && close ? Number(((price / close - 1) * 100).toFixed(2)) : null;
+  return { session: pct === null ? null : session, pct, raw: type + "/" + status };
+}
+export const moveState = (pct) => (pct === null || pct === undefined ? "" : pct >= PREV_FLAT ? "up" : pct <= -PREV_FLAT ? "down" : "flat");
+const avg = (a) => (a.length ? Number((a.reduce((x, y) => x + y, 0) / a.length).toFixed(2)) : null);
+
+// keep: 같은 날 앞선 아침 수집의 prev (8:05 수집은 7:05에 고른 테마와 애프터마켓 값을 그대로 이어 쓴다)
+export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, keep = null } = {}) {
+  const get = async (u) => {
+    const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  };
+  let themes = Array.isArray(keep) && keep.length ? keep.map((t) => ({ no: t.no, name: t.name, rate: t.rate, stocks: t.stocks || [], after: t.after })) : null;
+  if (!themes) {
+    const list = await get("https://m.stock.naver.com/api/stocks/theme?page=1&pageSize=60");
+    themes = pickThemes(list.groups);
+    if (!themes.length) throw new Error("테마 순위 없음");
+    for (const t of themes) {
+      try { t.stocks = leadStocks((await get("https://m.stock.naver.com/api/stocks/theme/" + t.no + "?page=1&pageSize=40")).stocks); }
+      catch (e) { t.stocks = []; }
+    }
+  }
+  const raws = [];
+  for (const t of themes) {
+    const moves = { after: [], pre: [] };
+    for (const s of t.stocks) {
+      try {
+        const j = await get("https://polling.finance.naver.com/api/realtime/domestic/stock/" + s.code);
+        const m = nxtMove(j && j.datas && j.datas[0]);
+        raws.push(s.code + " " + m.raw);
+        if (m.session) moves[m.session].push(m.pct);
+      } catch (e) { raws.push(s.code + " " + (e.message || e)); }
+    }
+    const a = avg(moves.after), p = avg(moves.pre);
+    if (a !== null) t.after = { pct: a, state: moveState(a), n: moves.after.length };
+    if (p !== null) t.pre = { pct: p, state: moveState(p), n: moves.pre.length };
+  }
+  return { themes, raw: raws.join(", ") };
 }
 
 // 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
@@ -82,6 +151,8 @@ export function summarize(rec) {
   if (m) {
     Object.entries(m.signals || {}).forEach(([k, v]) => lines.push(`아침 ${m.at} 신호 ${k.padEnd(5)} ${String(v.value).padStart(8)}  ${v.src}`));
     Object.entries(m.us || {}).forEach(([k, v]) => lines.push(`아침 ${m.at} 테마 ${k.padEnd(5)} ${String(v.value).padStart(8)}  ${v.src}`));
+    (m.prev || []).forEach((t) => lines.push(`아침 ${m.at} 전일테마 ${t.name} ${t.rate}% · 애프터 ${t.after ? t.after.pct + "% " + t.after.state : "—"} · 프리 ${t.pre ? t.pre.pct + "% " + t.pre.state : "—"} (${(t.stocks || []).map((x) => x.name).join("·")})`));
+    if (m.prevRaw) lines.push("아침 NXT 세션 " + m.prevRaw);
     (m.errors || []).forEach((e) => lines.push("아침 실패 " + e));
   }
   if (c) {
