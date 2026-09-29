@@ -114,16 +114,18 @@ export function autoEvents(s, cal = {}) {
     const g = holidayGap(s, holidays);
     if (g.skipped.length) {
       let off = 0; for (let d = addDays(g.prevKr, 1); d < s; d = addDays(d, 1)) off++;
-      out.push({ k: "연휴 후 첫날 (" + off + "일 쉬고 · 미국 신호는 연휴 누적)", lv: "a", ev: "연휴후" });
+      // 검증(2012~26): 연휴 뒤 첫날 자체는 평소와 비슷(하락 51%, 2021~ 39%) → 참고. 대신 미국 신호를 연휴 누적으로 보는 게 맞음(시가 방향 일치 67→73%)
+      out.push({ k: "연휴 후 첫날 (" + off + "일 쉬고 · 미국 신호는 연휴 누적)", lv: "", ev: "연휴후" });
     }
   }
 
   const exp = monthlyExpiry(y, m, holidays);
   if (exp === s) {
     const moved = exp !== secondThursday(y, m) ? " (둘째 목 휴장 → 앞당김)" : "";
+    // 검증(2012~26 코스피 118·59일): 만기일은 평소보다 오히려 덜 내림(하락 37·39% vs 46%) → 동시만기는 주의(마감 동시호가 변동), 옵션만기는 참고
     out.push([3, 6, 9, 12].includes(m)
-      ? { k: "동시만기" + moved, lv: "r", ev: "동시만기" }
-      : { k: "옵션만기" + moved, lv: "a", ev: "옵션만기" });
+      ? { k: "동시만기" + moved, lv: "a", ev: "동시만기" }
+      : { k: "옵션만기" + moved + " (참고)", lv: "", ev: "옵션만기" });
   }
 
   const has = (key) => (ev[key] || []).includes(s);
