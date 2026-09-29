@@ -28,3 +28,14 @@ export function parseBlsIcs(ics) {
   });
   return out;
 }
+
+// 구글 대한민국 공휴일 달력(.ics): "설날"·"추석" 은 당일에만 붙고 앞뒤는 "설날 연휴" → 음력 당일을 정확히 알 수 있다 (nager 는 대체 공휴일까지 같은 이름이라 헷갈림)
+export const KR_ICS = "https://calendar.google.com/calendar/ical/ko.south_korea%23holiday%40group.v.calendar.google.com/public/basic.ics";
+export function lunarFromIcs(ics, year) {
+  const ev = ics.split("BEGIN:VEVENT").slice(1).map((b) => ({ s: ((b.match(/\nSUMMARY[^:]*:(.*)/) || [])[1] || "").trim(), d: (b.match(/DTSTART[^:]*:(\d{8})/) || [])[1] })).filter((e) => e.d && e.d.startsWith(String(year)))
+    .map((e) => ({ name: e.s, date: e.d.slice(0, 4) + "-" + e.d.slice(4, 6) + "-" + e.d.slice(6, 8) }));
+  const one = (re) => (ev.find((e) => re.test(e.name)) || {}).date || null;
+  const lunar = { seol: one(/^설날$/), chuseok: one(/^추석$/), buddha: one(/부처님|석가/) };
+  const extras = ev.filter((e) => /선거|임시\s*공휴일/.test(e.name)).map((e) => ({ date: e.date, name: e.name }));
+  return { lunar, extras };
+}

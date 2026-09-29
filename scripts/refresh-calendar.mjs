@@ -4,7 +4,7 @@
 // 실행: node scripts/refresh-calendar.mjs [--dry] [--force] [--years=2027,2028]
 import { readFileSync, writeFileSync } from "node:fs";
 import { krxHolidays } from "../shared/calendar.js";
-import { lunarFromNager, parseFomc, parseBlsIcs } from "../server/calendar-src.js";
+import { lunarFromNager, lunarFromIcs, KR_ICS, parseFomc, parseBlsIcs } from "../server/calendar-src.js";
 
 const arg = (k) => { const a = process.argv.find((x) => x.startsWith("--" + k)); return a ? (a.includes("=") ? a.split("=")[1] : true) : null; };
 const DRY = !!arg("dry"), FORCE = !!arg("force");
@@ -20,12 +20,15 @@ const log = [];
 for (const y of YEARS) {
   if (hol[y] && !FORCE) { log.push(`휴장일 ${y}: 이미 있음 (${hol[y].length}일)`); continue; }
   try {
-    const list = await get(`https://date.nager.at/api/v3/PublicHolidays/${y}/KR`);
-    const { lunar, extras } = lunarFromNager(list);
+    // 1순위 구글 대한민국 공휴일 달력, 안 되면 date.nager.at
+    let got = null, src = "";
+    try { const g = lunarFromIcs(await get(KR_ICS, "text"), y); if (g.lunar.seol && g.lunar.chuseok && g.lunar.buddha) { got = g; src = "구글 달력"; } } catch (e) { log.push(`  구글 달력 실패: ${e.message}`); }
+    if (!got) { got = lunarFromNager(await get(`https://date.nager.at/api/v3/PublicHolidays/${y}/KR`)); src = "nager"; }
+    const { lunar, extras } = got;
     if (!lunar.seol || !lunar.chuseok || !lunar.buddha) throw new Error("음력 날짜 못 찾음 " + JSON.stringify(lunar));
     const days = krxHolidays(y, lunar, extras);
     hol[y] = days;
-    log.push(`휴장일 ${y}: ${days.length}일 계산 (설 ${lunar.seol} · 추석 ${lunar.chuseok} · 부처님 ${lunar.buddha}${extras.length ? " · 임시 " + extras.map((e) => e.date + e.name).join(",") : ""})`);
+    log.push(`휴장일 ${y}: ${days.length}일 계산 [${src}] (설 ${lunar.seol} · 추석 ${lunar.chuseok} · 부처님 ${lunar.buddha}${extras.length ? " · 임시 " + extras.map((e) => e.date + e.name).join(",") : ""})`);
     log.push("  " + days.map((h) => h.date.slice(5) + " " + h.name).join(" | "));
   } catch (e) { log.push(`휴장일 ${y}: 실패 ${e.message} (앱에 '휴장일 표 없음' 안내가 떠요)`); }
 }
