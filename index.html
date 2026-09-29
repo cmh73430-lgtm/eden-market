@@ -1747,7 +1747,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-34";
+  const APP_VER = "9.29-35";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1906,7 +1906,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     } else { try { history.replaceState(history.state, "", "#" + d); } catch (e) {} } // 새로고침해도 이 날짜가 열리게
     DATE = d; S = loadDay(d); AUTO = autoEvents(d, CAL);
     paintDate(); fill(); render(); renderStats();
-  calRefresh(); cancelReset();
+    cancelReset();
     setStatus(); paintBack();
     if (gh) ghPull(); else pubPull(); // 이 날짜의 자동 연동 값도 바로 확인
     try {
@@ -3351,6 +3351,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   paintDate(); fill(); render(); renderStats();
   if (!store.keys().length) $("intro").open = true; // 처음 쓰는 사람에게는 사용법을 펼쳐서 보여준다
   setStatus();
+  calRefresh(); // 달력 표(휴장일·미국 일정)는 여기서 한 번 — 위 goto 안에서 부르면 아직 pubGet 등이 준비 전이라 조용히 실패했음(9.29-35 수정)
   const ghCfg = ghLoad();
   if (ghCfg && ghCfg.token && ghCfg.repo) ghStart(ghCfg); // GitHub 동기화가 설정돼 있으면 그걸 쓴다
   else { paintGh(); startCloud(); pubStart(); }             // 아니면 claude.ai 링크일 때만 Claude 저장소 사용 + 열쇠 없이 공개 시장 숫자
