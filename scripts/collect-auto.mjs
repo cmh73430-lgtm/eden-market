@@ -2,10 +2,10 @@
 //   아침(KST 12시 전): 미국 선물·환율·SOX·VIX·유가·금리 + 미국 대응주 (네이버 → 야후 순) + 전일 주도 테마(애프터·프리마켓)
 //   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 + 오늘 주도 테마 (네이버)
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
-// 옵션: --when=morning|intraday|close (기본: 지금 시각으로 판단) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
+// 옵션: --when=morning|intraday|close|themes (기본: 지금 시각으로 판단 · themes = 미국장 테마 값만 아침 기록에 채워 넣기, 새 테마를 추가한 날) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
 import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay } from "../shared/calendar.js";
-import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, skipReason, summarize, whenOf } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, skipReason, summarize, whenOf, collectThemesOnly } from "../server/auto.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -73,24 +73,27 @@ const save = !has("dry") && token && repo;
 const prevDay = prevBusinessDay(date, cfg.holidays); // 어제(직전 거래일)
 const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { json: null };
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
-const part = when === "intraday"
+let part = when === "intraday"
   ? await collectIntraday({ adapters: { naver }, now })
+  : when === "themes"
+  ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: prev.json && prev.json.date === date ? prev.json.morning : null })
   : when === "morning"
   ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: () => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, "") }) })
   : await collectClose({ adapters: { naver }, now, leaders: () => collectLeaders({ now }) });
-const got = when === "intraday" ? ["fut", "spot", "kospi"].filter((k) => part[k] !== undefined).length : when === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
+const saveAs = when === "themes" ? "morning" : when; // 테마만 받은 것도 아침 기록에 들어간다
+const got = when === "intraday" ? ["fut", "spot", "kospi"].filter((k) => part[k] !== undefined).length : saveAs === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 // 장중 재판정은 하루 여러 번 → 앞선 확인 기록을 이어 붙인다
 if (when === "intraday" && prev.json && prev.json.date === date && prev.json.intraday) part.list = [...(prev.json.intraday.list || []), { at: prev.json.intraday.at, kospi: prev.json.intraday.kospi, fut: prev.json.intraday.fut, spot: prev.json.intraday.spot }].slice(-6);
 if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
 
 if (!save) {
-  const rec = mergeAuto(null, date, when, part);
+  const rec = mergeAuto(null, date, saveAs, part);
   console.log(summarize(rec));
   console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
-const rec = mergeAuto(prev.json, date, when, part);
-const msg = `자동 연동 ${date} ${when === "morning" ? "아침" : when === "intraday" ? "장중" : "오후"} ${part.at}`;
+const rec = mergeAuto(prev.json, date, saveAs, part);
+const msg = `자동 연동 ${date} ${when === "morning" ? "아침" : when === "themes" ? "아침(테마 보충)" : when === "intraday" ? "장중" : "오후"} ${part.at}`;
 await writeFile(autoFile(date), rec, msg);
 await writeFile(AUTO_DIR + "/latest.json", rec, msg);
 console.log(summarize(rec));

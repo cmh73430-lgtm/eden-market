@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       when:
-        description: "morning(아침) · intraday(장중) · close(오후) — 비우면 지금 시각으로"
+        description: "morning(아침) · intraday(장중) · close(오후) · themes(미국장 테마만 아침 기록에 보충) — 비우면 지금 시각으로"
         required: false
         default: ""
       force:
