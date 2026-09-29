@@ -177,6 +177,7 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .explain .end { padding: 9px 11px; text-indent: 0; border-radius: 8px; background: var(--surface); border: 2px solid var(--ink); }
 .explain .bchip { display: inline-block; font-size: 12.5px; padding: 2px 8px; margin: 0 4px 4px 0; border-radius: 12px; background: var(--note); }
 .explain .bchip.up { background: var(--up-bg); color: var(--up); font-weight: 700; } .explain .bchip.dn { background: var(--down-bg); color: var(--down); font-weight: 700; }
+.explain .bchip.up2 { color: var(--up); background: color-mix(in srgb, var(--up-bg) 55%, var(--note)); } .explain .bchip.dn2 { color: var(--down); background: color-mix(in srgb, var(--down-bg) 55%, var(--note)); } /* 기준 미달: 색만 연하게 */
 .linknotice { border: 2px solid var(--a); background: var(--a-bg); display: grid; gap: 6px; font-size: 13.5px; }
 .linknotice .btn { justify-self: start; font-weight: 800; }
 .linknotice .muted { font-size: 12px; color: var(--muted); }
@@ -1747,7 +1748,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-44";
+  const APP_VER = "9.29-45";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2126,7 +2127,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       + (calWarn() ? `<div class="nxline"><b class="upc">📅 ${esc(calWarn())}</b> <span class="muted">· 휴장일·FOMC 는 매달 1일 자동 갱신, CPI·고용·금통위·MSCI 는 연 1회 손으로 (data/events.json)</span></div>` : "");
     const usRows = US.map((u) => ({ u, v: themeValue(S.us[u.k]), st: r.themeStatus[u.k] })).filter((x) => x.v !== null)
       .sort((a, b) => ({ first: 0, back: 1, flat: 2 }[a.st] ?? 3) - ({ first: 0, back: 1, flat: 2 }[b.st] ?? 3) || Math.abs(b.v) - Math.abs(a.v));
-    const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" ? "up" : st === "back" ? "dn" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
+    const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" ? "up" : st === "back" ? "dn" : v > 0 ? "up2" : v < 0 ? "dn2" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
       : `<span class="muted">아직 없음 (아침 7시쯤 자동으로 들어와요)</span>`;
     const prevs = (S.prev || []).filter((p) => p && (p.name || "").trim());
     const both = [];
