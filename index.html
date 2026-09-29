@@ -164,6 +164,17 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .explain .brief { padding: 8px 10px; text-indent: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .explain .sub { padding-left: 0; text-indent: 0; font-weight: 800; font-size: 13px; margin-top: 4px; } .explain .brief > b { display: block; font-size: 13px; margin-bottom: 3px; }
 .explain .brief div { padding-left: 0; text-indent: 0; }
+.explain .sgrp { padding-left: 0; text-indent: 0; font-weight: 800; font-size: 12.5px; color: var(--muted, #777); margin-top: 6px; } .explain .sgrp small { font-weight: 600; }
+.explain .srow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; column-gap: 8px; row-gap: 1px; padding: 7px 10px; text-indent: 0; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.explain .srow .sn { font-weight: 700; } .explain .srow .sv { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+.explain .srow .sb { font-size: 12px; font-weight: 900; padding: 2px 9px; border-radius: 99px; min-width: 3.2em; text-align: center; background: var(--line); }
+.explain .srow .sw { grid-column: 1 / -1; font-size: 12px; opacity: .75; }
+.explain .srow.g { border-left-color: var(--g); } .explain .srow.g .sb { background: var(--g); color: var(--surface); }
+.explain .srow.a { border-left-color: var(--a); } .explain .srow.a .sb { background: var(--a); color: var(--surface); }
+.explain .srow.r { border-left-color: var(--r); } .explain .srow.r .sb { background: var(--r); color: var(--surface); }
+.explain .srow.ref { color: var(--ink); } .explain .srow.ref .sb { background: var(--line); color: var(--ink); }
+.explain .srow.g.ref, .explain .srow.a.ref, .explain .srow.r.ref { border-left-color: var(--line); }
+.explain .end { padding: 9px 11px; text-indent: 0; border-radius: 8px; background: var(--surface); border: 2px solid var(--ink); }
 .explain .bchip { display: inline-block; font-size: 12.5px; padding: 2px 8px; margin: 0 4px 4px 0; border-radius: 12px; background: var(--note); }
 .explain .bchip.up { background: var(--up-bg); color: var(--up); font-weight: 700; } .explain .bchip.dn { background: var(--down-bg); color: var(--down); font-weight: 700; }
 .linknotice { border: 2px solid var(--a); background: var(--a-bg); display: grid; gap: 6px; font-size: 13.5px; }
@@ -1585,7 +1596,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-9";
+  const APP_VER = "9.29-10";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1866,20 +1877,23 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     fx: (st) => (st === "a" ? "10원 넘게 올랐지만 혼자서는 판정에 안 넣어요. 실제 14년 데이터에서 근거가 약했어요" : "참고용이에요. 기름값과 같이 급등할 때만 판정에 넣어요"),
     oil: (st) => (st === "a" ? "3% 넘게 올랐지만 혼자서는 판정에 안 넣어요. 실제 14년 데이터에서 근거가 약했어요" : "참고용이에요. 환율과 같이 급등할 때만 판정에 넣어요"),
   };
+  // 지표 한 줄: 이름 · 값 · 판정 배지를 한 줄에 맞추고, 이유는 아래 작은 글씨로
+  const sigRow = (st, name, val, label, why) => `<div class="srow ${st}"><span class="sn">${esc(name)}</span><span class="sv">${esc(val)}</span><span class="sb">${label}</span>${why ? `<span class="sw">${esc(why)}</span>` : ""}</div>`;
   function explain(r) {
-    const lines = [];
+    const main = [], refs = [];
     SIGNALS.forEach((s) => {
       const v = parseNum(S.signals[s.k]); const st = r.statuses[s.k];
       if (v === null || !st) return;
       const val = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit;
-      if (s.k === "ustlvl") { lines.push(`<div class="${st}">· ${esc(s.name)} ${esc(val)} → <b>${LABEL[st]}</b> (${st === "g" ? "5% 미만이거나 오늘 안 오름" : (st === "r" ? "5.2%" : "5.0%") + " 이상 + 오름 → 금리 칸에 반영"} · 미검증 규칙)</div>`); return; }
-      if (r.excluded[s.k]) { lines.push(`<div class="${s.k === "fut" || REF_KEYS.includes(s.k) ? "" : st}">· ${esc(s.name)} ${esc(val)} → <b>참고</b> (${esc(REF_WHY[s.k](st))})</div>`); return; }
-      const why = s.rule[st].split(" → ")[0];
-      lines.push(`<div class="${st}">· ${esc(s.name)} ${esc(val)} → <b>${LABEL[st]}</b> (${esc(why)})</div>`);
+      if (s.k === "ustlvl") { main.push(sigRow(st, s.name, val, LABEL[st], `${st === "g" ? "5% 미만이거나 오늘 안 오름" : (st === "r" ? "5.2%" : "5.0%") + " 이상 + 오름 → 금리 칸에 반영"} · 미검증 규칙`)); return; }
+      if (r.excluded[s.k]) { refs.push(sigRow(s.k === "fut" || REF_KEYS.includes(s.k) ? "ref" : st + " ref", s.name, val, "참고", REF_WHY[s.k](st))); return; }
+      main.push(sigRow(st, s.name, val, LABEL[st], s.rule[st].split(" → ")[0]));
     });
-    if (r.combo) lines.push(`<div class="a">· 환율 10원↑ + 기름값 3%↑ 같은 날 동반 급등 → <b>주의 1개</b> (둘이 함께 튈 때만 판정에 넣어요 · 14년간 23일뿐, 다음 날 평균 -0.23%)</div>`);
+    if (r.combo) main.push(sigRow("a", "환율 10원↑ + 기름값 3%↑", "동반 급등", "주의 1개", "둘이 함께 튈 때만 판정에 넣어요 · 14년간 23일뿐, 다음 날 평균 -0.23%"));
     const evs = [...AUTO.filter((e) => e.lv).map((e) => e.k), ...S.events];
-    lines.push(`<div class="${r.statuses.ev}">· 주요 일정 ${evs.length ? esc(evs.join(", ")) : "특별한 일 없음"} → <b>${LABEL[r.statuses.ev]}</b></div>`);
+    main.push(sigRow(r.statuses.ev, "주요 일정", evs.length ? `${evs.length}건` : "없음", LABEL[r.statuses.ev], evs.length ? evs.join(", ") : "특별한 일 없음"));
+    const lines = [`<div class="sgrp">🎯 판정에 들어가는 지표</div>`, ...main];
+    if (refs.length) lines.push(`<div class="sgrp">👀 참고만 하는 지표 <small>판정 개수에 안 들어가요</small></div>`, ...refs);
     if (r.filled === 0) return briefHtml(r) + `<div class="sub">📊 지표별 판정</div><div>아직 넣은 숫자가 없어요. 아침 7시쯤(6:35·7:05·8:05 예약, 10~20분 늦을 수 있음) 자동으로 들어와요 (직접 넣어도 돼요).</div>` + lines.join("");
     let end;
     if (r.counts.r > 0) end = `나쁨이 ${r.counts.r}개 있어요. 규칙은 <b>나쁨이 하나라도 있으면 쉼</b>이에요. 오늘은 새로 사지 말고, 가진 주식만 정리해요.`;
