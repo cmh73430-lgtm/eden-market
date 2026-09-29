@@ -238,6 +238,26 @@ details.intro[open] summary { margin-bottom: 6px; }
 .jgrid label.wide, .tr label.wide { grid-column: 1 / -1; }
 .jin { font: inherit; font-size: 14px; font-weight: 400; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%; box-sizing: border-box; min-width: 0; }
 textarea.jin { resize: vertical; }
+.jgrid .mv { grid-column: 1 / -1; }
+.mv { display: grid; gap: 5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.mv .mvh { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .mv .mvh b { font-size: 13.5px; }
+.mv .mved { font: inherit; font-size: 11.5px; font-weight: 700; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; cursor: pointer; }
+.mv .mvsub { font-size: 11.5px; color: var(--muted); }
+.mv.has .mvin { display: none; } .mv.has.edit .mvin { display: grid; } .mv:not(.has) .mved { display: none; }
+.mv .autoat { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+.flow { display: grid; grid-template-columns: auto 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 13.5px; }
+.flow > * { padding: 6px 10px; border-top: 1px solid var(--line); text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+.flow > .fh { border-top: 0; background: var(--note); font-size: 11.5px; color: var(--muted); font-weight: 700; }
+.flow > .fm { text-align: left; font-weight: 700; color: var(--ink); } .flow > .fh.fm { color: var(--muted); }
+.flow .p { color: var(--up); } .flow .n { color: var(--down); }
+.lds { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lds li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 8px; row-gap: 3px; align-items: center; padding: 7px 10px; border: 1px solid var(--line); border-left: 4px solid var(--up); border-radius: 8px; }
+.lds .rk { font-size: 12px; font-weight: 900; color: var(--muted); } .lds .tn { font-weight: 800; font-size: 14px; } .lds .trate { font-weight: 900; font-variant-numeric: tabular-nums; }
+.lds .trate.p { color: var(--up); } .lds .trate.n { color: var(--down); }
+.lds .ti { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 4px; font-size: 12px; align-items: center; }
+.lds .ti span { padding: 1px 7px; border-radius: 99px; background: var(--note); font-weight: 700; }
+.lds .ti span.p { background: var(--up-bg); color: var(--up); } .lds .ti span.n { background: var(--down-bg); color: var(--down); }
+.lds .ts { grid-column: 2 / -1; font-size: 12px; color: var(--muted); }
 .jq { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 .tr { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: var(--surface); }
 .tr .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -297,6 +317,14 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .refcard .rdet { display: grid; gap: 4px; padding: 6px 0; border-top: 1px solid var(--line); } .refcard .rdet > b { font-size: 13px; }
 .refcard .rule { font-size: 11.5px; display: flex; gap: 4px; flex-wrap: wrap; } .refcard .rule b { padding: 1px 7px; border-radius: 99px; }
 .refcard .rule .g { background: var(--g-bg); color: var(--g); } .refcard .rule .a { background: var(--a-bg); color: var(--a); } .refcard .rule .r { background: var(--r-bg); color: var(--r); }
+.uslist { display: grid; gap: 0; }
+.uslist .urow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--line); border-left: 4px solid transparent; }
+.uslist .urow:first-child { border-top: 0; }
+.uslist .urow[data-st="up"] { border-left-color: var(--up); background: var(--up-bg); } .uslist .urow[data-st="dn"] { border-left-color: var(--down); background: var(--down-bg); }
+.uslist .rn { font-size: 14px; font-weight: 700; display: grid; line-height: 1.25; } .uslist .rn small { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.uslist .in { gap: 3px; } .uslist .pm { width: 28px; height: 30px; font-size: 14px; } .uslist input.num { width: 56px; font-size: 14px; padding: 3px 5px; } .uslist .unit { min-width: 1.1em; }
+.uslist .status { min-width: 4.6em; font-size: 12px; padding: 3px 5px; }
+.uslist details.more { margin-top: 6px; } .uslist .rdet { display: grid; gap: 4px; padding: 6px 0; border-top: 1px solid var(--line); } .uslist .rdet > b { font-size: 13px; } .uslist .ul { font-size: 12.5px; color: var(--muted); }
 details.more { grid-column: 1 / -1; display: grid; gap: 6px; font-size: 13px; }
 details.more > summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--muted); padding: 2px 0; }
 details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summary) { margin-top: 6px; }
@@ -831,8 +859,8 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <div class="jgrid">
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
-        <label class="wide">수급 (외국인·기관, 억원)<input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억"><small class="autoat" id="aa-market.invest" hidden></small></label>
-        <label class="wide">오늘 주도 테마 <small>+5% 넘게 오른 종목에 돈이 몰린 순 · 외인/기관 (종목 수급은 네이버가 늦게 올려서 저녁 6:40 또는 다음 날 아침에 채워짐)</small><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"><small class="autoat" id="aa-market.leaders" hidden></small></label>
+        <div class="wide mv" id="mv-invest"><div class="mvh"><b>수급 (외국인·기관, 억원)</b><button class="mved" type="button" data-for="invest">✏️ 고치기</button></div><div class="mvbody" id="mvb-invest"></div><label class="mvin"><input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억"></label><small class="autoat" id="aa-market.invest" hidden></small></div>
+        <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small></div>
       </div>
       <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a><a class="lk nv" href="https://m.stock.naver.com/news" target="_blank" rel="noopener">뉴스 ↗</a></div>
     </div>
@@ -1618,7 +1646,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-12";
+  const APP_VER = "9.29-14";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1702,14 +1730,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     </div>`;
   $("sigList").innerHTML = `<div class="siggroup"><b>🎯 판정 지표</b><span>이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 금리 수준만 미검증)</span></div>` + SIG_MAIN.map(sigHtml).join("") + refHtml();
 
-  $("usList").innerHTML = US.map((u) => `
-    <div class="us">
-      <div class="name">${esc(u.name)} <span class="unit">기준 ±${u.th}%</span></div>
-      <div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div>
-      <div class="autoat" id="aa-us.${u.k}" hidden></div>
-      <div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div>
-      <details class="learn"><summary>📘 왜 이 종목?</summary><p>${esc(u.learn)}</p></details>
-    </div>`).join("");
+  // 미국장 테마: 한 칸에 한 줄씩 (이름·기준 | ± 입력 | 우선 관심·후순위), 링크·설명은 맨 아래 접기 하나로
+  $("usList").innerHTML = `<div class="uslist">${US.map((u) => `
+      <div class="urow" id="ur-${u.k}"><span class="rn">${esc(u.name.split(" (")[0])}<small>${u.name.includes(" (") ? esc(u.name.split(" (")[1].replace(")", "")) + " · " : ""}기준 ±${u.th}%</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div></div>`).join("")}
+      <details class="more"><summary>✍️ 종목 · 사이트 링크 · 왜 이 종목?</summary>
+      ${US.map((u) => `<div class="rdet"><b>${esc(u.name)}</b><div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div><div class="ul">${esc(u.learn)}</div></div>`).join("")}
+      </details></div>`;
 
   $("prevList").innerHTML = [0, 1].map((i) => `
     <div class="prev">
@@ -1841,6 +1867,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     put($("memo"), S.journal.memo || ""); $("kept").checked = !!S.journal.kept;
     JFIELDS.forEach((k) => put($("j-" + k), S.journal[k] || ""));
     MFIELDS.forEach((k) => { const el = $(k === "note" ? "j-mktNote" : "j-" + k); put(el, S.journal.market[k] || ""); markAuto(el, "market." + k); });
+    paintMktView();
     renderTrades();
     paintChips();
     paintAuto();
@@ -1882,6 +1909,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const el = $("uss-" + u.k), st = r.themeStatus[u.k];
       el.className = "status" + (st === "first" ? " up" : st === "back" ? " dn" : "");
       el.textContent = st === "first" ? "우선 관심" : st === "back" ? "후순위" : st === "flat" ? "중립" : "—";
+      $("ur-" + u.k).dataset.st = st === "first" ? "up" : st === "back" ? "dn" : "";
     });
     const tagHtml = (a) => (a.length ? a.map(([t, s]) => `<span>${esc(t)}<small>${esc(s)}</small></span>`).join("") : `<span class="empty">아직 없음</span>`);
     $("tFirst").innerHTML = tagHtml(r.themeFirst); $("tBack").innerHTML = tagHtml(r.themeBack);
@@ -1984,6 +2012,30 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
 
   // ---------- 매매 일지 ----------
+  // 수급·주도 테마 글(자동 수집 형식)을 표·카드로 풀어 보여 준다 (손으로 쓴 글도 형식이 맞으면 같이 풀림)
+  const sgn = (v) => (v > 0 ? "p" : v < 0 ? "n" : "");
+  const numOf = (x) => Number(String(x).replace(/,/g, ""));
+  const fmtEok = (x) => { const v = numOf(x); return (v > 0 ? "+" : "") + v.toLocaleString("ko-KR") + "억"; };
+  function parseInvest(text) {
+    return String(text || "").split(" / ").map((part) => {
+      const m = part.match(/^\s*(\S+)/), f = part.match(/외국인\s*([+-]?[\d,]+)억/), i = part.match(/기관\s*([+-]?[\d,]+)억/);
+      return f || i ? { mk: m ? m[1] : "", f: f && numOf(f[1]), i: i && numOf(i[1]) } : null;
+    }).filter(Boolean);
+  }
+  function parseLeaders(text) {
+    return String(text || "").split(" / ").map((part) => {
+      const m = part.trim().match(/^(.+?)\s([+-][\d.]+)%(.*)$/); if (!m) return null;
+      const rest = m[3], hot = rest.match(/강세\s*(\d+)종목\s*([\d,]+)억/), f = rest.match(/외인\s*([+-]?[\d,]+)억/), i = rest.match(/기관\s*([+-]?[\d,]+)억/), st = rest.match(/\(([^)]*)\)\s*$/);
+      return { name: m[1], rate: Number(m[2]), hotN: hot && hot[1], hot: hot && hot[2], f: f && numOf(f[1]), i: i && numOf(i[1]), stocks: st ? st[1] : "" };
+    }).filter(Boolean);
+  }
+  function paintMktView() {
+    const inv = parseInvest(S.journal.market.invest), ld = parseLeaders(S.journal.market.leaders);
+    $("mv-invest").classList.toggle("has", inv.length > 0);
+    $("mvb-invest").innerHTML = inv.length ? `<div class="flow"><span class="fh fm"></span><span class="fh">외국인</span><span class="fh">기관</span>${inv.map((r) => `<span class="fm">${esc(r.mk)}</span><span class="${sgn(r.f)}">${r.f === null ? "—" : fmtEok(r.f)}</span><span class="${sgn(r.i)}">${r.i === null ? "—" : fmtEok(r.i)}</span>`).join("")}</div>` : "";
+    $("mv-leaders").classList.toggle("has", ld.length > 0);
+    $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span><div class="ti">${t.hot ? `<span>강세 ${esc(t.hotN)}종목 · ${esc(t.hot)}억</span>` : ""}${t.f !== null ? `<span class="${sgn(t.f)}">외인 ${fmtEok(t.f)}</span>` : ""}${t.i !== null ? `<span class="${sgn(t.i)}">기관 ${fmtEok(t.i)}</span>` : ""}</div>${t.stocks ? `<div class="ts">${esc(t.stocks.replace(/·/g, " · "))}</div>` : ""}</li>`).join("")}</ol>` : "";
+  }
   const JFIELDS = ["good", "bad", "tomorrow", "mood"];
   const MFIELDS = ["kospi", "kosdaq", "invest", "leaders", "flow", "issues", "note", "next"];
   const METHODS = ["프리마켓", "시초", "장중", "종가", "애프터마켓"];
@@ -2466,7 +2518,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   for (let i = 1; i <= 7; i++) { const c = $("td" + i); c.addEventListener("change", () => { S.todo["td" + i] = c.checked; c.closest("label").classList.toggle("done", c.checked); save(); }); }
   $("memo").addEventListener("input", (e) => { S.journal.memo = e.target.value; save(); });
   JFIELDS.forEach((k) => { const el = $("j-" + k); el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => { S.journal[k] = el.value; save(); }); });
-  MFIELDS.forEach((k) => { const el = $(k === "note" ? "j-mktNote" : "j-" + k); el.addEventListener("input", () => { S.journal.market[k] = el.value; markAuto(el, "market." + k); save(); paintAuto(); }); });
+  MFIELDS.forEach((k) => { const el = $(k === "note" ? "j-mktNote" : "j-" + k); el.addEventListener("input", () => { S.journal.market[k] = el.value; markAuto(el, "market." + k); save(); paintAuto(); paintMktView(); }); });
+  document.querySelectorAll(".mved").forEach((b) => b.addEventListener("click", () => { const box = $("mv-" + b.dataset.for); box.classList.toggle("edit"); b.textContent = box.classList.contains("edit") ? "✔ 닫기" : "✏️ 고치기"; if (box.classList.contains("edit")) $("j-" + b.dataset.for).focus(); }));
   document.querySelectorAll("#verdictChips .chip").forEach((b) => b.addEventListener("click", () => { S.journal.verdict = S.journal.verdict === b.dataset.v ? "" : b.dataset.v; paintChips(); save(); }));
   $("addTrade").addEventListener("click", () => {
     S.journal.trades = (S.journal.trades || []).concat([{ name: "", code: "", method: "", buy: "", qty: "", sell: "", stop: "", target: "", tIn: "", tOut: "", why: "", whyOut: "", lesson: "", kept: false, emotion: "" }]);
