@@ -236,12 +236,12 @@ export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now
 }
 
 // 미국장 테마 값만 다시 받아 그날 아침 기록(morning)에 채워 넣는다 — 테마를 새로 추가한 날 아침 수집이 이미 지난 뒤에 쓴다.
-// 다른 아침 값(야간선물·미국 지표·전일 테마)은 그대로 두고 us 만 합친다 (없던 테마만 새로, 있던 테마는 최신 값으로).
+// 다른 아침 값(야간선물·미국 지표·전일 테마)은 그대로 두고, 아침에 없던 테마만 채운다.
 export async function collectThemesOnly({ themes, sources, adapters, now = new Date(), morning = null }) {
   const got = await collectAll({ sources: { themeSource: sources.themeSource }, themes, adapters, now });
   const strip = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { value: v.value, src: v.src, time: v.time || undefined, detail: v.detail }]));
   const base = morning ? JSON.parse(JSON.stringify(morning)) : { at: kstTime(now).slice(0, 5), ts: now.getTime(), signals: {}, errors: [] };
-  base.us = Object.assign({}, base.us || {}, strip(got.us));
+  base.us = Object.assign({}, strip(got.us), base.us || {}); // 이미 있던 테마는 아침 값 유지 (금·구리·코인은 장중에도 움직여서 지금 값으로 바꾸면 안 됨), 없던 테마만 채움
   base.themesAt = kstTime(now).slice(0, 5);
   base.errors = [...(base.errors || []).filter((e) => !e.startsWith("us.")), ...got.errors.map((e) => e.key + ": " + e.error)];
   return base;
