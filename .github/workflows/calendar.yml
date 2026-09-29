@@ -1,0 +1,42 @@
+# 달력 자동 갱신: 매달 1일(그리고 손으로 누를 때) 올해·내년 한국거래소 휴장일과 미국 일정(FOMC·CPI·고용)을 채워 data/ 에 저장한다.
+# 휴장일은 규칙 + 음력 날짜(date.nager.at), FOMC 는 연준 일정표, CPI·고용은 BLS 발표 달력. 이미 있는 해는 그대로 둔다.
+# 이 파일 덕분에 해가 바뀌어도 Eden Cockpit 을 손보지 않고 계속 쓸 수 있다. cron 은 UTC.
+name: calendar
+on:
+  schedule:
+    - cron: "17 0 1 * *"   # 매달 1일 09:17 KST
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "이미 있는 해도 다시 계산 (true)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: collect
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 달력 갱신
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="--force"; fi
+          node scripts/refresh-calendar.mjs $ARGS
+      - name: 바뀌었으면 저장
+        run: |
+          git config user.name "eden-calendar"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/holidays.json data/events.json
+          if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          git commit -m "달력 자동 갱신 $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done
+          curl -s "https://purge.jsdelivr.net/gh/cmh73430-lgtm/eden-market@main/data/holidays.json" >/dev/null || true
+          curl -s "https://purge.jsdelivr.net/gh/cmh73430-lgtm/eden-market@main/data/events.json" >/dev/null || true

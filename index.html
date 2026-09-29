@@ -327,9 +327,9 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .uslist .rn { font-size: 13.5px; font-weight: 700; display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; }
 .uslist .rn small { font-size: 11px; font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 .uslist .in { gap: 3px; } .uslist .pm { width: 26px; height: 26px; font-size: 13px; } .uslist input.num { width: 52px; font-size: 13.5px; padding: 2px 5px; } .uslist .unit { min-width: 1em; }
-.uslist .rn .krlk { font-style: normal; font-size: 11px; order: -1; margin-right: -3px; } .uslist .rn .krlk:empty { display: none; }
+.uslist .rn .krlk { font-style: normal; font-size: 11px; order: -1; margin-right: -2px; letter-spacing: -1px; } .uslist .rn .krlk:empty { display: none; }
 .bchip .uslk { font-weight: 600; opacity: .85; } .explain .upc { color: var(--up); }
-.lds .tn .uslk { font-size: 10px; margin-left: 3px; opacity: .5; } .lds .tn .uslk.up, .lds .tn .uslk.dn { opacity: 1; }
+.lds .tn .uslk { font-size: 11px; margin-left: 3px; letter-spacing: -1px; }
 .uslist .status { min-width: 4.2em; font-size: 11.5px; padding: 2px 5px; }
 .uslist details.more { margin-top: 6px; } .uslist .rdet { display: grid; gap: 4px; padding: 6px 0; border-top: 1px solid var(--line); } .uslist .rdet > b { font-size: 13px; } .uslist .rdet > b small { font-weight: 500; color: var(--muted); font-size: 11.5px; } .uslist .ul { font-size: 12.5px; color: var(--muted); }
 details.more { grid-column: 1 / -1; display: grid; gap: 6px; font-size: 13px; }
@@ -728,6 +728,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <b>⏱ 장중 재판정 <small>09:30 · 10:30 · 미검증 규칙</small></b>
     <div class="muted">외인 코스피200 선물 순매도(1,000↑) + 프로그램 순매도(1,000억↑)가 함께 나오면 모드를 한 단계 낮춰요. 프로그램 값을 안 넣으면 외인+기관 현물 순매도(3,000억↑)로 대신 봐요.</div>
     <div class="explain" id="intraInfo"></div>
+    <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <label class="progin">프로그램 순매수 (억, 증권사 앱에서 보고 넣기 · 선택) <input class="num" type="text" inputmode="decimal" id="in-prog" placeholder="예: -2500" autocomplete="off"></label>
   </div>
   <nav class="secnav" id="secnav" aria-label="메뉴 바로 가기"></nav>
@@ -750,6 +751,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 
   <section class="card" data-nav="판단 근거">
     <h2>🧭 매매 모드 판단 근거 <small>오늘 일정 · 미국장 테마 · 전일 주도 테마 · 수혜 업종 한눈에 + 지표별 판정</small></h2>
+    <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div class="explain" id="explain"></div>
   </section>
 
@@ -796,12 +798,14 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 
   <section class="card" data-nav="미국장 테마">
     <h2>미국장 테마 확인 <small>미국장에서 오른 테마는 한국장에서도 같은 테마가 따라가요 · 몇 % 올랐는지 넣기</small></h2>
+    <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div id="usList"></div>
-    <div class="hint">🔥 = 한국 전일·오늘 주도 테마와 같은 흐름 (판단 근거·매매 일지 주도 테마의 🇺🇸 와 서로 이어져요). 기준보다 많이 오르면 "우선 관심", 많이 내리면 "후순위"예요. 여러 종목이면 대충 평균을 넣어요. 비트코인·금·구리는 그 주식을 살 생각이 있는 날만 보면 돼요.</div>
+    <div class="hint">🇰🇷 = 한국 전일·오늘 주도 테마도 오름 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오름 (판단 근거·매매 일지 주도 테마와 서로 이어져요). 기준보다 많이 오르면 "우선 관심", 많이 내리면 "후순위"예요. 여러 종목이면 대충 평균을 넣어요. 비트코인·금·구리는 그 주식을 살 생각이 있는 날만 보면 돼요.</div>
   </section>
 
   <section class="card" data-nav="전일 주도 테마">
     <h2>전일 주도 테마 <small>🤖 아침 7시쯤 어제 돈이 몰린 테마 + 외인·기관 + 어제 저녁 애프터마켓 · 8:05 오늘 아침 NXT 프리마켓(8:00~8:50) 자동 · 고치면 고친 값이 우선</small></h2>
+    <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div id="prevList"></div>
     <div class="links">열어서 보기 <a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">네이버 테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_rise.naver" target="_blank" rel="noopener">네이버 상승 종목 (KRX·NXT 탭) ↗</a><a class="lk" href="https://nextrade.co.kr/menu/transactionStatusMain/menuList.do" target="_blank" rel="noopener">넥스트레이드 거래현황 ↗</a></div>
     <div class="hint">네이버 종목 페이지 맨 위에 KRX 가격과 NXT 가격이 함께 나와요. 프리마켓·애프터마켓 값은 NXT 쪽이에요.</div>
@@ -819,6 +823,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 
   <section class="card" data-nav="수혜 업종">
     <h2>지표별 수혜 업종 <small>환율·유가·금리·반도체지수가 오르면 좋아지는 업종 · 해당 줄이 켜져요</small></h2>
+    <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div class="sector" id="sector">
       <div class="row" data-s="fx"><div class="k">환율 ↑</div><div class="v">자동차 · 조선 · 방산 · 반도체 · 화장품<small>피할 쪽: 항공 · 여행 · 음식료 · 전력가스 · 유통</small></div></div>
       <div class="row" data-s="oil"><div class="k">유가 ↑</div><div class="v">정유 · 조선<small>피할 쪽: 항공 · 화학 · 석유화학</small></div></div>
@@ -872,12 +877,12 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a><a class="lk nv" href="https://m.stock.naver.com/news" target="_blank" rel="noopener">뉴스 ↗</a></div>
     </div>
     <div class="jsec">
-      <h3>③ 오늘 시장 이야기 <small>짧게 적어도 쌓이면 흐름이 보여요</small></h3>
+      <h3>③ 오늘 시장 이야기 <small>🤖 장 마감 뒤 자동 초안 · 고치면 고친 글이 우선</small></h3>
       <div class="jgrid">
-        <label class="wide">장 흐름 (오전 → 오후)<textarea class="jin" id="j-flow" rows="2" placeholder="예: 갭상승 출발 → 10시부터 외국인 매도로 밀림 → 오후 반도체 반등"></textarea></label>
-        <label class="wide">특징주 · 이슈 · 뉴스<textarea class="jin" id="j-issues" rows="2" placeholder="예: 루닛 +20% (의료AI 정책 기대), 삼성전자 -4% (외국인 매도)"></textarea></label>
-        <label class="wide">한 줄 시황<input class="jin" id="j-mktNote" placeholder="예: 외국인 매도로 오후에 밀림, 반도체 약세"></label>
-        <label class="wide">내일 볼 것<textarea class="jin" id="j-next" rows="2" placeholder="예: 의료AI 이어지는지 프리마켓 확인, 밤 미국 CPI"></textarea></label>
+        <label class="wide">장 흐름 (오전 → 오후)<textarea class="jin" id="j-flow" rows="2" placeholder="예: 갭상승 출발 → 10시부터 외국인 매도로 밀림 → 오후 반도체 반등"></textarea><small class="autoat" id="aa-market.flow" hidden></small></label>
+        <label class="wide">특징주 · 이슈 · 뉴스<textarea class="jin" id="j-issues" rows="2" placeholder="예: 루닛 +20% (의료AI 정책 기대), 삼성전자 -4% (외국인 매도)"></textarea><small class="autoat" id="aa-market.issues" hidden></small></label>
+        <label class="wide">한 줄 시황<input class="jin" id="j-mktNote" placeholder="예: 외국인 매도로 오후에 밀림, 반도체 약세"><small class="autoat" id="aa-market.note" hidden></small></label>
+        <label class="wide">내일 볼 것<textarea class="jin" id="j-next" rows="2" placeholder="예: 의료AI 이어지는지 프리마켓 확인, 밤 미국 CPI"></textarea><small class="autoat" id="aa-market.next" hidden></small></label>
       </div>
     </div>
     <div class="jsec blog">
@@ -1233,11 +1238,18 @@ function prevBusinessDay(s, holidays) {
   return d;
 }
 
-// 미국 증시(NYSE) 휴장일 — 연휴 뒤 '기대하는 미국 거래일'과 받아온 값 날짜 비교에 쓴다 (연 1회 갱신)
-const US_HOLIDAYS = [
-  "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25",
-  "2027-01-01", "2027-01-18", "2027-02-15", "2027-03-26", "2027-05-31", "2027-06-18", "2027-07-05", "2027-09-06", "2027-11-25", "2027-12-24",
-];
+// 미국 증시(NYSE) 휴장일 — 규칙으로 해마다 계산 (연 1회 손으로 고칠 필요 없음)
+// 신정·MLK(1월 셋째 월)·대통령의 날(2월 셋째 월)·성금요일·메모리얼(5월 마지막 월)·준틴스(6/19)·독립기념일·노동절(9월 첫 월)·추수감사절(11월 넷째 목)·성탄절
+// 토요일이면 전날 금요일, 일요일이면 다음 월요일 (단, 신정이 토요일이면 전년 12/31 은 쉬지 않음 — NYSE 규칙)
+function easter(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return y + "-" + String(mo).padStart(2, "0") + "-" + String(da).padStart(2, "0"); }
+const ymd = (y, m, d) => y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+function lastWeekday(y, m, wd) { let d = ymd(y, m, new Date(Date.UTC(y, m, 0)).getUTCDate()); while (weekday(d) !== wd) d = addDays(d, -1); return d; }
+function observed(d, newYear) { const w = weekday(d); if (w === 6) return newYear ? null : addDays(d, -1); if (w === 0) return addDays(d, 1); return d; }
+function usHolidays(y) {
+  return [observed(ymd(y, 1, 1), true), nthWeekday(y, 1, 1, 3), nthWeekday(y, 2, 1, 3), addDays(easter(y), -2), lastWeekday(y, 5, 1),
+    ...(y >= 2022 ? [observed(ymd(y, 6, 19))] : []), observed(ymd(y, 7, 4)), nthWeekday(y, 9, 1, 1), nthWeekday(y, 11, 4, 4), observed(ymd(y, 12, 25))].filter(Boolean).sort();
+}
+const US_HOLIDAYS = Array.from({ length: 2080 - 2020 + 1 }, (_, i) => usHolidays(2020 + i)).flat();
 const isUsTradingDay = (s) => isBusinessDay(s, US_HOLIDAYS);
 // 한국 날짜 s 아침에 볼 수 있는 가장 최근 미국 거래일 (미국 날짜로 s보다 앞선 날)
 function lastUsTradingDayBefore(s) { let d = addDays(s, -1); while (!isUsTradingDay(d)) d = addDays(d, -1); return d; }
@@ -1329,6 +1341,39 @@ function autoEvents(s, cal = {}) {
 }
 
 // data/holidays.json → {set, names}
+// 한국거래소(KRX) 휴장일 — 규칙 + 음력 날짜(설·추석·부처님오신날)로 해마다 계산 (scripts/refresh-calendar.mjs 가 음력 날짜를 받아 와서 data/holidays.json 에 채운다)
+// lunar = { seol: 설날 당일, chuseok: 추석 당일, buddha: 부처님오신날 } · extras = 선거일 같은 임시 공휴일 [{date,name}]
+// 대체공휴일: 삼일절·어린이날·부처님오신날·제헌절·광복절·개천절·한글날·성탄절이 토·일이면, 설·추석 연휴가 일요일과 겹치면 다음 평일(공휴일 아닌 날)
+function krxHolidays(y, lunar = {}, extras = []) {
+  const base = [], add = (date, name, sub) => date && base.push({ date, name, sub });
+  add(ymd(y, 1, 1), "신정");
+  const block = (day, name) => { if (!day) return; [addDays(day, -1), day, addDays(day, 1)].forEach((d, i) => add(d, i === 1 ? name : name + " 연휴", i === 1 ? "block" : "block")); };
+  block(lunar.seol, "설날");
+  add(ymd(y, 3, 1), "삼일절", "wk"); add(ymd(y, 5, 1), "근로자의 날"); add(ymd(y, 5, 5), "어린이날", "kids");
+  add(lunar.buddha, "부처님오신날", "wk"); add(ymd(y, 6, 6), "현충일");
+  if (y >= 2026) add(ymd(y, 7, 17), "제헌절", "wk");
+  add(ymd(y, 8, 15), "광복절", "wk"); block(lunar.chuseok, "추석");
+  add(ymd(y, 10, 3), "개천절", "wk"); add(ymd(y, 10, 9), "한글날", "wk"); add(ymd(y, 12, 25), "성탄절", "wk");
+  (extras || []).forEach((e) => add(e.date, e.name));
+  const taken = new Set(base.map((h) => h.date)), isOff = (d) => [0, 6].includes(weekday(d)) || taken.has(d);
+  const nextFree = (d) => { let n = addDays(d, 1); while (isOff(n)) n = addDays(n, 1); return n; };
+  const subs = [];
+  const count = {}; base.forEach((h) => (count[h.date] = (count[h.date] || 0) + 1));
+  base.forEach((h) => {
+    const w = weekday(h.date);
+    if ((h.sub === "wk" && (w === 0 || w === 6)) || (h.sub === "kids" && (w === 0 || w === 6 || count[h.date] > 1))) { const d = nextFree(h.date); taken.add(d); subs.push({ date: d, name: h.name + " 대체" }); }
+  });
+  [["설날", lunar.seol], ["추석", lunar.chuseok]].forEach(([nm, day]) => {
+    if (!day) return; const days = [addDays(day, -1), day, addDays(day, 1)];
+    if (days.some((d) => weekday(d) === 0 || (count[d] || 0) > 1)) { const d = nextFree(days[2]); taken.add(d); subs.push({ date: d, name: nm + " 대체" }); }
+  });
+  // 연말 휴장: 12/31 (주말이면 그 전 평일)
+  let ye = ymd(y, 12, 31); while ([0, 6].includes(weekday(ye))) ye = addDays(ye, -1);
+  const all = [...base, ...subs, { date: ye, name: "연말 휴장" }].filter((h) => ![0, 6].includes(weekday(h.date)));
+  const seen = new Map(); all.forEach((h) => { if (!seen.has(h.date)) seen.set(h.date, h.name); });
+  return [...seen.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([date, name]) => ({ date, name }));
+}
+
 function holidayIndex(json) {
   const names = {};
   Object.values(json || {}).forEach((list) => {
@@ -1477,7 +1522,7 @@ function analyze(days) {
   return { n, withK, traded, stage: stageOf(n), modes, kept, broke, keptT: tStat(kept.p, broke.p), verdict, signals };
 }
 
-const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). 연 1회 KRX 공지로 확인 후 갱신. 공휴일이 주말과 겹친 대체공휴일 포함."}};
+const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). eden-market 의 calendar.yml 이 매달 1일 올해·내년을 자동으로 채운다(규칙 + 음력 날짜). KRX 공지와 다르면 손으로 고치면 그 값이 유지된다."}};
 // Eden Cockpit (구 장전 콕핏) — 손 입력 + 공부용 단일 파일 버전의 화면 코드.
 // 판정 규칙(shared/rules.js)과 달력(shared/calendar.js)은 빌드 때 이 파일 앞에 그대로 붙는다.
 (function () {
@@ -1665,6 +1710,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const n = String(name || "");
     return US.filter((u) => (u.kw || []).some((w) => n.toUpperCase().includes(w.toUpperCase()))).sort((a, b) => Math.max(...b.kw.map((w) => (n.includes(w) ? w.length : 0))) - Math.max(...a.kw.map((w) => (n.includes(w) ? w.length : 0))))[0] || null;
   }
+  const usUp = (u) => { const v = themeValue(S.us[u.k]); return v !== null && v > 0; };
+  const krUpPrev = (p) => !!p && (p.pre === "up" || (!p.pre && p.state === "up"));
+  // 한국·미국 둘 다 오른 테마 → 🇰🇷🇺🇸 (한 나라만 오르면 그 나라 국기만)
+  const flagsOf = (kr, us) => (kr ? "🇰🇷" : "") + (us ? "🇺🇸" : "");
   const usLinkText = (u) => { const v = themeValue(S.us[u.k]); return v === null ? "미국 " + u.name.split(" (")[0] : "미국 " + u.name.split(" (")[0] + " " + (v > 0 ? "+" : "") + v + "%"; };
   const THEMES = { defaultThreshold: 3, themes: US.map((u) => ({ key: u.k, name: u.name, th: u.th, thDn: u.thDn, noDown: !!u.noDown, label: u.label, weak: !!u.weak })) };
 
@@ -1694,7 +1743,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-28";
+  const APP_VER = "9.29-30";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1726,8 +1775,25 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     },
   };
 
-  const hol = holidayIndex(DATA.holidays);
-  const CAL = { events: DATA.events, holidays: hol.list, holidayNames: hol.names };
+  // 달력(휴장일·미국 일정): 앱에 든 표 + eden-market 이 매달 자동 갱신한 표(calRefresh)를 합친다 → 해가 바뀌어도 앱을 다시 안 올려도 됨
+  const CAL_KEY = "cockpit-cal-cache";
+  let calData = { holidays: DATA.holidays, events: DATA.events };
+  try { const c = JSON.parse(localStorage.getItem(CAL_KEY) || "null"); if (c && c.holidays && c.events) calData = mergeCal(calData, c); } catch (e) {}
+  function mergeCal(a, b) {
+    const holidays = Object.assign({}, a.holidays); Object.entries(b.holidays || {}).forEach(([y, l]) => { if (Array.isArray(l) && l.length) holidays[y] = l; });
+    const events = Object.assign({}, a.events); Object.entries(b.events || {}).forEach(([k, l]) => { if (Array.isArray(l)) events[k] = [...new Set([...(events[k] || []), ...l])].sort(); });
+    return { holidays, events };
+  }
+  const hol = holidayIndex(calData.holidays);
+  const CAL = { events: calData.events, holidays: hol.list, holidayNames: hol.names };
+  // 올해(11·12월이면 내년도) 휴장일·FOMC 표가 없으면 알려 준다
+  function calWarn() {
+    const y = Number(kstDate().slice(0, 4)), m = Number(kstDate().slice(5, 7)), yrs = new Set(CAL.holidays.map((d) => Number(d.slice(0, 4))));
+    const miss = [y, ...(m >= 11 ? [y + 1] : [])].filter((x) => !yrs.has(x));
+    const NM = { fomc: "FOMC", cpi: "CPI", jobs: "고용", bok: "금통위", msci: "MSCI" };
+    const evMiss = Object.keys(NM).filter((k) => !(CAL.events[k] || []).some((d) => d.startsWith(y + "-"))).map((k) => NM[k]);
+    return [miss.length ? miss.join("·") + "년 휴장일 표가 아직 없어요" : "", evMiss.length ? y + "년 " + evMiss.join("·") + " 일정 없음" : ""].filter(Boolean).join(" · ");
+  }
 
   // 시작 날짜: ?date=YYYY-MM-DD 또는 #YYYY-MM-DD (없으면 오늘). 이후 날짜 이동은 버튼으로 한다.
   let qDate = null;
@@ -1834,7 +1900,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       try { history.pushState({ eden: BACK.length }, "", "#" + d); histOk = true; } catch (e) { histOk = false; }
     } else { try { history.replaceState(history.state, "", "#" + d); } catch (e) {} } // 새로고침해도 이 날짜가 열리게
     DATE = d; S = loadDay(d); AUTO = autoEvents(d, CAL);
-    paintDate(); fill(); render(); renderStats(); cancelReset();
+    paintDate(); fill(); render(); renderStats();
+  calRefresh(); cancelReset();
     setStatus(); paintBack();
     if (gh) ghPull(); else pubPull(); // 이 날짜의 자동 연동 값도 바로 확인
     try {
@@ -1960,7 +2027,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const el = $("uss-" + u.k), st = r.themeStatus[u.k];
       el.className = "status" + (st === "first" ? " up" : st === "back" ? " dn" : "");
       el.textContent = u.noDown && st === "back" ? "참고 ↓" : u.weak && (st === "first" || st === "back") ? (st === "first" ? "참고 ↑" : "참고 ↓") : st === "first" ? "우선 관심" : st === "back" ? "후순위" : st === "flat" ? "중립" : "—";
-      { const kr = [...(S.prev || []).map((p) => p && p.name), ...parseLeaders(S.journal.market.leaders).map((t) => t.name)].filter((n) => n && usLinkOf(n) === u); const rn = $("ur-" + u.k).querySelector(".rn"); let b = rn.querySelector(".krlk"); if (!b) { b = document.createElement("i"); b.className = "krlk"; rn.appendChild(b); } b.textContent = kr.length ? "🔥" : ""; b.title = kr.length ? "한국 주도 테마와 같은 흐름: " + kr.join(", ") : ""; }
+      { const kr = [...(S.prev || []).map((p) => p && p.name), ...parseLeaders(S.journal.market.leaders).map((t) => t.name)].filter((n) => n && usLinkOf(n) === u); const rn = $("ur-" + u.k).querySelector(".rn"); let b = rn.querySelector(".krlk"); if (!b) { b = document.createElement("i"); b.className = "krlk"; rn.appendChild(b); } const krUp = kr.some((n) => (S.prev || []).some((p) => p && p.name === n && krUpPrev(p)) || parseLeaders(S.journal.market.leaders).some((t) => t.name === n && t.rate > 0)); b.textContent = krUp ? flagsOf(true, usUp(u)) : ""; b.title = krUp ? (usUp(u) ? "한국·미국 둘 다 오름: " : "한국에서 오름: ") + kr.join(", ") : ""; }
       $("ur-" + u.k).dataset.st = u.weak || (u.noDown && st === "back") ? "" : st === "first" ? "up" : st === "back" ? "dn" : "";
     });
     paintUsOrder();
@@ -2050,7 +2117,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const row = (icon, title, body) => `<div class="brief"><b>${icon} ${title}</b><div>${body}</div></div>`;
     const evAll = [...AUTO.map((e) => e.k + (e.lv ? "" : " (참고)")), ...S.events];
     const evHtml = (evAll.length ? evAll.map((e) => `<span class="bchip">${esc(e)}</span>`).join("") : `<span class="muted">특별한 일정 없음</span>`)
-      + `<div class="nxline"><span class="muted">다음 거래일 예정</span> ${upcomingHtml()}</div>`;
+      + `<div class="nxline"><span class="muted">다음 거래일 예정</span> ${upcomingHtml()}</div>`
+      + (calWarn() ? `<div class="nxline"><b class="upc">📅 ${esc(calWarn())}</b> <span class="muted">· 휴장일·FOMC 는 매달 1일 자동 갱신, CPI·고용·금통위·MSCI 는 연 1회 손으로 (data/events.json)</span></div>` : "");
     const usRows = US.map((u) => ({ u, v: themeValue(S.us[u.k]), st: r.themeStatus[u.k] })).filter((x) => x.v !== null)
       .sort((a, b) => ({ first: 0, back: 1, flat: 2 }[a.st] ?? 3) - ({ first: 0, back: 1, flat: 2 }[b.st] ?? 3) || Math.abs(b.v) - Math.abs(a.v));
     const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" ? "up" : st === "back" ? "dn" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
@@ -2059,13 +2127,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const both = [];
     const pvHtml = prevs.length ? prevs.map((p) => { const u = usLinkOf(p.name), st = u && r.themeStatus[u.k];
       if (u && st === "first" && !u.weak) both.push(p.name.trim() + " ↔ " + usLinkText(u));
-      return `<span class="bchip ${p.pre === "up" || (!p.pre && p.state === "up") ? "up" : p.pre === "down" || (!p.pre && p.state === "down") ? "dn" : ""}">${esc(prevLabel(p))}${u ? ` <small class="uslk ${st === "first" ? "up" : st === "back" ? "dn" : ""}">🇺🇸 ${esc(usLinkText(u).replace("미국 ", ""))}</small>` : ""}</span>`; }).join("")
+      return `<span class="bchip ${p.pre === "up" || (!p.pre && p.state === "up") ? "up" : p.pre === "down" || (!p.pre && p.state === "down") ? "dn" : ""}">${esc(prevLabel(p))}${u ? ` <small class="uslk ${st === "first" ? "up" : st === "back" ? "dn" : ""}">${krUpPrev(p) && usUp(u) ? "🇰🇷🇺🇸 " : ""}${esc(usLinkText(u))}</small>` : ""}</span>`; }).join("")
         + (both.length ? `<div class="nxline"><b class="upc">✅ 미국장도 같은 방향</b> ${esc(both.join(" · "))} → 오늘 더 강할 가능성</div>` : "")
       : `<span class="muted">아직 안 넣음 (아래 '전일 주도 테마' 칸)</span>`;
     const secs = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]);
     const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S.signals))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
     const idxLine = (S.auto || {}).usidx ? `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>` : "";
-    return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml)}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🔥", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
+    return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml)}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🇰🇷", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
   }
 
   // ---------- 매매 일지 ----------
@@ -2092,8 +2160,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const hasA = inv.some((r) => r.a), jo = (v) => (v >= 10000 ? (v / 10000).toFixed(1) + "조" : v.toLocaleString("ko-KR") + "억");
     $("mvb-invest").innerHTML = inv.length ? `<div class="flow${hasA ? " wa" : ""}"><span class="fh fm"></span><span class="fh">외국인</span><span class="fh">기관</span>${hasA ? `<span class="fh">거래대금</span>` : ""}${inv.map((r) => `<span class="fm">${esc(r.mk)}</span><span class="${sgn(r.f)}">${r.f === null ? "—" : fmtEok(r.f)}</span><span class="${sgn(r.i)}">${r.i === null ? "—" : fmtEok(r.i)}</span>${hasA ? `<span class="am">${r.a ? jo(r.a) : "—"}</span>` : ""}`).join("")}</div>` : "";
     $("mv-leaders").classList.toggle("has", ld.length > 0);
+    { const sub = $("mv-leaders").querySelector(".mvsub"); const n = nextBusinessDays(DATE, CAL.holidays, 1)[0]; if (sub) sub.textContent = "+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관은 " + mdw(DATE) + " 18:40 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마"; }
     // 한 줄: 순위 · 테마(대표 종목은 말풍선) · 외인 · 기관 · 등락률
-    $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li title="${esc((t.hot ? `강세 ${t.hotN}종목 · ${t.hot}억` : "") + (t.stocks ? " · " + t.stocks : ""))}"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name.split("(")[0].trim() || t.name)}${(() => { const u = usLinkOf(t.name); const st = u && lastEval && lastEval.themeStatus[u.k]; return u ? `<small class="uslk ${st === "first" ? "up" : st === "back" ? "dn" : ""}" title="${esc(usLinkText(u))}">🇺🇸</small>` : ""; })()}</span><span class="fi ${t.f === null ? "" : sgn(t.f)}">${t.f === null ? "" : "외 " + fmtEok(t.f).replace("억", "")}</span><span class="fi ${t.i === null ? "" : sgn(t.i)}">${t.i === null ? "" : "기 " + fmtEok(t.i).replace("억", "")}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span></li>`).join("")}</ol><small class="ldnote">외 = 외국인 · 기 = 기관 순매수(억) · 누르고 있으면 대표 종목</small>` : "";
+    $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li title="${esc((t.hot ? `강세 ${t.hotN}종목 · ${t.hot}억` : "") + (t.stocks ? " · " + t.stocks : ""))}"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name.split("(")[0].trim() || t.name)}${(() => { const u = usLinkOf(t.name); return u && t.rate > 0 && usUp(u) ? `<small class="uslk up" title="한국·미국 둘 다 오름 · ${esc(usLinkText(u))}">🇰🇷🇺🇸</small>` : ""; })()}</span><span class="fi ${t.f === null ? "" : sgn(t.f)}">${t.f === null ? "" : "외 " + fmtEok(t.f).replace("억", "")}</span><span class="fi ${t.i === null ? "" : sgn(t.i)}">${t.i === null ? "" : "기 " + fmtEok(t.i).replace("억", "")}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span></li>`).join("")}</ol><small class="ldnote">외 = 외국인 · 기 = 기관 순매수(억) · 누르고 있으면 대표 종목</small>` : "";
   }
   // 미국장 테마를 많이 오른 순으로 (빈 칸은 아래, 원래 순서). 칸에 입력하는 중에는 줄이 움직이지 않게 기다림
   function paintUsOrder() {
@@ -2894,6 +2963,22 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     try { return JSON.parse(b64dec(j.content || "")); } catch (e) { return null; }
   }
   // 받아 둔 자동 값(a)을 하루 기록(st)에 채운다. 빈 칸이나 '지난번 자동 값 그대로인 칸'만. 바뀐 칸 목록 [칸, 받아온 시각]
+  // 장 마감 자동 값 → 장 흐름 · 특징주 · 한 줄 시황 · 내일 볼 것 초안
+  function marketStory(d, c, itd) {
+    const pc = (v) => (v > 0 ? "+" : "") + v + "%", ek = (v) => (Math.abs(v) >= 10000 ? (Math.abs(v) / 10000).toFixed(1) + "조" : Math.abs(v).toLocaleString("ko-KR") + "억");
+    const k = c.kospi && c.kospi.value, q = c.kosdaq && c.kosdaq.value, iv = c.invest || {}, kf = iv.kospi && iv.kospi.foreign, ki = iv.kospi && iv.kospi.institution;
+    const th = (c.leaders && c.leaders.themes) || [], names = th.map((t) => String(t.name).split("(")[0].trim());
+    const out = {};
+    const flowParts = [];
+    if (itd && itd.at) flowParts.push(itd.at + " 장중 " + (typeof itd.kospi === "number" ? "코스피 " + pc(itd.kospi) : "") + (itd.fut && typeof itd.fut.foreign === "number" ? " · 외인 선물 " + (itd.fut.foreign > 0 ? "매수 " : "매도 ") + Math.abs(itd.fut.foreign).toLocaleString("ko-KR") : "") + (itd.spot && typeof itd.spot.foreign === "number" ? " · 외인 현물 " + (itd.spot.foreign > 0 ? "+" : "-") + ek(itd.spot.foreign) : ""));
+    if (typeof k === "number") flowParts.push("마감 코스피 " + pc(k) + (typeof q === "number" ? " · 코스닥 " + pc(q) : ""));
+    if (flowParts.length) out.flow = flowParts.join(" → ");
+    if (th.length) out.issues = th.map((t) => String(t.name).split("(")[0].trim() + " " + pc(t.rate) + (t.stocks && t.stocks.length ? " (" + t.stocks.join("·") + ")" : "")).join(" / ");
+    if (typeof k === "number") out.note = "코스피 " + pc(k) + (typeof kf === "number" ? " · 외국인 " + (kf > 0 ? "순매수 " : "순매도 ") + ek(kf) : "") + (typeof ki === "number" ? " · 기관 " + (ki > 0 ? "순매수 " : "순매도 ") + ek(ki) : "") + (names.length ? " · 주도 " + names.join("·") : "");
+    const nd = nextBusinessDays(d, CAL.holidays, 1)[0];
+    if (nd) { const evs = autoEvents(nd, CAL).filter((e) => e.lv).map((e) => e.k); out.next = mdw(nd) + " " + (evs.length ? evs.join(", ") + " · " : "") + (names.length ? names.join("·") + " 이어지는지 프리마켓 확인" : "프리마켓 주도 테마 확인") + " · 밤 미국장 테마 확인"; }
+    return out;
+  }
   function fillAuto(st, a) {
     st.auto = st.auto || {};
     const changed = [];
@@ -2941,6 +3026,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     ["kospi", "kosdaq"].forEach((k) => { if (c[k]) fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), c[k].value, a.close.ts); });
     if (c.leaders && c.leaders.text) fillOne("market.leaders", st.journal.market.leaders, (x) => (st.journal.market.leaders = x), c.leaders.text, a.close.ts);
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
+    // ③ 오늘 시장 이야기도 자동으로 초안 (손으로 고치면 고친 글이 우선)
+    if (a.close && (c.kospi || c.invest || c.leaders)) {
+      const story = marketStory(a.date || DATE, c, a.intraday);
+      Object.entries(story).forEach(([k, v]) => fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), v, a.close.ts));
+    }
     [["at.morning", m.at, m.ts], ["at.close", (a.close || {}).at, (a.close || {}).ts]].forEach(([k, v, ts]) => { if (v && st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, ts]); } });
     return changed;
   }
@@ -3040,7 +3130,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 🔄 지금 받아오기: 저장소에 이미 있는 값을 바로 다시 읽는다 (1분 기다리지 않고)
   // ⚡ 지금 새로 수집: 앱은 열쇠가 없어 수집을 직접 못 시키므로 GitHub 수집 화면을 열어 준다 → 'Run workflow' 누르면 1~2분 뒤 들어옴. 그동안 15초마다 확인
   let fastUntil = 0, fastTimer = null;
-  const autoMsg = (t) => document.querySelectorAll(".autobtns [data-msg]").forEach((m) => (m.textContent = t));
+  let lastBtns = null; // 누른 칸의 버튼 줄에만 안내를 띄운다 (칸마다 버튼이 있어서)
+  const autoMsg = (t) => document.querySelectorAll(".autobtns [data-msg]").forEach((m) => (m.textContent = !lastBtns || lastBtns.contains(m) ? t : ""));
   async function pullNow() {
     autoMsg("받아오는 중…");
     pubListAt = 0;
@@ -3056,8 +3147,22 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     clearInterval(fastTimer);
     fastTimer = setInterval(() => { if (Date.now() > fastUntil) { clearInterval(fastTimer); return; } pubListAt = 0; if (gh) ghPull(); else pubPull(); }, 15000);
   }
+  document.querySelectorAll(".autobtns [data-pull], .autobtns [data-collect]").forEach((b) => b.addEventListener("click", () => (lastBtns = b.closest(".autobtns")), true));
   document.querySelectorAll(".autobtns [data-pull]").forEach((b) => b.addEventListener("click", pullNow));
   document.querySelectorAll(".autobtns [data-collect]").forEach((b) => b.addEventListener("click", watchFast));
+  // 달력 자동 갱신 값 받기 (eden-market data/holidays.json · events.json, 하루 한 번이면 충분)
+  async function calRefresh() {
+    const base = isLinkBuild() ? "https://cdn.jsdelivr.net/gh/" + PUB_REPO + "@main/data/" : "https://raw.githubusercontent.com/" + PUB_REPO + "/main/data/";
+    try {
+      const [h, e] = await Promise.all([pubGet(base + "holidays.json"), pubGet(base + "events.json")]);
+      if (!h || !e) return;
+      try { localStorage.setItem(CAL_KEY, JSON.stringify({ holidays: h, events: e })); } catch (x) {}
+      const m = mergeCal(calData, { holidays: h, events: e }), hi = holidayIndex(m.holidays);
+      const before = CAL.holidays.length + "/" + JSON.stringify(CAL.events).length;
+      calData = m; CAL.events = m.events; CAL.holidays = hi.list; CAL.holidayNames = hi.names;
+      if (before !== CAL.holidays.length + "/" + JSON.stringify(CAL.events).length) { AUTO = autoEvents(DATE, CAL); render(); }
+    } catch (x) {}
+  }
   function pubStart() {
     if (gh) return;
     pubPull();
@@ -3065,22 +3170,36 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     pubTimer = setInterval(() => { if (document.visibilityState === "visible") pubPull(); }, 60000); // 1분마다 (화면을 볼 때만)
   }
   // 칸마다 회색 글씨로: 언제 자동으로 들어왔는지(날짜·시각) / 아직이면 몇 시에 들어오는지 / 손으로 고쳤는지
-  const AUTO_FIELDS = [].concat(SIGNALS.map((x) => ["signals." + x.k, "in-" + x.k, "morning"]), US.map((u) => ["us." + u.k, "us-" + u.k, "morning"]), ["kospi", "kosdaq", "invest", "leaders"].map((k) => ["market." + k, "j-" + k, "close"]), [0, 1].map((i) => ["prev." + i + ".name", "pv-" + i, "morning"]));
+  const AUTO_FIELDS = [].concat(SIGNALS.map((x) => ["signals." + x.k, "in-" + x.k, "morning"]), US.map((u) => ["us." + u.k, "us-" + u.k, "morning"]), ["kospi", "kosdaq", "invest", "leaders", "flow", "issues", "note", "next"].map((k) => ["market." + k, k === "note" ? "j-mktNote" : "j-" + k, "close"]), [0, 1].map((i) => ["prev." + i + ".name", "pv-" + i, "morning"]));
+  // 다음 자동 수집 시각: 오늘 남은 시각 / 다음 거래일 몇 시 (GitHub 예약은 10~20분 늦을 수 있음)
+  const RUNS = { morning: ["06:35", "07:05", "08:05"], close: ["16:20", "18:40"] };
+  function nextRun(when, d = DATE) {
+    const now = new Date(Date.now() + 9 * 3600e3).toISOString(), today = now.slice(0, 10), hm = now.slice(11, 16), slots = RUNS[when] || RUNS.close;
+    const nd = (x) => nextBusinessDays(x, CAL.holidays, 1)[0];
+    if (d > today) return { ph: mdw(d).replace(/\(.\)/, "") + " " + slots[0], txt: mdw(d) + " " + slots.join("·") };
+    if (d === today) {
+      const left = slots.filter((t) => t > hm);
+      if (left.length) return { ph: left[0] + " 자동", txt: "오늘 " + left.join("·") };
+      if (when === "close") { const n = nd(d); return { ph: "⚡ 새로 수집", txt: "오늘 수집 시간 지남 · 다음 자동은 " + mdw(n) + " " + slots[0] + " (⚡ 지금 새로 수집으로 바로 받기)" }; }
+      return { ph: "⚡ 새로 수집", txt: "오늘 아침 수집 시간 지남 · 다음 자동은 " + mdw(nd(d)) + " " + slots[0] };
+    }
+    return { ph: "지난 날", txt: "지난 날짜라 자동 수집이 끝났어요 (⚡ 지금 새로 수집으로 다시 받을 수 있어요)" };
+  }
   function paintAutoAt(noGh) {
     const a = S.auto || {}, md = DATE.slice(5).replace(/^0/, "").replace(/-0?/, "/");
     AUTO_FIELDS.forEach(([key, id, when]) => {
       const el = $("aa-" + key), input = $(id); if (!el || !input) return;
-      const plan = when === "morning" ? "평일 아침 6:35·7:05·8:05 (GitHub가 10~20분 늦게 돌릴 수 있음)" : "평일 오후 4:20 (몇 분 늦을 수 있음)", at = a["at." + when], v = a[key], cur = input.value;
+      const nr = nextRun(when), plan = nr.txt + " (GitHub가 10~20분 늦게 돌릴 수 있음)", at = a["at." + when], v = a[key], cur = input.value;
       // 빈 칸 안에도 회색으로 몇 시에 자동으로 들어오는지 보여 준다
       el.hidden = false; if (!input.dataset.ph) input.dataset.ph = input.placeholder;
-      input.placeholder = when === "morning" ? "7시쯤 자동" : "16:20 자동";
+      input.placeholder = nr.ph;
       let t;
       if (noGh) t = "🤖 " + plan + " 자동 입력 (PC 설치판·폰 주소에서 · 이 링크에서는 손 입력)";
       else if (v && cur === v) t = "🤖 " + md + " " + at + " 자동 입력됨" + (key === "signals.k200" ? " (" + (a["detail.k200"] || "야간 종가 ÷ 전날 주간 종가") + ")" : key.startsWith("prev.") && a["detail." + key.slice(0, 6)] ? " (" + a["detail." + key.slice(0, 6)] + ")" : key.startsWith("signals.") && a["detail." + key.slice(8)] ? " (" + a["detail." + key.slice(8)] + ")" : "");
       else if (key === "signals.k200" && at && !v) t = "🤖 " + md + " " + at + " 야간 거래 값을 못 받음 (휴장 다음 날 등) · 손 입력";
       else if (v && cur !== "") t = "✏️ 손으로 고침 (자동 " + at + " 값: " + v + ")";
       else if (v && cur === "") t = "🤖 " + md + " " + at + " 자동 값 " + v + " (지움)";
-      else t = "🤖 " + plan + " 자동 입력 · 아직 안 들어옴";
+      else t = "🤖 다음 자동 수집: " + plan + " · 아직 안 들어옴";
       const sk = key.startsWith("signals.") && a["stale." + key.slice(8)];
       el.textContent = t + (sk ? " " + sk : "");
       el.classList.toggle("stale", !!sk);
