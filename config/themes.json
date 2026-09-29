@@ -21,6 +21,10 @@
     { "key": "steel", "name": "철강",            "symbols": ["NUE", "STLD"], "th": 4 },
     { "key": "h2",    "name": "수소",            "symbols": ["PLUG", "BE"], "th": 5, "noDown": true },
     { "key": "build", "name": "건설 · 인프라",   "symbols": ["PAVE", "VMC"], "th": 2.5 },
-    { "key": "fintech", "name": "스테이블코인", "symbols": ["COIN", "PYPL"], "th": 5 }
+    { "key": "fintech", "name": "스테이블코인", "symbols": ["COIN", "PYPL"], "th": 5 },
+    { "key": "aisw",  "name": "AI 소프트웨어",   "symbols": ["IGV", "PLTR"], "th": 4 },
+    { "key": "cyber", "name": "사이버보안",      "symbols": ["CRWD", "PANW", "FTNT", "CIBR"], "th": 4 },
+    { "key": "lng",   "name": "LNG · 가스",      "symbols": ["LNG", "UNG"], "th": 4, "noDown": true },
+    { "key": "vaccine", "name": "백신 · 진단",   "symbols": ["MRNA", "BNTX"], "th": 5, "noDown": true }
   ]
 }

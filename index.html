@@ -1642,6 +1642,14 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       learn: "PAVE(미국 인프라 회사 묶음)와 벌컨머티리얼즈(건설 자재 회사)가 움직이면 현대건설·DL이앤씨 같은 한국 건설주도 따라가요. 금리 인하·경기 부양 때마다 돌아오는 테마예요. 검증: ±2.5% 넘게 움직일 때 오를 때 84%, 내릴 때 75%." },
     { k: "fintech", hit: [82, 80], name: "스테이블코인", th: 5, label: "미국", links: [["코인베이스", nvStock("COIN.O")], ["페이팔", nvStock("PYPL.O")]],
       learn: "코인베이스(코인 거래소)와 페이팔(간편결제)이 크게 움직이면 카카오페이·다날 같은 한국 결제·스테이블코인 관련주도 따라가요. 검증: ±5% 넘게 움직일 때 오를 때 82%, 내릴 때 80%." },
+    { k: "aisw", hit: [78, 75], name: "AI 소프트웨어", th: 4, label: "미국", links: [["IGV", nvStock("IGV", true)], ["팔란티어", nvStock("PLTR.O")]],
+      learn: "IGV(미국 소프트웨어 회사 묶음)와 팔란티어(AI 소프트웨어)가 크게 움직이면 코난테크놀로지·솔트룩스·폴라리스오피스 같은 한국 AI 소프트웨어 주식도 따라가요. 검증: ±4% 넘게 움직일 때 오를 때 78%, 내릴 때 75% (다른 조합은 60~70%대로 약했어요)." },
+    { k: "cyber", hit: [77, 80], name: "사이버보안", th: 4, label: "미국", links: [["크라우드스트라이크", nvStock("CRWD.O")], ["팔로알토", nvStock("PANW.O")], ["포티넷", nvStock("FTNT.O")], ["CIBR", nvStock("CIBR.O", true)]],
+      learn: "미국 보안 회사(크라우드스트라이크·팔로알토·포티넷)와 보안 묶음(CIBR)이 크게 움직이면 안랩·지니언스·라온시큐어·싸이버원 같은 한국 보안주도 따라가요. 해킹 사고 때마다 돌아오는 테마예요. 검증: ±4% 넘게 움직일 때 오를 때 77%, 내릴 때 80%." },
+    { k: "lng", hit: [82, null], noDown: true, name: "LNG · 가스", th: 4, label: "미국", links: [["셰니에르", nvStock("LNG")], ["UNG", nvStock("UNG", true)]],
+      learn: "셰니에르(미국 LNG 수출 회사)와 UNG(천연가스 값)가 +4% 넘게 오르면 한국가스공사도 따라 오르기 쉬워요(82%). 내릴 때는 어떤 짝·기준으로도 50~60%대라 참고만 해요. 겨울철·에너지 위기 때마다 돌아오는 테마예요." },
+    { k: "vaccine", hit: [76, null], noDown: true, name: "백신 · 진단", th: 5, label: "미국", links: [["모더나", nvStock("MRNA.O")], ["바이오엔텍", nvStock("BNTX.O")]],
+      learn: "모더나·바이오엔텍(백신 회사)이 +5% 넘게 오르면 SK바이오사이언스·씨젠 같은 한국 백신·진단 주식도 따라 오르기 쉬워요(76%). 내릴 때는 50%대라 참고만 해요. 전염병이 돌 때마다 돌아오는 테마예요." },
     { k: "btc", grp: "asset", hit: [92, 87], name: "가상자산 (비트코인)", th: 4, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
       learn: "비트코인이 크게 움직이면 코인 거래소와 관련된 한국 회사 주식이 따라 움직여요. 코인은 원래 많이 흔들려서 기준을 ±4%로 넓게 잡았어요." },
     { k: "gold", grp: "asset", hit: [64, 55], weak: true, name: "금", th: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
@@ -1677,7 +1685,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-21";
+  const APP_VER = "9.29-22";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
