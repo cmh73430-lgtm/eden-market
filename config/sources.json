@@ -14,7 +14,8 @@
     "sox":  [{ "source": "naver", "symbol": "index:.SOX", "kind": "pct" },     { "source": "yahoo", "symbol": "^SOX",  "kind": "pct" }],
     "vix":  [{ "source": "naver", "symbol": "index:.VIX", "kind": "level" },   { "source": "yahoo", "symbol": "^VIX",  "kind": "level" }],
     "oil":  [{ "source": "naver", "symbol": "market:energy:CLcv1", "kind": "pct" }, { "source": "yahoo", "symbol": "CL=F",  "kind": "pct" }],
-    "ust":  [{ "source": "naver", "symbol": "market:bond:US10YT=RR", "kind": "bp" }, { "source": "yahoo", "symbol": "^TNX",  "kind": "bp" }]
+    "ust":  [{ "source": "naver", "symbol": "market:bond:US10YT=RR", "kind": "bp" }, { "source": "yahoo", "symbol": "^TNX",  "kind": "bp" }],
+    "ustlvl": [{ "source": "naver", "symbol": "market:bond:US10YT=RR", "kind": "yield" }, { "source": "yahoo", "symbol": "^TNX", "kind": "yield" }]
   },
   "themeSource": ["naver", "upbit", "yahoo"]
 }

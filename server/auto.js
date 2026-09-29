@@ -1,8 +1,8 @@
 // 자동 연동: GitHub Actions 가 평일 아침(미국 지표·미국 대응주)과 오후(코스피·코스닥 마감·수급)에 네이버 값을 모아
 // 기록 저장소(cockpit-data 브랜치)의 auto/<날짜>.json 에 둔다. 앱은 그 파일을 읽어 빈 칸을 채운다 (손으로 고친 칸은 그대로).
 // 여기는 순수 함수만 — 실제 실행은 scripts/collect-auto.mjs.
-import { kstDate, kstTime, weekday } from "../shared/calendar.js";
-import { collectAll } from "./collect.js";
+import { kstDate, kstTime, weekday, holidayGap, lastUsTradingDayBefore, usDateOf } from "../shared/calendar.js";
+import { collectAll, normalizeYield } from "./collect.js";
 
 export const AUTO_DIR = "auto";
 export const autoFile = (date) => AUTO_DIR + "/" + date + ".json";
@@ -21,8 +21,11 @@ export function skipReason(date, holidays = [], holidayNames = {}) {
   return null;
 }
 
-// 시각으로 아침/오후 구분 (KST 12시 전 = 아침)
-export function whenOf(now = new Date()) { return Number(kstTime(now).slice(0, 2)) < 12 ? "morning" : "close"; }
+// 시각으로 구분: 9시 전 = 아침, 9:00~15:29 = 장중(재판정), 그 뒤 = 오후
+export function whenOf(now = new Date()) {
+  const t = kstTime(now).slice(0, 5);
+  return t < "09:00" ? "morning" : t < "15:30" ? "intraday" : "close";
+}
 
 // 네이버 투자자 매매동향 응답 {bizdate, personalValue, foreignValue, institutionalValue} (억원) → 숫자
 export function parseTrend(json) {
@@ -39,14 +42,64 @@ export function investText(inv) {
 }
 
 // 아침: 시장 신호 + 미국 대응주 (야간선물 k200 은 KIS 없이는 못 받으므로 실패해도 그대로 둔다)
-export async function collectMorning({ sources, themes, adapters, now = new Date(), prevThemes = null }) {
+// ---- 연휴 뒤 첫 거래일: 미국 신호를 '직전 한국 거래일 아침에 본 미국 종가 → 가장 최근 미국 종가' 누적 변화로 ----
+// 예: 9/28(월, 추석 연휴 뒤) = 미국 9/22 종가 → 9/25 종가. 연휴 동안 미국이 여러 날 움직인 걸 하루치로만 보면 놓친다 (9/28 코스피 -2.7%).
+export const CUM_SYMBOLS = { fut: "NQ=F", sox: "^SOX", ust: "^TNX", es: "ES=F", ym: "YM=F", rty: "RTY=F" };
+export function cumChange(k, bars, prevKr, expectedUs) {
+  const base = [...bars].filter((b) => b.date < prevKr).pop(), last = [...bars].filter((b) => b.date <= expectedUs).pop();
+  if (!base || !last || last.date <= base.date) return null;
+  const value = k === "ust" ? Number(((normalizeYield(last.close) - normalizeYield(base.close)) * 100).toFixed(1)) : Number(((last.close / base.close - 1) * 100).toFixed(2));
+  return { value, from: base.date, to: last.date };
+}
+// 받아온 미국 값의 기준 날짜가 '기대하는 미국 거래일'보다 오래됐는지 (연휴·주말 뒤 묵은 값 방지). 선물·환율처럼 밤새 거래되는 값은 시각이 최신이라 걸리지 않는다
+export const US_DATED = ["sox", "vix", "ust", "ustlvl", "dji", "ixic", "spx", "rut", "fut", "es", "ym", "rty", "oil"];
+export function staleCheck(signals, expectedUs) {
+  const out = {};
+  US_DATED.forEach((k) => { const v = signals[k]; const d = v && usDateOf(v.time); if (d && d < expectedUs) out[k] = { date: d, expected: expectedUs }; });
+  return out;
+}
+
+export async function collectMorning({ sources, themes, adapters, now = new Date(), prevThemes = null, holidays = [], date = null }) {
   const got = await collectAll({ sources, themes, adapters, now });
   const strip = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { value: v.value, src: v.src, time: v.time || undefined, detail: v.detail }]));
   const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), signals: strip(got.signals), us: strip(got.us), errors: got.errors.map((e) => e.key + ": " + e.error) };
+  const today = date || kstDate(now), expectedUs = lastUsTradingDayBefore(today);
+  out.expectedUs = expectedUs;
+  // 연휴 뒤 첫 거래일이면 누적 변화로 바꾼다
+  const gap = holidayGap(today, holidays);
+  if (gap.skipped.length && adapters.yahoo && adapters.yahoo.daily) {
+    out.gap = { prevKr: gap.prevKr, skipped: gap.skipped };
+    for (const [k, sym] of Object.entries(CUM_SYMBOLS)) {
+      try {
+        const c = cumChange(k, await adapters.yahoo.daily(sym), gap.prevKr, expectedUs);
+        if (!c) continue;
+        const single = out.signals[k] ? out.signals[k].value : null;
+        out.signals[k] = Object.assign({}, out.signals[k] || {}, { value: c.value, src: "yahoo", time: c.to, detail: Object.assign({}, (out.signals[k] || {}).detail || {}, { cum: { from: c.from, to: c.to, single } }) });
+        out.gap.from = c.from; out.gap.to = c.to;
+      } catch (e) { out.errors.push(k + " 연휴 누적: " + (e.message || e)); }
+    }
+  }
+  const stale = staleCheck(out.signals, expectedUs);
+  if (Object.keys(stale).length) out.stale = stale;
   if (prevThemes) {
     try { const p = await prevThemes(); out.prev = p.themes; out.prevRaw = p.raw; }
     catch (e) { out.errors.push("prev: " + (e.message || e)); }
   }
+  return out;
+}
+
+// ---- 장중 재판정 (09:30 · 10:30): 외인 코스피200 선물 순매수 + 외인·기관 코스피 현물 순매수 + 코스피 등락 ----
+// 네이버 m.stock.naver.com/api/index/FUT/trend (선물 투자자별, 장중 누적) · /api/index/KOSPI/trend (현물, 억원)
+export async function collectIntraday({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000 }) {
+  const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), errors: [] };
+  const get = async (code) => {
+    const r = await fetchImpl("https://m.stock.naver.com/api/index/" + code + "/trend", { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return parseTrend(await r.json());
+  };
+  try { const f = await get("FUT"); out.fut = { foreign: f.foreign, institution: f.institution, personal: f.personal, bizdate: f.bizdate }; } catch (e) { out.errors.push("선물 수급: " + (e.message || e)); }
+  try { const k = await get("KOSPI"); out.spot = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("현물 수급: " + (e.message || e)); }
+  try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = Number(((q.price / q.prevClose - 1) * 100).toFixed(2)); } catch (e) { out.errors.push("코스피: " + (e.message || e)); }
   return out;
 }
 
@@ -222,10 +275,14 @@ export function summarize(rec) {
   if (m) {
     Object.entries(m.signals || {}).forEach(([k, v]) => lines.push(`아침 ${m.at} 신호 ${k.padEnd(5)} ${String(v.value).padStart(8)}  ${v.src}`));
     Object.entries(m.us || {}).forEach(([k, v]) => lines.push(`아침 ${m.at} 테마 ${k.padEnd(5)} ${String(v.value).padStart(8)}  ${v.src}`));
+    if (m.gap) lines.push(`아침 ${m.at} 연휴 뒤 첫 거래일 (직전 한국 거래일 ${m.gap.prevKr}) · 미국 신호 누적 ${m.gap.from || "?"} → ${m.gap.to || "?"}`);
+    Object.entries(m.stale || {}).forEach(([k, v]) => lines.push(`아침 ${m.at} ⚠ ${k} 값 기준일 ${v.date} (기대 ${v.expected}) — 오래된 값`));
     (m.prev || []).forEach((t) => lines.push(`아침 ${m.at} 전일테마 ${t.name} ${t.rate}% · 애프터 ${t.after ? t.after.pct + "% " + t.after.state : "—"} · 프리 ${t.pre ? t.pre.pct + "% " + t.pre.state : "—"} (${(t.stocks || []).map((x) => x.name).join("·")})`));
     if (m.prevRaw) lines.push("아침 NXT 세션 " + m.prevRaw);
     (m.errors || []).forEach((e) => lines.push("아침 실패 " + e));
   }
+  const it = rec.intraday;
+  if (it) lines.push(`장중 ${it.at} 코스피 ${it.kospi ?? "—"}% · 외인 선물 ${it.fut ? it.fut.foreign : "—"} · 현물 외인 ${it.spot ? it.spot.foreign : "—"}억 · 기관 ${it.spot ? it.spot.institution : "—"}억`);
   if (c) {
     ["kospi", "kosdaq"].forEach((k) => { const v = c.market && c.market[k]; if (v) lines.push(`오후 ${c.at} ${k.padEnd(6)} ${String(v.value).padStart(7)}%  종가 ${v.close}`); });
     if (c.market && c.market.invest) lines.push(`오후 ${c.at} 수급 ${c.market.invest.text}`);

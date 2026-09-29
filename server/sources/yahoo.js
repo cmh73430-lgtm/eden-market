@@ -34,4 +34,18 @@ export async function quote(symbol, { fetchImpl = fetch, timeoutMs = 10000 } = {
   return parseChart(await res.json());
 }
 
-export default { name: "yahoo", quote };
+// 일봉 종가 목록 [{date: 거래소 현지 날짜, close}] — 연휴 누적 변화 계산용
+export function parseDaily(json) {
+  const r = json && json.chart && json.chart.result && json.chart.result[0];
+  if (!r || !r.timestamp) throw new Error("yahoo: 일봉 없음");
+  const off = (r.meta && r.meta.gmtoffset) || 0, closes = (r.indicators && r.indicators.quote && r.indicators.quote[0] && r.indicators.quote[0].close) || [];
+  return r.timestamp.map((t, i) => ({ date: new Date((t + off) * 1000).toISOString().slice(0, 10), close: closes[i] })).filter((x) => typeof x.close === "number");
+}
+export async function daily(symbol, { fetchImpl = fetch, timeoutMs = 10000 } = {}) {
+  const url = BASE + "/v8/finance/chart/" + encodeURIComponent(symbol) + "?range=1mo&interval=1d";
+  const res = await fetchImpl(url, { headers: { "User-Agent": "Mozilla/5.0 (cockpit)", Accept: "application/json" }, signal: AbortSignal.timeout(timeoutMs) });
+  if (!res.ok) throw new Error("yahoo " + symbol + ": HTTP " + res.status);
+  return parseDaily(await res.json());
+}
+
+export default { name: "yahoo", quote, daily };

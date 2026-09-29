@@ -33,6 +33,28 @@ export function prevBusinessDay(s, holidays) {
   return d;
 }
 
+// 미국 증시(NYSE) 휴장일 — 연휴 뒤 '기대하는 미국 거래일'과 받아온 값 날짜 비교에 쓴다 (연 1회 갱신)
+export const US_HOLIDAYS = [
+  "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25",
+  "2027-01-01", "2027-01-18", "2027-02-15", "2027-03-26", "2027-05-31", "2027-06-18", "2027-07-05", "2027-09-06", "2027-11-25", "2027-12-24",
+];
+export const isUsTradingDay = (s) => isBusinessDay(s, US_HOLIDAYS);
+// 한국 날짜 s 아침에 볼 수 있는 가장 최근 미국 거래일 (미국 날짜로 s보다 앞선 날)
+export function lastUsTradingDayBefore(s) { let d = addDays(s, -1); while (!isUsTradingDay(d)) d = addDays(d, -1); return d; }
+// 연휴 뒤 첫 거래일인지: 직전 한국 거래일과 오늘 사이에 쉰 평일(휴장일)이 있으면 그 날들을 돌려준다
+export function holidayGap(s, holidays) {
+  const set = toSet(holidays), prevKr = prevBusinessDay(s, set), skipped = [];
+  for (let d = addDays(prevKr, 1); d < s; d = addDays(d, 1)) { const wd = weekday(d); if (wd !== 0 && wd !== 6 && set.has(d)) skipped.push(d); }
+  return { prevKr, skipped };
+}
+// 시세 시각 → 미국 동부 날짜 (YYYY-MM-DD)
+export function usDateOf(time) {
+  if (!time) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(time))) return String(time); // 이미 미국 날짜 (일봉 날짜)
+  const t = new Date(time); if (isNaN(t)) return null;
+  try { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(t); } catch (e) { return String(time).slice(0, 10); }
+}
+
 export function nextBusinessDays(s, holidays, n = 2) {
   const set = toSet(holidays), out = [];
   let d = s;
@@ -79,6 +101,14 @@ export function autoEvents(s, cal = {}) {
     const wd = weekday(s);
     const name = (cal.holidayNames || {})[s];
     out.push({ k: wd === 0 || wd === 6 ? "주말 · 휴장" : "휴장" + (name ? " · " + name : ""), lv: "" });
+  }
+
+  if (isBusinessDay(s, holidays)) {
+    const g = holidayGap(s, holidays);
+    if (g.skipped.length) {
+      let off = 0; for (let d = addDays(g.prevKr, 1); d < s; d = addDays(d, 1)) off++;
+      out.push({ k: "연휴 후 첫날 (" + off + "일 쉬고 · 미국 신호는 연휴 누적)", lv: "a", ev: "연휴후" });
+    }
   }
 
   const exp = monthlyExpiry(y, m, holidays);

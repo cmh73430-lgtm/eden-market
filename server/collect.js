@@ -11,6 +11,7 @@ export function toSignal(kind, { price, prevClose }) {
     case "pct": return round((price / prevClose - 1) * 100, 2);
     case "diff": return round(price - prevClose, 2);
     case "level": return round(price, 2);
+    case "yield": return round(normalizeYield(price), 2); // 금리 수준 (%)
     case "bp": return round(Math.round((normalizeYield(price) - normalizeYield(prevClose)) * 1e6) / 1e4, 1); // 부동소수 오차 정리 후 bp
     default: throw new Error("알 수 없는 kind: " + kind);
   }
