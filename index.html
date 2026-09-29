@@ -1451,7 +1451,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-4";
+  const APP_VER = "9.29-5";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2716,7 +2716,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function paintAuto() {
     const sig = $("autoSig"), mkt = $("autoMkt"); if (!sig || !mkt) return;
     const noGh = isLinkBuild() && pubState !== "on"; // claude.ai 링크에서 못 받아오면 자동 연동 표시를 숨기고 안내를 띄운다
-    const ln = $("linkNotice"); if (ln) ln.hidden = !(isLinkBuild() && pubState === "error");
+    const ln = $("linkNotice"); if (ln) ln.hidden = !(isLinkBuild() && pubState !== "on");
     paintAutoAt(noGh);
     sig.hidden = mkt.hidden = noGh;
     document.querySelectorAll(".autobtns").forEach((b) => (b.hidden = noGh));
