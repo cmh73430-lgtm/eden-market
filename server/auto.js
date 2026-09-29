@@ -49,7 +49,7 @@ export function cumChange(k, bars, prevKr, expectedUs) {
   const base = [...bars].filter((b) => b.date < prevKr).pop(), last = [...bars].filter((b) => b.date <= expectedUs).pop();
   if (!base || !last || last.date <= base.date) return null;
   const value = k === "ust" ? Number(((normalizeYield(last.close) - normalizeYield(base.close)) * 100).toFixed(1)) : Number(((last.close / base.close - 1) * 100).toFixed(2));
-  return { value, from: base.date, to: last.date };
+  return { value, from: base.date, to: last.date, level: k === "ust" ? Number(normalizeYield(last.close).toFixed(2)) : undefined };
 }
 // 받아온 미국 값의 기준 날짜가 '기대하는 미국 거래일'보다 오래됐는지 (연휴·주말 뒤 묵은 값 방지). 선물·환율처럼 밤새 거래되는 값은 시각이 최신이라 걸리지 않는다
 export const US_DATED = ["sox", "vix", "ust", "ustlvl", "dji", "ixic", "spx", "rut", "fut", "es", "ym", "rty", "oil"];
@@ -76,6 +76,7 @@ export async function collectMorning({ sources, themes, adapters, now = new Date
         const single = out.signals[k] ? out.signals[k].value : null;
         out.signals[k] = Object.assign({}, out.signals[k] || {}, { value: c.value, src: "yahoo", time: c.to, detail: Object.assign({}, (out.signals[k] || {}).detail || {}, { cum: { from: c.from, to: c.to, single } }) });
         out.gap.from = c.from; out.gap.to = c.to;
+        if (k === "ust" && c.level !== undefined) out.signals.ustlvl = { value: c.level, src: "yahoo", time: c.to, detail: { asOf: c.to } }; // 금리 수준도 같은 날(최근 미국 종가) 기준
       } catch (e) { out.errors.push(k + " 연휴 누적: " + (e.message || e)); }
     }
   }
