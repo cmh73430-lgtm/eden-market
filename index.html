@@ -1747,7 +1747,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-35";
+  const APP_VER = "9.29-37";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2262,13 +2262,14 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 장전 시황 판단 → 일지 시황 (자동). st·auto를 넘기면 다른 날짜 것도 만든다.
   function morningSummary(r, st, auto) {
     st = st || S; auto = auto || AUTO;
-    const vals = SIGNALS.map((s) => { const v = parseNum(st.signals[s.k]); return v === null ? null : [s.name.replace(/ \(.*\)/, ""), (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit, r.excluded[s.k] ? "참고" : LABEL[r.statuses[s.k]] || ""]; }).filter(Boolean);
+    // [이름, 값, 판정, 뺀 이유] — 일지·블로그 복사와 같은 모양 (예: 원달러 환율: +1원 → 참고 (혼자서는 판정 제외))
+    const vals = SIGNALS.map((s) => { const v = parseNum(st.signals[s.k]); if (v === null || s.k === "ustlvl" || REF_KEYS.includes(s.k)) return null; const ex = r.excluded[s.k]; /* 판정 7개만 (es·ym·rty · 금리 수준은 넣지 않음) */ return [s.name, (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit, ex ? "참고" : LABEL[r.statuses[s.k]] || "", ex && s.k === "fx" ? "혼자서는 판정 제외" : ""]; }).filter(Boolean);
     const evs = [...auto.filter((e) => e.lv).map((e) => e.k), ...(st.events || [])];
     const first = r.themeFirst.map((t) => t[0]), back = r.themeBack.map((t) => t[0]);
     if (!vals.length) return { html: "장전 신호 칸에 숫자를 넣으면 여기에 장전 시황 판단이 자동으로 들어와요.", vals, evs, first, back };
-    const html = `<b>매매 모드: ${esc(r.mode)}</b> (${esc(r.why)})<br>` +
-      vals.map(([n, v, s2]) => `${esc(n)} ${esc(v)}(${esc(s2)})`).join(" · ") + (r.combo ? " · 환율+유가 동반 급등(주의)" : "") +
-      `<br>주요 일정: ${evs.length ? esc(evs.join(", ")) : "없음"}` +
+    const html = `<b>매매 모드: ${esc(r.mode)}</b> (${esc(r.why)})<br><br>` +
+      vals.map(([n, v, s2, why]) => `• ${esc(n)}: ${esc(v)} → ${esc(s2)}${why ? " (" + esc(why) + ")" : ""}`).join("<br>") + (r.combo ? "<br>• 환율+유가 동반 급등 → 주의 1개" : "") +
+      (evs.length ? `<br>주요 일정: ${esc(evs.join(", "))}` : "") +
       (first.length ? `<br>우선 관심: ${esc(first.join(", "))}` : "") + (back.length ? ` · 후순위: ${esc(back.join(", "))}` : "");
     return { html, vals, evs, first, back };
   }
@@ -2328,20 +2329,19 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (m.vals.length) {
       P(`<b>매매 모드:</b> <b>${esc(r.mode)}</b> (${esc(r.why)})`, `매매 모드: ${r.mode} (${r.why})`);
       gap();
-      table(["신호", "값", "판정", "기준"], SIGNALS.map((s) => {
-        const v = parseNum(st.signals[s.k]); if (v === null) return null;
-        const s2 = r.statuses[s.k];
-        return [s.name, (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit, r.excluded[s.k] ? "참고" : LABEL[s2] || "", r.excluded[s.k] ? (s.k === "fut" ? "야간선물과 방향 반대라 제외" : "혼자서는 판정 제외") : (s2 && s.rule[s2] ? s.rule[s2].split(" → ")[0] : "")];
-      }).filter(Boolean), ([n, v, s2, why]) => `${n}: ${v} → ${s2}${why ? " (" + why + ")" : ""}`);
+      // 지표마다 한 줄: 이름: 값 → 판정 (기준 설명은 넣지 않고, 판정에서 뺀 이유만 짧게)
+      table(["신호", "값", "판정"], m.vals, ([n, v, s2, why]) => `${n}: ${v} → ${s2}${why ? " (" + why + ")" : ""}`);
       if (r.combo) { gap(); say("환율과 기름값이 같은 날 함께 급등해 주의 1개로 넣었다."); }
     } else say("아침 신호를 넣지 않았다.");
-    gap();
-    line("주요 일정:", m.evs.join(", ") || "특별한 일 없음");
+    if (m.evs.length) { gap(); line("주요 일정:", m.evs.join(", ")); }
 
     // 2. 관심 테마 · 미국장 테마 · 전일 주도 테마 · 지표별 수혜 업종 (묶음마다 한 칸 띄움)
-    head("🎯 관심 테마");
-    list("우선 관심", r.themeFirst.map((t) => t[0] + " (" + t[1] + ")"));
-    gap(); list("후순위", r.themeBack.map((t) => t[0] + " (" + t[1] + ")"));
+    // 우선 관심: '미국'(미국장 테마·전일 주도) + '국장'(오늘 주도 테마: 이름 등락률 🇰🇷🇺🇸) · 후순위: 미국만 (국장은 오른 테마라 후순위에 안 넣음)
+    head("🎯 금일 관심 테마");
+    const krLead = parseLeaders(mk.leaders).map((t) => { const u = usLinkOf(t.name), v = u ? themeValue((st.us || {})[u.k]) : null; return (t.name.split("(")[0].trim() || t.name) + " " + pct(t.rate) + (flagsOf(t.rate > 0, v !== null && v > 0) ? " " + flagsOf(t.rate > 0, v !== null && v > 0) : ""); });
+    const group = (label, us, kr) => { sub(label); say("미국"); (us.length ? us : ["없음"]).forEach((x) => say("• " + x)); if (kr.length) { say("국장"); kr.forEach((x) => say(x)); } };
+    group("우선 관심", r.themeFirst.map((t) => t[0] + " (" + t[1] + ")"), krLead);
+    gap(); group("후순위", r.themeBack.map((t) => t[0] + " (" + t[1] + ")"), []);
     const usRows = US.map((u) => { const v = parseNum((st.us || {})[u.k]); if (v === null) return null; const s2 = r.themeStatus[u.k]; return [u.name, (v > 0 ? "+" : "") + v + "%", u.thDn ? "+" + u.th + "%/-" + u.thDn + "%" : u.noDown ? "+" + u.th + "%" : "±" + u.th + "%", (u.weak || u.noDown) && s2 === "back" || u.weak && s2 === "first" ? "참고" : s2 === "first" ? "우선 관심" : s2 === "back" ? "후순위" : "중립"]; }).filter(Boolean);
     if (usRows.length) { gap(); sub("미국장 테마"); table(["테마", "등락", "기준", "판정"], usRows, ([n, v, th, s2]) => `${n}: ${v} (기준 ${th}) → ${s2}`); }
     const prevs = (st.prev || []).filter((p) => p && (p.name || "").trim());
