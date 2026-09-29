@@ -12,6 +12,15 @@
     { "key": "cu",    "name": "전선 · 구리",     "symbols": ["HG=F"],    "th": 2,   "noDown": true, "label": "구리 선물", "labels": ["구리 선물"] },
     { "key": "bio",   "name": "비만치료제 · 바이오", "symbols": ["LLY", "NVO", "XBI"] },
     { "key": "robot", "name": "로봇",            "symbols": ["BOTZ", "SYM"], "th": 5 },
-    { "key": "space", "name": "우주항공",        "symbols": ["RKLB", "ASTS", "UFO"], "th": 5, "thDn": 6 }
+    { "key": "space", "name": "우주항공",        "symbols": ["RKLB", "ASTS", "UFO"], "th": 5, "thDn": 6 },
+    { "key": "solar", "name": "태양광",          "symbols": ["FSLR", "ENPH", "TAN"], "th": 5, "thDn": 6 },
+    { "key": "equip", "name": "반도체 장비",     "symbols": ["AMAT", "LRCX", "KLAC"] },
+    { "key": "auto",  "name": "자동차",          "symbols": ["GM", "F"], "th": 4 },
+    { "key": "ship",  "name": "해운",            "symbols": ["ZIM", "MATX"], "th": 5 },
+    { "key": "bank",  "name": "은행 · 금융",     "symbols": ["KBE", "JPM"], "th": 2 },
+    { "key": "steel", "name": "철강",            "symbols": ["NUE", "STLD"], "th": 4 },
+    { "key": "h2",    "name": "수소",            "symbols": ["PLUG", "BE"], "th": 5, "noDown": true },
+    { "key": "build", "name": "건설 · 인프라",   "symbols": ["PAVE", "VMC"], "th": 2.5 },
+    { "key": "fintech", "name": "스테이블코인", "symbols": ["COIN", "PYPL"], "th": 5 }
   ]
 }
