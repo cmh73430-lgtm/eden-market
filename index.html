@@ -319,7 +319,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .refcard .rule .g { background: var(--g-bg); color: var(--g); } .refcard .rule .a { background: var(--a-bg); color: var(--a); } .refcard .rule .r { background: var(--r-bg); color: var(--r); }
 .uslist { display: grid; gap: 0; }
 .uslist .urow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 8px; border-top: 1px solid var(--line); border-left: 4px solid transparent; }
-.uslist .urow:first-child { border-top: 0; }
+.uslist .ugrp { font-size: 12.5px; font-weight: 800; color: var(--muted); padding: 10px 2px 4px; } .uslist .ugrp:first-child { padding-top: 0; } .uslist .ugrp + .urow { border-top: 0; }
 .uslist .urow[data-st="up"] { border-left-color: var(--up); background: var(--up-bg); } .uslist .urow[data-st="dn"] { border-left-color: var(--down); background: var(--down-bg); }
 .uslist .rn { font-size: 14px; font-weight: 700; display: grid; line-height: 1.25; } .uslist .rn small { font-size: 11.5px; font-weight: 500; color: var(--muted); }
 .uslist .in { gap: 3px; } .uslist .pm { width: 28px; height: 30px; font-size: 14px; } .uslist input.num { width: 56px; font-size: 14px; padding: 3px 5px; } .uslist .unit { min-width: 1.1em; }
@@ -1158,10 +1158,12 @@ function evaluate(input = {}, events = [], config = {}) {
   (config.themes || []).forEach((t) => {
     const val = themeValue((input.us || {})[t.key]);
     if (val === null) { themeStatus[t.key] = null; return; }
-    const th = t.th ?? defTh;
+    const th = t.th ?? defTh, thDn = t.thDn ?? th;
     const why = (t.label || "미국") + " " + signed(val);
-    if (val >= th) { themeStatus[t.key] = "first"; themeFirst.push([t.name, why]); }
-    else if (val <= -th) { themeStatus[t.key] = "back"; themeBack.push([t.name, why]); }
+    // weak: 검증에서 한국장 연결이 약한 테마(금) → 상태만 표시하고 우선 관심·후순위 목록에는 안 넣음
+    // thDn: 내릴 때 기준을 따로 (원전 +5%/-6%) · noDown: 내릴 때는 잘 안 따라가서 후순위 목록에 안 넣음 (구리)
+    if (val >= th) { themeStatus[t.key] = "first"; if (!t.weak) themeFirst.push([t.name, why]); }
+    else if (val <= -thDn) { themeStatus[t.key] = "back"; if (!t.weak && !t.noDown) themeBack.push([t.name, why]); }
     else themeStatus[t.key] = "flat";
   });
   // 전일 주도 테마: state = 전날 저녁 애프터마켓(up/flat/down), pre = 오늘 아침 NXT 프리마켓 08:00~08:50 (up/flat/down, 없으면 "")
@@ -1601,24 +1603,30 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
   const nvStock = (code, etf) => NV + "/worldstock/" + (etf ? "etf/" : "stock/") + code + (etf ? "" : "/total");
   const US = [
-    { k: "semi", name: "반도체 · AI", th: 3, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
+    { k: "semi", hit: [94, 90], name: "반도체 · AI", th: 3, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
       learn: "엔비디아(AI 칩 회사), 마이크론(메모리 회사), SMH(반도체 회사 묶음)가 오르면 삼성전자·SK하이닉스 같은 한국 반도체 주식도 따라 오르기 쉬워요." },
-    { k: "power", name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
+    { k: "power", hit: [88, 74], name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
       learn: "AI 컴퓨터(데이터센터)는 전기를 엄청 많이 써요. 전기 설비를 만드는 미국 회사(GE버노바, 버티브)가 오르면 한국의 변압기·전선 회사도 따라가기 쉬워요." },
-    { k: "nuke", name: "원전 (원자력 발전)", th: 3, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
-      learn: "미국 원자력 발전 회사(컨스텔레이션, 오클로)가 오르면 한국 원전 부품 회사에도 관심이 몰려요." },
-    { k: "batt", name: "2차전지 (배터리)", th: 3, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
+    { k: "nuke", hit: [90, 89], name: "원전 (원자력 발전)", th: 5, thDn: 6, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
+      learn: "미국 원자력 발전 회사(컨스텔레이션, 오클로)가 오르면 한국 원전 부품 회사에도 관심이 몰려요. 원전 주식은 원래 크게 흔들려서, 검증해 보니 +5% 넘게 오를 때(90% 따라감), -6% 넘게 내릴 때(89%)만 잘 맞았어요. ±3%에서는 내릴 때 65%밖에 안 맞았어요." },
+    { k: "batt", hit: [90, 83], name: "2차전지 (배터리)", th: 3, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
       learn: "테슬라(전기차)와 앨버말(배터리 재료인 리튬 회사)을 보면 한국 배터리 회사들의 분위기를 알 수 있어요." },
-    { k: "def", name: "조선 · 방산 (배·무기)", th: 3, label: "미국", links: [["ITA", nvStock("ITA", true)]],
+    { k: "def", hit: [87, 77], name: "조선 · 방산 (배·무기)", th: 3, label: "미국", links: [["ITA", nvStock("ITA", true)]],
       learn: "ITA는 미국 무기·항공 회사 묶음이에요. 전쟁 같은 긴장이 커지면 한국 무기·배 만드는 회사도 같이 움직여요." },
-    { k: "btc", name: "가상자산 (비트코인)", th: 4, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
+    { k: "bio", hit: [85, 84], name: "비만치료제 · 바이오", th: 3, label: "미국", links: [["일라이릴리", nvStock("LLY")], ["노보노디스크", nvStock("NVO")], ["XBI", nvStock("XBI", true)]],
+      learn: "일라이릴리·노보노디스크(비만치료제 회사)와 XBI(미국 바이오 회사 묶음)가 크게 움직이면 한미약품·알테오젠·삼성바이오로직스 같은 한국 제약·바이오 주식도 따라가기 쉬워요." },
+    { k: "robot", hit: [80, 77], name: "로봇", th: 5, label: "미국", links: [["BOTZ", nvStock("BOTZ.O", true)], ["심보틱", nvStock("SYM.O")]],
+      learn: "BOTZ(미국 로봇·AI 회사 묶음)와 심보틱(물류 로봇 회사)이 크게 움직이면 레인보우로보틱스·두산로보틱스 같은 한국 로봇 주식도 따라가기 쉬워요. 로봇 주식은 많이 흔들려서, 검증해 보니 ±5% 넘게 움직일 때만 잘 맞았어요(오를 때 80%, 내릴 때 77%)." },
+    { k: "space", hit: [80, 76], name: "우주항공", th: 5, thDn: 6, label: "미국", links: [["로켓랩", nvStock("RKLB.O")], ["AST스페이스모바일", nvStock("ASTS.O")], ["UFO", nvStock("UFO", true)]],
+      learn: "로켓랩(로켓 회사), AST스페이스모바일(위성 통신 회사), UFO(우주 회사 묶음)가 크게 움직이면 쎄트렉아이·한화에어로스페이스 같은 한국 우주 주식도 움직여요. 검증해 보니 +5% 넘게 오를 때(80%), -6% 넘게 내릴 때(76%)만 잘 맞았어요." },
+    { k: "btc", grp: "asset", hit: [92, 87], name: "가상자산 (비트코인)", th: 4, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
       learn: "비트코인이 크게 움직이면 코인 거래소와 관련된 한국 회사 주식이 따라 움직여요. 코인은 원래 많이 흔들려서 기준을 ±4%로 넓게 잡았어요." },
-    { k: "gold", name: "금", th: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
-      learn: "사람들이 불안할 때 금을 사요. 금값이 오르면 금 관련 주식이 움직여요. 금은 잘 안 흔들려서 기준을 ±1.5%로 좁게 잡았어요." },
-    { k: "cu", name: "구리", th: 2, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
-      learn: "구리는 전선을 만드는 재료예요. 구리값이 오르면 전선 회사 주식이 강해지기 쉬워요. 기준은 ±2%예요." },
+    { k: "gold", grp: "asset", hit: [64, 55], weak: true, name: "금", th: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
+      learn: "사람들이 불안할 때 금을 사요. 금값이 오르면 금 관련 주식이 움직여요. 금은 잘 안 흔들려서 기준을 ±1.5%로 좁게 잡았어요. 검증해 보니 한국 금 관련주(고려아연)가 잘 안 따라가서(64%·55%) 참고만 해요." },
+    { k: "cu", grp: "asset", hit: [80, null], noDown: true, name: "구리", th: 2, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
+      learn: "구리는 전선을 만드는 재료예요. 구리값이 오르면 전선 회사 주식이 강해지기 쉬워요. 기준은 +2%예요. 검증해 보니 오를 때는 잘 따라가지만(80%) 내릴 때는 기준을 바꿔도 잘 안 맞아서(-2% 63%, -4% 62%) 내리는 날은 참고만 해요." },
   ];
-  const THEMES = { defaultThreshold: 3, themes: US.map((u) => ({ key: u.k, name: u.name, th: u.th, label: u.label })) };
+  const THEMES = { defaultThreshold: 3, themes: US.map((u) => ({ key: u.k, name: u.name, th: u.th, thDn: u.thDn, noDown: !!u.noDown, label: u.label, weak: !!u.weak })) };
 
   const GLOSS = [
     ["시가 · 종가", "시가는 아침 9시에 처음 정해진 가격, 종가는 오후 3시 30분 정규장이 끝날 때 가격이에요. 저녁 8시 애프터마켓 가격은 공식 종가가 아니고, 다음 날 기준가(±30% 기준)도 3시 30분 종가예요."],
@@ -1646,7 +1654,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-14";
+  const APP_VER = "9.29-17";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1731,8 +1739,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   $("sigList").innerHTML = `<div class="siggroup"><b>🎯 판정 지표</b><span>이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 금리 수준만 미검증)</span></div>` + SIG_MAIN.map(sigHtml).join("") + refHtml();
 
   // 미국장 테마: 한 칸에 한 줄씩 (이름·기준 | ± 입력 | 우선 관심·후순위), 링크·설명은 맨 아래 접기 하나로
-  $("usList").innerHTML = `<div class="uslist">${US.map((u) => `
-      <div class="urow" id="ur-${u.k}"><span class="rn">${esc(u.name.split(" (")[0])}<small>${u.name.includes(" (") ? esc(u.name.split(" (")[1].replace(")", "")) + " · " : ""}기준 ±${u.th}%</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div></div>`).join("")}
+  const US_GROUPS = [["📈 주식 테마", US.filter((u) => u.grp !== "asset")], ["🪙 가상자산 · 금 · 구리", US.filter((u) => u.grp === "asset")]];
+  $("usList").innerHTML = `<div class="uslist">${US_GROUPS.map(([gt, list]) => `<div class="ugrp">${gt}</div>` + list.map((u) => `
+      <div class="urow" id="ur-${u.k}"><span class="rn">${esc(u.name.split(" (")[0])}<small>${u.name.includes(" (") ? esc(u.name.split(" (")[1].replace(")", "")) + " · " : ""}기준 ${u.thDn ? `+${u.th}%/-${u.thDn}%` : u.noDown ? `+${u.th}%` : `±${u.th}%`}${u.hit ? ` · 따라감 ${u.hit[0]}%` + (u.hit[1] ? `·${u.hit[1]}%` : " (내릴 땐 참고)") : ""}${u.weak ? " · 약해서 참고만" : ""}</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div></div>`).join("")).join("")}
       <details class="more"><summary>✍️ 종목 · 사이트 링크 · 왜 이 종목?</summary>
       ${US.map((u) => `<div class="rdet"><b>${esc(u.name)}</b><div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div><div class="ul">${esc(u.learn)}</div></div>`).join("")}
       </details></div>`;
@@ -1908,8 +1917,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     US.forEach((u) => {
       const el = $("uss-" + u.k), st = r.themeStatus[u.k];
       el.className = "status" + (st === "first" ? " up" : st === "back" ? " dn" : "");
-      el.textContent = st === "first" ? "우선 관심" : st === "back" ? "후순위" : st === "flat" ? "중립" : "—";
-      $("ur-" + u.k).dataset.st = st === "first" ? "up" : st === "back" ? "dn" : "";
+      el.textContent = u.noDown && st === "back" ? "참고 ↓" : u.weak && (st === "first" || st === "back") ? (st === "first" ? "참고 ↑" : "참고 ↓") : st === "first" ? "우선 관심" : st === "back" ? "후순위" : st === "flat" ? "중립" : "—";
+      $("ur-" + u.k).dataset.st = u.weak || (u.noDown && st === "back") ? "" : st === "first" ? "up" : st === "back" ? "dn" : "";
     });
     const tagHtml = (a) => (a.length ? a.map(([t, s]) => `<span>${esc(t)}<small>${esc(s)}</small></span>`).join("") : `<span class="empty">아직 없음</span>`);
     $("tFirst").innerHTML = tagHtml(r.themeFirst); $("tBack").innerHTML = tagHtml(r.themeBack);
@@ -2199,7 +2208,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     head("🎯 관심 테마");
     list("우선 관심", r.themeFirst.map((t) => t[0] + " (" + t[1] + ")"));
     gap(); list("후순위", r.themeBack.map((t) => t[0] + " (" + t[1] + ")"));
-    const usRows = US.map((u) => { const v = parseNum((st.us || {})[u.k]); if (v === null) return null; const s2 = r.themeStatus[u.k]; return [u.name, (v > 0 ? "+" : "") + v + "%", "±" + u.th + "%", s2 === "first" ? "우선 관심" : s2 === "back" ? "후순위" : "중립"]; }).filter(Boolean);
+    const usRows = US.map((u) => { const v = parseNum((st.us || {})[u.k]); if (v === null) return null; const s2 = r.themeStatus[u.k]; return [u.name, (v > 0 ? "+" : "") + v + "%", u.thDn ? "+" + u.th + "%/-" + u.thDn + "%" : u.noDown ? "+" + u.th + "%" : "±" + u.th + "%", (u.weak || u.noDown) && s2 === "back" || u.weak && s2 === "first" ? "참고" : s2 === "first" ? "우선 관심" : s2 === "back" ? "후순위" : "중립"]; }).filter(Boolean);
     if (usRows.length) { gap(); sub("미국장 테마"); table(["테마", "등락", "기준", "판정"], usRows, ([n, v, th, s2]) => `${n}: ${v} (기준 ${th}) → ${s2}`); }
     const prevs = (st.prev || []).filter((p) => p && (p.name || "").trim());
     if (prevs.length) { gap(); list("전일 주도 테마", prevs.map(prevLabel)); }
