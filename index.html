@@ -1747,7 +1747,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-43";
+  const APP_VER = "9.29-44";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2345,7 +2345,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     gap();
     // 테마는 세 줄만: 국장 테마(오늘 주도, 없으면 전일 주도) · 미국 테마(우선 관심 · 후순위) · 주요 테마는 ② 장 마감에 대표 종목과 함께
     const prevNames = (st.prev || []).filter((x) => x && (x.name || "").trim()).map((x) => x.name.split("(")[0].trim());
-    const isUs = (t) => /미국/.test(t[1] || ""), prevUp = r.themeFirst.filter((t) => !isUs(t)).map((t) => t[0].split("(")[0].trim() + " ↑"), prevDn = r.themeBack.filter((t) => !isUs(t)).map((t) => t[0].split("(")[0].trim() + " ↓");
+    const isUs = (t) => /미국/.test(t[1] || ""), prevUp = r.themeFirst.filter((t) => !isUs(t)).map((t) => t[0].split("(")[0].trim() + "(강세)"), prevDn = r.themeBack.filter((t) => !isUs(t)).map((t) => t[0].split("(")[0].trim() + "(약세)"); // 애프터마켓·프리마켓에서 강세면 우선, 약세면 후순위
     const prevLine = [...prevUp, ...prevDn].length ? "전일 주도 " + [...prevUp, ...prevDn].join(", ") : "";
     // ① 한국 테마는 아침에 아는 '전일 주도'만 (오늘 주도 테마는 ② 장 마감의 '주요 테마 (한국)'에 — 중복 안 되게)
     line("한국 테마:", prevLine ? prevLine.replace(/^전일 주도 /, "전일 주도 ") : prevNames.length ? "전일 주도 " + prevNames.join(", ") : "없음");
