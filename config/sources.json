@@ -3,6 +3,12 @@
   "signals": {
     "k200": [{ "source": "tradingview", "symbol": "K200_NIGHT", "kind": "pct" }, { "source": "kis", "symbol": "K200_NIGHT", "kind": "pct" }],
     "fut":  [{ "source": "naver", "symbol": "futures:NQcv1", "kind": "pct" },  { "source": "yahoo", "symbol": "NQ=F",  "kind": "pct" }],
+    "es":   [{ "source": "naver", "symbol": "futures:EScv1", "kind": "pct" }, { "source": "yahoo", "symbol": "ES=F", "kind": "pct" }],
+    "ym":   [{ "source": "naver", "symbol": "futures:YMcv1", "kind": "pct" }, { "source": "yahoo", "symbol": "YM=F", "kind": "pct" }],
+    "dji":  [{ "source": "naver", "symbol": "index:.DJI", "kind": "pct" }, { "source": "yahoo", "symbol": "^DJI", "kind": "pct" }],
+    "ixic": [{ "source": "naver", "symbol": "index:.IXIC", "kind": "pct" }, { "source": "yahoo", "symbol": "^IXIC", "kind": "pct" }],
+    "spx":  [{ "source": "naver", "symbol": "index:.INX", "kind": "pct" }, { "source": "yahoo", "symbol": "^GSPC", "kind": "pct" }],
+    "rut":  [{ "source": "yahoo", "symbol": "^RUT", "kind": "pct" }],
     "rty":  [{ "source": "naver", "symbol": "futures:RTYcv1", "kind": "pct" }, { "source": "yahoo", "symbol": "RTY=F", "kind": "pct" }],
     "fx":   [{ "source": "naver", "symbol": "market:exchange:FX_USDKRW", "kind": "diff" }, { "source": "yahoo", "symbol": "KRW=X", "kind": "diff" }],
     "sox":  [{ "source": "naver", "symbol": "index:.SOX", "kind": "pct" },     { "source": "yahoo", "symbol": "^SOX",  "kind": "pct" }],

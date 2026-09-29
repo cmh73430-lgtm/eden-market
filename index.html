@@ -169,6 +169,9 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .linknotice { border: 2px solid var(--a); background: var(--a-bg); display: grid; gap: 6px; font-size: 13.5px; }
 .linknotice .btn { justify-self: start; font-weight: 800; }
 .linknotice .muted { font-size: 12px; color: var(--muted); }
+.nxline { margin-top: 6px; font-size: 12.5px; line-height: 1.7; }
+.evnext { flex-basis: 100%; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.nx { display: inline-block; margin: 0 8px 2px 4px; color: var(--ink); } .nx b { font-weight: 700; } .nx b.a { color: var(--a); } .nx b.r { color: var(--r); }
 .autobtns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 8px; }
 .autobtns .btn { font-size: 13px; padding: 4px 10px; }
 .autobtnmsg { font-size: 12px; color: var(--muted); flex-basis: 100%; }
@@ -685,7 +688,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
         <div class="chips" id="evChips"></div>
       </div>
       <div class="links">열어서 보기 <a class="lk iv" href="https://kr.investing.com/economic-calendar/" target="_blank" rel="noopener">인베스팅 경제캘린더 ↗</a><a class="lk nv" href="https://m.stock.naver.com/investment/research/economy" target="_blank" rel="noopener">네이버 경제지표 ↗</a></div>
-      <div class="what">🤖 자동: FOMC·미 CPI·미 고용·금통위·MSCI·옵션/동시만기·휴장일은 1년치 일정표로 날짜에 맞춰 자동 표시돼요. 일정표에 없는 큰 일이 생긴 날만 버튼을 눌러요</div>
+      <div class="what">🤖 자동: FOMC·미 CPI·미 고용·금통위·MSCI·옵션/동시만기·휴장일은 1년치 일정표로 날짜에 맞춰 자동 표시돼요. 다음 2거래일 예정도 미리 보여요 (판정은 오늘 것만). 일정표에 없는 큰 일이 생긴 날만 버튼을 눌러요</div>
       <div class="rule"><b class="g">없음 → 좋음</b><b class="a">아래 일정 중 하나라도 → 주의</b><b class="r">동시만기 → 나쁨</b></div>
       <details class="learn"><summary>📘 공부하기 — 이 날들은 왜 조심하나요?</summary>
         <p><b>한 줄 요약</b> 큰 발표가 있는 날은 결과에 따라 주가가 크게 출렁여요. 그래서 조심해요.</p>
@@ -930,8 +933,8 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 // 기준: docs/SPEC.md 3장. 2026-09-27 v2: 환율·유가는 혼자서는 참고, 동반 급등 때만 주의 1개 (실제 데이터 검증 결과 반영).
 
 const SIGNAL_KEYS = ["k200", "fut", "fx", "sox", "vix", "oil", "ust"];
-// 참고만 하는 신호 (판정·입력 개수에 안 넣음): 러셀2000 선물 — 아직 실제 데이터 검증 전이라 '내 기준 찾기'로 쌓아 보고 정한다
-const REF_KEYS = ["rty"];
+// 참고만 하는 신호 (판정·입력 개수에 안 넣음): S&P500·다우·러셀2000 선물 — 아직 실제 데이터 검증 전이라 '내 기준 찾기'로 쌓아 보고 정한다
+const REF_KEYS = ["es", "ym", "rty"];
 const ALL_KEYS = [...SIGNAL_KEYS, ...REF_KEYS];
 const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
 
@@ -961,6 +964,8 @@ const RULES = {
   k200: (v) => (v > -0.5 ? "g" : v > -1 ? "a" : "r"),
   fut: (v) => (v > -0.5 ? "g" : v > -1 ? "a" : "r"),
   rty: (v) => (v > -0.5 ? "g" : v > -1 ? "a" : "r"),
+  es: (v) => (v > -0.5 ? "g" : v > -1 ? "a" : "r"),
+  ym: (v) => (v > -0.5 ? "g" : v > -1 ? "a" : "r"),
   fx: (v) => (v < 10 ? "g" : "a"),
   sox: (v) => (v > 0 ? "g" : v > -2 ? "a" : "r"),
   vix: (v) => (v < 20 ? "g" : v <= 30 ? "a" : "r"),
@@ -1002,7 +1007,7 @@ function evaluate(input = {}, events = [], config = {}) {
   //    (scripts/backtest.mjs: 유가 3%↑ 다음 날 평균 +0.21%, 환율 10원↑ 다음 날 보통 날과 같음).
   //    둘이 같은 날 함께 급등(환율 ≥10원 & 유가 ≥3%)할 때만 '동반 급등'으로 주의 1개를 넣는다 (14년간 23일, 다음 날 평균 -0.23%).
   const combo = statuses.fx === "a" && statuses.oil === "a";
-  const excluded = { fx: true, oil: true, rty: true };
+  const excluded = { fx: true, oil: true, es: true, ym: true, rty: true };
 
   // 2) 방향 엇갈림
   const diverge = v.k200 !== null && v.fut !== null && v.k200 !== 0 && v.fut !== 0 && Math.sign(v.k200) !== Math.sign(v.fut);
@@ -1108,6 +1113,13 @@ function prevBusinessDay(s, holidays) {
   let d = addDays(s, -1);
   while (!isBusinessDay(d, set)) d = addDays(d, -1);
   return d;
+}
+
+function nextBusinessDays(s, holidays, n = 2) {
+  const set = toSet(holidays), out = [];
+  let d = s;
+  while (out.length < n) { d = addDays(d, 1); if (isBusinessDay(d, set)) out.push(d); }
+  return out;
 }
 
 // n번째 특정 요일 (month 1~12, wd 0=일)
@@ -1217,6 +1229,8 @@ const stageOf = (n) => STAGES.filter((s) => n >= s.min).pop();
 const SIG_META = {
   k200: { bad: "low", now: -0.5, cands: [-0.2, -0.3, -0.5, -0.7, -1, -1.5], unit: "%" },
   fut: { bad: "low", now: -0.5, cands: [-0.2, -0.3, -0.5, -0.7, -1, -1.5], unit: "%" },
+  es: { bad: "low", now: -0.5, cands: [-0.2, -0.3, -0.5, -0.7, -1, -1.5], unit: "%" },
+  ym: { bad: "low", now: -0.5, cands: [-0.2, -0.3, -0.5, -0.7, -1, -1.5], unit: "%" },
   rty: { bad: "low", now: -0.5, cands: [-0.3, -0.5, -0.7, -1, -1.5, -2], unit: "%" },
   sox: { bad: "low", now: 0, cands: [0, -0.5, -1, -1.5, -2, -3], unit: "%" },
   vix: { bad: "high", now: 20, cands: [16, 18, 20, 22, 25, 30], unit: "점" },
@@ -1349,6 +1363,24 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["이렇게 읽어요", "-0.5%만 넘게 빠져도 한국 주식이 약하게 시작하기 쉬워요."],
         ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "나스닥100 선물이 -1% 넘게 빠진 다음 날 코스피는 71%가 하락 마감(평균 -0.65%), -0.5%~-1%일 때 62%(평균 -0.25%)였어요. 보통 날은 40%(평균 +0.22%)예요. 이 기준은 실제로 잘 맞았어요."],
       ] },
+    { k: "es", name: "미국 선물 (S&P500)", core: "미국 분위기 · 참고", unit: "%", ph: "0.0",
+      links: [["네이버", NV + "/worldstock/futures/EScv1", "nv"], ["인베스팅", IV + "/indices/us-spx-500-futures", "iv"]],
+      what: "S&P500 선물이 어제보다 몇 % 올랐는지·내렸는지. 예: 0.25% 내렸으면 -0.25",
+      rule: { g: "참고용이에요 (판정에 안 넣어요)", a: "-0.5% ~ -1% 빠짐 → 참고", r: "-1% 넘게 빠짐 → 참고 (미국 분위기 나쁨)" },
+      learn: [
+        ["한 줄 요약", "미국 대표 회사 500곳 전체의 지금 분위기예요. 나스닥100보다 업종이 고르게 섞여 있어요."],
+        ["왜 보나요?", "나스닥100(기술주)만 빠지고 S&P500은 괜찮으면 '기술주만 약한 날', 둘 다 빠지면 '미국 전체가 약한 날'이에요."],
+        ["알아 두세요", "지금은 참고로만 보여 주고 판정에는 넣지 않아요. 기록이 쌓이면 '🔍 내 기준 찾기'에서 확인할 수 있어요."],
+      ] },
+    { k: "ym", name: "미국 선물 (다우)", core: "미국 분위기 · 참고", unit: "%", ph: "0.0",
+      links: [["네이버", NV + "/worldstock/futures/YMcv1", "nv"], ["인베스팅", IV + "/indices/us-30-futures", "iv"]],
+      what: "다우 선물이 어제보다 몇 % 올랐는지·내렸는지. 예: 0.23% 내렸으면 -0.23",
+      rule: { g: "참고용이에요 (판정에 안 넣어요)", a: "-0.5% ~ -1% 빠짐 → 참고", r: "-1% 넘게 빠짐 → 참고 (미국 분위기 나쁨)" },
+      learn: [
+        ["한 줄 요약", "미국 전통 대기업 30곳(보잉, 골드만삭스, 캐터필러 등)의 분위기예요."],
+        ["왜 보나요?", "다우는 산업재·금융 비중이 커서, 한국 조선·기계·은행 같은 '경기 민감주' 분위기를 볼 때 도움이 돼요."],
+        ["알아 두세요", "지금은 참고로만 보여 주고 판정에는 넣지 않아요."],
+      ] },
     { k: "rty", name: "미국 선물 (러셀2000)", core: "미국 중소형주 · 참고", unit: "%", ph: "0.0",
       links: [["네이버", NV + "/worldstock/futures/RTYcv1", "nv"], ["인베스팅", IV + "/indices/smallcap-2000-futures", "iv"]],
       what: "러셀2000 선물이 어제보다 몇 % 올랐는지·내렸는지. 예: 0.8% 내렸으면 -0.8",
@@ -1467,7 +1499,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-6";
+  const APP_VER = "9.29-7";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1571,7 +1603,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const nav = (d, t) => `<button class="datebtn" type="button" data-go="${d}">${t}</button>`;
     $("today").innerHTML = esc(DATE.replace(/-/g, ".") + " (" + WEEKDAYS[weekday(DATE)] + ") · 07:30~08:50 KST") + " " +
       nav(addDays(DATE, -1), "‹ 전날") + (isToday ? "" : nav(kstDate(), "오늘") + nav(addDays(DATE, 1), "다음 날 ›"));
-    $("evAuto").innerHTML = AUTO.length ? AUTO.map((e) => `<span class="${e.lv}">${esc(e.k)}</span>`).join("") : `<span>자동 감지된 이벤트 없음</span>`;
+    $("evAuto").innerHTML = (AUTO.length ? AUTO.map((e) => `<span class="${e.lv}">${esc(e.k)}</span>`).join("") : `<span>자동 감지된 이벤트 없음</span>`)
+      + `<div class="evnext">📆 다음 거래일 예정 ${upcomingHtml()}</div>`;
   }
   // 날짜 이동 + 뒤로 가기: 어디서(날짜·화면 위치) 왔는지 기억해 두고, '◀ 돌아가기' 버튼이나
   // 폰·브라우저의 뒤로 가기로 원래 날짜의 원래 자리로 돌아간다.
@@ -1694,7 +1727,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const el = $("st-" + k);
       if (r.excluded[k]) { // 참고 신호: 환율·유가(혼자서는 집계 제외), 방향이 엇갈린 미국 선물
         const st = r.statuses[k], both = r.combo && (k === "fx" || k === "oil");
-        el.className = "status " + (both ? "a" : k === "fut" || k === "rty" ? "" : st || "");
+        el.className = "status " + (both ? "a" : k === "fut" || REF_KEYS.includes(k) ? "" : st || "");
         el.textContent = both ? "동반 주의" : st ? "참고" : "—"; return;
       }
       el.className = "status " + (r.statuses[k] || ""); el.textContent = r.statuses[k] ? LABEL[r.statuses[k]] : "—";
@@ -1731,6 +1764,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 참고 신호인 이유 (칩·해설·블로그 공용)
   const REF_WHY = {
     fut: () => "야간선물과 방향이 반대라 이번엔 빼고 계산해요",
+    es: (st) => (st === "r" ? "1% 넘게 빠짐 · 미국 전체 분위기 나쁨 (판정에는 안 넣어요)" : "참고용이에요 · 판정에는 안 넣어요"),
+    ym: (st) => (st === "r" ? "1% 넘게 빠짐 · 경기 민감주 조심 (판정에는 안 넣어요)" : "참고용이에요 · 판정에는 안 넣어요"),
     rty: (st) => (st === "r" ? "1% 넘게 빠짐 · 코스닥 중소형 테마주 조심 (판정에는 안 넣어요)" : st === "a" ? "조금 약함 · 판정에는 안 넣어요" : "참고용이에요 · 판정에는 안 넣어요"),
     fx: (st) => (st === "a" ? "10원 넘게 올랐지만 혼자서는 판정에 안 넣어요. 실제 14년 데이터에서 근거가 약했어요" : "참고용이에요. 기름값과 같이 급등할 때만 판정에 넣어요"),
     oil: (st) => (st === "a" ? "3% 넘게 올랐지만 혼자서는 판정에 안 넣어요. 실제 14년 데이터에서 근거가 약했어요" : "참고용이에요. 환율과 같이 급등할 때만 판정에 넣어요"),
@@ -1741,7 +1776,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const v = parseNum(S.signals[s.k]); const st = r.statuses[s.k];
       if (v === null || !st) return;
       const val = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit;
-      if (r.excluded[s.k]) { lines.push(`<div class="${s.k === "fut" || s.k === "rty" ? "" : st}">· ${esc(s.name)} ${esc(val)} → <b>참고</b> (${esc(REF_WHY[s.k](st))})</div>`); return; }
+      if (r.excluded[s.k]) { lines.push(`<div class="${s.k === "fut" || REF_KEYS.includes(s.k) ? "" : st}">· ${esc(s.name)} ${esc(val)} → <b>참고</b> (${esc(REF_WHY[s.k](st))})</div>`); return; }
       const why = s.rule[st].split(" → ")[0];
       lines.push(`<div class="${st}">· ${esc(s.name)} ${esc(val)} → <b>${LABEL[st]}</b> (${esc(why)})</div>`);
     });
@@ -1756,10 +1791,19 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     return briefHtml(r) + `<div class="sub">📊 지표별 판정</div>` + lines.join("") + `<div class="end">➜ ${end}</div>`;
   }
   // 판단 근거 아래 한눈에 보기: 오늘 특별 일정 · 미국장 테마 · 전일 주도 테마(애프터·프리마켓) · 지표별 수혜 업종
+  // 다음 거래일 2개의 예정 일정 (달력으로 미리 앎: 만기·FOMC·CPI·고용·금통위·MSCI)
+  function upcoming() {
+    return nextBusinessDays(DATE, CAL.holidays, 2).map((d) => ({ d, evs: autoEvents(d, CAL).filter((e) => e.lv) }));
+  }
+  const mdw = (d) => d.slice(5).replace(/^0/, "").replace(/-0?/, "/") + "(" + WEEKDAYS[weekday(d)] + ")";
+  function upcomingHtml() {
+    return upcoming().map(({ d, evs }) => `<span class="nx">${esc(mdw(d))} ${evs.length ? evs.map((e) => `<b class="${e.lv}">${esc(e.k)}</b>`).join(" ") : "없음"}</span>`).join("");
+  }
   function briefHtml(r) {
     const row = (icon, title, body) => `<div class="brief"><b>${icon} ${title}</b><div>${body}</div></div>`;
     const evAll = [...AUTO.map((e) => e.k + (e.lv ? "" : " (참고)")), ...S.events];
-    const evHtml = evAll.length ? evAll.map((e) => `<span class="bchip">${esc(e)}</span>`).join("") : `<span class="muted">특별한 일정 없음</span>`;
+    const evHtml = (evAll.length ? evAll.map((e) => `<span class="bchip">${esc(e)}</span>`).join("") : `<span class="muted">특별한 일정 없음</span>`)
+      + `<div class="nxline"><span class="muted">다음 거래일 예정</span> ${upcomingHtml()}</div>`;
     const usRows = US.map((u) => ({ u, v: themeValue(S.us[u.k]), st: r.themeStatus[u.k] })).filter((x) => x.v !== null)
       .sort((a, b) => ({ first: 0, back: 1, flat: 2 }[a.st] ?? 3) - ({ first: 0, back: 1, flat: 2 }[b.st] ?? 3) || Math.abs(b.v) - Math.abs(a.v));
     const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" ? "up" : st === "back" ? "dn" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
@@ -1769,7 +1813,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       : `<span class="muted">아직 안 넣음 (아래 '전일 주도 테마' 칸)</span>`;
     const secs = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]);
     const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S.signals))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
-    return `<div class="briefs">${row("📅", "오늘 특별 일정", evHtml)}${row("🇺🇸", "미국장 테마 확인", usHtml)}${row("🔥", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
+    const idxLine = (S.auto || {}).usidx ? `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>` : "";
+    return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml)}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🔥", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
   }
 
   // ---------- 매매 일지 ----------
@@ -2570,6 +2615,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     };
     const m = a.morning || {}, c = (a.close || {}).market || {};
     Object.entries(m.signals || {}).forEach(([k, v]) => { if (SIGNALS.some((s) => s.k === k) && v) fillOne("signals." + k, st.signals[k], (x) => (st.signals[k] = x), v.value, m.ts); });
+    // 어젯밤 미국 지수 마감 (다우·나스닥·S&P500·러셀2000) → 한 줄 요약
+    const idx = [["dji", "다우"], ["ixic", "나스닥"], ["spx", "S&P500"], ["rut", "러셀2000"]].map(([k, n]) => { const v = m.signals && m.signals[k] && m.signals[k].value; return typeof v === "number" ? n + " " + (v > 0 ? "+" : "") + v + "%" : null; }).filter(Boolean).join(" · ");
+    if (idx && st.auto.usidx !== idx) { st.auto.usidx = idx; changed.push(["auto.usidx", m.ts]); }
     const kd = m.signals && m.signals.k200 && m.signals.k200.detail; // 야간선물 근거: 야간 종가 · 전날 주간 종가
     if (kd && kd.night && kd.dayClose) { const t = "야간 종가 " + kd.night.toLocaleString("ko-KR", { minimumFractionDigits: 2 }) + " ÷ 전날 주간 종가 " + kd.dayClose.toLocaleString("ko-KR", { minimumFractionDigits: 2 }); if (st.auto["detail.k200"] !== t) { st.auto["detail.k200"] = t; changed.push(["auto.detail.k200", m.ts]); } }
     Object.entries(m.us || {}).forEach(([k, v]) => { if (US.some((u) => u.k === k) && v) fillOne("us." + k, st.us[k], (x) => (st.us[k] = x), v.value, m.ts); });

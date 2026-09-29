@@ -33,6 +33,13 @@ export function prevBusinessDay(s, holidays) {
   return d;
 }
 
+export function nextBusinessDays(s, holidays, n = 2) {
+  const set = toSet(holidays), out = [];
+  let d = s;
+  while (out.length < n) { d = addDays(d, 1); if (isBusinessDay(d, set)) out.push(d); }
+  return out;
+}
+
 // n번째 특정 요일 (month 1~12, wd 0=일)
 export function nthWeekday(year, month, wd, n) {
   const first = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
