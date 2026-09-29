@@ -1748,7 +1748,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-45";
+  const APP_VER = "9.29-47";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2127,7 +2127,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       + (calWarn() ? `<div class="nxline"><b class="upc">📅 ${esc(calWarn())}</b> <span class="muted">· 휴장일·FOMC 는 매달 1일 자동 갱신, CPI·고용·금통위·MSCI 는 연 1회 손으로 (data/events.json)</span></div>` : "");
     const usRows = US.map((u) => ({ u, v: themeValue(S.us[u.k]), st: r.themeStatus[u.k] })).filter((x) => x.v !== null)
       .sort((a, b) => ({ first: 0, back: 1, flat: 2 }[a.st] ?? 3) - ({ first: 0, back: 1, flat: 2 }[b.st] ?? 3) || Math.abs(b.v) - Math.abs(a.v));
-    const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" ? "up" : st === "back" ? "dn" : v > 0 ? "up2" : v < 0 ? "dn2" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
+    const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" || v >= 1 ? "up" : st === "back" || v <= -1 ? "dn" : v > 0 ? "up2" : v < 0 ? "dn2" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
       : `<span class="muted">아직 없음 (아침 7시쯤 자동으로 들어와요)</span>`;
     const prevs = (S.prev || []).filter((p) => p && (p.name || "").trim());
     const both = [];
@@ -2352,7 +2352,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     line("한국 테마:", prevLine ? prevLine.replace(/^전일 주도 /, "전일 주도 ") : prevNames.length ? "전일 주도 " + prevNames.join(", ") : "없음");
     const usPick = (arr) => arr.filter(isUs).map((t) => t[0] + (/[+-][\d.]+%/.test(t[1]) ? " " + t[1].match(/[+-][\d.]+%/)[0] : "")).join(", ");
     line("미국 테마:", [usPick(r.themeFirst) ? "우선 " + usPick(r.themeFirst) : "", usPick(r.themeBack) ? "후순위 " + usPick(r.themeBack) : ""].filter(Boolean).join(" · ") || "없음");
-    if (VERDICT[j.verdict]) line("장전 판단이 맞았나:", VERDICT[j.verdict]);
+    // 장전 판단이 맞았나: 칩을 눌렀으면 그 값, 아니면 코스피 마감으로 자동 채점 (정상: -0.5%↑ 맞음 · -1%↓ 틀림 / 쉼: -0.5%↓ 맞음 · +0.5%↑ 틀림 / 절반: ±1% 안이면 맞음)
+    const kClose = pnum(mk.kospi);
+    const autoVerdict = kClose === null || r.mode === "—" ? "" : r.mode === "정상" ? (kClose >= -0.5 ? "맞았다" : kClose >= -1 ? "반쯤" : "틀렸다") : r.mode === "쉼" ? (kClose <= -0.5 ? "맞았다" : kClose <= 0.5 ? "반쯤" : "틀렸다") : Math.abs(kClose) <= 1 ? "맞았다" : "반쯤";
+    if (VERDICT[j.verdict] || autoVerdict) line("장전 판단이 맞았나:", (VERDICT[j.verdict] || autoVerdict) + (kClose !== null ? " (코스피 " + pct(kClose) + (VERDICT[j.verdict] ? "" : " · 자동") + ")" : ""));
 
     // ② 장 마감: 미국장 한 줄(강세/약세/보합 · 지수 · SOX) · 국장 한 줄(강세/약세/혼조 · 코스피·코스닥) · 수급(외국인·기관·거래대금) · 주도 테마 (미국·국장 둘 다, 대표 종목)
     head("② 장 마감");
@@ -2391,6 +2394,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       // 합계 먼저, 종목마다 한 줄: 이름 (기법) · 매수 → 매도 · 수량 · 손익 · 이유 → 매도 이유 · 배운 점
       const won = (v) => { const n = pnum(v); return n === null ? v || "" : n.toLocaleString("ko-KR"); };
       say(`${T.n}번 · ${T.wins}승 ${T.losses}패 · ${money(T.total)} (${pct(T.rate)}) · 수수료·세금 ${feePct()}% 반영`);
+      // 판정과 매매 연결: 쉼인데 매매했으면 ⚠, 절반이면 '평소 절반만', 정상이면 규칙대로
+      if (r.mode !== "—") say(r.mode === "쉼" ? `⚠ 쉼 모드였는데 매매 ${trades.length}건 — 규칙은 새로 사지 않기` : r.mode === "절반" ? `절반 모드 · 매매 ${trades.length}건 (평소 돈의 반만 · 당일 청산)` : `정상 모드 · 매매 ${trades.length}건 · 규칙대로`);
+      // 이번 주·이번 달 누적 (오늘까지 기록된 날들)
+      const sumOf = (from) => store.keys().filter((d) => isValidDate(d) && d >= from && d <= dd0).reduce((a, d) => { const t = dayTotals(fixJournal(loadDay(d).journal)); a.n += t.n; a.w += t.wins; a.l += t.losses; a.total += t.total; return a; }, { n: 0, w: 0, l: 0, total: 0 });
+      const wd = (weekday(dd0) + 6) % 7; // 월=0 … 일=6
+      const W = sumOf(addDays(dd0, -wd)), M = sumOf(dd0.slice(0, 8) + "01"); // 이번 주 = 월요일부터
+      say(`이번 주 ${W.n}번 ${W.w}승 ${W.l}패 ${money(W.total)} · 이번 달 ${M.n}번 ${M.w}승 ${M.l}패 ${money(M.total)}`);
       gap();
       trades.forEach((t) => {
         const c = tradeCalc(t);
