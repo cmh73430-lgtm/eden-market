@@ -1747,7 +1747,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-41";
+  const APP_VER = "9.29-42";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2347,7 +2347,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const prevNames = (st.prev || []).filter((x) => x && (x.name || "").trim()).map((x) => x.name.split("(")[0].trim());
     const isUs = (t) => /미국/.test(t[1] || ""), prevUp = r.themeFirst.filter((t) => !isUs(t)).map((t) => t[0].split("(")[0].trim() + " ↑"), prevDn = r.themeBack.filter((t) => !isUs(t)).map((t) => t[0].split("(")[0].trim() + " ↓");
     const prevLine = [...prevUp, ...prevDn].length ? "전일 주도 " + [...prevUp, ...prevDn].join(", ") : "";
-    line("국장 테마:", [krNames.length ? krNames.join(", ") : "", prevLine].filter(Boolean).join(" · ") || (prevNames.length ? prevNames.join(", ") + " (전일 주도)" : "없음"));
+    line("한국 테마:", [krNames.length ? krNames.join(", ") : "", prevLine].filter(Boolean).join(" · ") || (prevNames.length ? prevNames.join(", ") + " (전일 주도)" : "없음"));
     const usPick = (arr) => arr.filter(isUs).map((t) => t[0] + (/[+-][\d.]+%/.test(t[1]) ? " " + t[1].match(/[+-][\d.]+%/)[0] : "")).join(", ");
     line("미국 테마:", [usPick(r.themeFirst) ? "우선 " + usPick(r.themeFirst) : "", usPick(r.themeBack) ? "후순위 " + usPick(r.themeBack) : ""].filter(Boolean).join(" · ") || "없음");
     if (VERDICT[j.verdict]) line("장전 판단이 맞았나:", VERDICT[j.verdict]);
@@ -2363,9 +2363,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const kv = pnum(mk.kospi), qv = pnum(mk.kosdaq), krTone = kv === null ? "" : qv !== null && Math.sign(kv) !== Math.sign(qv) && Math.abs(kv - qv) > 0.3 ? "혼조" : tone((kv + (qv ?? kv)) / 2);
     const krLine = [krTone, mk.kospi && "코스피 " + pct(kv ?? 0), mk.kosdaq && "코스닥 " + pct(qv ?? 0)].filter(Boolean).join(" · ");
     const invLine = inv.map((x) => [x.mk, x.f !== null ? "외국인 " + (x.f > 0 ? "+" : "") + ek(x.f) : "", x.i !== null ? "기관 " + (x.i > 0 ? "+" : "") + ek(x.i) : "", x.a !== null ? "거래대금 " + ek(x.a) : ""].filter(Boolean).join(" ")).join(" / ");
-    const usLead = usAll.filter(([, v]) => v >= 1).slice(0, 3).map(([u, v]) => u.name + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
+    const usLead = usAll.filter(([, v]) => v >= 1).slice(0, 3).map(([u, v], i) => (i + 1) + " " + u.name + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
     const krLeadLine = krLead.map((t, i) => (i + 1) + " " + (t.name.split("(")[0].trim() || t.name) + (flagOf(t) ? " " + flagOf(t) : "") + " " + pct(t.rate) + (t.stocks ? " (" + t.stocks + ")" : "")).join(" · ");
-    [["미국장:", usLine], ["국장:", krLine], ["수급:", invLine], ["주요 테마 (국장):", krLeadLine], ["주요 테마 (미국):", usLead.join(" · ")]]
+    [["미국장:", usLine], ["국장:", krLine], ["수급:", invLine], ["주요 테마 (한국):", krLeadLine], ["주요 테마 (미국):", usLead.join(" · ")]]
       .filter(([, v]) => v).forEach(([k, v]) => line(k, v));
     if (txt.length === n0) say("아직 장 마감 값이 없다 (오후 4:20 자동).");
 
