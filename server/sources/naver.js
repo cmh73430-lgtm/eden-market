@@ -46,7 +46,18 @@ export function parseNaver(json) {
   if (price === null || change === null) throw new Error("naver: 가격 없음" + (d.message ? " (" + d.message + ")" : ""));
   const prevClose = price - change;
   if (prevClose === 0) throw new Error("naver: 기준가 0");
-  return { price, prevClose, time: d.localTradedAt || null };
+  const amount = tradeEok(d);
+  return amount === null ? { price, prevClose, time: d.localTradedAt || null } : { price, prevClose, time: d.localTradedAt || null, amount };
+}
+
+// 누적 거래대금 → 억원. Raw 는 원 단위, 아니면 단위가 응답마다 달라서(지수는 백만원) 코스피·코스닥 하루 거래대금으로 그럴듯한 값(1천억~300조)을 고른다
+export function tradeEok(d) {
+  const raw = num(d.accumulatedTradingValueRaw);
+  if (raw !== null && raw > 0) return Math.round(raw / 1e8);
+  const v = num(d.accumulatedTradingValue);
+  if (v === null || v <= 0) return null;
+  const hit = [v / 100, v / 1e8, v].find((x) => x >= 1000 && x <= 3000000);
+  return hit === undefined ? null : Math.round(hit);
 }
 
 async function getJson(url, fetchImpl, timeoutMs) {

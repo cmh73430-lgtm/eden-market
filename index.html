@@ -253,6 +253,7 @@ textarea.jin { resize: vertical; }
 .flow > .fh { border-top: 0; background: var(--note); font-size: 11.5px; color: var(--muted); font-weight: 700; }
 .flow > .fm { text-align: left; font-weight: 700; color: var(--ink); } .flow > .fh.fm { color: var(--muted); }
 .flow .p { color: var(--up); } .flow .n { color: var(--down); }
+.flow.wa { grid-template-columns: auto 1fr 1fr 1fr; } .flow > .am { color: var(--ink); font-weight: 700; } .flow.wa > * { padding: 6px 6px; font-size: 12.5px; white-space: nowrap; }
 .lds { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
 .lds li { display: grid; grid-template-columns: 1.2em minmax(0, 1fr) auto auto 3.8em; column-gap: 6px; align-items: center; padding: 5px 8px; border-top: 1px solid var(--line); border-left: 3px solid var(--up); font-size: 13px; }
 .lds li:first-child { border-top: 0; }
@@ -326,6 +327,9 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .uslist .rn { font-size: 13.5px; font-weight: 700; display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; }
 .uslist .rn small { font-size: 11px; font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 .uslist .in { gap: 3px; } .uslist .pm { width: 26px; height: 26px; font-size: 13px; } .uslist input.num { width: 52px; font-size: 13.5px; padding: 2px 5px; } .uslist .unit { min-width: 1em; }
+.uslist .rn .krlk { font-style: normal; font-size: 11px; order: -1; margin-right: -3px; } .uslist .rn .krlk:empty { display: none; }
+.bchip .uslk { font-weight: 600; opacity: .85; } .explain .upc { color: var(--up); }
+.lds .tn .uslk { font-size: 10px; margin-left: 3px; opacity: .5; } .lds .tn .uslk.up, .lds .tn .uslk.dn { opacity: 1; }
 .uslist .status { min-width: 4.2em; font-size: 11.5px; padding: 2px 5px; }
 .uslist details.more { margin-top: 6px; } .uslist .rdet { display: grid; gap: 4px; padding: 6px 0; border-top: 1px solid var(--line); } .uslist .rdet > b { font-size: 13px; } .uslist .rdet > b small { font-weight: 500; color: var(--muted); font-size: 11.5px; } .uslist .ul { font-size: 12.5px; color: var(--muted); }
 details.more { grid-column: 1 / -1; display: grid; gap: 6px; font-size: 13px; }
@@ -793,7 +797,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
   <section class="card" data-nav="미국장 테마">
     <h2>미국장 테마 확인 <small>미국장에서 오른 테마는 한국장에서도 같은 테마가 따라가요 · 몇 % 올랐는지 넣기</small></h2>
     <div id="usList"></div>
-    <div class="hint">기준보다 많이 오르면 "우선 관심", 많이 내리면 "후순위"예요. 여러 종목이면 대충 평균을 넣어요. 비트코인·금·구리는 그 주식을 살 생각이 있는 날만 보면 돼요.</div>
+    <div class="hint">🔥 = 한국 전일·오늘 주도 테마와 같은 흐름 (판단 근거·매매 일지 주도 테마의 🇺🇸 와 서로 이어져요). 기준보다 많이 오르면 "우선 관심", 많이 내리면 "후순위"예요. 여러 종목이면 대충 평균을 넣어요. 비트코인·금·구리는 그 주식을 살 생각이 있는 날만 보면 돼요.</div>
   </section>
 
   <section class="card" data-nav="전일 주도 테마">
@@ -862,7 +866,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <div class="jgrid">
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
-        <div class="wide mv" id="mv-invest"><div class="mvh"><b>수급 (외국인·기관, 억원)</b><button class="mved" type="button" data-for="invest">✏️ 고치기</button></div><div class="mvbody" id="mvb-invest"></div><label class="mvin"><input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억"></label><small class="autoat" id="aa-market.invest" hidden></small></div>
+        <div class="wide mv" id="mv-invest"><div class="mvh"><b>수급 · 거래대금 (억원)</b><button class="mved" type="button" data-for="invest">✏️ 고치기</button></div><div class="mvbody" id="mvb-invest"></div><label class="mvin"><input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억 · 거래대금 12조"></label><small class="autoat" id="aa-market.invest" hidden></small></div>
         <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small></div>
       </div>
       <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a><a class="lk nv" href="https://m.stock.naver.com/news" target="_blank" rel="noopener">뉴스 ↗</a></div>
@@ -1607,55 +1611,61 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
   const nvStock = (code, etf) => NV + "/worldstock/" + (etf ? "etf/" : "stock/") + code + (etf ? "" : "/total");
   const US = [
-    { k: "semi", grp: "it", hit: [94, 90], name: "반도체 · AI", th: 3, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
+    { k: "semi", kw: ["반도체","HBM","메모리","AI 반도체","시스템반도체","엔비디아"], grp: "it", hit: [94, 90], name: "반도체 · AI", th: 3, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
       learn: "엔비디아(AI 칩 회사), 마이크론(메모리 회사), SMH(반도체 회사 묶음)가 오르면 삼성전자·SK하이닉스 같은 한국 반도체 주식도 따라 오르기 쉬워요." },
-    { k: "power", grp: "energy", hit: [88, 74], name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
+    { k: "power", kw: ["전력","변압기","전선","전력설비","스마트그리드","초고압"], grp: "energy", hit: [88, 74], name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
       learn: "AI 컴퓨터(데이터센터)는 전기를 엄청 많이 써요. 전기 설비를 만드는 미국 회사(GE버노바, 버티브)가 오르면 한국의 변압기·전선 회사도 따라가기 쉬워요." },
-    { k: "nuke", grp: "energy", hit: [90, 89], name: "원전 (원자력 발전)", th: 5, thDn: 6, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
+    { k: "nuke", kw: ["원자력","원전","SMR"], grp: "energy", hit: [90, 89], name: "원전 (원자력 발전)", th: 5, thDn: 6, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
       learn: "미국 원자력 발전 회사(컨스텔레이션, 오클로)가 오르면 한국 원전 부품 회사에도 관심이 몰려요. 원전 주식은 원래 크게 흔들려서, 검증해 보니 +5% 넘게 오를 때(90% 따라감), -6% 넘게 내릴 때(89%)만 잘 맞았어요. ±3%에서는 내릴 때 65%밖에 안 맞았어요." },
-    { k: "batt", grp: "mobility", hit: [90, 83], name: "2차전지 (배터리)", th: 3, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
+    { k: "batt", kw: ["2차전지","이차전지","배터리","리튬","양극재","음극재","전고체"], grp: "mobility", hit: [90, 83], name: "2차전지 (배터리)", th: 3, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
       learn: "테슬라(전기차)와 앨버말(배터리 재료인 리튬 회사)을 보면 한국 배터리 회사들의 분위기를 알 수 있어요." },
-    { k: "def", grp: "heavy", hit: [87, 77], name: "조선 · 방산 (배·무기)", th: 3, label: "미국", links: [["ITA", nvStock("ITA", true)]],
+    { k: "def", kw: ["방산","방위","조선","K-방산"], grp: "heavy", hit: [87, 77], name: "조선 · 방산 (배·무기)", th: 3, label: "미국", links: [["ITA", nvStock("ITA", true)]],
       learn: "ITA는 미국 무기·항공 회사 묶음이에요. 전쟁 같은 긴장이 커지면 한국 무기·배 만드는 회사도 같이 움직여요." },
-    { k: "bio", grp: "bio", hit: [85, 84], name: "비만치료제 · 바이오", th: 3, label: "미국", links: [["일라이릴리", nvStock("LLY")], ["노보노디스크", nvStock("NVO")], ["XBI", nvStock("XBI", true)]],
+    { k: "bio", kw: ["바이오","제약","비만","신약","의료","CMO","바이오시밀러"], grp: "bio", hit: [85, 84], name: "비만치료제 · 바이오", th: 3, label: "미국", links: [["일라이릴리", nvStock("LLY")], ["노보노디스크", nvStock("NVO")], ["XBI", nvStock("XBI", true)]],
       learn: "일라이릴리·노보노디스크(비만치료제 회사)와 XBI(미국 바이오 회사 묶음)가 크게 움직이면 한미약품·알테오젠·삼성바이오로직스 같은 한국 제약·바이오 주식도 따라가기 쉬워요." },
-    { k: "robot", grp: "mobility", hit: [80, 77], name: "로봇", th: 5, label: "미국", links: [["BOTZ", nvStock("BOTZ.O", true)], ["심보틱", nvStock("SYM.O")]],
+    { k: "robot", kw: ["로봇","휴머노이드"], grp: "mobility", hit: [80, 77], name: "로봇", th: 5, label: "미국", links: [["BOTZ", nvStock("BOTZ.O", true)], ["심보틱", nvStock("SYM.O")]],
       learn: "BOTZ(미국 로봇·AI 회사 묶음)와 심보틱(물류 로봇 회사)이 크게 움직이면 레인보우로보틱스·두산로보틱스 같은 한국 로봇 주식도 따라가기 쉬워요. 로봇 주식은 많이 흔들려서, 검증해 보니 ±5% 넘게 움직일 때만 잘 맞았어요(오를 때 80%, 내릴 때 77%)." },
-    { k: "space", grp: "heavy", hit: [80, 76], name: "우주항공", th: 5, thDn: 6, label: "미국", links: [["로켓랩", nvStock("RKLB.O")], ["AST스페이스모바일", nvStock("ASTS.O")], ["UFO", nvStock("UFO", true)]],
+    { k: "space", kw: ["우주","위성","항공","UAM"], grp: "heavy", hit: [80, 76], name: "우주항공", th: 5, thDn: 6, label: "미국", links: [["로켓랩", nvStock("RKLB.O")], ["AST스페이스모바일", nvStock("ASTS.O")], ["UFO", nvStock("UFO", true)]],
       learn: "로켓랩(로켓 회사), AST스페이스모바일(위성 통신 회사), UFO(우주 회사 묶음)가 크게 움직이면 쎄트렉아이·한화에어로스페이스 같은 한국 우주 주식도 움직여요. 검증해 보니 +5% 넘게 오를 때(80%), -6% 넘게 내릴 때(76%)만 잘 맞았어요." },
-    { k: "solar", grp: "energy", hit: [94, 81], name: "태양광", th: 5, thDn: 6, label: "미국", links: [["퍼스트솔라", nvStock("FSLR.O")], ["엔페이즈", nvStock("ENPH.O")], ["TAN", nvStock("TAN", true)]],
+    { k: "solar", kw: ["태양광","태양전지"], grp: "energy", hit: [94, 81], name: "태양광", th: 5, thDn: 6, label: "미국", links: [["퍼스트솔라", nvStock("FSLR.O")], ["엔페이즈", nvStock("ENPH.O")], ["TAN", nvStock("TAN", true)]],
       learn: "퍼스트솔라·엔페이즈(태양광 회사)와 TAN(태양광 회사 묶음)이 크게 움직이면 한화솔루션·OCI홀딩스 같은 한국 태양광 주식도 따라가요. 검증해 보니 +5% 넘게 오를 때 94%, -6% 넘게 내릴 때 81% 따라갔어요." },
-    { k: "equip", grp: "it", hit: [93, 82], name: "반도체 장비", th: 3, label: "미국", links: [["어플라이드", nvStock("AMAT.O")], ["램리서치", nvStock("LRCX.O")], ["KLA", nvStock("KLAC.O")]],
+    { k: "equip", kw: ["반도체 장비","반도체장비","장비","CXL","유리기판"], grp: "it", hit: [93, 82], name: "반도체 장비", th: 3, label: "미국", links: [["어플라이드", nvStock("AMAT.O")], ["램리서치", nvStock("LRCX.O")], ["KLA", nvStock("KLAC.O")]],
       learn: "반도체를 만드는 기계 회사(어플라이드머티리얼즈·램리서치·KLA)가 움직이면 한미반도체·원익IPS·주성엔지니어링 같은 한국 장비 회사도 따라가요. 삼성전자·SK하이닉스와 따로 움직일 때가 있어서 반도체와 나눠 봐요. 검증: 오를 때 93%, 내릴 때 82%." },
-    { k: "auto", grp: "mobility", hit: [86, 82], name: "자동차", th: 4, label: "미국", links: [["GM", nvStock("GM")], ["포드", nvStock("F")]],
+    { k: "auto", kw: ["자동차","완성차","자동차부품","타이어"], grp: "mobility", hit: [86, 82], name: "자동차", th: 4, label: "미국", links: [["GM", nvStock("GM")], ["포드", nvStock("F")]],
       learn: "미국 자동차 회사(GM·포드)가 크게 움직이면 현대차·기아도 따라가기 쉬워요. 관세 같은 미국 뉴스가 같이 영향을 줘요. 검증: ±4% 넘게 움직일 때 오를 때 86%, 내릴 때 82%." },
-    { k: "ship", grp: "heavy", hit: [88, 81], name: "해운", th: 5, label: "미국", links: [["ZIM", nvStock("ZIM")], ["맷슨", nvStock("MATX")]],
+    { k: "ship", kw: ["해운","컨테이너","벌크"], grp: "heavy", hit: [88, 81], name: "해운", th: 5, label: "미국", links: [["ZIM", nvStock("ZIM")], ["맷슨", nvStock("MATX")]],
       learn: "미국 해운 회사(ZIM·맷슨)가 크게 움직이면 HMM·팬오션 같은 한국 해운 회사도 따라가요. 운임(배 삯)이 오르내릴 때 같이 움직여요. 검증: ±5% 넘게 움직일 때 오를 때 88%, 내릴 때 81%." },
-    { k: "bank", grp: "fin", hit: [84, 78], name: "은행 · 금융", th: 2, label: "미국", links: [["KBE", nvStock("KBE", true)], ["JP모건", nvStock("JPM")]],
+    { k: "bank", kw: ["은행","금융","증권","보험","지주"], grp: "fin", hit: [84, 78], name: "은행 · 금융", th: 2, label: "미국", links: [["KBE", nvStock("KBE", true)], ["JP모건", nvStock("JPM")]],
       learn: "미국 은행 묶음(KBE)과 JP모건이 움직이면 KB금융·신한지주 같은 한국 금융주도 따라가요. 은행주는 잘 안 흔들려서 기준을 ±2%로 잡았어요. 검증: 오를 때 84%, 내릴 때 78%." },
-    { k: "steel", grp: "heavy", hit: [80, 80], name: "철강", th: 4, label: "미국", links: [["뉴코어", nvStock("NUE")], ["스틸다이내믹스", nvStock("STLD.O")]],
+    { k: "steel", kw: ["철강","강관"], grp: "heavy", hit: [80, 80], name: "철강", th: 4, label: "미국", links: [["뉴코어", nvStock("NUE")], ["스틸다이내믹스", nvStock("STLD.O")]],
       learn: "미국 철강 회사(뉴코어·스틸다이내믹스)가 크게 움직이면 POSCO홀딩스·현대제철도 따라가요. 중국 철강 값 영향도 커서 참고로 같이 봐요. 검증: ±4% 넘게 움직일 때 오를 때 80%, 내릴 때 80%." },
-    { k: "h2", grp: "energy", hit: [85, null], noDown: true, name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
+    { k: "h2", kw: ["수소","연료전지"], grp: "energy", hit: [85, null], noDown: true, name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
       learn: "미국 수소 회사(플러그파워·블룸에너지)가 +5% 넘게 오르면 두산퓨얼셀·에스퓨얼셀 같은 한국 수소 주식도 따라가요(85%). 내릴 때는 기준을 바꿔도 70% 안팎이라 참고만 해요." },
-    { k: "build", grp: "heavy", hit: [84, 75], name: "건설 · 인프라", th: 2.5, label: "미국", links: [["PAVE", nvStock("PAVE", true)], ["벌컨머티리얼즈", nvStock("VMC")]],
+    { k: "build", kw: ["건설","인프라","시멘트","레미콘"], grp: "heavy", hit: [84, 75], name: "건설 · 인프라", th: 2.5, label: "미국", links: [["PAVE", nvStock("PAVE", true)], ["벌컨머티리얼즈", nvStock("VMC")]],
       learn: "PAVE(미국 인프라 회사 묶음)와 벌컨머티리얼즈(건설 자재 회사)가 움직이면 현대건설·DL이앤씨 같은 한국 건설주도 따라가요. 금리 인하·경기 부양 때마다 돌아오는 테마예요. 검증: ±2.5% 넘게 움직일 때 오를 때 84%, 내릴 때 75%." },
-    { k: "fintech", grp: "fin", hit: [82, 80], name: "스테이블코인", th: 5, label: "미국", links: [["코인베이스", nvStock("COIN.O")], ["페이팔", nvStock("PYPL.O")]],
+    { k: "fintech", kw: ["스테이블코인","핀테크","결제","페이","전자결제"], grp: "fin", hit: [82, 80], name: "스테이블코인", th: 5, label: "미국", links: [["코인베이스", nvStock("COIN.O")], ["페이팔", nvStock("PYPL.O")]],
       learn: "코인베이스(코인 거래소)와 페이팔(간편결제)이 크게 움직이면 카카오페이·다날 같은 한국 결제·스테이블코인 관련주도 따라가요. 검증: ±5% 넘게 움직일 때 오를 때 82%, 내릴 때 80%." },
-    { k: "aisw", grp: "it", hit: [78, 75], name: "AI 소프트웨어", th: 4, label: "미국", links: [["IGV", nvStock("IGV", true)], ["팔란티어", nvStock("PLTR.O")]],
+    { k: "aisw", kw: ["AI","인공지능","챗봇","소프트웨어","온디바이스"], grp: "it", hit: [78, 75], name: "AI 소프트웨어", th: 4, label: "미국", links: [["IGV", nvStock("IGV", true)], ["팔란티어", nvStock("PLTR.O")]],
       learn: "IGV(미국 소프트웨어 회사 묶음)와 팔란티어(AI 소프트웨어)가 크게 움직이면 코난테크놀로지·솔트룩스·폴라리스오피스 같은 한국 AI 소프트웨어 주식도 따라가요. 검증: ±4% 넘게 움직일 때 오를 때 78%, 내릴 때 75% (다른 조합은 60~70%대로 약했어요)." },
-    { k: "cyber", grp: "it", hit: [77, 80], name: "사이버보안", th: 4, label: "미국", links: [["크라우드스트라이크", nvStock("CRWD.O")], ["팔로알토", nvStock("PANW.O")], ["포티넷", nvStock("FTNT.O")], ["CIBR", nvStock("CIBR.O", true)]],
+    { k: "cyber", kw: ["보안","해킹","정보보안"], grp: "it", hit: [77, 80], name: "사이버보안", th: 4, label: "미국", links: [["크라우드스트라이크", nvStock("CRWD.O")], ["팔로알토", nvStock("PANW.O")], ["포티넷", nvStock("FTNT.O")], ["CIBR", nvStock("CIBR.O", true)]],
       learn: "미국 보안 회사(크라우드스트라이크·팔로알토·포티넷)와 보안 묶음(CIBR)이 크게 움직이면 안랩·지니언스·라온시큐어·싸이버원 같은 한국 보안주도 따라가요. 해킹 사고 때마다 돌아오는 테마예요. 검증: ±4% 넘게 움직일 때 오를 때 77%, 내릴 때 80%." },
-    { k: "lng", grp: "energy", hit: [82, null], noDown: true, name: "LNG · 가스", th: 4, label: "미국", links: [["셰니에르", nvStock("LNG")], ["UNG", nvStock("UNG", true)]],
+    { k: "lng", kw: ["LNG","LPG","가스","천연가스"], grp: "energy", hit: [82, null], noDown: true, name: "LNG · 가스", th: 4, label: "미국", links: [["셰니에르", nvStock("LNG")], ["UNG", nvStock("UNG", true)]],
       learn: "셰니에르(미국 LNG 수출 회사)와 UNG(천연가스 값)가 +4% 넘게 오르면 한국가스공사도 따라 오르기 쉬워요(82%). 내릴 때는 어떤 짝·기준으로도 50~60%대라 참고만 해요. 겨울철·에너지 위기 때마다 돌아오는 테마예요." },
-    { k: "vaccine", grp: "bio", hit: [76, null], noDown: true, name: "백신 · 진단", th: 5, label: "미국", links: [["모더나", nvStock("MRNA.O")], ["바이오엔텍", nvStock("BNTX.O")]],
+    { k: "vaccine", kw: ["백신","진단","코로나","mRNA"], grp: "bio", hit: [76, null], noDown: true, name: "백신 · 진단", th: 5, label: "미국", links: [["모더나", nvStock("MRNA.O")], ["바이오엔텍", nvStock("BNTX.O")]],
       learn: "모더나·바이오엔텍(백신 회사)이 +5% 넘게 오르면 SK바이오사이언스·씨젠 같은 한국 백신·진단 주식도 따라 오르기 쉬워요(76%). 내릴 때는 50%대라 참고만 해요. 전염병이 돌 때마다 돌아오는 테마예요." },
-    { k: "btc", grp: "asset", hit: [92, 87], name: "가상자산 (비트코인)", th: 4, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
+    { k: "btc", kw: ["가상화폐","비트코인","블록체인","코인","가상자산"], grp: "asset", hit: [92, 87], name: "가상자산 (비트코인)", th: 4, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
       learn: "비트코인이 크게 움직이면 코인 거래소와 관련된 한국 회사 주식이 따라 움직여요. 코인은 원래 많이 흔들려서 기준을 ±4%로 넓게 잡았어요." },
-    { k: "gold", grp: "asset", hit: [64, 55], weak: true, name: "금", th: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
+    { k: "gold", kw: ["금 ","금값","귀금속"], grp: "asset", hit: [64, 55], weak: true, name: "금", th: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
       learn: "사람들이 불안할 때 금을 사요. 금값이 오르면 금 관련 주식이 움직여요. 금은 잘 안 흔들려서 기준을 ±1.5%로 좁게 잡았어요. 검증해 보니 한국 금 관련주(고려아연)가 잘 안 따라가서(64%·55%) 참고만 해요." },
-    { k: "cu", grp: "asset", hit: [80, null], noDown: true, name: "구리", th: 2, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
+    { k: "cu", kw: ["구리","비철금속"], grp: "asset", hit: [80, null], noDown: true, name: "구리", th: 2, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
       learn: "구리는 전선을 만드는 재료예요. 구리값이 오르면 전선 회사 주식이 강해지기 쉬워요. 기준은 +2%예요. 검증해 보니 오를 때는 잘 따라가지만(80%) 내릴 때는 기준을 바꿔도 잘 안 맞아서(-2% 63%, -4% 62%) 내리는 날은 참고만 해요." },
   ];
+  // 한국 테마 이름(네이버) ↔ 미국장 테마 연결: 이름에 kw 가 들어 있으면 같은 흐름으로 본다 (전일·오늘 주도 테마 ↔ 미국장 테마)
+  function usLinkOf(name) {
+    const n = String(name || "");
+    return US.filter((u) => (u.kw || []).some((w) => n.toUpperCase().includes(w.toUpperCase()))).sort((a, b) => Math.max(...b.kw.map((w) => (n.includes(w) ? w.length : 0))) - Math.max(...a.kw.map((w) => (n.includes(w) ? w.length : 0))))[0] || null;
+  }
+  const usLinkText = (u) => { const v = themeValue(S.us[u.k]); return v === null ? "미국 " + u.name.split(" (")[0] : "미국 " + u.name.split(" (")[0] + " " + (v > 0 ? "+" : "") + v + "%"; };
   const THEMES = { defaultThreshold: 3, themes: US.map((u) => ({ key: u.k, name: u.name, th: u.th, thDn: u.thDn, noDown: !!u.noDown, label: u.label, weak: !!u.weak })) };
 
   const GLOSS = [
@@ -1684,7 +1694,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-26";
+  const APP_VER = "9.29-28";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1950,6 +1960,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const el = $("uss-" + u.k), st = r.themeStatus[u.k];
       el.className = "status" + (st === "first" ? " up" : st === "back" ? " dn" : "");
       el.textContent = u.noDown && st === "back" ? "참고 ↓" : u.weak && (st === "first" || st === "back") ? (st === "first" ? "참고 ↑" : "참고 ↓") : st === "first" ? "우선 관심" : st === "back" ? "후순위" : st === "flat" ? "중립" : "—";
+      { const kr = [...(S.prev || []).map((p) => p && p.name), ...parseLeaders(S.journal.market.leaders).map((t) => t.name)].filter((n) => n && usLinkOf(n) === u); const rn = $("ur-" + u.k).querySelector(".rn"); let b = rn.querySelector(".krlk"); if (!b) { b = document.createElement("i"); b.className = "krlk"; rn.appendChild(b); } b.textContent = kr.length ? "🔥" : ""; b.title = kr.length ? "한국 주도 테마와 같은 흐름: " + kr.join(", ") : ""; }
       $("ur-" + u.k).dataset.st = u.weak || (u.noDown && st === "back") ? "" : st === "first" ? "up" : st === "back" ? "dn" : "";
     });
     paintUsOrder();
@@ -2045,7 +2056,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" ? "up" : st === "back" ? "dn" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
       : `<span class="muted">아직 없음 (아침 7시쯤 자동으로 들어와요)</span>`;
     const prevs = (S.prev || []).filter((p) => p && (p.name || "").trim());
-    const pvHtml = prevs.length ? prevs.map((p) => `<span class="bchip ${p.pre === "up" || (!p.pre && p.state === "up") ? "up" : p.pre === "down" || (!p.pre && p.state === "down") ? "dn" : ""}">${esc(prevLabel(p))}</span>`).join("")
+    const both = [];
+    const pvHtml = prevs.length ? prevs.map((p) => { const u = usLinkOf(p.name), st = u && r.themeStatus[u.k];
+      if (u && st === "first" && !u.weak) both.push(p.name.trim() + " ↔ " + usLinkText(u));
+      return `<span class="bchip ${p.pre === "up" || (!p.pre && p.state === "up") ? "up" : p.pre === "down" || (!p.pre && p.state === "down") ? "dn" : ""}">${esc(prevLabel(p))}${u ? ` <small class="uslk ${st === "first" ? "up" : st === "back" ? "dn" : ""}">🇺🇸 ${esc(usLinkText(u).replace("미국 ", ""))}</small>` : ""}</span>`; }).join("")
+        + (both.length ? `<div class="nxline"><b class="upc">✅ 미국장도 같은 방향</b> ${esc(both.join(" · "))} → 오늘 더 강할 가능성</div>` : "")
       : `<span class="muted">아직 안 넣음 (아래 '전일 주도 테마' 칸)</span>`;
     const secs = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]);
     const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S.signals))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
@@ -2060,8 +2075,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const fmtEok = (x) => { const v = numOf(x); return (v > 0 ? "+" : "") + v.toLocaleString("ko-KR") + "억"; };
   function parseInvest(text) {
     return String(text || "").split(" / ").map((part) => {
-      const m = part.match(/^\s*(\S+)/), f = part.match(/외국인\s*([+-]?[\d,]+)억/), i = part.match(/기관\s*([+-]?[\d,]+)억/);
-      return f || i ? { mk: m ? m[1] : "", f: f && numOf(f[1]), i: i && numOf(i[1]) } : null;
+      const m = part.match(/^\s*(\S+)/), f = part.match(/외국인\s*([+-]?[\d,]+)억/), i = part.match(/기관\s*([+-]?[\d,]+)억/), a = part.match(/거래대금\s*([\d,.]+)\s*(조|억)/);
+      return f || i ? { mk: m ? m[1] : "", f: f && numOf(f[1]), i: i && numOf(i[1]), a: a ? numOf(a[1]) * (a[2] === "조" ? 10000 : 1) : null } : null;
     }).filter(Boolean);
   }
   function parseLeaders(text) {
@@ -2074,10 +2089,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function paintMktView() {
     const inv = parseInvest(S.journal.market.invest), ld = parseLeaders(S.journal.market.leaders);
     $("mv-invest").classList.toggle("has", inv.length > 0);
-    $("mvb-invest").innerHTML = inv.length ? `<div class="flow"><span class="fh fm"></span><span class="fh">외국인</span><span class="fh">기관</span>${inv.map((r) => `<span class="fm">${esc(r.mk)}</span><span class="${sgn(r.f)}">${r.f === null ? "—" : fmtEok(r.f)}</span><span class="${sgn(r.i)}">${r.i === null ? "—" : fmtEok(r.i)}</span>`).join("")}</div>` : "";
+    const hasA = inv.some((r) => r.a), jo = (v) => (v >= 10000 ? (v / 10000).toFixed(1) + "조" : v.toLocaleString("ko-KR") + "억");
+    $("mvb-invest").innerHTML = inv.length ? `<div class="flow${hasA ? " wa" : ""}"><span class="fh fm"></span><span class="fh">외국인</span><span class="fh">기관</span>${hasA ? `<span class="fh">거래대금</span>` : ""}${inv.map((r) => `<span class="fm">${esc(r.mk)}</span><span class="${sgn(r.f)}">${r.f === null ? "—" : fmtEok(r.f)}</span><span class="${sgn(r.i)}">${r.i === null ? "—" : fmtEok(r.i)}</span>${hasA ? `<span class="am">${r.a ? jo(r.a) : "—"}</span>` : ""}`).join("")}</div>` : "";
     $("mv-leaders").classList.toggle("has", ld.length > 0);
     // 한 줄: 순위 · 테마(대표 종목은 말풍선) · 외인 · 기관 · 등락률
-    $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li title="${esc((t.hot ? `강세 ${t.hotN}종목 · ${t.hot}억` : "") + (t.stocks ? " · " + t.stocks : ""))}"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name.split("(")[0].trim() || t.name)}</span><span class="fi ${t.f === null ? "" : sgn(t.f)}">${t.f === null ? "" : "외 " + fmtEok(t.f).replace("억", "")}</span><span class="fi ${t.i === null ? "" : sgn(t.i)}">${t.i === null ? "" : "기 " + fmtEok(t.i).replace("억", "")}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span></li>`).join("")}</ol><small class="ldnote">외 = 외국인 · 기 = 기관 순매수(억) · 누르고 있으면 대표 종목</small>` : "";
+    $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li title="${esc((t.hot ? `강세 ${t.hotN}종목 · ${t.hot}억` : "") + (t.stocks ? " · " + t.stocks : ""))}"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name.split("(")[0].trim() || t.name)}${(() => { const u = usLinkOf(t.name); const st = u && lastEval && lastEval.themeStatus[u.k]; return u ? `<small class="uslk ${st === "first" ? "up" : st === "back" ? "dn" : ""}" title="${esc(usLinkText(u))}">🇺🇸</small>` : ""; })()}</span><span class="fi ${t.f === null ? "" : sgn(t.f)}">${t.f === null ? "" : "외 " + fmtEok(t.f).replace("억", "")}</span><span class="fi ${t.i === null ? "" : sgn(t.i)}">${t.i === null ? "" : "기 " + fmtEok(t.i).replace("억", "")}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span></li>`).join("")}</ol><small class="ldnote">외 = 외국인 · 기 = 기관 순매수(억) · 누르고 있으면 대표 종목</small>` : "";
   }
   // 미국장 테마를 많이 오른 순으로 (빈 칸은 아래, 원래 순서). 칸에 입력하는 중에는 줄이 움직이지 않게 기다림
   function paintUsOrder() {

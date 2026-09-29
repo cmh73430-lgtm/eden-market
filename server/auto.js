@@ -36,9 +36,9 @@ export function parseTrend(json) {
 }
 
 const eok = (v) => (v === null ? "—" : (v > 0 ? "+" : "") + v.toLocaleString("ko-KR") + "억");
-// 수급 한 줄: "코스피 외국인 -4,942억 · 기관 +3,189억 / 코스닥 외국인 +812억 · 기관 -95억"
+// 수급 한 줄: "코스피 외국인 -4,942억 · 기관 +3,189억 · 거래대금 123,456억 / 코스닥 외국인 +812억 · 기관 -95억 · 거래대금 …"
 export function investText(inv) {
-  return ["kospi", "kosdaq"].filter((k) => inv && inv[k]).map((k) => (k === "kospi" ? "코스피" : "코스닥") + " 외국인 " + eok(inv[k].foreign) + " · 기관 " + eok(inv[k].institution)).join(" / ");
+  return ["kospi", "kosdaq"].filter((k) => inv && inv[k]).map((k) => (k === "kospi" ? "코스피" : "코스닥") + " 외국인 " + eok(inv[k].foreign) + " · 기관 " + eok(inv[k].institution) + (inv[k].amount ? " · 거래대금 " + inv[k].amount.toLocaleString("ko-KR") + "억" : "")).join(" / ");
 }
 
 // 아침: 시장 신호 + 미국 대응주 (야간선물 k200 은 KIS 없이는 못 받으므로 실패해도 그대로 둔다)
@@ -243,7 +243,7 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
     const code = k.toUpperCase();
     try {
       const q = await adapters.naver.quote("domestic:" + code);
-      out.market[k] = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, src: "naver", time: q.time || undefined };
+      out.market[k] = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, amount: q.amount || undefined, src: "naver", time: q.time || undefined };
     } catch (e) { out.errors.push(k + ": " + (e.message || e)); }
     try {
       const res = await fetchImpl("https://m.stock.naver.com/api/index/" + code + "/trend", {
@@ -252,6 +252,7 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
       inv[k] = parseTrend(await res.json());
+      if (out.market[k] && out.market[k].amount) inv[k].amount = out.market[k].amount;
     } catch (e) { out.errors.push(k + " 수급: " + (e.message || e)); }
   }
   if (Object.keys(inv).length) out.market.invest = Object.assign({ text: investText(inv) }, inv);
