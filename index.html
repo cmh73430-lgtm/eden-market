@@ -278,6 +278,28 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .nvex b { color: var(--g); font-size: 14px; }
 .helper { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 700; color: var(--muted); }
 .helper input.num { width: 90px; }
+#sigList .sig { grid-template-columns: minmax(0, 1fr) auto; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; background: var(--surface); }
+#sigList .sig[data-st="g"] { border-left-color: var(--g); } #sigList .sig[data-st="a"] { border-left-color: var(--a); } #sigList .sig[data-st="r"] { border-left-color: var(--r); }
+#sigList .sig .name { grid-column: 1 / -1; font-size: 15px; line-height: 1.3; }
+#sigList .sig .in { grid-column: 1 / -1; } #sigList .sig .in .status { margin-left: auto; min-width: 5em; }
+#sigList .sig .rule { gap: 4px; } #sigList .sig .rule b { padding: 1px 7px; border-radius: 99px; font-size: 11.5px; }
+#sigList .sig .rule .g { background: var(--g-bg); } #sigList .sig .rule .a { background: var(--a-bg); } #sigList .sig .rule .r { background: var(--r-bg); }
+#sigList .lvl { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px; padding: 6px 8px; border-radius: 6px; background: var(--note); }
+#sigList .lvl .ln { font-size: 13px; font-weight: 700; } #sigList .lvl .ln small { color: var(--muted); font-weight: 600; }
+#sigList .lvl .in input.num { width: 64px; font-size: 14px; padding: 4px 6px; } #sigList .lvl .status { min-width: 5em; }
+#sigList .lvl .lh, #sigList .lvl .autoat { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); }
+.refcard { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; background: var(--surface); display: grid; gap: 2px; }
+.refcard .rhead { display: grid; gap: 1px; margin-bottom: 4px; } .refcard .rhead b { font-size: 14.5px; } .refcard .rhead span { font-size: 12px; color: var(--muted); }
+.refcard .rrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid var(--line); }
+.refcard .rn { font-size: 14px; font-weight: 700; display: grid; line-height: 1.25; } .refcard .rn small { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.refcard .in { gap: 3px; } .refcard .pm { width: 28px; height: 30px; font-size: 14px; } .refcard input.num { width: 56px; font-size: 14px; padding: 3px 5px; } .refcard .unit { min-width: 1.1em; }
+.refcard .status { min-width: 3.4em; font-size: 12px; padding: 3px 5px; }
+.refcard .rdet { display: grid; gap: 4px; padding: 6px 0; border-top: 1px solid var(--line); } .refcard .rdet > b { font-size: 13px; }
+.refcard .rule { font-size: 11.5px; display: flex; gap: 4px; flex-wrap: wrap; } .refcard .rule b { padding: 1px 7px; border-radius: 99px; }
+.refcard .rule .g { background: var(--g-bg); color: var(--g); } .refcard .rule .a { background: var(--a-bg); color: var(--a); } .refcard .rule .r { background: var(--r-bg); color: var(--r); }
+details.more { grid-column: 1 / -1; display: grid; gap: 6px; font-size: 13px; }
+details.more > summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--muted); padding: 2px 0; }
+details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summary) { margin-top: 6px; }
 .warn { grid-column: 1 / -1; font-size: 13px; font-weight: 700; color: var(--r); background: var(--r-bg); border-radius: 6px; padding: 6px 8px; }
 .backfab { position: fixed; left: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; font: inherit; font-size: 14px; font-weight: 700; color: #fff; background: var(--down); border: 0; border-radius: 999px; padding: 10px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.25); cursor: pointer; }
 .topfab { position: fixed; right: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.2); cursor: pointer; }
@@ -1596,7 +1618,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-10";
+  const APP_VER = "9.29-12";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1650,25 +1672,35 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const learnHtml = (title, items) => `<details class="learn"><summary>📘 공부하기 — ${esc(title)}</summary>${items.map(([h, p]) => `<p><b>${esc(h)}</b> ${esc(p)}</p>`).join("")}</details>`;
 
   // 판정 지표(정상·절반·쉼을 정함)와 참고 지표(판정에 안 넣음)를 나눠 보여 준다
-  const SIG_GROUPS = [
-    ["🎯 판정 지표", "이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 금리 수준만 미검증)", SIGNALS.filter((s) => !s.ref)],
-    ["👀 참고 지표", "판정에는 안 넣어요 · 흐름 확인용 (환율과 유가는 같은 날 함께 급등할 때만 주의 1개)", SIGNALS.filter((s) => s.ref)],
-  ];
+  const SIG_MAIN = SIGNALS.filter((s) => !s.ref && s.k !== "ustlvl"), SIG_REF = SIGNALS.filter((s) => s.ref), UST_LVL = SIGNALS.find((s) => s.k === "ustlvl");
+  // 참고 지표 한 줄 요약 (칸 옆에 짧게)
+  const REF_SHORT = { es: "미국 전체 분위기", ym: "경기 민감주", rty: "코스닥 중소형주", fx: "외국인 돈 방향", oil: "기름값" };
   const sigHtml = (s) => `
     <div class="sig" data-k="${s.k}">
       <div class="name">${esc(s.name)} ${s.core ? `<span class="core">${esc(s.core)}</span>` : ""}</div>
       <div class="in">${s.noPm ? "" : `<button class="pm" type="button" data-for="${s.k}" aria-label="부호 바꾸기">±</button>`}<input class="num" type="text" inputmode="decimal" id="in-${s.k}" placeholder="${esc(s.ph)}" autocomplete="off"><span class="unit">${esc(s.unit)}</span><span class="status" id="st-${s.k}">—</span></div>
       <div class="autoat" id="aa-signals.${s.k}" hidden></div>
+      ${s.k === "ust" ? `<div class="lvl"><span class="ln">금리 수준 <small>(미검증)</small></span><div class="in"><input class="num" type="text" inputmode="decimal" id="in-ustlvl" placeholder="${esc(UST_LVL.ph)}" autocomplete="off"><span class="unit">%</span><span class="status" id="st-ustlvl">—</span></div><small class="lh">5.0%↑인데 또 오르면 주의 · 5.2%↑면 나쁨 (위 금리 판정을 올려요)</small></div>` : ""}
+      <div class="warn" id="warn-${s.k}" hidden></div>
+      <div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div>
+      ${s.k === "fut" ? `<div class="note" id="note-div" hidden>야간선물과 방향이 엇갈림 → 오늘은 야간선물 기준, 미 선물은 판정에서 뺌</div>` : ""}
+      <details class="more"><summary>✍️ 직접 넣는 법 · 사이트 링크</summary>
       <div class="links">열어서 보기 ${linkHtml(s.links)}</div>
       <div class="what">${esc(s.what)}</div>
       ${s.example ? `<div class="nvex" aria-label="네이버 화면 예시">네이버 화면 예시 <span class="px">${esc(s.example.parts[0])}</span> <mark>${esc(s.example.parts[1])}</mark> <s>${esc(s.example.parts[2])}</s> → <b>${esc(s.example.put)}</b> 넣기 <small>(✗ ${esc(s.example.not)} 아님)</small></div>` : ""}
       ${s.helper ? `<label class="helper">네이버 ▲ 숫자 그대로 <input class="num" type="text" inputmode="decimal" id="hp-${s.k}" placeholder="예: 0.003" autocomplete="off"> × ${s.helper} → 위 칸에 자동 입력 <small>(내리면 ▼, 앞에 − 붙이기)</small></label>` : ""}
-      <div class="warn" id="warn-${s.k}" hidden></div>
-      <div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div>
-      ${s.k === "fut" ? `<div class="note" id="note-div" hidden>야간선물과 방향이 엇갈림 → 오늘은 야간선물 기준, 미 선물은 판정에서 뺌</div>` : ""}
       ${learnHtml(s.name, s.learn)}
+      </details>
     </div>`;
-  $("sigList").innerHTML = SIG_GROUPS.map(([t, d, list]) => `<div class="siggroup"><b>${t}</b><span>${esc(d)}</span></div>` + list.map(sigHtml).join("")).join("");
+  const refHtml = () => `
+    <div class="refcard">
+      <div class="rhead"><b>👀 참고 지표</b><span>판정 개수에 안 들어가요 · 흐름만 봐요 (환율+유가가 같은 날 함께 급등하면 주의 1개)</span></div>
+      ${SIG_REF.map((s) => `<div class="rrow"><span class="rn">${esc(s.name.replace(/^미국 선물 \((.*)\)$/, "$1 선물").replace(/ \(.*\)$/, ""))}<small>${esc(REF_SHORT[s.k] || "")}</small></span><div class="in"><button class="pm" type="button" data-for="${s.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="in-${s.k}" placeholder="${esc(s.ph)}" autocomplete="off"><span class="unit">${esc(s.unit)}</span><span class="status" id="st-${s.k}">—</span></div></div><div class="warn" id="warn-${s.k}" hidden></div>`).join("")}
+      <details class="more"><summary>✍️ 기준 · 직접 넣는 법 · 사이트 링크</summary>
+      ${SIG_REF.map((s) => `<div class="rdet"><b>${esc(s.name)}</b><div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div><div class="links">열어서 보기 ${linkHtml(s.links)}</div><div class="what">${esc(s.what)}</div>${learnHtml(s.name, s.learn)}</div>`).join("")}
+      </details>
+    </div>`;
+  $("sigList").innerHTML = `<div class="siggroup"><b>🎯 판정 지표</b><span>이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 금리 수준만 미검증)</span></div>` + SIG_MAIN.map(sigHtml).join("") + refHtml();
 
   $("usList").innerHTML = US.map((u) => `
     <div class="us">
@@ -1839,6 +1871,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       }
       el.className = "status " + (r.statuses[k] || ""); el.textContent = r.statuses[k] ? LABEL[r.statuses[k]] : "—";
     });
+    // 지표 카드 왼쪽 띠 색: 칸 옆 판정(좋음·주의·나쁨)과 같게
+    document.querySelectorAll("#sigList .sig").forEach((card) => { const b = card.querySelector(".status"); card.dataset.st = ["g", "a", "r"].find((c) => b.classList.contains(c)) || ""; });
     const refN = Object.keys(r.excluded).filter((k) => r.excluded[k] && r.statuses[k]).length;
     $("verdict").className = "verdict " + r.cls;
     $("modeText").textContent = r.mode; $("modeWhy").textContent = r.mode === "—" ? "아래 칸에 숫자를 넣으면 오늘 날씨(모드)가 나와요" : r.why; $("modeAct").textContent = EASY_ACT[r.mode] ?? r.act;
@@ -1885,7 +1919,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const v = parseNum(S.signals[s.k]); const st = r.statuses[s.k];
       if (v === null || !st) return;
       const val = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit;
-      if (s.k === "ustlvl") { main.push(sigRow(st, s.name, val, LABEL[st], `${st === "g" ? "5% 미만이거나 오늘 안 오름" : (st === "r" ? "5.2%" : "5.0%") + " 이상 + 오름 → 금리 칸에 반영"} · 미검증 규칙`)); return; }
+      if (s.k === "ustlvl") return; // 금리 칸 한 줄에 같이 보여 줌
+      if (s.k === "ust" && r.ustLevel) { const L = r.ustLevel; main.push(sigRow(st, "미국 10년 금리", `${val} · ${L.level}%`, LABEL[st], L.raised ? `금리 수준 ${L.level}%가 ${L.st === "r" ? "5.2%" : "5.0%"} 이상인데 또 올라서 한 단계 올림 (미검증 규칙)` : `${s.rule[st].split(" → ")[0]} · 수준 ${L.level}% (5% 넘으면 조심)`)); return; }
       if (r.excluded[s.k]) { refs.push(sigRow(s.k === "fut" || REF_KEYS.includes(s.k) ? "ref" : st + " ref", s.name, val, "참고", REF_WHY[s.k](st))); return; }
       main.push(sigRow(st, s.name, val, LABEL[st], s.rule[st].split(" → ")[0]));
     });
