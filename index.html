@@ -335,6 +335,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 details.more { grid-column: 1 / -1; display: grid; gap: 6px; font-size: 13px; }
 details.more > summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--muted); padding: 2px 0; }
 details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summary) { margin-top: 6px; }
+.valid { grid-column: 1 / -1; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
 .warn { grid-column: 1 / -1; font-size: 13px; font-weight: 700; color: var(--r); background: var(--r-bg); border-radius: 6px; padding: 6px 8px; }
 .backfab { position: fixed; left: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; font: inherit; font-size: 14px; font-weight: 700; color: #fff; background: var(--down); border: 0; border-radius: 999px; padding: 10px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.25); cursor: pointer; }
 .topfab { position: fixed; right: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.2); cursor: pointer; }
@@ -1531,7 +1532,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
   // 시장 신호: 판정 7개 + 참고 러셀2000: 링크 · 넣을 숫자 · 기준 · 공부 내용 (초보자도 알 수 있게 쉬운 말로)
   const SIGNALS = [
-    { k: "k200", name: "코스피200 야간선물", core: "한국 예고편", unit: "%", ph: "0.0",
+    { k: "k200", valid: "야간선물은 과거 자료가 없어 나스닥 선물로 대신 검증 — 주의(-0.5%) 하락 66%·나쁨(-1%) 73% (평소 46%) [A·A]", name: "코스피200 야간선물", core: "한국 예고편", unit: "%", ph: "0.0",
       links: [["인베스팅", IV + "/indices/korea-200-futures", "iv"], ["밤사이코스피", "https://nightkospi.com/", ""], ["KRX 정보데이터시스템", "http://data.krx.co.kr/contents/MDC/MAIN/main/index.cmd", ""], ["네이버(낮 시장 선물)", NV + "/domestic/index/FUT/total", "nv"]],
       what: "야간선물이 전날 낮 시장 마감(오후 3시 45분) 가격보다 몇 % 올랐는지·내렸는지. 예: 0.62% 내렸으면 -0.62. 새벽 6시에 끝난 '야간 종가'로 봐요",
       rule: { g: "-0.5%보다 덜 빠짐 → 좋음", a: "-0.5% ~ -1% 빠짐 → 주의", r: "-1% 넘게 빠짐 → 나쁨" },
@@ -1545,7 +1546,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["이렇게 읽어요", "+0.5%면 오늘 주가가 조금 올라서 시작할 가능성이 커요. -1%보다 더 빠졌으면 아침부터 크게 떨어진 채 시작할 수 있으니 아침에 서둘러 사지 않아요."],
         ["알아 두세요", "① 미국 선물과 방향이 반대면 이 숫자를 믿어요(한국장을 직접 보여주니까요). 그때 미국 선물은 판정에서 빠져요. ② 야간 거래는 거래 규칙상 '다음 날' 거래로 쳐요. 그래서 거래 화면에 따라 야간과 다음 날 낮 시장이 한 막대로 합쳐져 보여요. ③ 가격제한은 ±8%(낮 시장보다 좁음). ④ 새벽 6시 이후 9시까지의 소식은 못 담아요. 그 사이 움직임은 미국 선물(24시간)로 봐요. ⑤ 휴장일 전날 밤에는 야간 시장이 안 열려서 값이 없어요."],
       ] },
-    { k: "fut", name: "미국 선물 (나스닥100)", core: "미국 분위기", unit: "%", ph: "0.0",
+    { k: "fut", valid: "2021~ 처음 보는 기간: 주의(-0.5%↓) 다음 날 코스피 하락 66% · 나쁨(-1%↓) 73% (평소 46%, 매년 60%↑) [A·A]", name: "미국 선물 (나스닥100)", core: "미국 분위기", unit: "%", ph: "0.0",
       links: [["네이버", NV + "/worldstock/futures/NQcv1", "nv"], ["인베스팅", IV + "/indices/nq-100-futures", "iv"], ["S&P500 선물", IV + "/indices/us-spx-500-futures", "iv"]],
       what: "나스닥100 선물이 어제보다 몇 % 올랐는지·내렸는지. 예: 0.3% 내렸으면 -0.3",
       rule: { g: "-0.5%보다 덜 빠짐 → 좋음", a: "-0.5% ~ -1% 빠짐 → 주의", r: "-1% 넘게 빠짐 → 나쁨" },
@@ -1585,7 +1586,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["이렇게 읽어요", "나스닥100은 오르는데 러셀2000만 크게 빠지면 '큰 회사만 좋고 작은 회사는 약한 날'이라, 코스닥 테마주는 조심해요."],
         ["알아 두세요", "지금은 참고로만 보여 주고 정상·절반·쉼 판정에는 넣지 않아요. 기록이 쌓이면 '🔍 내 기준 찾기'에서 러셀2000이 내 매매와 맞는지 확인할 수 있어요."],
       ] },
-    { k: "fx", ref: true, name: "원달러 환율", core: "외국인 돈의 방향", unit: "원", ph: "0",
+    { k: "fx", valid: "2021~ 처음 보는 기간: 10원↑ 다음 날 하락 44% (평소 46%) [C] → 혼자서는 판정에 안 넣음 · 유가와 동반 급등 13일은 하락 62%(표본 적음)", ref: true, name: "원달러 환율", core: "외국인 돈의 방향", unit: "원", ph: "0",
       links: [["네이버", NV + "/marketindex/exchange/FX_USDKRW", "nv"], ["인베스팅", IV + "/currencies/usd-krw", "iv"], ["달러인덱스", IV + "/indices/usdollar", "iv"]],
       what: "▲(또는 ▼) 옆의 '원' 숫자를 넣어요. 오른쪽 %(등락률)는 넣지 않아요",
       example: { parts: ["1,392.50", "▲3.50", "+0.26%"], put: "3.5", not: "0.26" },
@@ -1598,7 +1599,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["알아 두세요", "환율은 혼자서는 판정에 넣지 않고 참고로만 봐요. 환율과 기름값이 같은 날 함께 크게 오를 때만(10원↑ + 3%↑) '주의 1개'로 넣어요. 아래 실제 데이터를 보면 이유를 알 수 있어요."],
         ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "주의: 해외에서 원달러가 10원 넘게 오른 다음 날만 따로 보면 코스피는 평균 +0.08%, 하락 마감 47%로 보통 날과 거의 같았어요(-1% 넘게 빠진 날만 17%로 조금 많음). 환율 단독으로는 약한 신호예요. 환율+유가 동시 급등은 14년간 23일뿐이었고 평균 -0.23%였어요."],
       ] },
-    { k: "sox", name: "SOX 반도체지수", core: "반도체 주식이면 꼭", unit: "%", ph: "0.0",
+    { k: "sox", valid: "2021~ 처음 보는 기간: 주의(0%↓) 하락 60% · 나쁨(-2%↓) 77%, 평균 -1.03% (평소 46%) [A·A]", name: "SOX 반도체지수", core: "반도체 주식이면 꼭", unit: "%", ph: "0.0",
       links: [["네이버", NV + "/worldstock/index/.SOX", "nv"], ["인베스팅", IV + "/indices/phlx-semiconductor", "iv"]],
       what: "미국 반도체지수가 어제보다 몇 % 올랐는지·내렸는지. 예: 1.2% 내렸으면 -1.2",
       rule: { g: "올랐음 → 좋음", a: "0 ~ -2% 내림 → 주의", r: "-2% 넘게 내림 → 나쁨" },
@@ -1609,7 +1610,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["이렇게 읽어요", "올랐으면 반도체 쪽 분위기가 좋아요. -2%보다 더 빠졌으면 오늘은 반도체 관련 주식을 뒤로 미뤄요."],
         ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "SOX가 -2% 넘게 빠진 다음 날 코스피는 74%가 하락 마감(평균 -0.89%)했어요. SOX가 오른 날 다음은 37%만 하락(평균 +0.32%). 7개 신호 중 가장 잘 맞았어요."],
       ] },
-    { k: "vix", name: "VIX (공포지수)", core: "겁먹은 정도", unit: "점", ph: "숫자", noPm: true,
+    { k: "vix", valid: "2021~ 처음 보는 기간: 주의(20↑) 하락 51% (평소 46%, 약함) · 나쁨(30↑) 60%, -1%↓ 35% (65일) [B·B]", name: "VIX (공포지수)", core: "겁먹은 정도", unit: "점", ph: "숫자", noPm: true,
       links: [["네이버", NV + "/worldstock/index/.VIX", "nv"], ["인베스팅", IV + "/indices/volatility-s-p-500", "iv"]],
       what: "VIX 숫자 그대로 넣어요(%가 아니에요). 예: 22.4",
       rule: { g: "20 아래 → 좋음", a: "20 ~ 30 → 주의", r: "30 넘음 → 나쁨" },
@@ -1620,7 +1621,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["이렇게 읽어요", "20 아래는 차분해요. 20~30은 긴장한 상태예요. 30이 넘으면 겁을 많이 먹은 상태라 조심해요. 20·30은 시장에서 흔히 쓰는 기준이에요(Cboe 공식 구분은 아니에요). 오랜 평균은 19~20 정도예요."],
         ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "VIX 30 초과 다음 날 코스피가 -1% 넘게 빠진 비율은 32%, 20~30일 때 19%, 20 미만일 때 10%였어요. 숫자가 클수록 크게 빠지는 날이 늘어요."],
       ] },
-    { k: "oil", ref: true, name: "WTI 유가 (기름값)", core: "", unit: "%", ph: "0.0",
+    { k: "oil", valid: "2021~ 처음 보는 기간: 3%↑ 다음 날 코스피 하락 37% — 평소(46%)보다 오히려 덜 내림 [C] → 혼자서는 판정에 안 넣음", ref: true, name: "WTI 유가 (기름값)", core: "", unit: "%", ph: "0.0",
       links: [["네이버", NV + "/marketindex/energy/CLcv1", "nv"], ["인베스팅", IV + "/commodities/crude-oil", "iv"]],
       what: "기름값이 어제보다 몇 % 올랐는지. 예: 3.4% 올랐으면 +3.4",
       rule: { g: "3% 미만 오름 → 참고", a: "3% 이상 오름 → 참고 (환율도 10원 이상 오르면 함께 주의 1개)", r: "(나쁨 없음)" },
@@ -1631,7 +1632,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["이렇게 읽어요", "하루에 3% 넘게 오르면 큰 움직임이에요. 중동 전쟁 같은 이유가 있는지 뉴스도 같이 봐요. 기름값은 혼자서는 판정에 넣지 않고 참고로만 봐요. 환율도 같은 날 10원 넘게 오를 때만 '주의 1개'로 넣어요."],
         ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "주의: 유가가 3% 넘게 오른 다음 날 코스피는 오히려 평균 +0.21%, 하락 마감 33%였어요(연 18일). 유가 급등만으로는 코스피가 약하다는 근거가 약해요. 이유(전쟁·공급 차질)를 같이 보세요."],
       ] },
-    { k: "ust", name: "미국 10년 금리 (이자율)", core: "", unit: "bp", ph: "0",
+    { k: "ust", valid: "2021~ 처음 보는 기간: 주의(10bp↑) 하락 61%, -1%↓ 32% (79일 · 해마다 들쭉날쭉) [B]", name: "미국 10년 금리 (이자율)", core: "", unit: "bp", ph: "0",
       links: [["네이버", NV + "/marketindex/bond/US10YT=RR", "nv"], ["인베스팅", IV + "/rates-bonds/u.s.-10-year-bond-yield", "iv"]],
       what: "▲(또는 ▼) 옆 숫자에 100을 곱해서 넣어요. 오른쪽 %(등락률)는 넣지 않아요. 아래 '네이버 ▲ 숫자 그대로' 칸에 넣으면 ×100을 대신 계산해요",
       example: { parts: ["4.183", "▲0.003", "+0.08%"], put: "0.3", not: "0.08" }, helper: 100,
@@ -1743,7 +1744,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-31";
+  const APP_VER = "9.29-33";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1825,6 +1826,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       ${s.k === "ust" ? `<div class="lvl"><span class="ln">금리 수준 <small>(미검증)</small></span><div class="in"><input class="num" type="text" inputmode="decimal" id="in-ustlvl" placeholder="${esc(UST_LVL.ph)}" autocomplete="off"><span class="unit">%</span><span class="status" id="st-ustlvl">—</span></div><small class="lh">5.0%↑인데 또 오르면 주의 · 5.2%↑면 나쁨 (위 금리 판정을 올려요)</small></div>` : ""}
       <div class="warn" id="warn-${s.k}" hidden></div>
       <div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div>
+      ${s.valid ? `<div class="valid">🔬 검증 ${esc(s.valid)}</div>` : ""}
       ${s.k === "fut" ? `<div class="note" id="note-div" hidden>야간선물과 방향이 엇갈림 → 오늘은 야간선물 기준, 미 선물은 판정에서 뺌</div>` : ""}
       <details class="more"><summary>✍️ 직접 넣는 법 · 사이트 링크</summary>
       <div class="links">열어서 보기 ${linkHtml(s.links)}</div>
@@ -3093,6 +3095,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const PUB_RAW = isLinkBuild() ? PUB_CDN : PUB_RAW0;
   async function pubGet(url) {
     let signal; try { signal = AbortSignal.timeout(15000); } catch (e) {}
+    // raw.githubusercontent 는 5분쯤 예전 파일을 줄 수 있어서 주소 뒤에 시각을 붙여 새로 받는다 (jsDelivr 는 수집기가 캐시를 비움)
+    if (url.startsWith(PUB_RAW0) || url.includes("api.github.com")) url += (url.includes("?") ? "&" : "?") + "t=" + Date.now();
     const r = await fetch(url, { cache: "no-cache", signal });
     if (r.status === 404) return null;
     if (!r.ok) throw new Error("HTTP " + r.status);
@@ -3116,15 +3120,17 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (n) renderStats();
     return n;
   }
+  let pubLast = null; // 마지막으로 오늘 파일을 받은 결과 {found, changed} (🔄 버튼 안내용)
   async function pubPull() {
     if (gh || pubBusy) return; // 열쇠가 연결돼 있으면 비공개 저장소 쪽(ghPull)이 맡는다
     pubBusy = true;
     try {
       const a = await pubGet(PUB_RAW + DATE + ".json");
-      if (a) applyAuto(DATE, a);
+      pubLast = { found: !!a, changed: a ? applyAuto(DATE, a) : false, at: a ? [a.morning && a.morning.at, a.intraday && a.intraday.at, a.close && a.close.at].filter(Boolean).join("·") : "" };
       pubState = "on";
+      paintAuto();
       if (!isLinkBuild()) { try { await pubBackfill(); } catch (e) {} } // 지난 날 몰아 받기 (GitHub 목록 API) — 링크에서는 안 함
-    } catch (e) { pubState = "error"; }
+    } catch (e) { pubState = "error"; pubLast = { found: false, changed: false, err: String((e && e.message) || e) }; }
     finally { pubBusy = false; paintAuto(); }
   }
   // 🔄 지금 받아오기: 저장소에 이미 있는 값을 바로 다시 읽는다 (1분 기다리지 않고)
@@ -3136,10 +3142,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     autoMsg("받아오는 중…");
     pubListAt = 0;
     for (let i = 0; i < 40 && pubBusy; i++) await new Promise((ok) => setTimeout(ok, 250)); // 이미 받는 중이면 끝날 때까지
-    try { if (gh) await ghPull(); else await pubPull(); } catch (e) {}
-    const a = S.auto || {};
-    autoMsg(pubState === "error" ? "인터넷이 안 돼요. 잠시 뒤 다시 눌러 주세요."
-      : "받아왔어요 ✅ " + new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) + (a["at.morning"] ? " · 아침 수집 " + a["at.morning"] : " · 오늘 아침 수집은 아직 없어요") + (a["at.close"] ? " · 오후 수집 " + a["at.close"] : ""));
+    if (gh) { try { await ghPull(); } catch (e) {} }
+    else { pubListAt = Date.now(); try { await pubPull(); } catch (e) {} } // 오늘 파일만 바로 받고(지난 날 몰아 받기는 건너뜀), 안내를 띄운다
+    const a = S.auto || {}, L = pubLast || {}, hm = new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    autoMsg(pubState === "error" ? "받아오지 못했어요 (" + (L.err || "인터넷") + "). 잠시 뒤 다시 눌러 주세요."
+      : !gh && !L.found ? "받아왔어요 ✅ " + hm + " · " + mdw(DATE) + " 파일이 아직 없어요 (다음 자동 수집: " + nextRun("morning").txt + ")"
+      : "받아왔어요 ✅ " + hm + (L.changed ? " · 새 값이 들어왔어요" : " · 새 값 없음 (이미 최신)") + (a["at.morning"] ? " · 아침 수집 " + a["at.morning"] : " · 오늘 아침 수집은 아직 없어요") + (a["intra.at"] ? " · 장중 " + a["intra.at"] : "") + (a["at.close"] ? " · 오후 수집 " + a["at.close"] : " · 오후 수집은 아직 없어요"));
   }
   function watchFast() {
     fastUntil = Date.now() + 5 * 60 * 1000;
