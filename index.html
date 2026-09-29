@@ -1522,7 +1522,7 @@ function analyze(days) {
   return { n, withK, traded, stage: stageOf(n), modes, kept, broke, keptT: tStat(kept.p, broke.p), verdict, signals };
 }
 
-const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). eden-market 의 calendar.yml 이 매달 1일 올해·내년을 자동으로 채운다(규칙 + 음력 날짜). KRX 공지와 다르면 손으로 고치면 그 값이 유지된다."}};
+const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09","2027-01-27","2027-03-17","2027-04-28","2027-06-09","2027-07-28","2027-09-15","2027-10-27","2027-12-08"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"2027":[{"date":"2027-01-01","name":"신정"},{"date":"2027-02-08","name":"설날 연휴"},{"date":"2027-02-09","name":"설날 대체"},{"date":"2027-03-01","name":"삼일절"},{"date":"2027-05-05","name":"어린이날"},{"date":"2027-05-13","name":"부처님오신날"},{"date":"2027-07-19","name":"제헌절 대체"},{"date":"2027-08-16","name":"광복절 대체"},{"date":"2027-09-14","name":"추석 연휴"},{"date":"2027-09-15","name":"추석"},{"date":"2027-09-16","name":"추석 연휴"},{"date":"2027-10-04","name":"개천절 대체"},{"date":"2027-10-11","name":"한글날 대체"},{"date":"2027-12-27","name":"성탄절 대체"},{"date":"2027-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). eden-market 의 calendar.yml 이 매달 1일 올해·내년을 자동으로 채운다(규칙 + 음력 날짜). KRX 공지와 다르면 손으로 고치면 그 값이 유지된다."}};
 // Eden Cockpit (구 장전 콕핏) — 손 입력 + 공부용 단일 파일 버전의 화면 코드.
 // 판정 규칙(shared/rules.js)과 달력(shared/calendar.js)은 빌드 때 이 파일 앞에 그대로 붙는다.
 (function () {
@@ -1656,54 +1656,54 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
   const nvStock = (code, etf) => NV + "/worldstock/" + (etf ? "etf/" : "stock/") + code + (etf ? "" : "/total");
   const US = [
-    { k: "semi", kw: ["반도체","HBM","메모리","AI 반도체","시스템반도체","엔비디아"], grp: "it", hit: [94, 90], name: "반도체 · AI", th: 3, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
+    { k: "semi", hit: [94, 95], g: "AA", kw: ["반도체","HBM","메모리","AI 반도체","시스템반도체","엔비디아"], grp: "it", name: "반도체 · AI", th: 3, thDn: 4, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
       learn: "엔비디아(AI 칩 회사), 마이크론(메모리 회사), SMH(반도체 회사 묶음)가 오르면 삼성전자·SK하이닉스 같은 한국 반도체 주식도 따라 오르기 쉬워요." },
-    { k: "power", kw: ["전력","변압기","전선","전력설비","스마트그리드","초고압"], grp: "energy", hit: [88, 74], name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
+    { k: "power", hit: [89, 72], g: "AB", kw: ["전력","변압기","전선","전력설비","스마트그리드","초고압"], grp: "energy", name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
       learn: "AI 컴퓨터(데이터센터)는 전기를 엄청 많이 써요. 전기 설비를 만드는 미국 회사(GE버노바, 버티브)가 오르면 한국의 변압기·전선 회사도 따라가기 쉬워요." },
-    { k: "nuke", kw: ["원자력","원전","SMR"], grp: "energy", hit: [90, 89], name: "원전 (원자력 발전)", th: 5, thDn: 6, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
-      learn: "미국 원자력 발전 회사(컨스텔레이션, 오클로)가 오르면 한국 원전 부품 회사에도 관심이 몰려요. 원전 주식은 원래 크게 흔들려서, 검증해 보니 +5% 넘게 오를 때(90% 따라감), -6% 넘게 내릴 때(89%)만 잘 맞았어요. ±3%에서는 내릴 때 65%밖에 안 맞았어요." },
-    { k: "batt", kw: ["2차전지","이차전지","배터리","리튬","양극재","음극재","전고체"], grp: "mobility", hit: [90, 83], name: "2차전지 (배터리)", th: 3, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
+    { k: "nuke", hit: [81, null], g: "BC", noDown: true, kw: ["원자력","원전","SMR"], grp: "energy", name: "원전 (원자력 발전)", th: 1, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
+      learn: "미국 원자력 발전 회사(컨스텔레이션, 오클로)가 오르면 한국 원전 부품 회사에도 관심이 몰려요." },
+    { k: "batt", hit: [91, 100], g: "AA", kw: ["2차전지","이차전지","배터리","리튬","양극재","음극재","전고체"], grp: "mobility", name: "2차전지 (배터리)", th: 4, thDn: 6, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
       learn: "테슬라(전기차)와 앨버말(배터리 재료인 리튬 회사)을 보면 한국 배터리 회사들의 분위기를 알 수 있어요." },
-    { k: "def", kw: ["방산","방위","조선","K-방산"], grp: "heavy", hit: [87, 77], name: "조선 · 방산 (배·무기)", th: 3, label: "미국", links: [["ITA", nvStock("ITA", true)]],
+    { k: "def", hit: [80, null], g: "BC", noDown: true, kw: ["방산","방위","조선","K-방산"], grp: "heavy", name: "조선 · 방산 (배·무기)", th: 1.5, thDn: 2.5, label: "미국", links: [["ITA", nvStock("ITA", true)]],
       learn: "ITA는 미국 무기·항공 회사 묶음이에요. 전쟁 같은 긴장이 커지면 한국 무기·배 만드는 회사도 같이 움직여요." },
-    { k: "bio", kw: ["바이오","제약","비만","신약","의료","CMO","바이오시밀러"], grp: "bio", hit: [85, 84], name: "비만치료제 · 바이오", th: 3, label: "미국", links: [["일라이릴리", nvStock("LLY")], ["노보노디스크", nvStock("NVO")], ["XBI", nvStock("XBI", true)]],
+    { k: "bio", hit: [79, 76], g: "BB", kw: ["바이오","제약","비만","신약","의료","CMO","바이오시밀러"], grp: "bio", name: "비만치료제 · 바이오", th: 3, thDn: 2.5, label: "미국", links: [["일라이릴리", nvStock("LLY")], ["노보노디스크", nvStock("NVO")], ["XBI", nvStock("XBI", true)]],
       learn: "일라이릴리·노보노디스크(비만치료제 회사)와 XBI(미국 바이오 회사 묶음)가 크게 움직이면 한미약품·알테오젠·삼성바이오로직스 같은 한국 제약·바이오 주식도 따라가기 쉬워요." },
-    { k: "robot", kw: ["로봇","휴머노이드"], grp: "mobility", hit: [80, 77], name: "로봇", th: 5, label: "미국", links: [["BOTZ", nvStock("BOTZ.O", true)], ["심보틱", nvStock("SYM.O")]],
-      learn: "BOTZ(미국 로봇·AI 회사 묶음)와 심보틱(물류 로봇 회사)이 크게 움직이면 레인보우로보틱스·두산로보틱스 같은 한국 로봇 주식도 따라가기 쉬워요. 로봇 주식은 많이 흔들려서, 검증해 보니 ±5% 넘게 움직일 때만 잘 맞았어요(오를 때 80%, 내릴 때 77%)." },
-    { k: "space", kw: ["우주","위성","항공","UAM"], grp: "heavy", hit: [80, 76], name: "우주항공", th: 5, thDn: 6, label: "미국", links: [["로켓랩", nvStock("RKLB.O")], ["AST스페이스모바일", nvStock("ASTS.O")], ["UFO", nvStock("UFO", true)]],
-      learn: "로켓랩(로켓 회사), AST스페이스모바일(위성 통신 회사), UFO(우주 회사 묶음)가 크게 움직이면 쎄트렉아이·한화에어로스페이스 같은 한국 우주 주식도 움직여요. 검증해 보니 +5% 넘게 오를 때(80%), -6% 넘게 내릴 때(76%)만 잘 맞았어요." },
-    { k: "solar", kw: ["태양광","태양전지"], grp: "energy", hit: [94, 81], name: "태양광", th: 5, thDn: 6, label: "미국", links: [["퍼스트솔라", nvStock("FSLR.O")], ["엔페이즈", nvStock("ENPH.O")], ["TAN", nvStock("TAN", true)]],
-      learn: "퍼스트솔라·엔페이즈(태양광 회사)와 TAN(태양광 회사 묶음)이 크게 움직이면 한화솔루션·OCI홀딩스 같은 한국 태양광 주식도 따라가요. 검증해 보니 +5% 넘게 오를 때 94%, -6% 넘게 내릴 때 81% 따라갔어요." },
-    { k: "equip", kw: ["반도체 장비","반도체장비","장비","CXL","유리기판"], grp: "it", hit: [93, 82], name: "반도체 장비", th: 3, label: "미국", links: [["어플라이드", nvStock("AMAT.O")], ["램리서치", nvStock("LRCX.O")], ["KLA", nvStock("KLAC.O")]],
-      learn: "반도체를 만드는 기계 회사(어플라이드머티리얼즈·램리서치·KLA)가 움직이면 한미반도체·원익IPS·주성엔지니어링 같은 한국 장비 회사도 따라가요. 삼성전자·SK하이닉스와 따로 움직일 때가 있어서 반도체와 나눠 봐요. 검증: 오를 때 93%, 내릴 때 82%." },
-    { k: "auto", kw: ["자동차","완성차","자동차부품","타이어"], grp: "mobility", hit: [86, 82], name: "자동차", th: 4, label: "미국", links: [["GM", nvStock("GM")], ["포드", nvStock("F")]],
-      learn: "미국 자동차 회사(GM·포드)가 크게 움직이면 현대차·기아도 따라가기 쉬워요. 관세 같은 미국 뉴스가 같이 영향을 줘요. 검증: ±4% 넘게 움직일 때 오를 때 86%, 내릴 때 82%." },
-    { k: "ship", kw: ["해운","컨테이너","벌크"], grp: "heavy", hit: [88, 81], name: "해운", th: 5, label: "미국", links: [["ZIM", nvStock("ZIM")], ["맷슨", nvStock("MATX")]],
-      learn: "미국 해운 회사(ZIM·맷슨)가 크게 움직이면 HMM·팬오션 같은 한국 해운 회사도 따라가요. 운임(배 삯)이 오르내릴 때 같이 움직여요. 검증: ±5% 넘게 움직일 때 오를 때 88%, 내릴 때 81%." },
-    { k: "bank", kw: ["은행","금융","증권","보험","지주"], grp: "fin", hit: [84, 78], name: "은행 · 금융", th: 2, label: "미국", links: [["KBE", nvStock("KBE", true)], ["JP모건", nvStock("JPM")]],
-      learn: "미국 은행 묶음(KBE)과 JP모건이 움직이면 KB금융·신한지주 같은 한국 금융주도 따라가요. 은행주는 잘 안 흔들려서 기준을 ±2%로 잡았어요. 검증: 오를 때 84%, 내릴 때 78%." },
-    { k: "steel", kw: ["철강","강관"], grp: "heavy", hit: [80, 80], name: "철강", th: 4, label: "미국", links: [["뉴코어", nvStock("NUE")], ["스틸다이내믹스", nvStock("STLD.O")]],
-      learn: "미국 철강 회사(뉴코어·스틸다이내믹스)가 크게 움직이면 POSCO홀딩스·현대제철도 따라가요. 중국 철강 값 영향도 커서 참고로 같이 봐요. 검증: ±4% 넘게 움직일 때 오를 때 80%, 내릴 때 80%." },
-    { k: "h2", kw: ["수소","연료전지"], grp: "energy", hit: [85, null], noDown: true, name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
-      learn: "미국 수소 회사(플러그파워·블룸에너지)가 +5% 넘게 오르면 두산퓨얼셀·에스퓨얼셀 같은 한국 수소 주식도 따라가요(85%). 내릴 때는 기준을 바꿔도 70% 안팎이라 참고만 해요." },
-    { k: "build", kw: ["건설","인프라","시멘트","레미콘"], grp: "heavy", hit: [84, 75], name: "건설 · 인프라", th: 2.5, label: "미국", links: [["PAVE", nvStock("PAVE", true)], ["벌컨머티리얼즈", nvStock("VMC")]],
-      learn: "PAVE(미국 인프라 회사 묶음)와 벌컨머티리얼즈(건설 자재 회사)가 움직이면 현대건설·DL이앤씨 같은 한국 건설주도 따라가요. 금리 인하·경기 부양 때마다 돌아오는 테마예요. 검증: ±2.5% 넘게 움직일 때 오를 때 84%, 내릴 때 75%." },
-    { k: "fintech", kw: ["스테이블코인","핀테크","결제","페이","전자결제"], grp: "fin", hit: [82, 80], name: "스테이블코인", th: 5, label: "미국", links: [["코인베이스", nvStock("COIN.O")], ["페이팔", nvStock("PYPL.O")]],
-      learn: "코인베이스(코인 거래소)와 페이팔(간편결제)이 크게 움직이면 카카오페이·다날 같은 한국 결제·스테이블코인 관련주도 따라가요. 검증: ±5% 넘게 움직일 때 오를 때 82%, 내릴 때 80%." },
-    { k: "aisw", kw: ["AI","인공지능","챗봇","소프트웨어","온디바이스"], grp: "it", hit: [78, 75], name: "AI 소프트웨어", th: 4, label: "미국", links: [["IGV", nvStock("IGV", true)], ["팔란티어", nvStock("PLTR.O")]],
-      learn: "IGV(미국 소프트웨어 회사 묶음)와 팔란티어(AI 소프트웨어)가 크게 움직이면 코난테크놀로지·솔트룩스·폴라리스오피스 같은 한국 AI 소프트웨어 주식도 따라가요. 검증: ±4% 넘게 움직일 때 오를 때 78%, 내릴 때 75% (다른 조합은 60~70%대로 약했어요)." },
-    { k: "cyber", kw: ["보안","해킹","정보보안"], grp: "it", hit: [77, 80], name: "사이버보안", th: 4, label: "미국", links: [["크라우드스트라이크", nvStock("CRWD.O")], ["팔로알토", nvStock("PANW.O")], ["포티넷", nvStock("FTNT.O")], ["CIBR", nvStock("CIBR.O", true)]],
-      learn: "미국 보안 회사(크라우드스트라이크·팔로알토·포티넷)와 보안 묶음(CIBR)이 크게 움직이면 안랩·지니언스·라온시큐어·싸이버원 같은 한국 보안주도 따라가요. 해킹 사고 때마다 돌아오는 테마예요. 검증: ±4% 넘게 움직일 때 오를 때 77%, 내릴 때 80%." },
-    { k: "lng", kw: ["LNG","LPG","가스","천연가스"], grp: "energy", hit: [82, null], noDown: true, name: "LNG · 가스", th: 4, label: "미국", links: [["셰니에르", nvStock("LNG")], ["UNG", nvStock("UNG", true)]],
-      learn: "셰니에르(미국 LNG 수출 회사)와 UNG(천연가스 값)가 +4% 넘게 오르면 한국가스공사도 따라 오르기 쉬워요(82%). 내릴 때는 어떤 짝·기준으로도 50~60%대라 참고만 해요. 겨울철·에너지 위기 때마다 돌아오는 테마예요." },
-    { k: "vaccine", kw: ["백신","진단","코로나","mRNA"], grp: "bio", hit: [76, null], noDown: true, name: "백신 · 진단", th: 5, label: "미국", links: [["모더나", nvStock("MRNA.O")], ["바이오엔텍", nvStock("BNTX.O")]],
-      learn: "모더나·바이오엔텍(백신 회사)이 +5% 넘게 오르면 SK바이오사이언스·씨젠 같은 한국 백신·진단 주식도 따라 오르기 쉬워요(76%). 내릴 때는 50%대라 참고만 해요. 전염병이 돌 때마다 돌아오는 테마예요." },
-    { k: "btc", kw: ["가상화폐","비트코인","블록체인","코인","가상자산"], grp: "asset", hit: [92, 87], name: "가상자산 (비트코인)", th: 4, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
-      learn: "비트코인이 크게 움직이면 코인 거래소와 관련된 한국 회사 주식이 따라 움직여요. 코인은 원래 많이 흔들려서 기준을 ±4%로 넓게 잡았어요." },
-    { k: "gold", kw: ["금 ","금값","귀금속"], grp: "asset", hit: [64, 55], weak: true, name: "금", th: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
-      learn: "사람들이 불안할 때 금을 사요. 금값이 오르면 금 관련 주식이 움직여요. 금은 잘 안 흔들려서 기준을 ±1.5%로 좁게 잡았어요. 검증해 보니 한국 금 관련주(고려아연)가 잘 안 따라가서(64%·55%) 참고만 해요." },
-    { k: "cu", kw: ["구리","비철금속"], grp: "asset", hit: [80, null], noDown: true, name: "구리", th: 2, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
-      learn: "구리는 전선을 만드는 재료예요. 구리값이 오르면 전선 회사 주식이 강해지기 쉬워요. 기준은 +2%예요. 검증해 보니 오를 때는 잘 따라가지만(80%) 내릴 때는 기준을 바꿔도 잘 안 맞아서(-2% 63%, -4% 62%) 내리는 날은 참고만 해요." },
+    { k: "robot", hit: [80, 82], g: "AB", kw: ["로봇","휴머노이드"], grp: "mobility", name: "로봇", th: 2, thDn: 5, label: "미국", links: [["BOTZ", nvStock("BOTZ.O", true)], ["심보틱", nvStock("SYM.O")]],
+      learn: "BOTZ(미국 로봇·AI 회사 묶음)와 심보틱(물류 로봇 회사)이 크게 움직이면 레인보우로보틱스·두산로보틱스 같은 한국 로봇 주식도 따라가기 쉬워요." },
+    { k: "space", hit: [71, 76], g: "BB", kw: ["우주","위성","항공","UAM"], grp: "heavy", name: "우주항공", th: 1, thDn: 6, label: "미국", links: [["로켓랩", nvStock("RKLB.O")], ["AST스페이스모바일", nvStock("ASTS.O")], ["UFO", nvStock("UFO", true)]],
+      learn: "로켓랩(로켓 회사), AST스페이스모바일(위성 통신 회사), UFO(우주 회사 묶음)가 크게 움직이면 쎄트렉아이·한화에어로스페이스 같은 한국 우주 주식도 움직여요." },
+    { k: "solar", hit: [94, 79], g: "AA", kw: ["태양광","태양전지"], grp: "energy", name: "태양광", th: 4, thDn: 3, label: "미국", links: [["퍼스트솔라", nvStock("FSLR.O")], ["엔페이즈", nvStock("ENPH.O")], ["TAN", nvStock("TAN", true)]],
+      learn: "퍼스트솔라·엔페이즈(태양광 회사)와 TAN(태양광 회사 묶음)이 크게 움직이면 한화솔루션·OCI홀딩스 같은 한국 태양광 주식도 따라가요." },
+    { k: "equip", hit: [91, 84], g: "AA", kw: ["반도체 장비","반도체장비","장비","CXL","유리기판"], grp: "it", name: "반도체 장비", th: 2.5, label: "미국", links: [["어플라이드", nvStock("AMAT.O")], ["램리서치", nvStock("LRCX.O")], ["KLA", nvStock("KLAC.O")]],
+      learn: "반도체를 만드는 기계 회사(어플라이드머티리얼즈·램리서치·KLA)가 움직이면 한미반도체·원익IPS·주성엔지니어링 같은 한국 장비 회사도 따라가요. 삼성전자·SK하이닉스와 따로 움직일 때가 있어서 반도체와 나눠 봐요." },
+    { k: "auto", hit: [90, 75], g: "AB", kw: ["자동차","완성차","자동차부품","타이어"], grp: "mobility", name: "자동차", th: 4, thDn: 2.5, label: "미국", links: [["GM", nvStock("GM")], ["포드", nvStock("F")]],
+      learn: "미국 자동차 회사(GM·포드)가 크게 움직이면 현대차·기아도 따라가기 쉬워요. 관세 같은 미국 뉴스가 같이 영향을 줘요." },
+    { k: "ship", hit: [78, null], g: "BC", noDown: true, kw: ["해운","컨테이너","벌크"], grp: "heavy", name: "해운", th: 2.5, thDn: 6, label: "미국", links: [["ZIM", nvStock("ZIM")], ["맷슨", nvStock("MATX")]],
+      learn: "미국 해운 회사(ZIM·맷슨)가 크게 움직이면 HMM·팬오션 같은 한국 해운 회사도 따라가요. 운임(배 삯)이 오르내릴 때 같이 움직여요." },
+    { k: "bank", hit: [87, 76], g: "BB", kw: ["은행","금융","증권","보험","지주"], grp: "fin", name: "은행 · 금융", th: 2, label: "미국", links: [["KBE", nvStock("KBE", true)], ["JP모건", nvStock("JPM")]],
+      learn: "미국 은행 묶음(KBE)과 JP모건이 움직이면 KB금융·신한지주 같은 한국 금융주도 따라가요." },
+    { k: "steel", hit: [74, 82], g: "BA", kw: ["철강","강관"], grp: "heavy", name: "철강", th: 2.5, thDn: 3, label: "미국", links: [["뉴코어", nvStock("NUE")], ["스틸다이내믹스", nvStock("STLD.O")]],
+      learn: "미국 철강 회사(뉴코어·스틸다이내믹스)가 크게 움직이면 POSCO홀딩스·현대제철도 따라가요. 중국 철강 값 영향도 커서 참고로 같이 봐요." },
+    { k: "h2", hit: [84, 74], g: "BB", kw: ["수소","연료전지"], grp: "energy", name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
+      learn: "" },
+    { k: "build", hit: [78, 80], g: "BB", kw: ["건설","인프라","시멘트","레미콘"], grp: "heavy", name: "건설 · 인프라", th: 1.5, thDn: 2, label: "미국", links: [["PAVE", nvStock("PAVE", true)], ["벌컨머티리얼즈", nvStock("VMC")]],
+      learn: "PAVE(미국 인프라 회사 묶음)와 벌컨머티리얼즈(건설 자재 회사)가 움직이면 현대건설·DL이앤씨 같은 한국 건설주도 따라가요. 금리 인하·경기 부양 때마다 돌아오는 테마예요." },
+    { k: "fintech", hit: [72, 88], g: "BB", kw: ["스테이블코인","핀테크","결제","페이","전자결제"], grp: "fin", name: "스테이블코인", th: 2, thDn: 6, label: "미국", links: [["코인베이스", nvStock("COIN.O")], ["페이팔", nvStock("PYPL.O")]],
+      learn: "코인베이스(코인 거래소)와 페이팔(간편결제)이 크게 움직이면 카카오페이·다날 같은 한국 결제·스테이블코인 관련주도 따라가요." },
+    { k: "aisw", hit: [82, 81], g: "AA", kw: ["AI","인공지능","챗봇","소프트웨어","온디바이스"], grp: "it", name: "AI 소프트웨어", th: 2, thDn: 4, label: "미국", links: [["IGV", nvStock("IGV", true)], ["팔란티어", nvStock("PLTR.O")]],
+      learn: "IGV(미국 소프트웨어 회사 묶음)와 팔란티어(AI 소프트웨어)가 크게 움직이면 코난테크놀로지·솔트룩스·폴라리스오피스 같은 한국 AI 소프트웨어 주식도 따라가요." },
+    { k: "cyber", hit: [72, 78], g: "BB", kw: ["보안","해킹","정보보안"], grp: "it", name: "사이버보안", th: 2, thDn: 4, label: "미국", links: [["크라우드스트라이크", nvStock("CRWD.O")], ["팔로알토", nvStock("PANW.O")], ["포티넷", nvStock("FTNT.O")], ["CIBR", nvStock("CIBR.O", true)]],
+      learn: "미국 보안 회사(크라우드스트라이크·팔로알토·포티넷)와 보안 묶음(CIBR)이 크게 움직이면 안랩·지니언스·라온시큐어·싸이버원 같은 한국 보안주도 따라가요. 해킹 사고 때마다 돌아오는 테마예요." },
+    { k: "lng", hit: [75, 52], g: "CC", weak: true, kw: ["LNG","LPG","가스","천연가스"], grp: "energy", name: "LNG · 가스", th: 4, label: "미국", links: [["셰니에르", nvStock("LNG")], ["UNG", nvStock("UNG", true)]],
+      learn: "겨울철·에너지 위기 때마다 돌아오는 테마예요." },
+    { k: "vaccine", hit: [76, null], g: "BC", noDown: true, kw: ["백신","진단","코로나","mRNA"], grp: "bio", name: "백신 · 진단", th: 5, thDn: 6, label: "미국", links: [["모더나", nvStock("MRNA.O")], ["바이오엔텍", nvStock("BNTX.O")]],
+      learn: "전염병이 돌 때마다 돌아오는 테마예요." },
+    { k: "btc", hit: [96, 90], g: "AA", kw: ["가상화폐","비트코인","블록체인","코인","가상자산"], grp: "asset", name: "가상자산 (비트코인)", th: 6, thDn: 5, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
+      learn: "비트코인이 크게 움직이면 코인 거래소와 관련된 한국 회사 주식이 따라 움직여요." },
+    { k: "gold", hit: [63, 59], g: "CC", weak: true, kw: ["금 ","금값","귀금속"], grp: "asset", name: "금", th: 2, thDn: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
+      learn: "사람들이 불안할 때 금을 사요. 금값이 오르면 금 관련 주식이 움직여요." },
+    { k: "cu", hit: [82, 76], g: "AB", kw: ["구리","비철금속"], grp: "asset", name: "구리", th: 2, thDn: 2.5, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
+      learn: "구리는 전선을 만드는 재료예요. 구리값이 오르면 전선 회사 주식이 강해지기 쉬워요." },
   ];
   // 한국 테마 이름(네이버) ↔ 미국장 테마 연결: 이름에 kw 가 들어 있으면 같은 흐름으로 본다 (전일·오늘 주도 테마 ↔ 미국장 테마)
   function usLinkOf(name) {
@@ -1743,7 +1743,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-30";
+  const APP_VER = "9.29-31";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1851,7 +1851,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   $("usList").innerHTML = `<div class="uslist">${US_GROUPS.map(([gt, list]) => `<div class="ugrp">${gt}</div><div class="ugbox">` + list.map((u) => `
       <div class="urow" id="ur-${u.k}"><span class="rn" title="${esc(u.name)}">${esc(u.name.split(" (")[0])}<small>${u.thDn ? `+${u.th}/-${u.thDn}%` : u.noDown ? `+${u.th}%` : `±${u.th}%`}${u.weak ? " 참고" : u.noDown ? " ↓참고" : ""}</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div></div>`).join("") + `</div>`).join("")}
       <details class="more"><summary>✍️ 종목 · 사이트 링크 · 왜 이 종목?</summary>
-      ${US_SORTED.map((u) => `<div class="rdet"><b>${esc(u.name)}${u.hit ? ` <small>검증: 다음 날 따라감 오를 때 ${u.hit[0]}%` + (u.hit[1] ? ` · 내릴 때 ${u.hit[1]}%` : " · 내릴 땐 약해서 참고") + "</small>" : ""}</b><div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div><div class="ul">${esc(u.learn)}</div></div>`).join("")}
+      ${US_SORTED.map((u) => `<div class="rdet"><b>${esc(u.name)}${u.hit ? ` <small>검증(2023~ 처음 보는 기간): 오를 때 +${u.th}%↑ → 다음 날 시가 같은 방향 ${u.hit[0]}% [${(u.g || "")[0] || "-"}] · 내릴 때 -${u.thDn || u.th}%↓ → ${u.hit[1] ? u.hit[1] + "% [" + ((u.g || "")[1] || "-") + "]" : "약해서 참고 [C]"}</small>` : ""}</b><div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div><div class="ul">${esc(u.learn)}</div></div>`).join("")}
       </details></div>`;
 
   $("prevList").innerHTML = [0, 1].map((i) => `
