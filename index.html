@@ -1748,7 +1748,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-47";
+  const APP_VER = "9.29-48";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2314,10 +2314,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const mk = j.market;
     let h = "";
     const txt = [];
-    const P = (html, text) => { h += `<p>${html}</p>`; txt.push(text); };
+    const P = (html, text) => { h += `<p>${html.replace(/−/g, "-")}</p>`; txt.push(String(text).replace(/−/g, "-")); }; // 부호는 "-" 로 통일
     const say = (text) => P(esc(text), text);
     const blank = () => { h += "<p>&nbsp;</p>"; txt.push(""); };
-    const head = (text) => { blank(); blank(); h += `<h3>${esc(text)}</h3>`; txt.push("■ " + text); };
+    const head = (text) => { blank(); h += `<h3>${esc(text)}</h3>`; txt.push("■ " + text); };
     const sub = (text) => P(`<b>${esc(text)}</b>`, "[" + text + "]");
     const line = (label, v) => { if (v) P(`<b>${esc(label)}</b> ${esc(v)}`, label + " " + v); };
     const list = (label, items) => { sub(label); (items.length ? items : ["없음"]).forEach((x) => say("• " + x)); };
@@ -2355,7 +2355,6 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 장전 판단이 맞았나: 칩을 눌렀으면 그 값, 아니면 코스피 마감으로 자동 채점 (정상: -0.5%↑ 맞음 · -1%↓ 틀림 / 쉼: -0.5%↓ 맞음 · +0.5%↑ 틀림 / 절반: ±1% 안이면 맞음)
     const kClose = pnum(mk.kospi);
     const autoVerdict = kClose === null || r.mode === "—" ? "" : r.mode === "정상" ? (kClose >= -0.5 ? "맞았다" : kClose >= -1 ? "반쯤" : "틀렸다") : r.mode === "쉼" ? (kClose <= -0.5 ? "맞았다" : kClose <= 0.5 ? "반쯤" : "틀렸다") : Math.abs(kClose) <= 1 ? "맞았다" : "반쯤";
-    if (VERDICT[j.verdict] || autoVerdict) line("장전 판단이 맞았나:", (VERDICT[j.verdict] || autoVerdict) + (kClose !== null ? " (코스피 " + pct(kClose) + (VERDICT[j.verdict] ? "" : " · 자동") + ")" : ""));
 
     // ② 장 마감: 미국장 한 줄(강세/약세/보합 · 지수 · SOX) · 국장 한 줄(강세/약세/혼조 · 코스피·코스닥) · 수급(외국인·기관·거래대금) · 주도 테마 (미국·국장 둘 다, 대표 종목)
     head("② 장 마감");
@@ -2363,15 +2362,20 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const soxV = parseNum(st.signals.sox), usAll = US.map((u) => [u, parseNum((st.us || {})[u.k])]).filter(([, v]) => v !== null).sort((a, b) => b[1] - a[1]);
     const idxVals = ((st.auto || {}).usidx || "").match(/[+-][\d.]+%/g) || [], usAvg = idxVals.length ? idxVals.reduce((a, x) => a + parseFloat(x), 0) / idxVals.length : soxV;
     const tone = (v) => (v === null || v === undefined ? "" : v >= 0.5 ? "강세" : v <= -0.5 ? "약세" : "보합");
-    const usLine = [tone(usAvg), (st.auto || {}).usidx, soxV !== null ? "반도체 SOX " + pct(soxV) : ""].filter(Boolean).join(" · ");
+    const usLine = [tone(usAvg), (st.auto || {}).usidx, soxV !== null ? "SOX " + pct(soxV) : ""].filter(Boolean).join(" · ");
     const inv = parseInvest(mk.invest);
     const kv = pnum(mk.kospi), qv = pnum(mk.kosdaq), krTone = kv === null ? "" : qv !== null && Math.sign(kv) !== Math.sign(qv) && Math.abs(kv - qv) > 0.3 ? "혼조" : tone((kv + (qv ?? kv)) / 2);
     const krLine = [krTone, mk.kospi && "코스피 " + pct(kv ?? 0), mk.kosdaq && "코스닥 " + pct(qv ?? 0)].filter(Boolean).join(" · ");
-    const invLine = inv.map((x) => [x.mk, x.f !== null ? "외국인 " + (x.f > 0 ? "+" : "") + ek(x.f) : "", x.i !== null ? "기관 " + (x.i > 0 ? "+" : "") + ek(x.i) : "", x.a !== null ? "거래대금 " + ek(x.a) : ""].filter(Boolean).join(" ")).join(" / ");
-    const usLead = usAll.filter(([, v]) => v >= 1).slice(0, 3).map(([u, v], i) => (i + 1) + " " + u.name + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
-    const krLeadLine = krLead.map((t, i) => (i + 1) + " " + (t.name.split("(")[0].trim() || t.name) + (flagOf(t) ? " " + flagOf(t) : "") + " " + pct(t.rate) + (t.stocks ? " (" + t.stocks + ")" : "")).join(" · ");
-    [["미국장:", usLine], ["국장:", krLine], ["수급:", invLine], ["주요 테마 (한국):", krLeadLine], ["주요 테마 (미국):", usLead.join(" · ")]]
-      .filter(([, v]) => v).forEach(([k, v]) => line(k, v));
+    const _invLine = inv.map((x) => [x.mk, x.f !== null ? "외국인 " + (x.f > 0 ? "+" : "") + ek(x.f) : "", x.i !== null ? "기관 " + (x.i > 0 ? "+" : "") + ek(x.i) : "", x.a !== null ? "거래대금 " + ek(x.a) : ""].filter(Boolean).join(" ")).join(" / ");
+    const usLead = usAll.filter(([, v]) => v >= 1).slice(0, 3).map(([u, v], i) => (i + 1) + ". " + u.name + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
+    const _krLeadLine = krLead.map((t, i) => (i + 1) + " " + (t.name.split("(")[0].trim() || t.name) + (flagOf(t) ? " " + flagOf(t) : "") + " " + pct(t.rate) + (t.stocks ? " (" + t.stocks + ")" : "")).join(" · ");
+    line("미국장:", usLine); line("국장:", krLine);
+    // 장전 판단 적중: 아침 매매 모드 vs 코스피 마감 (테마와 비교하는 게 아님)
+    if (VERDICT[j.verdict] || autoVerdict) line("장전 판단:", `${r.mode} → ${VERDICT[j.verdict] || autoVerdict}` + (kClose !== null ? ` (코스피 ${pct(kClose)}${VERDICT[j.verdict] ? "" : " 기준 자동 채점"})` : ""));
+    // 수급은 시장마다 한 줄, 주요 테마는 번호마다 한 줄
+    if (inv.length) { sub("수급"); inv.forEach((x) => say([x.mk, x.f !== null ? "외국인 " + (x.f > 0 ? "+" : "") + ek(x.f) : "", x.i !== null ? "기관 " + (x.i > 0 ? "+" : "") + ek(x.i) : "", x.a !== null ? "거래대금 " + ek(x.a) : ""].filter(Boolean).join(" · "))); }
+    if (krLead.length) { sub("주요 테마 (한국)"); krLead.forEach((t, i) => say(`${i + 1}. ${t.name.split("(")[0].trim() || t.name} ${pct(t.rate)}${flagOf(t) ? " " + flagOf(t) : ""}${t.stocks ? " (" + t.stocks + ")" : ""}`)); }
+    if (usLead.length) { sub("주요 테마 (미국)"); usLead.forEach((x) => say(x)); }
     if (txt.length === n0) say("아직 장 마감 값이 없다 (오후 4:20 자동).");
 
     // ③ 오늘 시장 이야기: 화면 칸 그대로 (자동 초안이어도 넣는다)
@@ -2383,7 +2387,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 시황일지: 매매·돌아보기 칸은 넣지 않는다
     if (!isJournal) {
       if (j.result === "none") { gap(); say("💹 오늘은 매매하지 않았다."); }
-      blank(); blank();
+      blank();
       say(`#시황일지 #주식시황 #장전체크 ${tags(parseLeaders(mk.leaders).map((t) => t.name))} #EdenCockpit #${dd0.replace(/-/g, "")}`.replace(/\s+/g, " "));
       return { title, kind, html: h, text: txt.join("\n") };
     }
@@ -2409,10 +2413,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
           [t.buy ? "매수 " + won(t.buy) : "", t.sell ? "→ 매도 " + won(t.sell) : "→ 보유 중"].filter(Boolean).join(" "),
           t.qty ? won(t.qty) + "주" : "",
           c.ok ? `${money(c.net)} (${pct(c.rate)}${c.r !== null ? " · " + c.r.toFixed(1) + "R" : ""})` : "",
-          [t.why, t.whyOut].filter(Boolean).length ? "이유: " + [t.why, t.whyOut].filter(Boolean).join(" → ") : "",
-          t.kept ? "계획대로" : "", t.lesson ? "배운 점: " + t.lesson : "",
+          t.kept ? "계획대로" : "",
         ].filter(Boolean);
         say("• " + parts.join(" · "));
+        if (t.why || t.whyOut) say("   이유: " + [t.why, t.whyOut].filter(Boolean).map((x) => x.trim()).join(" → "));
+        if (t.lesson) say("   배운 점: " + t.lesson.trim());
       });
     } else say(j.result === "none" ? "오늘은 매매하지 않았다." : "매매 기록 없음");
 
@@ -2423,7 +2428,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     [["잘한 점:", j.good], ["아쉬운 점:", j.bad], ["내일 할 일:", j.tomorrow], ["결과:", j.result && j.result !== "none" ? RESULT[j.result] + (j.kept ? " · 규칙 지킴" : "") : ""], ["마음 상태:", j.mood], ["메모:", j.memo]]
       .filter(([, v]) => v).forEach(([k, v]) => line(k, v));
     if (txt.length === n2) say("돌아보기를 적지 않았다.");
-    blank(); blank();
+    blank();
     say(`#매매일지 #주식일지 #단타일지 ${tags(trades.map((t) => t.name))} ${tags(parseLeaders(mk.leaders).map((t) => t.name))} #EdenCockpit #${dd0.replace(/-/g, "")}`.replace(/\s+/g, " "));
     return { title, kind, html: h, text: txt.join("\n") };
   }
