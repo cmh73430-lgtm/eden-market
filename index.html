@@ -1749,7 +1749,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-54";
+  const APP_VER = "9.29-55";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3015,15 +3015,16 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   // 받아 둔 자동 값(a)을 하루 기록(st)에 채운다. 빈 칸이나 '지난번 자동 값 그대로인 칸'만. 바뀐 칸 목록 [칸, 받아온 시각]
   // 장 마감 자동 값 → 장 흐름 · 특징주 · 한 줄 시황 · 내일 볼 것 초안
-  function marketStory(d, c, itd) {
+  function marketStory(d, c, itd, prog) {
     const pc = (v) => (v > 0 ? "+" : "") + v + "%", ek = (v) => (Math.abs(v) >= 10000 ? (Math.abs(v) / 10000).toFixed(1) + "조" : Math.abs(v).toLocaleString("ko-KR") + "억");
     const k = c.kospi && c.kospi.value, q = c.kosdaq && c.kosdaq.value, iv = c.invest || {}, kf = iv.kospi && iv.kospi.foreign, ki = iv.kospi && iv.kospi.institution;
     const th = (c.leaders && c.leaders.themes) || [], names = th.map((t) => String(t.name).split("(")[0].trim());
     const out = {};
-    const flowParts = [];
-    if (itd && itd.at) flowParts.push(itd.at + " 장중 " + (typeof itd.kospi === "number" ? "코스피 " + pc(itd.kospi) : "") + (itd.fut && typeof itd.fut.foreign === "number" ? " · 외인 선물 " + (itd.fut.foreign > 0 ? "매수 " : "매도 ") + Math.abs(itd.fut.foreign).toLocaleString("ko-KR") : "") + (itd.spot && typeof itd.spot.foreign === "number" ? " · 외인 현물 " + (itd.spot.foreign > 0 ? "+" : "-") + ek(itd.spot.foreign) : ""));
-    if (typeof k === "number") flowParts.push("마감 코스피 " + pc(k) + (typeof q === "number" ? " · 코스닥 " + pc(q) : ""));
-    if (flowParts.length) out.flow = flowParts.join(" → ");
+    // 장 흐름 = 마감 종가(지수·등락률) · 거래대금 · 외국인·기관 · 프로그램(장중 재판정 칸에 손으로 넣은 값이 있을 때)
+    const sg = (v) => (v > 0 ? "+" : "-") + ek(v), idx = (m, n) => (m && typeof m.value === "number" ? n + " " + (typeof m.close === "number" ? m.close.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (" + pc(m.value) + ")" : pc(m.value)) : "");
+    const amt = [iv.kospi && iv.kospi.amount ? "코스피 " + ek(iv.kospi.amount) : "", iv.kosdaq && iv.kosdaq.amount ? "코스닥 " + ek(iv.kosdaq.amount) : ""].filter(Boolean).join(" · ");
+    const flow = [idx(c.kospi, "코스피"), idx(c.kosdaq, "코스닥"), amt ? "거래대금 " + amt : "", typeof kf === "number" ? "외국인 " + sg(kf) : "", typeof ki === "number" ? "기관 " + sg(ki) : "", typeof prog === "number" ? "프로그램 " + sg(prog) : ""].filter(Boolean);
+    if (flow.length) out.flow = "마감 " + flow.join(" · ");
     if (th.length) out.issues = th.map((t) => String(t.name).split("(")[0].trim() + " " + pc(t.rate) + (t.stocks && t.stocks.length ? " (" + t.stocks.join("·") + ")" : "")).join(" / ");
     // 한 줄 시황: 코스피·코스닥 둘 다 + 코스피 수급 + 코스닥 수급 + 주도 테마
     const qf = iv.kosdaq && iv.kosdaq.foreign, qi = iv.kosdaq && iv.kosdaq.institution;
@@ -3082,7 +3083,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
     // ③ 오늘 시장 이야기도 자동으로 초안 (손으로 고치면 고친 글이 우선)
     if (a.close && (c.kospi || c.invest || c.leaders)) {
-      const story = marketStory(a.date || DATE, c, a.intraday);
+      const story = marketStory(a.date || DATE, c, a.intraday, parseNum((st.signals || {}).prog));
       Object.entries(story).forEach(([k, v]) => fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), v, a.close.ts));
     }
     [["at.morning", m.at, m.ts], ["at.close", (a.close || {}).at, (a.close || {}).ts]].forEach(([k, v, ts]) => { if (v && st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, ts]); } });
