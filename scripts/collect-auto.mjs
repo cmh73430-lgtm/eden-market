@@ -1,11 +1,13 @@
 // 자동 연동 수집기 — GitHub Actions(.github/workflows/auto.yml)가 평일 아침·오후에 실행한다.
 //   아침(KST 12시 전): 미국 선물·환율·SOX·VIX·유가·금리 + 미국 대응주 (네이버 → 야후 순) + 전일 주도 테마(애프터·프리마켓)
-//   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 + 오늘 주도 테마 (네이버)
+//   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 + 오늘 주도 테마 (네이버) — 16:20 은 잠정(게이트·L·U·B, 요청 13회), 18:40 은 확정(+수급·일봉, 43회)
+//   아침 전일 테마는 전날 18:40 확정 결과(close.market.leaders)를 이어 쓰고 NXT 애프터·프리마켓만 붙인다 (재선정 안 함, 없으면 n=2 잠정 선정). 전날 결과가 아직 잠정·수급 없음이면 아침 수집 전에 먼저 확정(백필)한다
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
 // 옵션: --when=morning|intraday|close|themes (기본: 지금 시각으로 판단 · themes = 미국장 테마 값만 아침 기록에 채워 넣기, 새 테마를 추가한 날) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
+//       --final (close: 실행 시각과 관계없이 확정 run — 수급·일봉 포함). 오늘이 아닌 --date 로 손으로 백필하는 close run 도 확정으로 돈다 (잠정 결과가 확정을 덮지 않게)
 import { loadCollectConfig } from "../server/config.js";
-import { prevBusinessDay } from "../shared/calendar.js";
-import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, skipReason, summarize, whenOf, collectThemesOnly } from "../server/auto.js";
+import { prevBusinessDay, kstTime } from "../shared/calendar.js";
+import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom } from "../server/auto.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -73,13 +75,45 @@ const save = !has("dry") && token && repo;
 const prevDay = prevBusinessDay(date, cfg.holidays); // 어제(직전 거래일)
 const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { json: null };
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
+const todayMorning = prev.json && prev.json.date === date ? prev.json.morning : null;
+// 지난 거래일 파일들(최근 먼저, 최대 n개): 코스피 거래대금 20일 평균(관망) · 테마 목록(지속일수 D) · 전일 수급(2일 연속). 빈 날이 5번 이어지면 그만 (첫 수집 2026-09-28 이전)
+async function loadHistory(from, n = 20) {
+  if (!save) return [];
+  const recs = []; let d = from, miss = 0;
+  while (recs.length < n && miss < 5) {
+    d = prevBusinessDay(d, cfg.holidays);
+    try { const f = await readFile(autoFile(d)); if (f.json && f.json.close) { recs.push(f.json); miss = 0; } else miss++; } catch (e) { miss++; }
+  }
+  return historyFrom(recs);
+}
+const prevFile = when === "morning" && save ? await readFile(autoFile(prevDay)).catch(() => ({ json: null })) : { json: null }; // 전날 파일 (확정 주도 테마 · 코스피 거래대금)
+const prevClose = prevFile.json && prevFile.json.close && prevFile.json.close.market ? prevFile.json.close.market : {};
+// 잠정/확정: 오늘 날짜를 18시 전에 도는 close run 만 잠정(16:20). 지난날 --date 백필이나 --final 은 확정
+const provisional = when === "close" && !has("final") && date === kstDate(now) && kstTime(now).slice(0, 5) < "18:00";
+// 아침: 어제 파일의 '오늘 주도 테마'가 아직 잠정이거나 종목 외인·기관이 없으면(18:40 장애·네이버가 늦게 올림) 어제 값으로 다시 확정해 채운다 (요청 43회, 평소엔 안 돎)
+// 아침 수집 '앞'에서 돈다: 전일 테마(collectPrevThemes)가 prevClose.leaders 를 이어 쓰므로, 여기서 확정하면 그 결과(수급·차트 반영 순위)가 그대로 아침 전일 테마가 된다.
+// 잠정을 이어 쓴 뒤 collectPrevThemes 안에서 n=2 로 다시 고르는 방법보다 골랐다 — 아침의 테마 목록은 어제 마감 그대로라 잠정 재선정은 같은 결과(F=C=1)만 내고 수급이 안 들어간다.
+// 여기서도 수급을 못 받으면(nl.flowReady 거짓) 잠정 결과가 그대로 이어지는데, 그건 잠정 재선정과 같은 값이라 손해가 없다. prevClose 는 prevFile.json.close.market 과 같은 객체라 m.leaders 교체가 바로 반영된다.
+if (when === "morning" && save) {
+  try {
+    const pf = prevFile, L = pf.json && pf.json.close && pf.json.close.market && pf.json.close.market.leaders;
+    if (L && (!L.flowReady || L.provisional)) {
+      const m = pf.json.close.market, nl = await collectLeaders({ now, date: prevDay, bizdate: prevDay.replace(/-/g, ""), kospi: m.kospi || null, us: pf.json.morning && pf.json.morning.us, history: await loadHistory(prevDay), provisional: false });
+      if (nl.all) { if (!pf.json.close.themes) pf.json.close.themes = nl.all; delete nl.all; }
+      if (nl.flowReady) { if (L.provisional) m.leadersProvisional = L; m.leaders = nl; pf.json.updatedAt = Date.now(); await writeFile(autoFile(prevDay), pf.json, `자동 연동 ${prevDay} 주도 테마 확정(수급 채움)`); console.log(`어제(${prevDay}) 주도 테마 확정: ${nl.text}`); }
+      else console.log(`어제(${prevDay}) 종목 수급 아직 없음 — 잠정 결과를 이어 씀`);
+    }
+  } catch (e) { console.log("어제 주도 테마 수급 채우기 실패:", e.message || e); }
+}
 let part = when === "intraday"
   ? await collectIntraday({ adapters: { naver }, now })
   : when === "themes"
-  ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: prev.json && prev.json.date === date ? prev.json.morning : null })
+  ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: todayMorning })
   : when === "morning"
-  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: () => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, "") }) })
-  : await collectClose({ adapters: { naver }, now, leaders: () => collectLeaders({ now }) });
+  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null }) })
+  : await collectClose({ adapters: { naver }, now, leaders: async (market) => collectLeaders({ now, date, kospi: market.kospi || null, us: todayMorning && todayMorning.us, history: await loadHistory(date), provisional }) });
+// 같은 날 앞선 close run 과 합친다: 잠정 → 확정이면 잠정은 leadersProvisional 로 보관, 확정 뒤 잠정이 늦게 오면 확정 유지 (server/auto.js mergeCloseLeaders)
+if (when === "close" && prev.json && prev.json.date === date && prev.json.close) mergeCloseLeaders(prev.json.close, part);
 const saveAs = when === "themes" ? "morning" : when; // 테마만 받은 것도 아침 기록에 들어간다
 const got = when === "intraday" ? ["fut", "spot", "kospi"].filter((k) => part[k] !== undefined).length : saveAs === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 // 장중 재판정은 하루 여러 번 → 앞선 확인 기록을 이어 붙인다
@@ -98,16 +132,4 @@ await writeFile(autoFile(date), rec, msg);
 await writeFile(AUTO_DIR + "/latest.json", rec, msg);
 console.log(summarize(rec));
 console.log(`저장: ${autoFile(date)} (${BRANCH})`);
-// 아침: 어제 파일의 '오늘 주도 테마'에 종목 외인·기관이 아직 없으면(네이버가 늦게 올림) 지금 어제 값으로 다시 계산해 채운다
-if (when === "morning") {
-  try {
-    const pf = await readFile(autoFile(prevDay));
-    const L = pf.json && pf.json.close && pf.json.close.market && pf.json.close.market.leaders;
-    if (L && !L.flowReady) {
-      const nl = await collectLeaders({ bizdate: prevDay.replace(/-/g, "") });
-      if (nl.flowReady) { pf.json.close.market.leaders = nl; pf.json.updatedAt = Date.now(); await writeFile(autoFile(prevDay), pf.json, `자동 연동 ${prevDay} 주도 테마 수급 채움`); console.log(`어제(${prevDay}) 주도 테마 수급 채움: ${nl.text}`); }
-      else console.log(`어제(${prevDay}) 종목 수급 아직 없음`);
-    }
-  } catch (e) { console.log("어제 주도 테마 수급 채우기 실패:", e.message || e); }
-}
 if (part.errors.length) console.log("일부 실패:", part.errors.join(" / "));
