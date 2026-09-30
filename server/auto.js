@@ -36,7 +36,26 @@ export function parseTrend(json) {
   return out;
 }
 
+const NV_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 const eok = (v) => (v === null ? "—" : (v > 0 ? "+" : "") + v.toLocaleString("ko-KR") + "억");
+
+// 프로그램 매매(억): 네이버 모바일 지수 종합 페이지(m.stock.naver.com/domestic/index/KOSPI/total) 안에 박힌
+// "programTrendInfo":{"bizdate":"20260930","indexTotalReal":"-12,666","indexDifferenceReal":"+195","indexBiDifferenceReal":"-12,861"}
+// 를 읽는다 (전용 JSON 주소는 없음 — 2026-09-30 probe 로 확인). total 전체 · arb 차익 · nonArb 비차익. 장중엔 누적, 마감 뒤엔 그날 확정값
+export const PROGRAM_URL = (code = "KOSPI") => "https://m.stock.naver.com/domestic/index/" + code + "/total";
+export function parseProgram(html) {
+  const m = typeof html === "string" ? html.match(/"programTrendInfo"\s*:\s*(\{[^{}]*\})/) : null;
+  if (!m) throw new Error("program: 값 없음");
+  let j; try { j = JSON.parse(m[1]); } catch (e) { throw new Error("program: 형식 이상"); }
+  const total = num(j.indexTotalReal), arb = num(j.indexDifferenceReal), nonArb = num(j.indexBiDifferenceReal);
+  if (total === null) throw new Error("program: 값 없음");
+  return { bizdate: j.bizdate ? String(j.bizdate) : null, total, arb, nonArb };
+}
+export async function fetchProgram(fetchImpl = fetch, { code = "KOSPI", timeoutMs = 10000 } = {}) {
+  const r = await fetchImpl(PROGRAM_URL(code), { headers: { Accept: "text/html", Referer: "https://m.stock.naver.com/", "User-Agent": NV_UA }, signal: AbortSignal.timeout(timeoutMs) });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return parseProgram(await r.text());
+}
 // 수급 한 줄: "코스피 외국인 -4,942억 · 기관 +3,189억 · 거래대금 123,456억 / 코스닥 외국인 +812억 · 기관 -95억 · 거래대금 …"
 export function investText(inv) {
   return ["kospi", "kosdaq"].filter((k) => inv && inv[k]).map((k) => (k === "kospi" ? "코스피" : "코스닥") + " 외국인 " + eok(inv[k].foreign) + " · 기관 " + eok(inv[k].institution) + (inv[k].amount ? " · 거래대금 " + inv[k].amount.toLocaleString("ko-KR") + "억" : "")).join(" / ");
@@ -102,6 +121,7 @@ export async function collectIntraday({ adapters, fetchImpl = fetch, now = new D
   try { const f = await get("FUT"); out.fut = { foreign: f.foreign, institution: f.institution, personal: f.personal, bizdate: f.bizdate }; } catch (e) { out.errors.push("선물 수급: " + (e.message || e)); }
   try { const k = await get("KOSPI"); out.spot = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("현물 수급: " + (e.message || e)); }
   try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = Number(((q.price / q.prevClose - 1) * 100).toFixed(2)); } catch (e) { out.errors.push("코스피: " + (e.message || e)); }
+  try { out.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); } // 장중 누적 프로그램 순매수(억) → 앱 재판정·프로그램 칸
   return out;
 }
 
@@ -227,7 +247,7 @@ export function persistDays(no, days) {
 
 // C: 일봉(1년치) → 대장주 차트 자리. 3 신고가(close ≥ 직전 250봉 고가) · 2 돌파(≥ 직전 60봉 고가, 또는 > 20봉 고가 & 당일 거래대금 ≥ T) · 1 눌림(> MA20 & ≥ 20봉 고가×0.9, 거래대금 없는 돌파도 여기) · 0 추세아래
 // 봉 21개 미만이면 null(중립 1). 60봉 미만 신규 상장주는 H250/H60 생략
-export const CHART_TAG = ["추세아래", "눌림", "돌파", "신고가"];
+export const CHART_TAG = ["추세아래", "돌파직전", "돌파", "신고가"]; // 0 은 자리에 따라 "눌림"(MA20 위) 또는 "추세아래" 로 적는다 — 등급은 둘 다 0 (10년 검증: 둘 다 다음날 이어지는 힘이 없음)
 export function gradeC(bars, { vToday = null, T = 500 } = {}) {
   const rows = (Array.isArray(bars) ? bars : []).map((b) => ({ d: String(b.localDate || ""), c: num(b.closePrice), h: num(b.highPrice) })).filter((r) => r.c !== null && r.h !== null).sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
   if (rows.length < 21) return null;
@@ -236,8 +256,9 @@ export function gradeC(bars, { vToday = null, T = 500 } = {}) {
   const MA20 = round2(rows.slice(-20).reduce((s, r) => s + r.c, 0) / 20), close = last.c;
   const grade = H250 !== null && close >= H250 ? 3
     : (H60 !== null && close >= H60) || (close > H20 && typeof vToday === "number" && vToday >= T) ? 2
-    : close > MA20 && close >= H20 * 0.9 ? 1 : 0;
-  return { grade, tag: CHART_TAG[grade], close, H20, H60, H250, MA20, offHigh: H250 ? round2(((H250 - close) / H250) * 100) : null, bars: rows.length, date: last.d };
+    : close >= H20 * 0.97 ? 1 : 0; // 1 = 20봉 고가 3% 이내(돌파 직전) — 옛 '눌림'(MA20 위 & −10% 이내)은 검증에서 추세아래와 차이가 없어 0 으로 합침 (9.29-59)
+  const tag = grade === 0 && close > MA20 ? "눌림" : CHART_TAG[grade];
+  return { grade, tag, close, H20, H60, H250, MA20, offHigh: H250 ? round2(((H250 - close) / H250) * 100) : null, bars: rows.length, date: last.d };
 }
 export const chartUrl = (code, date) => "https://api.stock.naver.com/chart/domestic/item/" + code + "/day?startDateTime=" + addDays(date, -365).replace(/-/g, "") + "0000&endDateTime=" + date.replace(/-/g, "") + "2359";
 
@@ -402,7 +423,7 @@ export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, 
 const eokText = (v) => (Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : v.toLocaleString("ko-KR") + "억");
 const signed = (v) => (v > 0 ? "+" : v < 0 ? "-" : "") + eokText(Math.abs(v));
 export function flowText(flow) { return flow ? "외인 " + signed(flow.foreign) + " · 기관 " + signed(flow.inst) : ""; }
-// "이름 +x% · 대금 T억↑ L종목 · 강세 N종목 X억 · 외인 +…억 · 기관 +…억 · 미장 ✓|✗|— · 차트 신고가|돌파|눌림|추세아래 (대장·2등)" 를 " / " 로 이어 붙인다
+// "이름 +x% · 대금 T억↑ L종목 · 강세 N종목 X억 · 외인 +…억 · 기관 +…억 · 미장 ✓|✗|— · 차트 신고가|돌파|돌파직전|눌림|추세아래 (대장·2등)" 를 " / " 로 이어 붙인다
 export function leadersText(themes, T = null) {
   return themes.map((t) => {
     const g = t.grades, names = (t.stocks && t.stocks.length ? t.stocks : t.slots || []).slice(0, 2).map((x) => (typeof x === "string" ? x : x.name)), th = t.T || T;
@@ -480,6 +501,7 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
     } catch (e) { out.errors.push(k + " 수급: " + (e.message || e)); }
   }
   if (Object.keys(inv).length) out.market.invest = Object.assign({ text: investText(inv) }, inv);
+  try { out.market.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); } // 마감 프로그램 순매수(억) → 장 흐름 문장·프로그램 칸
   if (leaders) {
     try {
       const l = await leaders(out.market); // 코스피 등락률·거래대금(T·초과수익 게이트) 을 넘긴다

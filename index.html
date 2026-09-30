@@ -249,6 +249,10 @@ textarea.jin { resize: vertical; }
 .mv .mved { font: inherit; font-size: 11.5px; font-weight: 700; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; cursor: pointer; }
 .mv .mvsub { font-size: 11.5px; color: var(--muted); }
 .mv .mvsub .ldbadge { font-weight: 600; color: var(--ink); }
+#ldHelp { margin-top: 8px; font-size: 13px; }
+#ldHelp p { margin: 6px 0; line-height: 1.5; }
+#ldHelp .ldwhy { margin: 4px 0 8px; padding-left: 18px; }
+#ldHelp .ldwhy li { margin: 2px 0; }
 .mv.has .mvin { display: none; } .mv.has.edit .mvin { display: grid; } .mv:not(.has) .mved { display: none; }
 .mv .autoat { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 .flow { display: grid; grid-template-columns: auto 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 13.5px; }
@@ -733,7 +737,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="muted">외인 코스피200 선물 순매도(1,000↑) + 프로그램 순매도(1,000억↑)가 함께 나오면 모드를 한 단계 낮춰요. 프로그램 값을 안 넣으면 외인+기관 현물 순매도(3,000억↑)로 대신 봐요.</div>
     <div class="explain" id="intraInfo"></div>
     <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
-    <label class="progin">프로그램 순매수 (억, 증권사 앱에서 보고 넣기 · 선택) <input class="num" type="text" inputmode="decimal" id="in-prog" placeholder="예: -2500" autocomplete="off"></label>
+    <label class="progin">프로그램 순매수 (억, 09:30·10:30·마감에 자동으로 받아와요 · 안 오면 증권사 앱에서 보고 넣기) <input class="num" type="text" inputmode="decimal" id="in-prog" placeholder="예: -2500" autocomplete="off"></label>
   </div>
   <nav class="secnav" id="secnav" aria-label="메뉴 바로 가기"></nav>
 
@@ -876,7 +880,21 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
         <div class="wide mv" id="mv-invest"><div class="mvh"><b>수급 · 거래대금 (억원)</b><button class="mved" type="button" data-for="invest">✏️ 고치기</button></div><div class="mvbody" id="mvb-invest"></div><label class="mvin"><input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억 · 거래대금 12조"></label><small class="autoat" id="aa-market.invest" hidden></small></div>
-        <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small></div>
+        <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small>
+          <details class="learn" id="ldHelp"><summary>📘 설명 — 주요 테마는 어떻게 뽑나요? (누르면 펼쳐져요)</summary>
+            <div id="ldHelpToday"></div>
+            <p><b>한 줄로:</b> 오른 테마 중에서 <b>"큰돈이 들어온 테마"</b>를 먼저 고르고, 같은 점수면 수급·미국장·이유·차트 순으로 가려요. 등락률이 제일 큰 테마가 아니라 <b>돈이 몰린 테마</b>가 1등이에요.</p>
+            <p><b>다섯 단계 (앞 단계가 크면 무조건 이겨요)</b></p>
+            <p>① <b>거래대금(L)</b> — 테마 안에서 오른 종목 상위 5개 중, 종목당 거래대금이 기준(T)을 넘는 종목 수. T는 코스피 거래대금에 따라 바뀌어요 (10조 미만 500억 · 10조 700억 · 20조 1,000억 · 그 사이는 비례). 기준을 넘는 종목이 하나도 없으면 탈락 → 작은 종목만 오른 테마는 등락률이 커도 빠져요.</p>
+            <p>② <b>수급(F)</b> — 대장주 3종목의 외국인·기관 합. 둘 다 사면 3점, 한쪽만 사면 2점, 안 나왔으면 1점(중립), 둘 다 팔면 0점.</p>
+            <p>③ <b>미국장(U)</b> — 같은 테마의 미국 주식이 어젯밤 올랐으면 2점, 내렸으면 0점, 미국에 짝이 없으면 1점(중립).</p>
+            <p>④ <b>상승 근거(B)</b> — 상한가·10%↑·5%↑ 종목 수(폭), 며칠째 이어지는지, 대장주 하나만 오른 건 아닌지.</p>
+            <p>⑤ <b>차트 자리(C)</b> — 대장주 일봉. <b>신고가</b>(1년 고점 돌파) 3점 · <b>돌파</b>(60일 고점, 또는 20일 고점을 큰 거래대금으로) 2점 · <b>돌파직전</b>(20일 고점 3% 이내) 1점 · <b>눌림/추세아래</b> 0점.</p>
+            <p><b>줄에 적힌 말 읽는 법:</b> "대금 1,000억↑ 2종목" = 기준 1,000억을 넘는 종목이 2개 · "외인 +155억 · 기관 -59억" = 대장주 3종목 합 · "미장 ✓ ✗ —" = 미국 짝이 올랐다·내렸다·없다 · "차트 눌림" = 대장주 자리 · 괄호 안은 대장주·2등주.</p>
+            <p><b>언제 나와요:</b> 16:20에 잠정(수급·차트 빠짐) → 19:45에 확정(수급·차트 포함, 안 오면 20:20 한 번 더). 아침 07:05 수집이 어제 것을 다시 채워요.</p>
+            <p><b>10년치(2016~)로 검증해 보니:</b> 다음날까지 이어지는 힘은 <b>차트 자리</b>가 제일 뚜렷했어요 (신고가 자리 다음날 종가 오름 52%, 눌림 43%). 거래대금 기준은 다음날 <b>아침 갭</b>에만 조금 유리하고 종가까지는 차이가 거의 없었어요. 같은 테마에 2종목 이상 돈이 몰린 날이 한 종목만인 날보다 조금 나았어요. 그래서 눌림은 추세아래와 같은 0점으로 내렸어요.</p>
+            <p class="muted">주의: 이 순서는 "오늘 시장이 어디에 돈을 넣었나"를 보는 도구예요. 내일 오른다는 뜻이 아니고, 추격 매수 근거로 쓰면 안 돼요.</p>
+          </details></div>
       </div>
       <div class="links">열어서 보기 <a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSPI/total" target="_blank" rel="noopener">코스피 ↗</a><a class="lk nv" href="https://m.stock.naver.com/domestic/index/KOSDAQ/total" target="_blank" rel="noopener">코스닥 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_trans_style.naver" target="_blank" rel="noopener">투자자별 매매 ↗</a><a class="lk nv" href="https://m.stock.naver.com/news" target="_blank" rel="noopener">뉴스 ↗</a></div>
     </div>
@@ -1751,7 +1769,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-57";
+  const APP_VER = "9.29-59";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1986,7 +2004,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const tint = (el) => { const n = parseNum(el.value); el.classList.toggle("neg", n !== null && n < 0); el.classList.toggle("pos", n !== null && n > 0); };
   function fill() {
     const put = (el, v) => { if (el !== document.activeElement) el.value = v; };
-    put($("in-prog"), S.signals.prog || "");
+    put($("in-prog"), S.signals.prog || ""); tint($("in-prog")); markAuto($("in-prog"), "signals.prog");
     SIGNALS.forEach((s) => { const el = $("in-" + s.k); put(el, S.signals[s.k] || ""); tint(el); markAuto(el, "signals." + s.k); if (s.helper) put($("hp-" + s.k), ""); });
     US.forEach((u) => { const el = $("us-" + u.k); put(el, S.us[u.k] || ""); tint(el); markAuto(el, "us." + u.k); });
     [0, 1].forEach((i) => { put($("pv-" + i), S.prev[i].name || ""); markAuto($("pv-" + i), "prev." + i + ".name"); });
@@ -2111,7 +2129,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function paintIntra(r) {
     const el = $("intraInfo"); if (!el) return;
     const a = S.auto || {}, it = r.intraday, n = (v) => (v === null || v === undefined || v === "" ? "—" : (Number(v) > 0 ? "+" : "") + Number(v).toLocaleString("ko-KR"));
-    const vals = a["intra.at"] ? `🤖 ${esc(a["intra.at"])} 확인 · 코스피 ${esc(n(a["intra.kospi"]))}% · 외인 선물 ${esc(n(a["intra.fut"]))} · 현물 외인 ${esc(n(a["intra.spotF"]))}억 · 기관 ${esc(n(a["intra.spotI"]))}억` : "🤖 평일 09:30·10:30쯤 자동으로 확인해요 (GitHub가 10~20분 늦을 수 있음)";
+    const vals = a["intra.at"] ? `🤖 ${esc(a["intra.at"])} 확인 · 코스피 ${esc(n(a["intra.kospi"]))}% · 외인 선물 ${esc(n(a["intra.fut"]))} · 현물 외인 ${esc(n(a["intra.spotF"]))}억 · 기관 ${esc(n(a["intra.spotI"]))}억${a["intra.prog"] !== undefined && a["intra.prog"] !== "" ? ` · 프로그램 ${esc(n(a["intra.prog"]))}억` : ""}` : "🤖 평일 09:30·10:30쯤 자동으로 확인해요 (GitHub가 10~20분 늦을 수 있음)";
     const res = !it ? "" : it.down ? `<div class="r"><b>→ 한 단계 낮춤</b> · 외인 선물 매도 + ${esc(it.by)} 매도가 함께 나왔어요</div>` : `<div class="g">→ 그대로 · ${it.futSell ? "외인 선물은 매도지만 " + esc(it.by) + " 매도가 기준보다 작아요" : "외인 선물 매도가 기준보다 작아요"}</div>`;
     el.innerHTML = `<div>${vals}</div>${res}`;
   }
@@ -2157,13 +2175,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     }).filter(Boolean);
   }
   // 오늘 주도 테마 한 줄(자동 수집 leadersText) 읽기. 옛 모양 "이름 +x% · 강세 N종목 X억 · 외인 +a억 · 기관 +b억 (대장·2등)" 도,
-  // 9.29-56 새 모양 "이름 +x% · 대금 T억↑ L종목 · 강세 … · 외인 … · 기관 … · 미장 ✓|✗|— · 차트 신고가|돌파|눌림|추세아래 (대장·2등)" 도 읽는다 (T·L·us·chart 는 새 모양에만)
+  // 9.29-56 새 모양 "이름 +x% · 대금 T억↑ L종목 · 강세 … · 외인 … · 기관 … · 미장 ✓|✗|— · 차트 신고가|돌파|돌파직전|눌림|추세아래 (대장·2등)" 도 읽는다 (T·L·us·chart 는 새 모양에만)
   function parseLeaders(text) {
     const eok = (m) => (m ? numOf(m[1]) * (m[2] === "조" ? 10000 : 1) : null);
     return String(text || "").split(" / ").map((part) => {
       const m = part.trim().match(/^(.+?)\s([+-]?[\d.]+)%(.*)$/); if (!m) return null; // 등락률 0 은 부호 없이 "0%" 로 온다
       const rest = m[3], hot = rest.match(/강세\s*(\d+)종목\s*([\d,.]+)\s*(억|조)/), f = rest.match(/외인\s*([+-]?[\d,.]+)(억|조)/), i = rest.match(/기관\s*([+-]?[\d,.]+)(억|조)/), st = rest.match(/\(([^)]*)\)\s*$/);
-      const L = rest.match(/대금\s*([\d,]+)억↑\s*(\d)종목/), us = rest.match(/미장\s*([✓✗—])/), ch = rest.match(/차트\s*(신고가|돌파|눌림|추세아래)/);
+      const L = rest.match(/대금\s*([\d,]+)억↑\s*(\d)종목/), us = rest.match(/미장\s*([✓✗—])/), ch = rest.match(/차트\s*(신고가|돌파직전|돌파|눌림|추세아래)/);
       return { name: m[1], rate: Number(m[2]), hotN: hot && hot[1], hot: hot && numOf(hot[2]) * (hot[3] === "조" ? 10000 : 1), /* 억 */ f: eok(f), i: eok(i), stocks: st ? st[1] : "",
         T: L ? numOf(L[1]) : null, L: L ? Number(L[2]) : null, us: us ? us[1] : null, chart: ch ? ch[1] : null };
     }).filter(Boolean);
@@ -2183,9 +2201,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 설명 줄: 새 규칙(대금 기준 종목 수 → 수급 → 미장 → 근거 → 차트)이면 그 요약 + 자동 값 배지(잠정/확정·T·관망·약함), 옛 파일(grades 없음)은 예전 문장 그대로
     { const sub = $("mv-leaders").querySelector(".mvsub"); const n = nextBusinessDays(DATE, CAL.holidays, 1)[0];
       const graded = ld.some((t) => t.L !== null && t.L !== undefined), a = S.auto || {}, badge = graded && a["market.leaders"] && a["market.leaders"] === S.journal.market.leaders ? a["leaders.badge"] : "";
-      const base = graded ? "종목당 거래대금 기준 넘긴 종목 수 → 외인·기관 → 미장 → 상승 근거 → 차트 순 · 종목 외인/기관은 " + mdw(DATE) + " 18:40 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마"
-        : "+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관은 " + mdw(DATE) + " 18:40 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마";
+      const base = graded ? "종목당 거래대금 기준 넘긴 종목 수 → 외인·기관 → 미장 → 상승 근거 → 차트 순 · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마"
+        : "+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마";
       if (sub) sub.innerHTML = (badge ? `<b class="ldbadge">${esc(badge)}</b><br>` : "") + esc(base); }
+    // 설명 펼침 안 '오늘 테마별 왜 뽑혔나' 줄 (새 규칙 값이 있을 때만)
+    { const el = $("ldHelpToday"); if (el) { const rows = ld.filter((t) => leaderWhy(t)); el.innerHTML = rows.length ? `<p><b>오늘 뽑힌 이유:</b></p><ul class="ldwhy">${rows.map((t, i) => `<li>${i + 1} ${esc(t.name)} — ${esc(leaderWhy(t))}</li>`).join("")}</ul>` : ""; } }
     // 한 줄: 순위 · 테마(대표 종목은 말풍선) · 외인 · 기관 · 등락률
     $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li title="${esc([leaderWhy(t), t.hot ? `강세 ${t.hotN}종목 · ${t.hot >= 10000 ? (t.hot / 10000).toFixed(1) + "조" : t.hot.toLocaleString("ko-KR") + "억"}` : "", t.stocks || ""].filter(Boolean).join(" · "))}"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name.split("(")[0].trim() || t.name)}${(() => { const u = usLinkOf(t.name); return u && t.rate > 0 && usUp(u) ? `<small class="uslk up" title="한국·미국 둘 다 오름 · ${esc(usLinkText(u))}">🇰🇷🇺🇸</small>` : ""; })()}</span><span class="fi ${t.f === null ? "" : sgn(t.f)}">${t.f === null ? "" : "외 " + fmtEok(t.f).replace("억", "")}</span><span class="fi ${t.i === null ? "" : sgn(t.i)}">${t.i === null ? "" : "기 " + fmtEok(t.i).replace("억", "")}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span></li>`).join("")}</ol><small class="ldnote">외 = 외국인 · 기 = 기관 순매수(억) · 누르고 있으면 대표 종목</small>` : "";
   }
@@ -3087,8 +3107,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const itd = a.intraday;
     if (itd && itd.at) {
       const sa = (k, v) => { v = v === undefined || v === null ? "" : String(v); if (st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, itd.ts]); } };
-      sa("intra.at", itd.at); sa("intra.fut", itd.fut && itd.fut.foreign); sa("intra.spotF", itd.spot && itd.spot.foreign); sa("intra.spotI", itd.spot && itd.spot.institution); sa("intra.kospi", itd.kospi);
+      sa("intra.at", itd.at); sa("intra.prog", itd.program && itd.program.total); sa("intra.fut", itd.fut && itd.fut.foreign); sa("intra.spotF", itd.spot && itd.spot.foreign); sa("intra.spotI", itd.spot && itd.spot.institution); sa("intra.kospi", itd.kospi);
     }
+    // 프로그램 순매수(억): 마감 확정값(close.market.program) 이 있으면 그것, 아니면 장중 누적(intraday.program). 손으로 넣은 값이 있으면 그대로 둔다
+    { const pc = c.program && typeof c.program.total === "number" ? c.program : itd && itd.program && typeof itd.program.total === "number" ? itd.program : null;
+      if (pc) fillOne("signals.prog", st.signals.prog, (x) => (st.signals.prog = x), pc.total, pc === c.program ? a.close.ts : itd.ts); }
     // 연휴 누적 · 오래된 값 표시 (칸 아래 회색 줄)
     const setAuto = (k, v) => { if (v === undefined) { if (st.auto[k] !== undefined) { delete st.auto[k]; changed.push(["auto." + k, m.ts]); } return; } if (st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, m.ts]); } };
     const md2 = (d) => d.slice(5).replace(/^0/, "").replace(/-0?/, "/");
@@ -3121,7 +3144,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
     // ③ 오늘 시장 이야기도 자동으로 초안 (손으로 고치면 고친 글이 우선)
     if (a.close && (c.kospi || c.invest || c.leaders)) {
-      const story = marketStory(a.date || DATE, c, a.intraday, parseNum((st.signals || {}).prog));
+      const story = marketStory(a.date || DATE, c, a.intraday, parseNum((st.signals || {}).prog) ?? (c.program && typeof c.program.total === "number" ? c.program.total : null));
       Object.entries(story).forEach(([k, v]) => fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), v, a.close.ts));
     }
     [["at.morning", m.at, m.ts], ["at.close", (a.close || {}).at, (a.close || {}).ts]].forEach(([k, v, ts]) => { if (v && st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, ts]); } });
