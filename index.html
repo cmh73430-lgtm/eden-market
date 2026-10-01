@@ -1796,7 +1796,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-66";
+  const APP_VER = "9.29-67";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2305,7 +2305,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     $("topLeadTitle").textContent = stale ? "🔴 실시간 주도 테마 (마지막 값)" : "🔴 실시간 주도 테마"; $("topLeadSub").textContent = `${when} · 코스피 ${pc(L.kospi && L.kospi.value)}${L.kospi && L.kospi.amount ? " · 거래대금 " + eok(L.kospi.amount) : ""}${L.invest ? " · 외인 " + sg(L.invest.foreign) + " · 기관 " + sg(L.invest.institution) : ""}${L.program && typeof L.program.total === "number" ? " · 프로그램 " + sg(L.program.total) : ""}`;
     $("topLeadList").innerHTML = L.themes.slice(0, 3).map((t, n) => {
       const slots = (t.slots || []).slice(0, 2), flows = slots.filter((x) => x.flow);
-      const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
+      const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
       const nw = (t.news || [])[0];
       return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}${flows.length ? "" : " · 종목별 외인·기관은 장 마감 뒤"}</span>${nw ? `<span class="tln">📰 ${nw.url ? `<a href="${esc(nw.url)}" target="_blank" rel="noopener">${esc(nw.title)}</a>` : esc(nw.title)}${nw.office || nw.at ? ` <small>${esc([nw.office, nw.at ? nw.at.slice(11) : ""].filter(Boolean).join(" "))}</small>` : ""}</span>` : ""}</li>`;
     }).join("");

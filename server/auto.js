@@ -260,6 +260,13 @@ export function gradeC(bars, { vToday = null, T = 500 } = {}) {
   const tag = grade === 0 && close > MA20 ? "눌림" : CHART_TAG[grade];
   return { grade, tag, close, H20, H60, H250, MA20, offHigh: H250 ? round2(((H250 - close) / H250) * 100) : null, bars: rows.length, date: last.d };
 }
+// 장중에는 네이버 일봉에 오늘 봉이 아직 없을 수 있음 → 테마 상세의 현재가로 오늘 봉(종가=고가=현재가)을 붙인다. 이미 있으면 그대로
+export function withToday(bars, date, price) {
+  const rows = Array.isArray(bars) ? bars : [], d = String(date || "").replace(/-/g, "");
+  if (!rows.length || typeof price !== "number" || !(price > 0) || d.length !== 8) return rows;
+  const last = rows.reduce((m, b) => (String(b.localDate || "") > m ? String(b.localDate || "") : m), "");
+  return last >= d ? rows : [...rows, { localDate: d, closePrice: price, highPrice: price }];
+}
 export const chartUrl = (code, date) => "https://api.stock.naver.com/chart/domestic/item/" + code + "/day?startDateTime=" + addDays(date, -365).replace(/-/g, "") + "0000&endDateTime=" + date.replace(/-/g, "") + "2359";
 
 // 자릿수 점수: 앞 단계가 크면 무조건 이긴다 (L 0~5, F 0~3, U 0~2, B 0~3, C 0~3)
@@ -329,8 +336,9 @@ export function historyFrom(records) {
 const prevFlowOf = (name, history) => { const h = Array.isArray(history) ? history[0] : null; const t = h && Array.isArray(h.leaders) && h.leaders.find((x) => x && x.name === name); return !!(t && t.flow && t.flow.foreign + t.flow.inst > 0); };
 
 // 주도 테마 선정 (게이트 → L → [F] → U → B → [C] → 점수·중복 제거 → 상위 n). provisional 이면 수급·일봉 요청 생략 (F=1·C=1 중립)
+//  chart: true 면 provisional 이어도 C(대장주 차트 자리)는 매긴다 — 장중 실시간 (9.29-67). 수급(F)은 장중엔 네이버에 없어서 중립 그대로
 //  kospi: { value: 등락률 %, amount: 거래대금 억 } (collectClose 가 받은 market.kospi 또는 전날 파일) · us: 아침 기록 morning.us · history: historyFrom() (오늘 제외, 최근 먼저)
-export async function selectThemes({ get, n = 3, bizdate = null, kospi = null, us = null, history = [], provisional = false, date = null, pool = LEAD_POOL, material = {} }) {
+export async function selectThemes({ get, n = 3, bizdate = null, kospi = null, us = null, history = [], provisional = false, chart = !provisional, date = null, pool = LEAD_POOL, material = {} }) {
   const list = await get("https://m.stock.naver.com/api/stocks/theme?page=1&pageSize=100");
   const kospiRate = kospi && typeof kospi.value === "number" ? kospi.value : null, amount = kospi && typeof kospi.amount === "number" ? kospi.amount : null;
   const groups = list && Array.isArray(list.groups) ? list.groups : []; // 응답이 null·문자열·groups 없음이면 빈 목록 → '테마 순위 없음'
@@ -369,11 +377,13 @@ export async function selectThemes({ get, n = 3, bizdate = null, kospi = null, u
       if (t.flow) { flowReady = true; if (t.streak) t.warn.push("2일 연속 순매수"); }
       t.grades.F = gradeF(t.flow); t.score = scoreTheme(t.grades);
     }
+  }
+  if (chart) {
     cands.sort(compareThemes);
     for (const t of cands.slice(0, CHART_TOP)) { // 일봉: 상위 6테마 × 대장·2등 = 12회
       const cs = [];
       for (const s of t.slots.slice(0, CHART_STOCKS)) {
-        try { const c = gradeC(await get(chartUrl(s.code, today)), { vToday: s.value, T }); cs.push(c); if (c) s.chart = { grade: c.grade, tag: c.tag }; } catch (e) { cs.push(null); }
+        try { const c = gradeC(provisional ? withToday(await get(chartUrl(s.code, today)), today, s.price) : await get(chartUrl(s.code, today)), { vToday: s.value, T }); cs.push(c); if (c) s.chart = { grade: c.grade, tag: c.tag }; } catch (e) { cs.push(null); }
       }
       t.chart = { lead: cs[0] || null, second: cs[1] || null };
       if (cs[0]) chartReady = true;
@@ -460,11 +470,11 @@ const slim = (t) => ({
   stocks: (t.slots || []).slice(0, 2).map((x) => x.name), grades: t.grades, score: t.score, slots: (t.slots || []).slice(0, SLOT_N), alias: t.alias || [], warn: t.warn || [],
   chart: t.chart ? { lead: t.chart.lead && { grade: t.chart.lead.grade, tag: t.chart.lead.tag, offHigh: t.chart.lead.offHigh }, second: t.chart.second && { grade: t.chart.second.grade, tag: t.chart.second.tag } } : undefined,
 });
-export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now = new Date(), bizdate = null, kospi = null, us = null, history = [], provisional = false, date = null, n = 3 } = {}) {
+export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now = new Date(), bizdate = null, kospi = null, us = null, history = [], provisional = false, chart = !provisional, date = null, n = 3 } = {}) {
   const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
   // 종목 수급은 그 날 값만. 네이버 종목별 외인·기관은 늦게(저녁~다음 날 아침) 올라와서, 16:20 잠정 run 은 요청을 생략하고 18:40 확정 run·다음 날 아침 백필이 채운다
   const day = date || kstDate(now);
-  const sel = await selectThemes({ get, n, bizdate: bizdate || day.replace(/-/g, ""), kospi, us, history, provisional, date: day });
+  const sel = await selectThemes({ get, n, bizdate: bizdate || day.replace(/-/g, ""), kospi, us, history, provisional, chart, date: day });
   const themes = sel.themes.map(slim), candidates = sel.candidates.map(slim);
   // 관망(거래대금)과 주도 약함(1위 L ≤ 1)은 별개 배지 — 둘 다면 "관망·약함", weakLead 도 따로 둔다
   const weakLead = !!(themes[0] && themes[0].grades && themes[0].grades.L <= 1);
@@ -511,12 +521,12 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSPI/trend")); out.invest = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("현물 수급: " + (e.message || e)); }
   try { out.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); }
   try {
-    const L = await collectLeaders({ fetchImpl, timeoutMs, now, date: day, kospi: out.kospi || null, us, history, provisional: true, n });
-    out.T = L.T; out.regime = L.regime; out.relaxed = L.relaxed; out.text = L.text; out.candidates = (L.candidates || []).map((t) => ({ name: t.name, score: t.score, alias: t.alias || [], stocks: (t.slots || []).map((s) => s.code) }));
+    const L = await collectLeaders({ fetchImpl, timeoutMs, now, date: day, kospi: out.kospi || null, us, history, provisional: true, chart: true, n }); // 장중: 수급(F)만 빼고 C 차트 자리까지 사용자 규칙대로
+    out.chartReady = !!L.chartReady; out.T = L.T; out.regime = L.regime; out.relaxed = L.relaxed; out.text = L.text; out.candidates = (L.candidates || []).map((t) => ({ name: t.name, score: t.score, alias: t.alias || [], stocks: (t.slots || []).map((s) => s.code) }));
     const bizdate = day.replace(/-/g, "");
     out.themes = [];
     for (const t of L.themes.slice(0, n)) {
-      const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price })), news: [] };
+      const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, ...(s.chart ? { chart: s.chart } : {}) })), news: [] };
       for (const s of row.slots.slice(0, 2)) { // 종목별 외인·기관: 오늘 bizdate 가 있을 때만 (장중엔 보통 없음)
         try { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) s.flow = { foreign: f.foreign, inst: f.inst }; } catch (e) {}
       }
