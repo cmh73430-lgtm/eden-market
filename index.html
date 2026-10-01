@@ -1796,7 +1796,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-65";
+  const APP_VER = "9.29-66";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2266,7 +2266,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   let LIVE = null;
   const kstHM = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
   const liveWindow = () => DATE === kstDate() && isBusinessDay(DATE, CAL.holidays) && kstHM() >= "09:00" && kstHM() <= "16:25";
-  const liveFresh = () => !!(LIVE && LIVE.date === DATE && Array.isArray(LIVE.themes) && LIVE.themes.length && liveWindow() && !((S.auto || {})["at.close"] && (S.auto || {})["at.close"] > (LIVE.at || "")));
+  // 실시간 값이 실제로 어느 장(날짜)의 값인지: 장 전에 손으로 돌리면 date 는 오늘이어도 값은 어제 장 것
+  const liveAsOf = (L) => { const t = (L && L.kospi && L.kospi.time) || ""; if (/^\d{4}-\d\d-\d\d/.test(t)) return t.slice(0, 10); const b = (L && L.invest && L.invest.bizdate) || ""; return /^\d{8}$/.test(b) ? b.slice(0, 4) + "-" + b.slice(4, 6) + "-" + b.slice(6) : (L && L.date) || ""; };
+  const liveHas = () => !!(LIVE && Array.isArray(LIVE.themes) && LIVE.themes.length);
+  const liveFresh = () => !!(liveHas() && LIVE.date === DATE && liveAsOf(LIVE) === DATE && (LIVE.at || "") >= "09:00" && liveWindow() && !((S.auto || {})["at.close"] && (S.auto || {})["at.close"] > (LIVE.at || "")));
   function paintTopLead() {
     const box = $("topLead"); if (!box) return;
     if (liveFresh()) { paintTopLive(box); return; }
@@ -2283,6 +2286,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       $("topLeadList").innerHTML = ld.map((t, n) => row(t, n, leaderWhy(t))).join("");
       return done();
     }
+    // 장 시작 전·휴장일: 마지막 실시간 값을 '장 시작 전' 표시로 보여 줌 (오늘 화면을 볼 때만)
+    if (DATE === kstDate() && liveHas()) { paintTopLive(box, true); return done(); }
     const prev = (S.prev || []).filter((p) => p && p.name).slice(0, 2);
     if (prev.length) {
       box.hidden = false; box.classList.add("prev");
@@ -2292,10 +2297,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     }
     box.hidden = true; done();
   }
-  function paintTopLive(box) {
+  function paintTopLive(box, stale) {
     const L = LIVE, eok = (v) => (typeof v !== "number" ? "—" : Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억"), sg = (v) => (typeof v !== "number" ? "—" : (v > 0 ? "+" : "") + eok(v)), pc = (v) => (typeof v !== "number" ? "" : (v > 0 ? "+" : "") + v + "%");
-    const wasHidden = box.hidden; box.hidden = false; box.classList.remove("prev"); box.classList.add("live");
-    $("topLeadTitle").textContent = "🔴 실시간 주도 테마"; $("topLeadSub").textContent = `${L.at} 기준 · 20분마다 · 코스피 ${pc(L.kospi && L.kospi.value)}${L.kospi && L.kospi.amount ? " · 거래대금 " + eok(L.kospi.amount) : ""}${L.invest ? " · 외인 " + sg(L.invest.foreign) + " · 기관 " + sg(L.invest.institution) : ""}${L.program && typeof L.program.total === "number" ? " · 프로그램 " + sg(L.program.total) : ""}`;
+    const wasHidden = box.hidden; box.hidden = false; box.classList.toggle("prev", !!stale); box.classList.add("live");
+    const asOf = liveAsOf(L), md = asOf ? Number(asOf.slice(5, 7)) + "/" + Number(asOf.slice(8, 10)) : "";
+    const when = stale ? `⏸ 지금은 장중이 아니에요 · ${md} ${asOf === L.date ? L.at + " 기준" : "장 마감 기준"} 마지막 값 · 장중 09:00~15:40 에 20분마다 새로 바뀌어요` : `${L.at} 기준 · 20분마다`;
+    $("topLeadTitle").textContent = stale ? "🔴 실시간 주도 테마 (마지막 값)" : "🔴 실시간 주도 테마"; $("topLeadSub").textContent = `${when} · 코스피 ${pc(L.kospi && L.kospi.value)}${L.kospi && L.kospi.amount ? " · 거래대금 " + eok(L.kospi.amount) : ""}${L.invest ? " · 외인 " + sg(L.invest.foreign) + " · 기관 " + sg(L.invest.institution) : ""}${L.program && typeof L.program.total === "number" ? " · 프로그램 " + sg(L.program.total) : ""}`;
     $("topLeadList").innerHTML = L.themes.slice(0, 3).map((t, n) => {
       const slots = (t.slots || []).slice(0, 2), flows = slots.filter((x) => x.flow);
       const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
@@ -3381,13 +3388,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     } catch (x) {}
   }
   let liveTimer = null, liveBusy = false;
-  async function livePull() {
-    if (liveBusy || !liveWindow()) return; liveBusy = true;
-    try { const l = await pubGet(PUB_RAW + "live.json"); if (l && l.date === DATE && (!LIVE || l.ts !== LIVE.ts)) { LIVE = l; paintTopLead(); } }
+  async function livePull(first) {
+    if (liveBusy || (!first && !liveWindow())) return; liveBusy = true; // 처음 열 때는 장 밖에서도 한 번 (마지막 값 보여 주기), 그 뒤엔 장중에만
+    try { const l = await pubGet(PUB_RAW + "live.json"); if (l && l.date <= kstDate() && (!LIVE || l.ts !== LIVE.ts)) { LIVE = l; paintTopLead(); } }
     catch (e) {} finally { liveBusy = false; }
   }
   function pubStart() {
-    livePull(); clearInterval(liveTimer);
+    livePull(true); clearInterval(liveTimer);
     liveTimer = setInterval(() => { if (document.visibilityState === "visible") livePull(); }, 5 * 60000); // 실시간 주도 테마: 5분마다 (장중 창에서만 실제로 받음)
     if (gh) return;
     pubPull();
