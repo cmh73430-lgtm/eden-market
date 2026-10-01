@@ -280,7 +280,14 @@ export function compareThemes(a, b) {
     || (b.value || 0) - (a.value || 0) || (b.rate || 0) - (a.rate || 0);
 }
 // 중복 제거: 점수 순으로 보면서 슬롯 5종목 중 2개 이상 겹치거나 대장주가 같으면 낮은 쪽 이름을 alias 로 붙인다. 점수까지 같으면 종목 수 적은(더 좁은) 테마가 대표
+// 한 번만 훑으면, 좁은 테마가 넓은 테마 자리를 대신 차지하며 대장주가 바뀔 때 이미 따로 남은 테마와 다시 겹칠 수 있다
+// (2026-10-02 live: 시스템반도체 → HBM 으로 바뀐 뒤 온디바이스 AI 와 SK하이닉스·삼성전자가 겹쳤는데 둘 다 남음) → 더 합칠 게 없을 때까지 반복
 export function dedupeThemes(sorted) {
+  let cur = sorted, prevLen = -1;
+  for (let k = 0; k < 6 && cur.length !== prevLen; k++) { prevLen = cur.length; cur = dedupeOnce(cur); }
+  return cur;
+}
+function dedupeOnce(sorted) {
   const out = [];
   for (const t of sorted) {
     t.alias = t.alias || [];
@@ -474,11 +481,11 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
   try { out.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); }
   try {
     const L = await collectLeaders({ fetchImpl, timeoutMs, now, date: day, kospi: out.kospi || null, us, history, provisional: true, n });
-    out.T = L.T; out.regime = L.regime; out.relaxed = L.relaxed; out.text = L.text;
+    out.T = L.T; out.regime = L.regime; out.relaxed = L.relaxed; out.text = L.text; out.candidates = (L.candidates || []).map((t) => ({ name: t.name, score: t.score, alias: t.alias || [], stocks: (t.slots || []).map((s) => s.code) }));
     const bizdate = day.replace(/-/g, "");
     out.themes = [];
     for (const t of L.themes.slice(0, n)) {
-      const row = { no: t.no, name: t.name, rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price })), news: [] };
+      const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price })), news: [] };
       for (const s of row.slots.slice(0, 2)) { // 종목별 외인·기관: 오늘 bizdate 가 있을 때만 (장중엔 보통 없음)
         try { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) s.flow = { foreign: f.foreign, inst: f.inst }; } catch (e) {}
       }

@@ -80,6 +80,7 @@ if (when === "live") {
   const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date) });
   console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${(live.themes || []).map((t) => `${t.name} ${t.rate > 0 ? "+" : ""}${t.rate}% (대금 ${Math.round(t.value || 0).toLocaleString("ko-KR")}억 · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
   if (live.errors.length) console.log("일부 실패:", live.errors.join(" / "));
+  console.log("후보:", (live.candidates || []).map((c) => `${c.name}${c.alias.length ? "=" + c.alias.join("=") : ""} ${c.score} [${c.stocks.join(",")}]`).join(" / "));
   if (!live.themes || !live.themes.length) { console.error("주도 테마를 못 골랐음"); process.exit(1); }
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
