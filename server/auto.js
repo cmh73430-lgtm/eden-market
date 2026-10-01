@@ -282,21 +282,33 @@ export function compareThemes(a, b) {
 // 중복 제거: 점수 순으로 보면서 슬롯 5종목 중 2개 이상 겹치거나 대장주가 같으면 낮은 쪽 이름을 alias 로 붙인다. 점수까지 같으면 종목 수 적은(더 좁은) 테마가 대표
 // 한 번만 훑으면, 좁은 테마가 넓은 테마 자리를 대신 차지하며 대장주가 바뀔 때 이미 따로 남은 테마와 다시 겹칠 수 있다
 // (2026-10-02 live: 시스템반도체 → HBM 으로 바뀐 뒤 온디바이스 AI 와 SK하이닉스·삼성전자가 겹쳤는데 둘 다 남음) → 더 합칠 게 없을 때까지 반복
+// 보이는 이름: 합쳐진 무리 중 오늘 가장 많이 오른 테마(동률이면 테마 거래대금 큰 쪽) — 종목 수가 적은 쪽을 고르면 '온디바이스 AI' 처럼
+// 덜 익숙한 이름이 나오고, 거래대금만 보면 '시스템반도체' 같은 넓은 테마가 늘 이겨서 (2026-10-02 사용자 요청). 슬롯·점수는 그대로, 이름·번호만 바꾼다
+const memberOf = (t) => ({ name: t.name, no: t.no, rate: typeof t.rate === "number" ? t.rate : null, value: typeof t.value === "number" ? t.value : null });
 export function dedupeThemes(sorted) {
   let cur = sorted, prevLen = -1;
   for (let k = 0; k < 6 && cur.length !== prevLen; k++) { prevLen = cur.length; cur = dedupeOnce(cur); }
+  for (const t of cur) {
+    const ms = t._members || [memberOf(t)]; delete t._members;
+    let best = ms[0];
+    for (const m of ms) if ((m.rate ?? -Infinity) > (best.rate ?? -Infinity) || ((m.rate ?? -Infinity) === (best.rate ?? -Infinity) && (m.value ?? -Infinity) > (best.value ?? -Infinity))) best = m;
+    if (best.name !== t.name) { // 이름을 바꾸면 화면에 같이 나오는 등락률·테마 거래대금도 그 테마 값으로 (점수·슬롯·등급은 그대로)
+      t.alias = [t.name, ...t.alias.filter((a) => a !== best.name)]; t.name = best.name; if (best.no !== undefined) t.no = best.no;
+      if (best.rate !== null) t.rate = best.rate; if (best.value !== null) t.value = best.value;
+    }
+  }
   return cur;
 }
 function dedupeOnce(sorted) {
   const out = [];
   for (const t of sorted) {
-    t.alias = t.alias || [];
+    t.alias = t.alias || []; t._members = t._members || [memberOf(t)];
     const codes = new Set((t.slots || []).map((s) => s.code)), top = t.slots && t.slots[0] && t.slots[0].code;
     const i = out.findIndex((o) => (o.slots || []).filter((s) => codes.has(s.code)).length >= 2 || (top && o.slots && o.slots[0] && o.slots[0].code === top));
     if (i < 0) { out.push(t); continue; }
     const o = out[i];
-    if (o.score === t.score && (t.count || 0) < (o.count || 0)) { t.alias = [o.name, ...o.alias, ...t.alias]; out[i] = t; } // 더 좁은 테마명이 대표
-    else o.alias.push(t.name, ...t.alias);
+    if (o.score === t.score && (t.count || 0) < (o.count || 0)) { t.alias = [o.name, ...o.alias, ...t.alias]; t._members = [...t._members, ...o._members]; out[i] = t; } // 슬롯은 더 좁은 테마 것을 쓴다
+    else { o.alias.push(t.name, ...t.alias); o._members = [...o._members, ...t._members]; }
   }
   return out;
 }
@@ -462,14 +474,33 @@ export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now
 
 // ---- 장중 실시간 주도 테마 (--when=live, 09:05~15:35 20분마다) ----
 // 네이버 종목 뉴스: /api/news/stock/{code}?pageSize=n → [{total, items:[{title, datetime(YYYYMMDDHHmm), officeName, mobileNewsUrl}]}]
+const unent = (x) => String(x).replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&middot;/g, "·").replace(/&hellip;/g, "…").replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (_, d) => String.fromCharCode(+d)).replace(/&amp;/g, "&");
 export function parseNews(json, n = 2) {
   const items = (Array.isArray(json) ? json : []).flatMap((g) => (g && Array.isArray(g.items) ? g.items : []));
-  return items.filter((x) => x && x.title).slice(0, n).map((x) => { const d = String(x.datetime || ""); return { title: String(x.titleFull || x.title).trim(), at: d.length >= 12 ? d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8) + " " + d.slice(8, 10) + ":" + d.slice(10, 12) : null, office: x.officeName || null, url: x.mobileNewsUrl || null }; });
+  return items.filter((x) => x && x.title).slice(0, n).map((x) => { const d = String(x.datetime || ""); return { title: unent(x.titleFull || x.title).trim(), at: d.length >= 12 ? d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8) + " " + d.slice(8, 10) + ":" + d.slice(10, 12) : null, office: x.officeName || null, url: x.mobileNewsUrl || null }; });
 }
-export async function fetchNews(fetchImpl, code, { n = 2, timeoutMs = 10000 } = {}) {
-  const r = await fetchImpl("https://m.stock.naver.com/api/news/stock/" + code + "?pageSize=" + Math.max(n, 3), { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
+// 테마 낱말: 테마 이름·합쳐진 이름에서 괄호·구분자로 자른 조각 (2글자↑, 일반어 제외) + 슬롯 종목명. 영문 약어(HBM·MLCC)는 대문자 그대로
+const NEWS_STOP = new Set(["관련", "관련주", "테마", "등", "기타", "대표", "수혜", "개선", "양적", "질적", "부품", "소재", "장비", "산업"]);
+export function themeWords(names = [], stocks = []) {
+  const w = new Set();
+  for (const nm of names) {
+    const head = String(nm || "").split(/[(（]/)[0].trim(); if (head.length >= 2 && !NEWS_STOP.has(head)) w.add(head); // 괄호 앞 전체 이름 (예: "반도체 기판")
+    for (const p of String(nm || "").split(/[()（）/·,\s]+/)) { const x = p.trim(); if (x.length >= 2 && !NEWS_STOP.has(x)) w.add(x); }
+  }
+  for (const s of stocks) if (s && String(s).length >= 2) w.add(String(s));
+  return [...w];
+}
+// 뉴스 고르기: 제목에 테마 낱말이 든 기사를 먼저(낱말이 많이 든 순 → 최신 순), 모자라면 남은 최신 기사로 채운다. 각 기사에 match(맞은 낱말) 표시
+export function pickNews(items, words = [], n = 2) {
+  const list = (Array.isArray(items) ? items : []).map((x, i) => { const t = String(x.title || ""); const hit = words.filter((w) => t.includes(w)); return { x, i, hit }; });
+  const rel = list.filter((a) => a.hit.length).sort((a, b) => b.hit.length - a.hit.length || a.i - b.i), rest = list.filter((a) => !a.hit.length);
+  return [...rel, ...rest].slice(0, n).map((a) => Object.assign({}, a.x, a.hit.length ? { match: a.hit.slice(0, 3) } : {}));
+}
+export async function fetchNews(fetchImpl, code, { n = 2, timeoutMs = 10000, words = [] } = {}) {
+  const r = await fetchImpl("https://m.stock.naver.com/api/news/stock/" + code + "?pageSize=" + (words.length ? 15 : Math.max(n, 3)), { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
   if (!r.ok) throw new Error("HTTP " + r.status);
-  return parseNews(await r.json(), n);
+  const all = parseNews(await r.json(), 15);
+  return words.length ? pickNews(all, words, n) : all.slice(0, n);
 }
 // 장중 한 번: 코스피(등락·거래대금) · 코스피 외인/기관(장중 누적) · 프로그램 · 잠정 규칙으로 고른 주도 테마 3개(테마 거래대금·대장주 등락·거래대금) + 대장주 뉴스 2개 + 종목별 외인/기관(그 날 값이 이미 있을 때만 — 보통 장 마감 뒤)
 // 결과는 auto/live.json 하나에 덮어쓴다 (날짜 파일에는 안 넣음). 실패한 조각은 errors 에 적고 나머지는 남긴다
@@ -489,8 +520,13 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
       for (const s of row.slots.slice(0, 2)) { // 종목별 외인·기관: 오늘 bizdate 가 있을 때만 (장중엔 보통 없음)
         try { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) s.flow = { foreign: f.foreign, inst: f.inst }; } catch (e) {}
       }
-      const lead = row.slots[0];
-      if (lead) { try { row.news = await fetchNews(fetchImpl, lead.code, { n: 2, timeoutMs }); } catch (e) { out.errors.push("뉴스 " + lead.name + ": " + (e.message || e)); } }
+      // 뉴스: 대장주 기사 15개 중 제목에 테마 낱말(테마 이름·합쳐진 이름·대장주 3종목)이 든 것을 먼저 → 대장주 하나에 맞는 기사가 없으면 2등주 기사에서 다시
+      const words = themeWords([t.name, ...(t.alias || [])], row.slots.map((s) => s.name)), nameOnly = themeWords([t.name, ...(t.alias || [])]);
+      for (const s of row.slots.slice(0, 2)) {
+        try { const got = await fetchNews(fetchImpl, s.code, { n: 2, timeoutMs, words }); const themed = got.filter((x) => x.match && x.match.some((m) => nameOnly.includes(m)));
+          if (themed.length || !row.news.length) row.news = themed.length ? [...themed, ...got.filter((x) => !themed.includes(x))].slice(0, 2) : got;
+          if (themed.length) break; } catch (e) { out.errors.push("뉴스 " + s.name + ": " + (e.message || e)); }
+      }
       out.themes.push(row);
     }
   } catch (e) { out.errors.push("주도 테마: " + (e.message || e)); }
