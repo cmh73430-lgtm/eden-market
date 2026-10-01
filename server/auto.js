@@ -453,6 +453,43 @@ export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now
   return { text: leadersText(sel.themes, sel.T), flowReady: sel.flowReady, chartReady: sel.chartReady, provisional: sel.provisional, T: sel.T, regime, weakLead: weakLead || undefined, relaxed: sel.relaxed || undefined, kospiRate: sel.kospiRate, decidedAt: now.getTime(), themes, candidates, all: sel.all };
 }
 
+// ---- 장중 실시간 주도 테마 (--when=live, 09:05~15:35 20분마다) ----
+// 네이버 종목 뉴스: /api/news/stock/{code}?pageSize=n → [{total, items:[{title, datetime(YYYYMMDDHHmm), officeName, mobileNewsUrl}]}]
+export function parseNews(json, n = 2) {
+  const items = (Array.isArray(json) ? json : []).flatMap((g) => (g && Array.isArray(g.items) ? g.items : []));
+  return items.filter((x) => x && x.title).slice(0, n).map((x) => { const d = String(x.datetime || ""); return { title: String(x.titleFull || x.title).trim(), at: d.length >= 12 ? d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8) + " " + d.slice(8, 10) + ":" + d.slice(10, 12) : null, office: x.officeName || null, url: x.mobileNewsUrl || null }; });
+}
+export async function fetchNews(fetchImpl, code, { n = 2, timeoutMs = 10000 } = {}) {
+  const r = await fetchImpl("https://m.stock.naver.com/api/news/stock/" + code + "?pageSize=" + Math.max(n, 3), { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return parseNews(await r.json(), n);
+}
+// 장중 한 번: 코스피(등락·거래대금) · 코스피 외인/기관(장중 누적) · 프로그램 · 잠정 규칙으로 고른 주도 테마 3개(테마 거래대금·대장주 등락·거래대금) + 대장주 뉴스 2개 + 종목별 외인/기관(그 날 값이 이미 있을 때만 — 보통 장 마감 뒤)
+// 결과는 auto/live.json 하나에 덮어쓴다 (날짜 파일에는 안 넣음). 실패한 조각은 errors 에 적고 나머지는 남긴다
+export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, us = null, history = [], date = null, n = 3 } = {}) {
+  const day = date || kstDate(now), out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), date: day, errors: [] };
+  const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+  try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스피: " + (e.message || e)); }
+  try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSPI/trend")); out.invest = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("현물 수급: " + (e.message || e)); }
+  try { out.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); }
+  try {
+    const L = await collectLeaders({ fetchImpl, timeoutMs, now, date: day, kospi: out.kospi || null, us, history, provisional: true, n });
+    out.T = L.T; out.regime = L.regime; out.relaxed = L.relaxed; out.text = L.text;
+    const bizdate = day.replace(/-/g, "");
+    out.themes = [];
+    for (const t of L.themes.slice(0, n)) {
+      const row = { no: t.no, name: t.name, rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price })), news: [] };
+      for (const s of row.slots.slice(0, 2)) { // 종목별 외인·기관: 오늘 bizdate 가 있을 때만 (장중엔 보통 없음)
+        try { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) s.flow = { foreign: f.foreign, inst: f.inst }; } catch (e) {}
+      }
+      const lead = row.slots[0];
+      if (lead) { try { row.news = await fetchNews(fetchImpl, lead.code, { n: 2, timeoutMs }); } catch (e) { out.errors.push("뉴스 " + lead.name + ": " + (e.message || e)); } }
+      out.themes.push(row);
+    }
+  } catch (e) { out.errors.push("주도 테마: " + (e.message || e)); }
+  return out;
+}
+
 // 같은 날 close run 을 두 번 돌릴 때(16:20 잠정 → 18:40 확정, 또는 확정 뒤 잠정이 늦게 옴) 주도 테마를 합친다 — scripts/collect-auto.mjs 가 쓴다
 //  · 이번 선정이 통째로 실패(cur 없음)면 앞선 결과라도 남긴다
 //  · 잠정 → 확정: 잠정은 leadersProvisional 로 보관 (잠정/확정 일치율 검증용)

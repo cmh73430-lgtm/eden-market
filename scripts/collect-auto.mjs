@@ -3,11 +3,11 @@
 //   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 + 오늘 주도 테마 (네이버) — 16:20 은 잠정(게이트·L·U·B, 요청 13회), 18:40 은 확정(+수급·일봉, 43회)
 //   아침 전일 테마는 전날 18:40 확정 결과(close.market.leaders)를 이어 쓰고 NXT 애프터·프리마켓만 붙인다 (재선정 안 함, 없으면 n=2 잠정 선정). 전날 결과가 아직 잠정·수급 없음이면 아침 수집 전에 먼저 확정(백필)한다
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
-// 옵션: --when=morning|intraday|close|themes (기본: 지금 시각으로 판단 · themes = 미국장 테마 값만 아침 기록에 채워 넣기, 새 테마를 추가한 날) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
+// 옵션: --when=morning|intraday|close|themes|live (기본: 지금 시각으로 판단 · live = 장중 실시간 주도 테마 → auto/live.json 만 · themes = 미국장 테마 값만 아침 기록에 채워 넣기, 새 테마를 추가한 날) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
 //       --final (close: 실행 시각과 관계없이 확정 run — 수급·일봉 포함). 오늘이 아닌 --date 로 손으로 백필하는 close run 도 확정으로 돈다 (잠정 결과가 확정을 덮지 않게)
 import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay, kstTime } from "../shared/calendar.js";
-import { autoFile, AUTO_DIR, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom } from "../server/auto.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -72,6 +72,18 @@ async function writeFile(path, obj, message) {
 }
 
 const save = !has("dry") && token && repo;
+// ---- 장중 실시간 (live): 09:05~15:40 만, auto/live.json 하나에 덮어쓰고 끝 (날짜 파일·latest 는 손대지 않음) ----
+if (when === "live") {
+  const hm = kstTime(now).slice(0, 5);
+  if (!has("force") && (hm < "09:05" || hm > "15:40")) { console.log(`${hm} 장중 아님 — 건너뜀`); process.exit(0); }
+  const tm = save ? (await readFile(autoFile(date)).catch(() => ({ json: null }))).json : null;
+  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date) });
+  console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${(live.themes || []).map((t) => `${t.name} ${t.rate > 0 ? "+" : ""}${t.rate}% (대금 ${Math.round(t.value || 0).toLocaleString("ko-KR")}억 · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
+  if (live.errors.length) console.log("일부 실패:", live.errors.join(" / "));
+  if (!live.themes || !live.themes.length) { console.error("주도 테마를 못 골랐음"); process.exit(1); }
+  if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
+  process.exit(0);
+}
 const prevDay = prevBusinessDay(date, cfg.holidays); // 어제(직전 거래일)
 const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { json: null };
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
