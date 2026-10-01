@@ -249,6 +249,15 @@ textarea.jin { resize: vertical; }
 .mv .mved { font: inherit; font-size: 11.5px; font-weight: 700; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px; cursor: pointer; }
 .mv .mvsub { font-size: 11.5px; color: var(--muted); }
 .mv .mvsub .ldbadge { font-weight: 600; color: var(--ink); }
+/* 간단 보기: 판정에 쓰는 것만 보이고 나머지는 접힘 (전체 보기 버튼으로 전환) */
+body.simple [data-simple="hide"] { display: none; }
+body.simple #sigList .sig .valid { display: none; }
+body.simple #usList .urow.usb:not([data-st="up"]):not([data-st="dn"]) { display: none; }
+body.simple #usList .ugrp.empty, body.simple #usList .ugbox.empty { display: none; }
+body.simple #mv-leaders .mvsub .subtxt { display: none; }
+.usmore { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; } body:not(.simple) .usmore { display: none; }
+#simpleBtn.on { border-color: var(--up); color: var(--up); font-weight: 700; }
+.refmore { margin-top: 12px; } .refmore > summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--muted); padding: 6px 0; } .refmore > summary small { font-weight: 400; }
 #ldHelp { margin-top: 8px; font-size: 13px; }
 #ldHelp p { margin: 6px 0; line-height: 1.5; }
 #ldHelp .ldwhy { margin: 4px 0 8px; padding-left: 18px; }
@@ -713,7 +722,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <div class="date" id="today"></div>
       <button class="btn docbtn" id="docOpen" type="button">📘 내 매매기법</button>
     </div>
-    <div class="tools"><div class="row"><button class="btn" id="reset" type="button">이 날 초기화</button><span id="resetAsk" class="row" hidden><button class="btn danger" id="resetYes" type="button">정말 지우기</button><button class="btn" id="resetNo" type="button">취소</button></span><button class="btn" id="undo" type="button" hidden>↩ 되돌리기</button></div><div class="sync" id="sync"></div></div>
+    <div class="tools"><div class="row"><button class="btn" id="simpleBtn" type="button">🧹 간단 보기 ✓</button><button class="btn" id="reset" type="button">이 날 초기화</button><span id="resetAsk" class="row" hidden><button class="btn danger" id="resetYes" type="button">정말 지우기</button><button class="btn" id="resetNo" type="button">취소</button></span><button class="btn" id="undo" type="button" hidden>↩ 되돌리기</button></div><div class="sync" id="sync"></div></div>
   </header>
 
   <section class="verdict" id="verdict" aria-live="polite">
@@ -829,7 +838,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     </details>
   </section>
 
-  <section class="card" data-nav="수혜 업종">
+  <section class="card" data-nav="수혜 업종" data-simple="hide">
     <h2>지표별 수혜 업종 <small>환율·유가·금리·반도체지수가 오르면 좋아지는 업종 · 해당 줄이 켜져요</small></h2>
     <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div class="sector" id="sector">
@@ -846,7 +855,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     </details>
   </section>
 
-  <section class="card" data-nav="체크리스트">
+  <section class="card" data-nav="체크리스트" data-simple="hide">
     <h2>장전 체크리스트 <small>하나씩 체크하면서 진행해요</small></h2>
     <div class="todo" id="todo">
       <label><input type="checkbox" id="td1"><time>07:30</time><span class="t"><b>미국장 결과 보기</b><span>반도체지수 · 미국 금리 · 공포지수 · 미국장 테마 → 위 칸에 넣기</span></span></label>
@@ -978,7 +987,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="hint">승률은 수익 ÷ (수익+손실+본전)이에요. 손익은 매매 내역에 매도가까지 적은 날만 계산돼요. 기록 버튼을 누르면 그날로 가요. "쉼"인 날 매매해서 자주 잃었다면, 규칙을 지키는 것부터가 공부예요.</div>
   </section>
 
-  <section class="card" id="trendCard" data-nav="📈 지표 기록표">
+  <section class="card" id="trendCard" data-simple="hide" data-nav="📈 지표 기록표">
     <h2>📈 지표 기록표 <small>지난 며칠 지표를 한눈에 비교 · 엑셀로 옮기기</small></h2>
     <div class="trendctl">
       <select id="trendDays" aria-label="기간"><option value="5">최근 5일</option><option value="10">최근 10일</option><option value="20" selected>최근 20일</option><option value="60">최근 60일</option><option value="0">전체</option></select>
@@ -993,7 +1002,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="hint">초록은 좋음, 노랑은 주의, 빨강은 나쁨이에요. 맨 아래에 기간 평균·최고·최저가 나와요. 날짜를 누르면 그날로 가요. 엑셀에서 그래프를 그리거나 "VIX가 20을 넘은 날 내 손익" 같은 비교를 할 수 있어요.</div>
   </section>
 
-  <section class="card" id="insightCard" data-nav="🔍 내 기준 찾기">
+  <section class="card" id="insightCard" data-simple="hide" data-nav="🔍 내 기준 찾기">
     <h2>🔍 내 기준 찾기 <small>쌓인 기록으로 지금 기준이 나에게도 맞는지 · 나에게 맞는 기준은 어디인지</small></h2>
     <div id="insight"></div>
   </section>
@@ -1006,7 +1015,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="row2"><a class="btn" href="https://blog.naver.com/GoBlogWrite.naver" target="_blank" rel="noopener">네이버 블로그 글쓰기 열기 ↗</a><a class="btn" id="blogHome2" href="https://blog.naver.com/" target="_blank" rel="noopener" hidden>내 블로그 열기 ↗</a></div>
   </section>
 
-  <section class="card" data-nav="📚 용어">
+  <section class="card" data-nav="📚 용어" data-simple="hide">
     <details class="fold"><summary><h2>📚 용어 사전 <small>눌러서 펼치기</small></h2></summary>
     <dl class="gloss" id="gloss"></dl>
     </details>
@@ -1026,7 +1035,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="hint">인터넷 기록을 지우면 일지도 같이 지워질 수 있어요. 한 달에 한 번 "글자로 복사"를 눌러 메모장이나 카톡 나에게 보내기에 붙여넣어 두세요. 다른 기기로 옮길 때는 그 글자를 "붙여넣어 불러오기"하면 돼요.</div>
   </section>
 
-  <section class="card how" data-nav="🖥 바로가기">
+  <section class="card how" data-nav="🖥 바로가기" data-simple="hide">
     <h2>🖥 바로가기 만들기</h2>
     <ol>
       <li><b>링크로 열었다면</b>: 크롬 주소창 오른쪽 ☆(북마크)을 누르거나, 휴대폰은 공유 → 홈 화면에 추가.</li>
@@ -1769,7 +1778,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-59";
+  const APP_VER = "9.29-60";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -1869,17 +1878,20 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       ${SIG_REF.map((s) => `<div class="rdet"><b>${esc(s.name)}</b><div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div><div class="links">열어서 보기 ${linkHtml(s.links)}</div><div class="what">${esc(s.what)}</div>${s.valid ? `<div class="valid">🔬 검증 ${esc(s.valid)}</div>` : ""}${learnHtml(s.name, s.learn)}</div>`).join("")}
       </details>
     </div>`;
-  $("sigList").innerHTML = `<div class="siggroup"><b>🎯 판정 지표</b><span>이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 2021~ 처음 보는 기간에서도 확인)</span></div>` + SIG_MAIN.map(sigHtml).join("") + refHtml();
+  // 간단 보기: 검증 A·B 등급(야간선물·미 선물·반도체·VIX·금리)만 펼쳐 두고, C 등급 환율과 참고 지표는 접어 둔다 (전체 보기면 펼쳐짐)
+  const SIG_CORE = SIG_MAIN.filter((s) => s.k !== "fx"), SIG_FOLD = SIG_MAIN.filter((s) => s.k === "fx");
+  $("sigList").innerHTML = `<div class="siggroup"><b>🎯 판정 지표</b><span>이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 2021~ 처음 보는 기간에서도 확인)</span></div>` + SIG_CORE.map(sigHtml).join("")
+    + `<details class="refmore" id="refMore"><summary>👀 참고 지표 — 환율 · 유가 · S&P · 다우 · 러셀 <small>(혼자서는 판정에 거의 안 들어가요 · 환율+유가가 같은 날 급등할 때만 주의 1)</small></summary>` + SIG_FOLD.map(sigHtml).join("") + refHtml() + `</details>`;
 
   // 미국장 테마: 한 칸에 한 줄씩 (이름·기준 | ± 입력 | 우선 관심·후순위), 링크·설명은 맨 아래 접기 하나로
   // 비슷한 업종끼리 묶고, 묶음 안은 많이 오른 순으로 (paintUsOrder)
   const US_GROUPS = [["💻 반도체 · IT", "it"], ["⚡ 에너지 · 전력", "energy"], ["🚗 2차전지 · 자동차 · 로봇", "mobility"], ["🚢 조선 · 방산 · 우주 · 중공업", "heavy"], ["💊 바이오 · 제약", "bio"], ["🏦 금융 · 핀테크", "fin"], ["🪙 가상자산 · 금 · 구리", "asset"]].map(([t, g]) => [t, US.filter((u) => u.grp === g)]);
   const US_SORTED = US_GROUPS.flatMap(([, l]) => l);
   $("usList").innerHTML = `<div class="uslist">${US_GROUPS.map(([gt, list]) => `<div class="ugrp">${gt}</div><div class="ugbox">` + list.map((u) => `
-      <div class="urow" id="ur-${u.k}"><span class="rn" title="${esc(u.name)}">${esc(u.name.split(" (")[0])}<small>${u.thDn ? `+${u.th}/-${u.thDn}%` : u.noDown ? `+${u.th}%` : `±${u.th}%`}${u.weak ? " 참고" : u.noDown ? " ↓참고" : ""}</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div></div>`).join("") + `</div>`).join("")}
+      <div class="urow${(u.g || "").startsWith("A") ? "" : " usb"}" id="ur-${u.k}"><span class="rn" title="${esc(u.name)}">${esc(u.name.split(" (")[0])}<small>${u.thDn ? `+${u.th}/-${u.thDn}%` : u.noDown ? `+${u.th}%` : `±${u.th}%`}${u.weak ? " 참고" : u.noDown ? " ↓참고" : ""}</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div></div>`).join("") + `</div>`).join("")}
       <details class="more"><summary>✍️ 종목 · 사이트 링크 · 왜 이 종목?</summary>
       ${US_SORTED.map((u) => `<div class="rdet"><b>${esc(u.name)}${u.hit ? ` <small>검증(2023~ 처음 보는 기간): 오를 때 +${u.th}%↑ → 다음 날 시가 같은 방향 ${u.hit[0]}% [${(u.g || "")[0] || "-"}] · 내릴 때 -${u.thDn || u.th}%↓ → ${u.hit[1] ? u.hit[1] + "% [" + ((u.g || "")[1] || "-") + "]" : "약해서 참고 [C]"}</small>` : ""}</b><div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div><div class="ul">${esc(u.learn)}</div></div>`).join("")}
-      </details></div>`;
+      </details><div class="usmore" id="usMore"></div></div>`;
 
   $("prevList").innerHTML = [0, 1].map((i) => `
     <div class="prev">
@@ -1962,8 +1974,28 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const h = location.hash.slice(1); if (isValidDate(h) && h !== DATE) goto(h, { back: true });
   });
   // ---------- 메뉴 바로 가기(오른쪽 세로) · 맨 위로 ----------
-  const NAV = [...document.querySelectorAll("[data-nav]")].filter((el) => !el.hidden);
-  $("secnav").innerHTML = NAV.map((el, i) => `<button type="button" data-sec="${i}">${esc(el.dataset.nav)}</button>`).join("");
+  // ---------- 간단 보기 / 전체 보기 ----------
+  // 간단 보기(기본): 판정 지표 5개 · A등급 미국 테마 · 오늘 할 일만. 참고 지표·B/C 테마·수혜 업종·체크리스트·기록표·기준 찾기·용어·바로가기는 접거나 숨김 (판정 계산은 똑같이 돈다)
+  let simple = true; try { const v = localStorage.getItem("eden.simple"); if (v !== null) simple = v === "1"; } catch (e) {}
+  let NAV = [];
+  function buildNav() {
+    NAV = [...document.querySelectorAll("[data-nav]")].filter((el) => !el.hidden && !(simple && el.dataset.simple === "hide"));
+    $("secnav").innerHTML = NAV.map((el, i) => `<button type="button" data-sec="${i}">${esc(el.dataset.nav)}</button>`).join("");
+  }
+  // 미국 테마 줄: 간단 보기면 B·C 등급은 숨기되, 기준보다 많이 움직인(우선 관심·후순위) 줄은 보인다. 묶음이 다 비면 묶음 제목도 숨김
+  function paintSimpleUs() {
+    const show = (r) => !simple || !r.classList.contains("usb") || r.dataset.st === "up" || r.dataset.st === "dn";
+    document.querySelectorAll("#usList .ugbox").forEach((box) => { const vis = [...box.children].some(show); box.classList.toggle("empty", !vis); const g = box.previousElementSibling; if (g && g.classList.contains("ugrp")) g.classList.toggle("empty", !vis); });
+    const um = $("usMore"); if (um) { const hid = [...document.querySelectorAll("#usList .urow.usb")].filter((r) => !show(r)).length; um.textContent = simple ? `👀 간단 보기라 검증 A등급(다음 날 같은 방향 85%↑) 테마만 보여요 · 숨긴 테마 ${hid}개는 기준보다 많이 움직이면 저절로 나타나요 · 맨 위 "간단 보기" 버튼을 누르면 모두 보여요` : ""; }
+  }
+  function applySimple() {
+    document.body.classList.toggle("simple", simple);
+    const b = $("simpleBtn"); if (b) { b.textContent = simple ? "🧹 간단 보기 ✓" : "🔎 전체 보기 ✓"; b.classList.toggle("on", simple); b.title = simple ? "누르면 전체 보기 (참고 지표 · 모든 테마 · 수혜 업종 · 체크리스트 · 기록표 · 용어)" : "누르면 간단 보기 (판정에 쓰는 것만)"; }
+    const rm = $("refMore"); if (rm) rm.open = !simple;
+    paintSimpleUs(); buildNav();
+  }
+  $("simpleBtn").addEventListener("click", () => { simple = !simple; try { localStorage.setItem("eden.simple", simple ? "1" : "0"); } catch (e) {} applySimple(); paintNav(); });
+  buildNav();
   const toTop = () => { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { window.scrollTo(0, 0); } };
   function openNav(open) {
     $("secnav").classList.toggle("open", open); $("navDim").hidden = !open;
@@ -1988,7 +2020,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (navPin && Date.now() < navPin.until) return setActive(navPin.i); // 방금 누른 메뉴는 이동하는 동안 그대로
     // 지금 보고 있는 메뉴 표시: 화면 맨 위에 보이는 카드 (아래 끝이 화면 위쪽 120px보다 아래에 있는 첫 카드)
     let cur = -1;
-    if (NAV[0].getBoundingClientRect().top < window.innerHeight * 0.6) cur = NAV.findIndex((el) => el.getBoundingClientRect().bottom > 120);
+    if (NAV[0] && NAV[0].getBoundingClientRect().top < window.innerHeight * 0.6) cur = NAV.findIndex((el) => el.getBoundingClientRect().bottom > 120);
     if (window.innerHeight + (window.scrollY || 0) >= document.documentElement.scrollHeight - 4) cur = NAV.length - 1;
     setActive(cur);
   }
@@ -1996,7 +2028,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     $("secnav").querySelectorAll("[data-sec]").forEach((b) => b.classList.toggle("on", +b.dataset.sec === cur));
   }
   window.addEventListener("scroll", () => { if (!navTick) navTick = requestAnimationFrame(paintNav); }, { passive: true });
-  paintNav();
+  applySimple(); paintNav();
 
   document.addEventListener("click", (e) => { const b = e.target.closest("[data-go]"); if (b) { e.preventDefault(); goto(b.dataset.go, { from: b }); } });
 
@@ -2057,7 +2089,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       { const kr = [...(S.prev || []).map((p) => p && p.name), ...parseLeaders(S.journal.market.leaders).map((t) => t.name)].filter((n) => n && usLinkOf(n) === u); const rn = $("ur-" + u.k).querySelector(".rn"); let b = rn.querySelector(".krlk"); if (!b) { b = document.createElement("i"); b.className = "krlk"; rn.appendChild(b); } const krUp = kr.some((n) => (S.prev || []).some((p) => p && p.name === n && krUpPrev(p)) || parseLeaders(S.journal.market.leaders).some((t) => t.name === n && t.rate > 0)); b.textContent = krUp ? flagsOf(true, usUp(u)) : ""; b.title = krUp ? (usUp(u) ? "한국·미국 둘 다 오름: " : "한국에서 오름: ") + kr.join(", ") : ""; }
       $("ur-" + u.k).dataset.st = u.weak || (u.noDown && st === "back") ? "" : st === "first" ? "up" : st === "back" ? "dn" : "";
     });
-    paintUsOrder();
+    paintUsOrder(); paintSimpleUs();
     const tagHtml = (a) => (a.length ? a.map(([t, s]) => `<span>${esc(t)}<small>${esc(s)}</small></span>`).join("") : `<span class="empty">아직 없음</span>`);
     $("tFirst").innerHTML = tagHtml(r.themeFirst); $("tBack").innerHTML = tagHtml(r.themeBack);
     $("explain").innerHTML = explain(r);
@@ -2203,7 +2235,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const graded = ld.some((t) => t.L !== null && t.L !== undefined), a = S.auto || {}, badge = graded && a["market.leaders"] && a["market.leaders"] === S.journal.market.leaders ? a["leaders.badge"] : "";
       const base = graded ? "종목당 거래대금 기준 넘긴 종목 수 → 외인·기관 → 미장 → 상승 근거 → 차트 순 · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마"
         : "+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마";
-      if (sub) sub.innerHTML = (badge ? `<b class="ldbadge">${esc(badge)}</b><br>` : "") + esc(base); }
+      if (sub) sub.innerHTML = (badge ? `<b class="ldbadge">${esc(badge)}</b><br>` : "") + `<span class="subtxt">${esc(base)}</span>`; }
     // 설명 펼침 안 '오늘 테마별 왜 뽑혔나' 줄 (새 규칙 값이 있을 때만)
     { const el = $("ldHelpToday"); if (el) { const rows = ld.filter((t) => leaderWhy(t)); el.innerHTML = rows.length ? `<p><b>오늘 뽑힌 이유:</b></p><ul class="ldwhy">${rows.map((t, i) => `<li>${i + 1} ${esc(t.name)} — ${esc(leaderWhy(t))}</li>`).join("")}</ul>` : ""; } }
     // 한 줄: 순위 · 테마(대표 종목은 말풍선) · 외인 · 기관 · 등락률
