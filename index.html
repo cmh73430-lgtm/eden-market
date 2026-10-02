@@ -259,6 +259,7 @@ textarea.jin { resize: vertical; }
 .topld .tll .tlw { grid-column: 2 / -1; font-size: 12.5px; color: var(--muted); }
 .topld .tlf { margin-top: 8px; } .topld .tlf .btn { font-size: 12.5px; padding: 4px 10px; }
 .topld.prev { border-left-color: var(--line); }
+.lvr { font: inherit; font-size: 12px; padding: 1px 8px; margin-left: 4px; border: 1px solid #e0245e; color: #e0245e; background: transparent; border-radius: 12px; cursor: pointer; }
 .topld.live { border-left-color: #e0245e; } .topld.live .tlh b { color: #e0245e; }
 .topld .tll .tln { grid-column: 2 / -1; font-size: 12.5px; line-height: 1.4; } .topld .tll .tln a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; } .topld .tll .tln small { color: var(--muted); }
 /* 간단 보기: 판정에 쓰는 것만 보이고 나머지는 접힘 (전체 보기 버튼으로 전환) */
@@ -1796,7 +1797,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-68";
+  const APP_VER = "9.29-69";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2263,7 +2264,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   // 맨 위 요약: 오늘 주도 테마 상위 3개 (마감 뒤). 아직 없으면 어제 주도 테마(아침 수집 prev) 를 '어제' 로 표시. 둘 다 없으면 카드 숨김
   // 장중 실시간 (eden-market auto/live.json · 09:05~15:40 20분마다): 오늘 것이고 장중 창(09:00~16:25)이며 마감 주도 테마가 아직 없을 때 맨 위 카드가 실시간으로 바뀐다
-  let LIVE = null;
+  let LIVE = null, liveChecked = "";
   const kstHM = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
   const liveWindow = () => DATE === kstDate() && isBusinessDay(DATE, CAL.holidays) && kstHM() >= "09:00" && kstHM() <= "16:25";
   // 실시간 값이 실제로 어느 장(날짜)의 값인지: 장 전에 손으로 돌리면 date 는 오늘이어도 값은 어제 장 것
@@ -2302,7 +2303,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const wasHidden = box.hidden; box.hidden = false; box.classList.toggle("prev", !!stale); box.classList.add("live");
     const asOf = liveAsOf(L), md = asOf ? Number(asOf.slice(5, 7)) + "/" + Number(asOf.slice(8, 10)) : "";
     const when = stale ? `⏸ 지금은 장중이 아니에요 · ${md} ${asOf === L.date ? L.at + " 기준" : "장 마감 기준"} 마지막 값 · 장중 09:00~15:40 에 20분마다 새로 바뀌어요` : `${L.at} 기준 · 20분마다`;
-    $("topLeadTitle").textContent = stale ? "🔴 실시간 주도 테마 (마지막 값)" : "🔴 실시간 주도 테마"; $("topLeadSub").textContent = `${when} · 코스피 ${pc(L.kospi && L.kospi.value)}${L.kospi && L.kospi.amount ? " · 거래대금 " + eok(L.kospi.amount) : ""}${L.invest ? " · 외인 " + sg(L.invest.foreign) + " · 기관 " + sg(L.invest.institution) : ""}${L.program && typeof L.program.total === "number" ? " · 프로그램 " + sg(L.program.total) : ""}`;
+    $("topLeadTitle").textContent = stale ? "🔴 실시간 주도 테마 (마지막 값)" : "🔴 실시간 주도 테마"; const mk = (nm, k, inv, pg) => k ? `${nm} ${pc(k.value)}${k.amount ? " · 거래대금 " + eok(k.amount) : ""}${inv ? " · 외인 " + sg(inv.foreign) + " · 기관 " + sg(inv.institution) : ""}${pg && typeof pg.total === "number" ? " · 프로그램 " + sg(pg.total) : ""}` : "";
+    const chk = liveChecked ? ` · 앱 확인 ${liveChecked}` : "";
+    $("topLeadSub").innerHTML = [esc(when + chk) + ' <button type="button" class="lvr" data-live-refresh>↻ 새로고침</button>', esc(mk("코스피", L.kospi, L.invest, L.program)), esc(mk("코스닥", L.kosdaq, L.investQ, L.programQ))].filter(Boolean).join("<br>"); // 코스피·코스닥 한 줄씩 (9.29-69)
     $("topLeadList").innerHTML = L.themes.slice(0, 3).map((t, n) => {
       const slots = (t.slots || []).slice(0, 2), flows = slots.filter((x) => x.flow);
       const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
@@ -3387,15 +3390,21 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (before !== CAL.holidays.length + "/" + JSON.stringify(CAL.events).length) { AUTO = autoEvents(DATE, CAL); render(); }
     } catch (x) {}
   }
-  let liveTimer = null, liveBusy = false;
+  let liveTimer = null, liveBusy = false, liveHooked = false;
   async function livePull(first) {
     if (liveBusy || (!first && !liveWindow())) return; liveBusy = true; // 처음 열 때는 장 밖에서도 한 번 (마지막 값 보여 주기), 그 뒤엔 장중에만
-    try { const l = await pubGet(PUB_RAW + "live.json"); if (l && l.date <= kstDate() && (!LIVE || l.ts !== LIVE.ts)) { LIVE = l; paintTopLead(); } }
+    try { const l = await pubGet(PUB_RAW + "live.json"); liveChecked = kstHM(); if (l && l.date <= kstDate() && (!LIVE || l.ts !== LIVE.ts)) LIVE = l; if (LIVE) paintTopLead(); }
     catch (e) {} finally { liveBusy = false; }
   }
   function pubStart() {
     livePull(true); clearInterval(liveTimer);
-    liveTimer = setInterval(() => { if (document.visibilityState === "visible") livePull(); }, 5 * 60000); // 실시간 주도 테마: 5분마다 (장중 창에서만 실제로 받음)
+    liveTimer = setInterval(() => { if (document.visibilityState === "visible") livePull(); }, 2 * 60000); // 실시간 주도 테마: 2분마다 (장중 창에서만 실제로 받음)
+    if (!liveHooked) { // 폰에서 화면이 꺼지거나 다른 앱에 갔다 오면 타이머가 멈춰 있으므로, 돌아오는 즉시 한 번 받는다 · ↻ 버튼 (9.29-69)
+      liveHooked = true;
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") livePull(true); });
+      window.addEventListener("focus", () => livePull(true)); window.addEventListener("pageshow", () => livePull(true));
+      document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-live-refresh]"); if (b) { b.textContent = "확인 중…"; livePull(true); } });
+    }
     if (gh) return;
     pubPull();
     clearInterval(pubTimer);
