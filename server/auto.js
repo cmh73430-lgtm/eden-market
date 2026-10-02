@@ -127,12 +127,12 @@ export async function collectIntraday({ adapters, fetchImpl = fetch, now = new D
 
 // ---- 주도 테마 고르기 (오늘 주도 테마 · 다음 날 아침 전일 주도 테마 공통) — docs/leader-theme-research-2026-09-30.md 1절 ----
 // 사용자 순서 그대로 다섯 번 거른다: L 거래대금 기준 종목 수 → F 외인·기관 수급 → U 미국장 방향 → B 상승 근거 → C 대장주 차트 자리.
-//  게이트: 종목 수 ≥ 5 · 등락률 ≥ +1% · 오른 종목 비율 ≥ 0.6 · 초과수익(테마 − 코스피) ≥ +1%p → 초과수익 순 상위 12개(LEAD_POOL). 후보 0 이면 등락률 순 relaxed 폴백.
+//  게이트: 종목 수 ≥ 5 · 등락률 ≥ +1% · 오른 종목 비율 ≥ 0.6 · 초과수익(테마 − 코스피) ≥ +1%p → 초과수익 순 상위 40개(LEAD_POOL — 9.29-68: 12 → 40. 12개로 자르면 등락률은 낮아도 거래대금(L)이 큰 테마(예: 2026-10-02 장중 2차전지 L=4, 26위)를 아예 안 봐서 L 우선 규칙이 깨졌음). 후보 0 이면 등락률 순 relaxed 폴백.
 //  T: 코스피 거래대금 연동 종목당 거래대금 기준(억). 슬롯 = 오른 종목 중 v ≥ T/5 인 것을 거래대금 순 5개. L = 슬롯 중 v ≥ T 인 수 (0 이면 탈락).
 //  Score = L×10000 + F×1000 + U×100 + B×10 + C (앞자리가 크면 무조건 이김 → 사용자 순서 유지, 손으로 검산 가능).
 //  16:20 잠정(provisional): 게이트·L·U·B 만 (F=1·C=1 중립) = 요청 1+12. 18:40 확정: + 수급 6테마×3종목 + 일봉 6테마×2종목 = 43.
 const NV_HEAD = { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" };
-export const PREV_MIN_STOCKS = 5, PREV_FLAT = 0.5, LEAD_MIN_RATE = 1, LEAD_MIN_RISE = 0.6, LEAD_MIN_EXCESS = 1, LEAD_POOL = 12, HOT_RATE = 5, HOT_MIN = 2;
+export const PREV_MIN_STOCKS = 5, PREV_FLAT = 0.5, LEAD_MIN_RATE = 1, LEAD_MIN_RISE = 0.6, LEAD_MIN_EXCESS = 1, LEAD_POOL = 40, HOT_RATE = 5, HOT_MIN = 2;
 export const SLOT_N = 5, FLOW_TOP = 6, FLOW_STOCKS = 3, CHART_TOP = 6, CHART_STOCKS = 2, WEAK_AMOUNT = 70000, PERSIST_RANK = 20, PERSIST_MAX = 6;
 const round2 = (x) => Number(x.toFixed(2));
 
@@ -291,12 +291,15 @@ export function compareThemes(a, b) {
 // (2026-10-02 live: 시스템반도체 → HBM 으로 바뀐 뒤 온디바이스 AI 와 SK하이닉스·삼성전자가 겹쳤는데 둘 다 남음) → 더 합칠 게 없을 때까지 반복
 // 보이는 이름: 합쳐진 무리 중 오늘 가장 많이 오른 테마(동률이면 테마 거래대금 큰 쪽) — 종목 수가 적은 쪽을 고르면 '온디바이스 AI' 처럼
 // 덜 익숙한 이름이 나오고, 거래대금만 보면 '시스템반도체' 같은 넓은 테마가 늘 이겨서 (2026-10-02 사용자 요청). 슬롯·점수는 그대로, 이름·번호만 바꾼다
-const memberOf = (t) => ({ name: t.name, no: t.no, rate: typeof t.rate === "number" ? t.rate : null, value: typeof t.value === "number" ? t.value : null });
+const memberOf = (t) => ({ name: t.name, no: t.no, score: typeof t.score === "number" ? t.score : null, rate: typeof t.rate === "number" ? t.rate : null, value: typeof t.value === "number" ? t.value : null });
 export function dedupeThemes(sorted) {
   let cur = sorted, prevLen = -1;
   for (let k = 0; k < 6 && cur.length !== prevLen; k++) { prevLen = cur.length; cur = dedupeOnce(cur); }
   for (const t of cur) {
-    const ms = t._members || [memberOf(t)]; delete t._members;
+    const all = t._members || [memberOf(t)]; delete t._members;
+    // 이름은 점수가 가장 높은(=대표와 같은 점수) 테마들 중에서만 — 점수 낮은 테마(예: L=1 윤활유)가 L=4 2차전지 무리의 이름이 되지 않게 (9.29-68)
+    const sc = all.map((m) => m.score).filter((x) => typeof x === "number"), top = sc.length ? Math.max(...sc) : null;
+    const ms = top === null ? all : all.filter((m) => m.score === null || m.score === top);
     let best = ms[0];
     for (const m of ms) if ((m.rate ?? -Infinity) > (best.rate ?? -Infinity) || ((m.rate ?? -Infinity) === (best.rate ?? -Infinity) && (m.value ?? -Infinity) > (best.value ?? -Infinity))) best = m;
     if (best.name !== t.name) { // 이름을 바꾸면 화면에 같이 나오는 등락률·테마 거래대금도 그 테마 값으로 (점수·슬롯·등급은 그대로)
@@ -311,7 +314,8 @@ function dedupeOnce(sorted) {
   for (const t of sorted) {
     t.alias = t.alias || []; t._members = t._members || [memberOf(t)];
     const codes = new Set((t.slots || []).map((s) => s.code)), top = t.slots && t.slots[0] && t.slots[0].code;
-    const i = out.findIndex((o) => (o.slots || []).filter((s) => codes.has(s.code)).length >= 2 || (top && o.slots && o.slots[0] && o.slots[0].code === top));
+    // 같은 흐름: 슬롯 2종목↑ 겹침 · 대장주 같음 · 아래 테마의 대장주가 위 테마의 주도주(슬롯) 안에 있음 (9.29-68: 5G 대장 대한광통신 = 광통신 2등주)
+    const i = out.findIndex((o) => (o.slots || []).filter((s) => codes.has(s.code)).length >= 2 || (top && (o.slots || []).some((s) => s.code === top)));
     if (i < 0) { out.push(t); continue; }
     const o = out[i];
     if (o.score === t.score && (t.count || 0) < (o.count || 0)) { t.alias = [o.name, ...o.alias, ...t.alias]; t._members = [...t._members, ...o._members]; out[i] = t; } // 슬롯은 더 좁은 테마 것을 쓴다
