@@ -79,7 +79,7 @@ export function staleCheck(signals, expectedUs) {
   return out;
 }
 
-export async function collectMorning({ sources, themes, adapters, now = new Date(), prevThemes = null, holidays = [], date = null }) {
+export async function collectMorning({ sources, themes, adapters, now = new Date(), prevThemes = null, holidays = [], date = null, listings = null }) {
   const got = await collectAll({ sources, themes, adapters, now });
   const strip = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { value: v.value, src: v.src, time: v.time || undefined, detail: v.detail }]));
   const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), signals: strip(got.signals), us: strip(got.us), errors: got.errors.map((e) => e.key + ": " + e.error) };
@@ -106,6 +106,7 @@ export async function collectMorning({ sources, themes, adapters, now = new Date
     try { const p = await prevThemes(out); out.prev = p.themes; out.prevRaw = p.raw; } // out.us(방금 받은 미국 테마 값)으로 gapWarn 계산
     catch (e) { out.errors.push("prev: " + (e.message || e)); }
   }
+  if (listings) { try { out.listings = await listings(); } catch (e) { out.errors.push("신규상장: " + (e.message || e)); } } // 다음 거래일 신규 상장 (9.29-76 원장 [1500]) · 실패해도 다른 값은 그대로
   return out;
 }
 
@@ -382,12 +383,14 @@ export async function selectThemes({ get, n = 3, bizdate = null, kospi = null, u
       t.grades.F = gradeF(t.flow); t.score = scoreTheme(t.grades);
     }
   }
+  const rawBars = {}; // 확정 run 에서 받은 일봉 원본 (종목코드 → 네이버 응답) — 앱 차트용 auto/candles 저장에 다시 씀 (9.29-76 원장 [1502])
   if (chart) {
     cands.sort(compareThemes);
     for (const t of cands.slice(0, CHART_TOP)) { // 일봉: 상위 6테마 × 대장·2등 = 12회
       const cs = [];
       for (const s of t.slots.slice(0, CHART_STOCKS)) {
-        try { const c = gradeC(provisional ? withToday(await get(chartUrl(s.code, today)), today, s.price) : await get(chartUrl(s.code, today)), { vToday: s.value, T }); cs.push(c); if (c) s.chart = { grade: c.grade, tag: c.tag }; } catch (e) { cs.push(null); }
+        try { const raw = await get(chartUrl(s.code, today)); if (!provisional) rawBars[s.code] = raw;
+          const c = gradeC(provisional ? withToday(raw, today, s.price) : raw, { vToday: s.value, T }); cs.push(c); if (c) s.chart = { grade: c.grade, tag: c.tag }; } catch (e) { cs.push(null); }
       }
       t.chart = { lead: cs[0] || null, second: cs[1] || null };
       if (cs[0]) chartReady = true;
@@ -396,7 +399,7 @@ export async function selectThemes({ get, n = 3, bizdate = null, kospi = null, u
   }
   cands.sort(compareThemes);
   const candidates = dedupeThemes(cands);
-  return { themes: candidates.slice(0, n), candidates, T, relaxed, flowReady, chartReady, provisional: !!provisional, kospiRate, amount, all };
+  return Object.defineProperty({ themes: candidates.slice(0, n), candidates, T, relaxed, flowReady, chartReady, provisional: !!provisional, kospiRate, amount, all }, "rawBars", { value: rawBars, enumerable: false });
 }
 
 // 종목 실시간 응답 → { session: "after"|"pre"|null, pct } (NXT 가격 ÷ 어제 KRX 종가)
@@ -483,7 +486,8 @@ export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now
   // 관망(거래대금)과 주도 약함(1위 L ≤ 1)은 별개 배지 — 둘 다면 "관망·약함", weakLead 도 따로 둔다
   const weakLead = !!(themes[0] && themes[0].grades && themes[0].grades.L <= 1);
   const regime = [regimeOf(sel.amount, history), weakLead ? "약함" : ""].filter(Boolean).join("·");
-  return { text: leadersText(sel.themes, sel.T), flowReady: sel.flowReady, chartReady: sel.chartReady, provisional: sel.provisional, T: sel.T, regime, weakLead: weakLead || undefined, relaxed: sel.relaxed || undefined, kospiRate: sel.kospiRate, decidedAt: now.getTime(), themes, candidates, all: sel.all };
+  const res = { text: leadersText(sel.themes, sel.T), flowReady: sel.flowReady, chartReady: sel.chartReady, provisional: sel.provisional, T: sel.T, regime, weakLead: weakLead || undefined, relaxed: sel.relaxed || undefined, kospiRate: sel.kospiRate, decidedAt: now.getTime(), themes, candidates, all: sel.all };
+  return Object.defineProperty(res, "rawBars", { value: sel.rawBars || {}, enumerable: false }); // 저장 파일에는 안 들어감 (숨은 속성)
 }
 
 // ---- 장중 실시간 주도 테마 (--when=live, 09:05~15:35 20분마다) ----
@@ -579,7 +583,7 @@ export async function collectThemesOnly({ themes, sources, adapters, now = new D
 }
 
 // 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
-export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, leaders = null }) {
+export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, leaders = null, listings = null, candles = null }) {
   const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), market: {}, errors: [] };
   const inv = {};
   for (const k of ["kospi", "kosdaq"]) {
@@ -606,9 +610,75 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
       const l = await leaders(out.market); // 코스피 등락률·거래대금(T·초과수익 게이트) 을 넘긴다
       if (l && l.all) { out.themes = l.all; delete l.all; } // 테마 100개 compact 는 close.themes 에 (지속일수 D · 다음 날 정답표)
       if (l && l.text !== undefined) out.market.leaders = l;
+      if (candles && l && l.text !== undefined && !l.provisional) { // 앱 차트용 일봉 (확정 run 만 · 9.29-76 원장 [1502]) — 날짜 파일에는 안 넣고 숨은 속성으로 넘김 → collect-auto 가 auto/candles/<코드>.json 으로 저장
+        try { const c = await candles(l, l.rawBars || {}); Object.defineProperty(out, "candles", { value: c.candles || {}, enumerable: false }); (c.errors || []).forEach((e) => out.errors.push(e)); }
+        catch (e) { out.errors.push("일봉 저장: " + (e.message || e)); }
+      }
     } catch (e) { out.errors.push("주도 테마: " + (e.message || e)); }
   }
+  if (listings) { try { out.listings = await listings(); } catch (e) { out.errors.push("신규상장: " + (e.message || e)); } } // 다음 거래일 신규 상장 (9.29-76 원장 [1500])
   return out;
+}
+
+// ---- 앱 차트용 일봉 (9.29-76 원장 [1502]): 오늘 주도 테마 슬롯 종목 + 아침 전일 주도 테마 종목 → auto/candles/<코드>.json { code, name, date, bars:[{ date, o, h, l, c, v }] } (최근 120봉)
+// 확정 run 이 C 등급 계산에 이미 받은 일봉(rawBars)을 다시 쓰고, 없는 종목만 새로 받는다 (최대 CANDLE_MAX 종목)
+export const CANDLE_N = 120, CANDLE_MAX = 30;
+export const candleFile = (code) => AUTO_DIR + "/candles/" + code + ".json";
+export function candleRows(raw, n = CANDLE_N) {
+  const d8 = (s) => { const x = String(s || ""); return /^\d{8}$/.test(x) ? x.slice(0, 4) + "-" + x.slice(4, 6) + "-" + x.slice(6, 8) : /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : null; };
+  const rows = (Array.isArray(raw) ? raw : []).map((b) => ({ date: d8(b && b.localDate), o: num(b && b.openPrice), h: num(b && b.highPrice), l: num(b && b.lowPrice), c: num(b && b.closePrice), v: num(b && b.accumulatedTradingVolume) }))
+    .filter((r) => r.date && r.o !== null && r.h !== null && r.l !== null && r.c !== null).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const seen = new Set(), uniq = []; for (const r of rows) { if (seen.has(r.date)) continue; seen.add(r.date); uniq.push(r); }
+  return uniq.slice(-n);
+}
+// 저장할 종목: 오늘 주도 테마(themes) 슬롯 코드 → 아침 전일 주도 테마(morning.prev) 종목 코드 순, 6자리 숫자만, 같은 종목 한 번
+export function candleCodes(leaders, morning, max = CANDLE_MAX) {
+  const out = new Map(), add = (code, name) => { const c = String(code || "").trim(); if (/^\d{6}$/.test(c) && !out.has(c) && out.size < max) out.set(c, String(name || "").trim()); };
+  ((leaders && leaders.themes) || []).forEach((t) => ((t && t.slots) || []).forEach((s) => s && add(s.code, s.name)));
+  ((morning && morning.prev) || []).forEach((t) => ((t && t.stocks) || []).forEach((s) => s && add(s.code, s.name)));
+  return [...out].map(([code, name]) => ({ code, name }));
+}
+export async function collectCandles({ fetchImpl = fetch, timeoutMs = 10000, date, leaders = null, morning = null, cache = {} } = {}) {
+  const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+  const candles = {}, errors = []; let fetched = 0;
+  for (const { code, name } of candleCodes(leaders, morning)) {
+    try {
+      const raw = cache[code] || (fetched++, await get(chartUrl(code, date)));
+      const bars = candleRows(raw);
+      if (bars.length) candles[code] = { code, name, date, bars }; else errors.push("일봉 " + code + ": 봉 없음");
+    } catch (e) { errors.push("일봉 " + code + ": " + (e.message || e)); }
+  }
+  return { candles, errors, fetched };
+}
+
+// ---- 신규 상장 예정 (9.29-76 원장 [1500]): 네이버 증권 공모주 '상장대기'·'청약중' 목록 (로그인 없이 읽힘 · 같은 m.stock.naver.com 이라 Actions 에서도 다른 수집과 같은 길)
+// 응답 ipoList[]: compName(종목명) · marketType(코스피/코스닥/코넥스) · fixPubPrice(확정 공모가, 없으면 null) · lcalDate(상장일 YYYY-MM-DD) · ipoCode("A179880")
+export const IPO_URL = (type) => "https://m.stock.naver.com/front-api/ipo/progress?progressType=" + type + "&page=1&pageSize=50";
+// 여러 응답을 합쳐 today 뒤에 상장하는 종목만 날짜순으로 (같은 종목은 한 번) — 공모가가 아직 없으면 지어내지 않고 null
+export function parseListings(jsons, today = null) {
+  const seen = new Set(), items = [];
+  for (const j of jsons) {
+    const list = (j && j.result && Array.isArray(j.result.ipoList)) ? j.result.ipoList : [];
+    for (const x of list) {
+      const d = String((x && x.lcalDate) || ""), name = String((x && x.compName) || "").trim();
+      if (!name || !/^\d{4}-\d{2}-\d{2}$/.test(d) || (today && d <= today)) continue;
+      const key = x.ipoCode || name; if (seen.has(key)) continue; seen.add(key);
+      items.push({ name, market: String(x.marketType || "").trim(), price: num(x.fixPubPrice), date: d, code: String(x.ipoCode || "").replace(/^A/, "") });
+    }
+  }
+  return items.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}
+export async function fetchListings(fetchImpl = fetch, { today = null, timeoutMs = 10000 } = {}) {
+  const get = async (type) => {
+    const res = await fetchImpl(IPO_URL(type), { headers: { Accept: "application/json", Referer: "https://m.stock.naver.com/ipo", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" }, signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+    if (!j || j.isSuccess === false || !j.result) throw new Error("응답 이상" + (j && j.message ? ": " + j.message : ""));
+    return j;
+  };
+  const js = [await get("listing-upcoming")]; // 상장대기 (청약 끝 · 상장일 확정) — 이것이 못 오면 실패로
+  try { js.push(await get("subscribing")); } catch (e) {} // 청약중 (보통 상장은 1주 뒤라 다음 거래일엔 거의 없음 · 못 와도 됨)
+  return { src: "naver", items: parseListings(js, today) };
 }
 
 // 그 날 파일에 이번 결과를 합친다 (아침·오후 따로 두고, 같은 시점은 최신으로 덮는다)
@@ -629,6 +699,7 @@ export function summarize(rec) {
     Object.entries(m.stale || {}).forEach(([k, v]) => lines.push(`아침 ${m.at} ⚠ ${k} 값 기준일 ${v.date} (기대 ${v.expected}) — 오래된 값`));
     (m.prev || []).forEach((t) => lines.push(`아침 ${m.at} 전일테마 ${t.name} ${t.rate}%${t.score !== undefined ? " · 점수 " + t.score : ""} · 애프터 ${t.after ? t.after.pct + "% " + t.after.state : "—"} · 프리 ${t.pre ? t.pre.pct + "% " + t.pre.state : "—"}${t.gapWarn ? " · ⚠ 갭 추격 금지" : ""} (${(t.stocks || []).map((x) => x.name).join("·")})`));
     if (m.prevRaw) lines.push("아침 NXT 세션 " + m.prevRaw);
+    if (m.listings) lines.push(`아침 ${m.at} 신규상장 예정 ${(m.listings.items || []).map((x) => x.date.slice(5) + " " + x.name + "(" + x.market + ")").join(" · ") || "없음"}`);
     (m.errors || []).forEach((e) => lines.push("아침 실패 " + e));
   }
   const it = rec.intraday;
@@ -637,6 +708,7 @@ export function summarize(rec) {
     ["kospi", "kosdaq"].forEach((k) => { const v = c.market && c.market[k]; if (v) lines.push(`오후 ${c.at} ${k.padEnd(6)} ${String(v.value).padStart(7)}%  종가 ${v.close}`); });
     if (c.market && c.market.invest) lines.push(`오후 ${c.at} 수급 ${c.market.invest.text}`);
     if (c.market && c.market.leaders) { const L = c.market.leaders; lines.push(`오후 ${c.at} 주도 테마${L.provisional ? "(잠정)" : ""}${L.T ? " T=" + L.T + "억" : ""}${L.regime ? " · " + L.regime : ""}${L.relaxed ? " · 조건 미달·참고용" : ""} ${L.text || "없음"}`); }
+    if (c.listings) lines.push(`오후 ${c.at} 신규상장 예정 ${(c.listings.items || []).map((x) => x.date.slice(5) + " " + x.name + "(" + x.market + ")").join(" · ") || "없음"}`);
     (c.errors || []).forEach((e) => lines.push("오후 실패 " + e));
   }
   return lines.join("\n");
