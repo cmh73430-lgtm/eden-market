@@ -1800,7 +1800,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-76";
+  const APP_VER = "9.29-77";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2393,17 +2393,38 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     </div>`;
   }
   // 차트 밑 매수·매도 띠 "B 8,149 (09:05)" · "S 8,133 (14:00)" (9.29-76 원장 [1503]) — 입력 중에도 paintTradeNumbers 가 갱신
+  // 시점 칸에 날짜가 있으면 "B 8,149 (9/30 09:05)" 처럼 M/D 로 맞춰 보여 줌 (9.29-77 원장 [1513] · 차트 범위 밖이라 표식을 못 찍어도 날짜는 여기 보임)
   function chartMk(t) {
     const b = pnum(t.buy), sl = pnum(t.sell);
     if (b === null && sl === null) return "";
-    return (b !== null ? `<span class="mk buy">B ${b.toLocaleString("ko-KR")}${t.tIn ? " (" + esc(t.tIn) + ")" : ""}</span>` : "") + (sl !== null ? `<span class="mk sell">S ${sl.toLocaleString("ko-KR")}${t.tOut ? " (" + esc(t.tOut) + ")" : ""}</span>` : "");
+    const when = (v) => { const x = tradeDate(v, ""), w = x ? x.md + (x.rest ? " " + x.rest : "") : String(v || "").trim(); return w ? " (" + esc(w) + ")" : ""; };
+    return (b !== null ? `<span class="mk buy">B ${b.toLocaleString("ko-KR")}${when(t.tIn)}</span>` : "") + (sl !== null ? `<span class="mk sell">S ${sl.toLocaleString("ko-KR")}${when(t.tOut)}</span>` : "");
+  }
+  // 매수·매도 시점 칸의 날짜 (9.29-77 원장 [1513]): "9/30" · "09/30" · "9-30" · "2026-09-30" · "2026.09.30" · "9월30일" · "2026년 9월 30일" (시각 "09:05"·글 "장중" 과 같이 있어도)
+  // → { date: "YYYY-MM-DD", md: "9/30", rest: "09:05" } · 날짜가 없거나 없는 날(2/30)이면 null (= 일지 날짜 봉)
+  // 연도를 안 적으면 일지 날짜(day)와 가장 가까운 해 (1월 일지의 "12/30" = 지난해 · 10/2 일지의 "10/6" = 올해)
+  function tradeDate(v, day) {
+    const s = String(v || "");
+    let m = s.match(/(^|\D)(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})(?:\s*일)?(?!\d)/), y = null, mo, d;
+    if (m) { y = +m[2]; mo = +m[3]; d = +m[4]; }
+    else { m = s.match(/(^|[^\d:])(\d{1,2})\s*(?:[/-]|월)\s*(\d{1,2})(?:\s*일)?(?![\d:])/); if (!m) return null; mo = +m[2]; d = +m[3]; }
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    const p2 = (n) => String(n).padStart(2, "0"), ok = (yy) => { const t = new Date(Date.UTC(yy, mo - 1, d)); return t.getUTCMonth() === mo - 1 && t.getUTCDate() === d ? t : null; };
+    if (y === null) {
+      const ref = /^\d{4}-\d{2}-\d{2}$/.test(day || "") ? Date.UTC(+day.slice(0, 4), +day.slice(5, 7) - 1, +day.slice(8, 10)) : Date.now(), y0 = new Date(ref).getUTCFullYear();
+      let best = null; for (const yy of [y0 - 1, y0, y0 + 1]) { const t = ok(yy); if (t && (best === null || Math.abs(t - ref) < Math.abs(best - ref))) best = t; }
+      if (!best) return null; y = best.getUTCFullYear();
+    } else if (!ok(y)) return null;
+    const rest = (s.slice(0, m.index + m[1].length) + " " + s.slice(m.index + m[0].length)).replace(/\s+/g, " ").trim();
+    return { date: y + "-" + p2(mo) + "-" + p2(d), md: mo + "/" + d, rest };
   }
   // 거래량 막대 색 (9.29-76 원장 [1503]): 전날보다 많으면 up(빨강) · 적으면 down(파랑) · 같거나 첫 봉·값 없음이면 flat(회색)
   function volTone(v, pv) {
     return typeof v !== "number" || typeof pv !== "number" || v === pv ? "flat" : v > pv ? "up" : "down";
   }
-  // 앱 일봉 그림 좌표 (9.29-76 원장 [1502]·[1503]): 수집기 일봉(auto/candles/<코드>.json bars) 최근 60봉(그날이 들어가게) → 캔들 · 그날 봉 x · B(매수가)·S(매도가) 높이 · 아래 거래량 칸
-  // 그날 봉이 없으면 null (네이버 그림으로 대신)
+  // 앱 일봉 그림 좌표 (9.29-76 원장 [1502]·[1503]): 일봉 bars 최근 60봉(그날이 들어가게) → 캔들 · 그날 봉 x · B(매수가)·S(매도가) 높이 · 아래 거래량 칸
+  // 그날(일지 날짜) 봉이 없으면 null (네이버 그림으로 대신)
+  // 9.29-77 원장 [1513]: o.dB·o.dS = 매수·매도 시점 칸의 날짜(없으면 그날) → 그 날 봉에 B·S · 그 날 봉이 60봉 안에 없으면 표식 생략(out.B/out.S = true · 날짜는 값 띠에)
   function candleGeom(bars, day, buy, sell, o = {}) {
     const W = o.W || 600, H = o.H || 220, VH = o.VH || 56, GAP = 8, pad = 8, axis = 52;
     const rows = (Array.isArray(bars) ? bars : []).filter((b) => b && typeof b.c === "number" && typeof b.o === "number" && typeof b.h === "number" && typeof b.l === "number");
@@ -2412,7 +2433,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     let end = rows.length - 1, start = Math.max(0, end - 59);
     if (di < start) { start = Math.max(0, di - 30); end = Math.min(rows.length - 1, start + 59); }
     const win = rows.slice(start, end + 1), n = win.length, cw = (W - axis) / n, bw = Math.max(1, Math.min(10, cw * 0.62));
-    const marks = [buy, sell].filter((x) => typeof x === "number" && x > 0);
+    const at = (dd) => { const k = rows.findIndex((b) => b.date === (dd || day)); return k >= start && k <= end ? k : -1; };
+    const iB = typeof buy === "number" && buy > 0 ? at(o.dB) : -2, iS = typeof sell === "number" && sell > 0 ? at(o.dS) : -2; // -2 = 값 없음 · -1 = 범위 밖
+    const marks = [iB >= 0 ? buy : null, iS >= 0 ? sell : null].filter((x) => x !== null);
     let lo = Math.min(...win.map((b) => b.l), ...marks), hi = Math.max(...win.map((b) => b.h), ...marks);
     if (hi === lo) { hi += 1; lo -= 1; }
     const m = (hi - lo) * 0.04; lo -= m; hi += m;
@@ -2420,11 +2443,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const vmax = Math.max(0, ...win.map((b) => (typeof b.v === "number" ? b.v : 0)));
     const candles = win.map((b, i) => { const pv = start + i > 0 ? rows[start + i - 1].v : null;
       return { date: b.date, x: x(i), yo: y(b.o), yc: y(b.c), yh: y(b.h), yl: y(b.l), up: b.c >= b.o, vh: vmax > 0 && typeof b.v === "number" ? (b.v / vmax) * VH : 0, vt: volTone(b.v, pv) }; });
-    const d = di - start, dx = x(d), yB = typeof buy === "number" && buy > 0 ? y(buy) : null, yS = typeof sell === "number" && sell > 0 ? y(sell) : null;
-    const apart = yB !== null && yS !== null && Math.abs(yB - yS) < 18 ? 10 : 0; // 두 표식이 겹치면 좌우로 비킴
+    const d = di - start, yB = iB >= 0 ? y(buy) : null, yS = iS >= 0 ? y(sell) : null;
+    const apart = yB !== null && yS !== null && iB === iS && Math.abs(yB - yS) < 18 ? 10 : 0; // 같은 봉에서 두 표식이 겹치면 좌우로 비킴
     const ticks = [hi - m, (hi + lo) / 2, lo + m].map((p) => ({ p, y: y(p) }));
     return { W, H, VH, GAP, TH: H + GAP + VH, axis, n, start, d, cw, bw, lo, hi, candles, ticks,
-      B: yB === null ? null : { x: dx - apart, y: yB }, S: yS === null ? null : { x: dx + apart, y: yS } };
+      B: yB === null ? null : { x: x(iB - start) - apart, y: yB }, S: yS === null ? null : { x: x(iS - start) + apart, y: yS }, out: { B: iB === -1, S: iS === -1 } };
   }
   // 네이버 차트 그림처럼: 양봉 빨강 · 음봉 파랑 · 가격 눈금 3개 · 그날 봉에 B·S 표식 두 개만 (점선·범례·격자 없음) · 아래 거래량 막대
   function candleSvg(g) {
@@ -2436,8 +2459,31 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const mark = (k, p, col) => p ? `<g class="bs ${k}"><circle cx="${f(p.x)}" cy="${f(p.y)}" r="9" style="fill:${col}"/><text x="${f(p.x)}" y="${f(p.y + 4)}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${k}</text></g>` : "";
     return `<svg class="candles" viewBox="0 0 ${g.W} ${g.TH}" role="img" aria-label="일봉 ${g.n}개 · B 매수 · S 매도">${body}${tick}${mark("B", g.B, C.up)}${mark("S", g.S, C.down)}${vol}</svg>`;
   }
-  // 일봉 파일 받기 (공개 저장소 auto/candles/<코드>.json · 링크판 jsDelivr · 홈페이지 raw) — 없으면(404) 네이버 그림 그대로
-  const CANDLES = {}; // 코드 → 파일 | null(없음) | "…"(받는 중)
+  // 일봉 받기 (9.29-77 원장 [1513]): ① 중계 서버(아무 종목 · 네이버 일봉 120봉) → ② 수집기 auto/candles/<코드>.json(링크판 jsDelivr · 홈페이지 raw) → ③ 둘 다 없으면 네이버 그림 + B/S 값 띠
+  // 한 번 받은 건 이 화면 동안 기억(CANDLES · 저장 0) · 요청마다 15초 제한 · 링크판에서 중계가 막혀도(CORS·접속 제한) 화면 문구 없이 다음 길로
+  const CANDLES = {}; // 코드 → { bars, src: "relay"|"candles" } | null(없음) | "…"(받는 중)
+  const RELAY = "https://eden-chart.cmh-eden.workers.dev";
+  let relayOff = false; // 중계 접속 자체가 막힌 화면이면(fetch 가 TypeError) 이 화면 동안 다른 종목도 중계를 건너뜀
+  // 중계 응답 { code, name, bars:[{ d:"YYYY-MM-DD", o, h, l, c, v }] } → 앱 일봉 { date, o, h, l, c, v } · 코드가 다르거나 봉이 없으면 null
+  function relayBars(j, code) {
+    if (!j || String(j.code) !== code || !Array.isArray(j.bars)) return null;
+    const n = (x) => (typeof x === "number" && isFinite(x) ? x : null);
+    const bars = j.bars.map((b) => ({ date: b && b.d, o: n(b && b.o), h: n(b && b.h), l: n(b && b.l), c: n(b && b.c), v: n(b && b.v) }))
+      .filter((b) => /^\d{4}-\d{2}-\d{2}$/.test(String(b.date)) && b.o !== null && b.h !== null && b.l !== null && b.c !== null);
+    return bars.length ? { code, name: typeof j.name === "string" ? j.name : "", bars, src: "relay" } : null;
+  }
+  async function relayGet(code) {
+    if (relayOff) return null;
+    let signal; try { signal = AbortSignal.timeout(15000); } catch (e) {}
+    let r; try { r = await fetch(RELAY + "/day?code=" + code + "&count=120", { signal }); } catch (e) { if (e && e.name === "TypeError") relayOff = true; return null; }
+    if (!r.ok) return null; // 400·404(없는 종목)·502(네이버 실패) → 수집기 파일로
+    try { return relayBars(await r.json(), code); } catch (e) { return null; }
+  }
+  async function loadCandles(code, base) {
+    const a = await relayGet(code); if (a) return a;
+    try { const j = await pubGet(base + "candles/" + code + ".json"); if (j && Array.isArray(j.bars) && j.bars.length) return Object.assign({}, j, { src: "candles" }); } catch (e) {}
+    return null;
+  }
   function paintCandles() {
     (S.journal.trades || []).forEach((t, i) => {
       const box = $("cd-" + i); if (!box) return;
@@ -2445,11 +2491,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (c === undefined) {
         let base; try { base = PUB_RAW; } catch (e) { setTimeout(paintCandles, 200); return; } // 시작 중이면 조금 뒤에
         CANDLES[code] = "…";
-        pubGet(base + "candles/" + code + ".json").then((j) => { CANDLES[code] = j && Array.isArray(j.bars) && j.bars.length ? j : null; paintCandles(); }).catch(() => { CANDLES[code] = null; paintCandles(); });
+        loadCandles(code, base).then((j) => { CANDLES[code] = j; paintCandles(); }, () => { CANDLES[code] = null; paintCandles(); });
         return;
       }
-      const g = c && c !== "…" ? candleGeom(c.bars, DATE, pnum(t.buy), pnum(t.sell)) : null;
-      if (g) { box.innerHTML = candleSvg(g); box.hidden = false; if (nv) { nv.hidden = true; nv.dataset.byCandle = "1"; } }
+      const dB = (tradeDate(t.tIn, DATE) || {}).date, dS = (tradeDate(t.tOut, DATE) || {}).date; // 시점 칸 날짜 (없으면 일지 날짜)
+      const g = c && c !== "…" ? candleGeom(c.bars, DATE, pnum(t.buy), pnum(t.sell), { dB, dS }) : null;
+      if (g) { box.innerHTML = candleSvg(g); box.hidden = false; box.dataset.src = c.src || ""; if (nv) { nv.hidden = true; nv.dataset.byCandle = "1"; } }
       else { box.innerHTML = ""; box.hidden = true; if (nv && nv.dataset.byCandle) { nv.hidden = false; delete nv.dataset.byCandle; } }
     });
   }

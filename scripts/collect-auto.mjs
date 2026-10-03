@@ -141,6 +141,7 @@ if (!save) {
   process.exit(0);
 }
 // 앱 차트용 일봉 (확정 close run 만 · 9.29-76 원장 [1502]): 종목마다 auto/candles/<코드>.json — 실패해도 날짜 파일 저장은 계속
+// 9.29-77 (원장 [1511]·[1513]): 앱이 중계 서버에서 일봉을 받으므로 기본 꺼짐(server/auto.js CANDLE_SAVE = false → part.candles 없음 → 쓰기 0) · 이미 저장된 파일은 그대로
 if (part.candles) {
   let n = 0;
   for (const [code, c] of Object.entries(part.candles)) {

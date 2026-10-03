@@ -583,7 +583,7 @@ export async function collectThemesOnly({ themes, sources, adapters, now = new D
 }
 
 // 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
-export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, leaders = null, listings = null, candles = null }) {
+export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, leaders = null, listings = null, candles = null, saveCandles = CANDLE_SAVE }) {
   const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), market: {}, errors: [] };
   const inv = {};
   for (const k of ["kospi", "kosdaq"]) {
@@ -610,7 +610,7 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
       const l = await leaders(out.market); // 코스피 등락률·거래대금(T·초과수익 게이트) 을 넘긴다
       if (l && l.all) { out.themes = l.all; delete l.all; } // 테마 100개 compact 는 close.themes 에 (지속일수 D · 다음 날 정답표)
       if (l && l.text !== undefined) out.market.leaders = l;
-      if (candles && l && l.text !== undefined && !l.provisional) { // 앱 차트용 일봉 (확정 run 만 · 9.29-76 원장 [1502]) — 날짜 파일에는 안 넣고 숨은 속성으로 넘김 → collect-auto 가 auto/candles/<코드>.json 으로 저장
+      if (candles && saveCandles && l && l.text !== undefined && !l.provisional) { // 앱 차트용 일봉 (확정 run 만 · 9.29-76 원장 [1502] · 9.29-77 부터 기본 꺼짐 CANDLE_SAVE) — 날짜 파일에는 안 넣고 숨은 속성으로 넘김 → collect-auto 가 auto/candles/<코드>.json 으로 저장
         try { const c = await candles(l, l.rawBars || {}); Object.defineProperty(out, "candles", { value: c.candles || {}, enumerable: false }); (c.errors || []).forEach((e) => out.errors.push(e)); }
         catch (e) { out.errors.push("일봉 저장: " + (e.message || e)); }
       }
@@ -623,6 +623,9 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
 // ---- 앱 차트용 일봉 (9.29-76 원장 [1502]): 오늘 주도 테마 슬롯 종목 + 아침 전일 주도 테마 종목 → auto/candles/<코드>.json { code, name, date, bars:[{ date, o, h, l, c, v }] } (최근 120봉)
 // 확정 run 이 C 등급 계산에 이미 받은 일봉(rawBars)을 다시 쓰고, 없는 종목만 새로 받는다 (최대 CANDLE_MAX 종목)
 export const CANDLE_N = 120, CANDLE_MAX = 30;
+// 9.29-77 (원장 [1511] 디렉터 답 "중계 서버 생기면 끄기" · [1513]): 앱이 중계 서버(eden-chart.cmh-eden.workers.dev)에서 아무 종목 일봉을 직접 받으므로
+// 마감 확정 수집의 주도주 일봉 따로 저장(auto/candles 쓰기)은 기본 꺼짐. 코드 경로는 남김(true 로 바꾸면 다시 저장) · C 등급 계산용 일봉 받기는 그대로 · 이미 저장된 candles 파일은 앱의 대체 경로로 그대로 둠
+export const CANDLE_SAVE = false;
 export const candleFile = (code) => AUTO_DIR + "/candles/" + code + ".json";
 export function candleRows(raw, n = CANDLE_N) {
   const d8 = (s) => { const x = String(s || ""); return /^\d{8}$/.test(x) ? x.slice(0, 4) + "-" + x.slice(4, 6) + "-" + x.slice(6, 8) : /^\d{4}-\d{2}-\d{2}$/.test(x) ? x : null; };
