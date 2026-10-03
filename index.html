@@ -1799,7 +1799,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-74";
+  const APP_VER = "9.29-75";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2452,6 +2452,23 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const PRE_NAMES = { up: "프리마켓 강세", flat: "프리마켓 보합", down: "프리마켓 약세" };
   const prevLabel = (p) => { const bits = [PREV_NAMES[p.state], PRE_NAMES[p.pre]].filter(Boolean); return p.name.trim() + (bits.length ? " (" + bits.join(" · ") + ")" : ""); };
 
+  // 블로그 억/조 표기: 1만억 이상은 조 (16.0조) · 부호 붙이기 (9.29-75 함수로 빼서 시험)
+  function blogEok(v, signed) {
+    const t = Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : v.toLocaleString("ko-KR") + "억";
+    return (signed && v > 0 ? "+" : "") + t;
+  }
+  // 테마 외인·기관 매매 현황 "외인 +183억 · 기관 +25억" — 자료가 없으면 지어내지 않고 "—" (9.29-75)
+  function blogFlow(f, i) {
+    const one = (nm, v) => nm + " " + (typeof v === "number" && isFinite(v) ? blogEok(v, true) : "—");
+    return one("외인", f) + " · " + one("기관", i);
+  }
+  // 수급 한 줄 "- 외국인 -1,080억 / 기관 +4,155억 / 프로그램 -225억 / 거래대금 16.0조" — 프로그램 값이 없으면 "프로그램 —" (9.29-75)
+  function blogSupply(x, prog) {
+    const v = (n) => typeof n === "number" && isFinite(n);
+    const parts = [v(x.f) ? "외국인 " + blogEok(x.f, true) : "", v(x.i) ? "기관 " + blogEok(x.i, true) : "", "프로그램 " + (v(prog) ? blogEok(prog, true) : "—"), v(x.a) ? "거래대금 " + blogEok(x.a) : ""].filter(Boolean);
+    return "- " + parts.join(" / ");
+  }
+
   // 네이버 블로그용 글: 그날 입력한 전체 내용 (서식 유지 HTML + 글자만)
   // 네이버 글쓰기에 붙여넣어도 줄이 흐트러지지 않게, 한 줄에 하나씩 <p>로 나눈다.
   function blogPost(d, only) {
@@ -2476,7 +2493,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const say = (text) => P(esc(text), text);
     const blank = () => { h += "<p>&nbsp;</p>"; txt.push(""); };
     const HEADS = new Set();
-    const head = (text) => { blank(); h += `<p><b>${esc(text)}</b></p>`; txt.push(text); HEADS.add(text); }; // 소제목: 굵은 글씨만 (9.29-74 사용자 블로그 글 그대로)
+    const head = (text) => { if (txt.length > 1 && txt[txt.length - 1] !== "") blank(); h += `<p><b>${esc(text)}</b></p>`; txt.push(text); HEADS.add(text); }; // 소제목: 굵은 글씨만 · 제목 바로 밑·빈 줄 뒤에는 빈 줄 안 넣음 (9.29-75 사용자 블로그 글 그대로)
     const BLUE2 = "#0078cb"; // 주요 일정 · 주요 테마 · 특징주 (사용자 블로그 글의 파란 글씨)
     const tint = (html, c) => `<span style="color:${c}">${html}</span>`;
     const sub = (text) => P(`<b>${esc(text)}</b>`, "[" + text + "]");
@@ -2500,8 +2517,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
     // 1. 장전 시황 판단 · 이유
     head("① 장전 판단");
-    const krLead = parseLeaders(mk.leaders), ek = (v) => (Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : v.toLocaleString("ko-KR") + "억");
-    const sg = (v) => (v > 0 ? "+" : "") + ek(v); // 부호 붙은 억/조
+    const krLead = parseLeaders(mk.leaders), ek = (v) => blogEok(v);
+    const sg = (v) => blogEok(v, true); // 부호 붙은 억/조
     // 블로그(네이버)는 국기 이모지가 "KRUS" 글자로 깨지므로 글자로: 한국·미국 둘 다 오르면 [한·미], 한국만 [한]
     const flagOf = (t) => { const u = usLinkOf(t.name), v = u ? themeValue((st.us || {})[u.k]) : null; const f = flagsOf(t.rate > 0, v !== null && v > 0); return f === "🇰🇷🇺🇸" ? "[한·미]" : f === "🇰🇷" ? "[한]" : f === "🇺🇸" ? "[미]" : ""; };
     const isUs = (t) => /미국/.test(t[1] || "");
@@ -2540,7 +2557,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const krLine = [krTone, mk.kospi && "코스피 " + pct(kv ?? 0), mk.kosdaq && "코스닥 " + pct(qv ?? 0)].filter(Boolean).join(" · ");
     const usLead = usAll.filter(([, v]) => v >= 1).slice(0, 3).map(([u, v], i) => (i + 1) + " " + u.name + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
     // 미국장: 첫 줄 "미국장: 보합", 아래로 지수 하나씩 "· 다우 +0.04%" (9.29-72 사용자 요청)
-    if (usLine) { const tn = tone(usAvg); P(`<b>미국장:</b>${tn ? " " + esc(tn) : ""}`, "미국장:" + (tn ? " " + tn : "")); usItems.forEach((x) => P("· " + paintPct(x), "· " + x)); gap(); }
+    if (usLine) { const tn = tone(usAvg); P(`<b>미국장:</b>${tn ? " " + esc(tn) : ""}`, "미국장:" + (tn ? " " + tn : "")); usItems.forEach((x) => P("· " + paintPct(x), "· " + x)); } // 한국장은 빈 줄 없이 바로 밑 (9.29-75 사용자 블로그 글)
     // 국장: 첫 줄 "국장: 혼조", 아래로 "· 코스피 +0.46%" · "· 코스닥 -0.11%" (9.29-72 사용자 요청)
     const lv = (k) => { const x = (st.auto || {})["close." + k]; return typeof x === "number" ? x.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""; };
     const krRow = (nm, k, v) => { const L = lv(k), t = L ? `${L} (${pct(v)})` : pct(v); P(`· ${nm} ${paint(esc(t), v)}`, `· ${nm} ${t}`); }; // '· 코스피 7,003.74 (+0.46%)'
@@ -2550,11 +2567,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (inv.length) { if (kv !== null || qv !== null) gap(); sub0("수급:");
       const progOf = (mkName) => { const a0 = st.auto || {}, v = /닥/.test(mkName) ? a0["close.progQ"] : a0["close.progK"] ?? parseNum((st.signals || {}).prog); return typeof v === "number" ? v : null; };
       inv.forEach((x, i) => { if (i) blank(); say("· " + x.mk);
-        const parts = [x.f !== null ? "외국인 " + sg(x.f) : "", x.i !== null ? "기관 " + sg(x.i) : "", progOf(x.mk) !== null ? "프로그램 " + sg(progOf(x.mk)) : "", x.a !== null ? "거래대금 " + ek(x.a) : ""].filter(Boolean);
-        say("- " + parts.join(" / ")); }); }
+        say(blogSupply(x, progOf(x.mk))); }); } // 프로그램 값이 없으면 "프로그램 —" (9.29-75)
     const blueList = (label, rows) => { P(tint(`<b>${esc(label)}</b>`, BLUE2), label); rows.forEach((x) => P(tint(esc("· " + x), BLUE2), "· " + x)); };
-    if (krLead.length) { gap(); blank(); blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t) => `${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks ? " (" + t.stocks + ")" : ""}${t.f !== null || t.i !== null ? " · " + [t.f !== null ? "외인 " + sg(t.f) : "", t.i !== null ? "기관 " + sg(t.i) : ""].filter(Boolean).join(" · ") : ""}`)); }
-    if (usLead.length) { gap(); blueList("주요 테마 (미국):", usLead.map((x) => x.replace(/^\d+\s+/, ""))); }
+    if (krLead.length) { gap(); blank(); blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t) => `${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks ? " (" + t.stocks + ")" : ""} · ${blogFlow(t.f, t.i)}`)); } // 한국 주요 테마: 외인·기관 매매 현황 (없으면 —) (9.29-75)
+    if (usLead.length) { blueList("주요 테마 (미국):", usLead.map((x) => x.replace(/^\d+\s+/, ""))); } // 미국: 외인·기관 자료 없음 → 표시 안 함 · 한국 줄 바로 밑 (9.29-75 사용자 블로그 글)
     // 왜 주요 테마인지: 맨 밑에 참고 줄 하나 (얇게)
     // grades(새 모양: 대금 기준 종목 수·수급·미장·차트)가 있으면 그 근거를, 옛 모양이면 강세 종목 수·거래대금을 적는다
     if (false && (krLead.length || usLead.length)) { // 블로그에는 넣지 않음 (9.29-72 사용자 요청)
@@ -2572,8 +2588,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const split = (v, sep) => String(v || "").split(sep).map((x) => x.trim()).filter(Boolean);
     // 사용자 블로그 글 그대로 (9.29-74): 장 흐름 줄은 넣지 않음 · 특징주는 파랑 · 내일 볼 것은 빨강
     if (mk.issues) { gap(); const a = split(mk.issues, " / "); blueList("특징주·이슈:", a.map((x, i) => x + (i < a.length - 1 ? " /" : ""))); }
-    if (mk.note) { gap(); line("한 줄 시황:", mk.note); }
-    if (mk.next) { gap(); const RED2 = "#e00000"; const nx = String(mk.next).trim(), dm = nx.match(/^(\d{1,2}\/\d{1,2}\([^)]+\))\s+(.*)$/);
+    // 한 줄 시황: 시황일지 복사에만 넣고 매매일지 복사에서는 뺌 · 매매일지는 내일 볼 것이 특징주 바로 밑 (9.29-75 사용자 블로그 글 그대로 · 원장 [1494])
+    if (mk.note && !isJournal) { gap(); line("한 줄 시황:", mk.note); }
+    if (mk.next) { if (!isJournal) gap(); const RED2 = "#e00000"; const nx = String(mk.next).trim(), dm = nx.match(/^(\d{1,2}\/\d{1,2}\([^)]+\))\s+(.*)$/);
       const red = (html, text) => P(tint(html, RED2), text);
       if (!dm) red(`<b>내일 볼 것:</b> ${esc(nx)}`, "내일 볼 것: " + nx);
       else { // "10/6(화) [일정 · ]A·B 이어지는지 프리마켓 확인 · 밤 미국장 테마 확인" → 날짜 줄 · 테마마다 한 줄 · 나머지 한 줄
@@ -2619,8 +2636,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     head("⑤ 돌아보기");
     // 핵심만: 잘한 점 · 아쉬운 점 · 내일 할 일 (결과·규칙·마음·메모는 적었을 때만 짧게)
     const n2 = txt.length;
-    [["잘한 점:", j.good], ["아쉬운 점:", j.bad], ["내일 할 일:", j.tomorrow], ["결과:", j.result && j.result !== "none" ? RESULT[j.result] + (j.kept ? " · 규칙 지킴" : "") : ""], ["마음 상태:", j.mood], ["메모:", j.memo]]
-      .filter(([, v]) => v).forEach(([k, v]) => line(k, v));
+    // 사용자 블로그 글 그대로 (9.29-75): 잘한 점·아쉬운 점·내일 할 일 다음 한 칸 띄우고 결과·마음 상태·메모 · 여러 줄 글은 줄바꿈 그대로
+    const lineBr = (label, v) => { const t = String(v).trim(); if (t) P(`<b>${esc(label)}</b> ${esc(t).replace(/\r?\n/g, "<br>")}`, label + " " + t); };
+    const g1 = [["잘한 점:", j.good], ["아쉬운 점:", j.bad], ["내일 할 일:", j.tomorrow]].filter(([, v]) => (v || "").trim());
+    const g2 = [["결과:", j.result && j.result !== "none" ? RESULT[j.result] + (j.kept ? " · 규칙 지킴" : "") : ""], ["마음 상태:", j.mood], ["메모:", j.memo]].filter(([, v]) => (v || "").trim());
+    g1.forEach(([k, v]) => lineBr(k, v)); if (g1.length && g2.length) blank(); g2.forEach(([k, v]) => lineBr(k, v));
     if (txt.length === n2) say("돌아보기를 적지 않았다.");
     blank();
     say(`#매매일지 #주식일지 #단타일지 ${tags(trades.map((t) => t.name))} ${tags(parseLeaders(mk.leaders).map((t) => t.name))} #EdenCockpit #${dd0.replace(/-/g, "")}`.replace(/\s+/g, " "));
