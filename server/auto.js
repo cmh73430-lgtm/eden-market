@@ -428,7 +428,7 @@ export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, 
   const hasSlots = (t) => !!t && Array.isArray(t.slots) && t.slots.some((s) => s && s.code);
   if (!themes && leaders && Array.isArray(leaders.themes) && leaders.themes.some(hasSlots)) themes = leaders.themes.map((t) => fromLeader(t, leaders.T));
   if (!themes) {
-    const sel = await selectThemes({ get, n: 2, bizdate, kospi, provisional: true }); // 아침 9시 전 = 어제 마감 기준 (수급·일봉 없이 잠정)
+    const sel = await selectThemes({ get, n: 3, bizdate, kospi, provisional: true }); // 아침 9시 전 = 어제 마감 기준 (수급·일봉 없이 잠정)
     themes = sel.themes.map((t) => fromLeader(t, sel.T));
   }
   const raws = [];
@@ -599,6 +599,7 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
     } catch (e) { out.errors.push(k + " 수급: " + (e.message || e)); }
   }
   if (Object.keys(inv).length) out.market.invest = Object.assign({ text: investText(inv) }, inv);
+  try { out.market.programQ = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); } // 블로그 수급 줄 (9.29-74)
   try { out.market.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); } // 마감 프로그램 순매수(억) → 장 흐름 문장·프로그램 칸
   if (leaders) {
     try {
