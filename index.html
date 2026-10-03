@@ -1799,7 +1799,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-72";
+  const APP_VER = "9.29-73";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2477,6 +2477,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const blank = () => { h += "<p>&nbsp;</p>"; txt.push(""); };
     const head = (text) => { blank(); h += `<p><b>■ ${esc(text)}</b></p>`; txt.push("■ " + text); }; // h3 는 블로그에 붙이면 글씨가 너무 커서 굵은 글씨로 (9.29-71)
     const sub = (text) => P(`<b>${esc(text)}</b>`, "[" + text + "]");
+    // 오른 건 빨강 · 내린 건 파랑 (블로그 붙여넣기용 html 에만, 글자판은 그대로) (9.29-73)
+    const RED = "#ff0010", BLUE = "#0000ff";
+    const colorOf = (v) => (v > 0 ? RED : v < 0 ? BLUE : "");
+    const paint = (html, v) => { const c = colorOf(v); return c ? `<span style="color:${c}">${html}</span>` : html; };
+    const paintPct = (text) => esc(text).replace(/[+\-−]?\d[\d,.]*%/g, (m) => paint(m, parseFloat(m.replace("−", "-"))));
     const sub0 = (text) => P(`<b>${esc(text)}</b>`, text); // 굵은 라벨만 한 줄 ("수급:")
     const line = (label, v) => { if (v) P(`<b>${esc(label)}</b> ${esc(v)}`, label + " " + v); };
     const cont = (text, n = 6) => P("&nbsp;".repeat(n) + esc(text), " ".repeat(n) + text); // 라벨 아래 이어지는 줄
@@ -2532,9 +2537,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const krLine = [krTone, mk.kospi && "코스피 " + pct(kv ?? 0), mk.kosdaq && "코스닥 " + pct(qv ?? 0)].filter(Boolean).join(" · ");
     const usLead = usAll.filter(([, v]) => v >= 1).slice(0, 3).map(([u, v], i) => (i + 1) + " " + u.name + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
     // 미국장: 첫 줄 "미국장: 보합", 아래로 지수 하나씩 "· 다우 +0.04%" (9.29-72 사용자 요청)
-    if (usLine) { const tn = tone(usAvg); P(`<b>미국장:</b>${tn ? " " + esc(tn) : ""}`, "미국장:" + (tn ? " " + tn : "")); usItems.forEach((x) => say("· " + x)); gap(); }
+    if (usLine) { const tn = tone(usAvg); P(`<b>미국장:</b>${tn ? " " + esc(tn) : ""}`, "미국장:" + (tn ? " " + tn : "")); usItems.forEach((x) => P("· " + paintPct(x), "· " + x)); gap(); }
     // 국장: 첫 줄 "국장: 혼조", 아래로 "· 코스피 +0.46%" · "· 코스닥 -0.11%" (9.29-72 사용자 요청)
-    if (kv !== null || qv !== null) { P(`<b>국장:</b>${krTone ? " " + esc(krTone) : ""}`, "국장:" + (krTone ? " " + krTone : "")); if (kv !== null) say("· 코스피 " + pct(kv)); if (qv !== null) say("· 코스닥 " + pct(qv)); }
+    const lv = (k) => { const x = (st.auto || {})["close." + k]; return typeof x === "number" ? x.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""; };
+    const krRow = (nm, k, v) => { const L = lv(k), t = L ? `${L} (${pct(v)})` : pct(v); P(`· ${nm} ${paint(esc(t), v)}`, `· ${nm} ${t}`); }; // '· 코스피 7,003.74 (+0.46%)'
+    if (kv !== null || qv !== null) { P(`<b>한국장:</b>${krTone ? " " + esc(krTone) : ""}`, "한국장:" + (krTone ? " " + krTone : "")); if (kv !== null) krRow("코스피", "kospi", kv); if (qv !== null) krRow("코스닥", "kosdaq", qv); }
     // 수급은 시장마다 한 줄, 주요 테마는 번호마다 한 줄
     if (inv.length) { if (kv !== null || qv !== null) gap(); sub0("수급:"); inv.map((x, i) => [x.mk, x.f !== null ? "외국인 " + (x.f > 0 ? "+" : "") + ek(x.f) : "", x.i !== null ? "기관 " + (x.i > 0 ? "+" : "") + ek(x.i) : "", x.a !== null ? "거래대금 " + ek(x.a) : ""].filter(Boolean).join(" ") + (i < inv.length - 1 ? " /" : "")).forEach((x) => say("· " + x)); } // 수급: 아래로 시장마다 "· 코스피 외국인 … 거래대금 …"
     if (krLead.length) { gap(); listed("주요 테마 (한국):", krLead.map((t, i) => `${i + 1} ${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks ? " (" + t.stocks + ")" : ""}`)); }
@@ -3252,7 +3259,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const d = "어제 " + pc(t.rate) + (t.stocks && t.stocks.length ? " · 주도주 " + t.stocks.slice(0, 3).map((x) => x.name).join("·") : "") + (t.flow ? " · 외인 " + (t.flow.foreign > 0 ? "+" : "") + t.flow.foreign.toLocaleString("ko-KR") + "억 · 기관 " + (t.flow.inst > 0 ? "+" : "") + t.flow.inst.toLocaleString("ko-KR") + "억" : "")+ " · 애프터 " + (t.after ? pc(t.after.pct) : "—") + " · 프리 " + (t.pre ? pc(t.pre.pct) : "8시 이후");
       if (st.auto["detail.prev." + i] !== d) { st.auto["detail.prev." + i] = d; changed.push(["auto.detail.prev." + i, m.ts]); }
     });
-    ["kospi", "kosdaq"].forEach((k) => { if (c[k]) fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), c[k].value, a.close.ts); });
+    ["kospi", "kosdaq"].forEach((k) => { if (c[k]) fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), c[k].value, a.close.ts);
+      if (c[k] && typeof c[k].close === "number" && st.auto["close." + k] !== c[k].close) { st.auto["close." + k] = c[k].close; changed.push(["auto.close." + k, a.close.ts]); } }); // 블로그 '코스피 7,003.74 (+0.46%)' 용 (9.29-73)
     if (c.leaders && c.leaders.text) fillOne("market.leaders", st.journal.market.leaders, (x) => (st.journal.market.leaders = x), c.leaders.text, a.close.ts);
     { const b = leadersBadge(c.leaders, (a.close || {}).at) || undefined; if (st.auto["leaders.badge"] !== b) { if (b === undefined) delete st.auto["leaders.badge"]; else st.auto["leaders.badge"] = b; changed.push(["auto.leaders.badge", (a.close || {}).ts]); } }
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
