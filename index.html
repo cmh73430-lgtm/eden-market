@@ -407,7 +407,8 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 #ruleDoc .dhead h1 { margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.02em; }
 #ruleDoc .dhead p { margin: 0; color: var(--muted); font-size: 13px; }
 #ruleDoc .eyebrow { font-size: 11px; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
-#ruleDoc .flow { display: grid; gap: 10px; }
+/* 9.29-80 원장 [1544]: 단계 묶음 = .dflow (앱의 수급 표 .flow 3칸 격자와 이름이 겹쳐 휴대폰에서 여러 세로 칸으로 잘리던 것) */
+#ruleDoc .dflow { display: grid; gap: 10px; }
 #ruleDoc .stage { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; display: grid; grid-template-columns: 52px 1fr; }
 #ruleDoc .num { display: grid; place-items: center; font-size: 22px; font-weight: 900; color: var(--up); border-right: 1px solid var(--line); }
 #ruleDoc .body { padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
@@ -492,7 +493,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <p>장 전에 시장 모드를 정하고, 진짜 대금이 몰린 테마에서 외인·기관·프로그램이 같이 사는 종목을, 그날 시장에 맞는 진입 방식으로 산다. 파는 가격은 사기 전에 정한다.</p>
   </div>
 
-  <div class="flow">
+  <div class="dflow">
 
     <section class="stage">
       <div class="num">0</div>
@@ -1832,7 +1833,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-79";
+  const APP_VER = "9.29-80";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
