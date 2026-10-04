@@ -386,6 +386,8 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .chiplbl { font-size: 12px; color: var(--muted); font-weight: 700; margin-right: 2px; }
 .prev .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
 .how { font-size: 13px; line-height: 1.7; } .how ol { margin: 4px 0; padding-left: 20px; }
+/* 9.29-79 원장 [1537]: 매매수칙 카드 (첫 화면 맨 위 · 메뉴 첫 항목) */
+.rulecard h3 { margin: 0; font-size: 14px; font-weight: 900; } .rulecard ol { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.75; }
 </style>
 </head>
 <body>
@@ -740,6 +742,36 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="tools"><div class="row"><button class="btn" id="simpleBtn" type="button">🧹 간단 보기 ✓</button><button class="btn" id="reset" type="button">이 날 초기화</button><span id="resetAsk" class="row" hidden><button class="btn danger" id="resetYes" type="button">정말 지우기</button><button class="btn" id="resetNo" type="button">취소</button></span><button class="btn" id="undo" type="button" hidden>↩ 되돌리기</button></div><div class="sync" id="sync"></div></div>
   </header>
   <div class="jumps"><button class="btn docbtn" id="docOpen" type="button">📘 내 매매기법</button><button class="btn docbtn" type="button" data-jump="marketCard">📰 시황일지</button><button class="btn docbtn" type="button" data-jump="journal">📓 매매일지</button></div>
+
+  <!-- 9.29-79 원장 [1537]·[1539]: 매매수칙 — 첫 화면 맨 위 · 메뉴 첫 항목 (디렉터 메모 「관심종목 고르는 법」 · 「종가배팅」 글자 그대로) -->
+  <section class="card rulecard" id="tradeRules" data-nav="📋 매매수칙">
+    <h2>📋 매매수칙</h2>
+    <h3>관심종목 고르는 법</h3>
+    <ol id="pickRules">
+      <li>거래량, 거래대금상위 (거래대금 우선)</li>
+      <li>거래대금 500억 이상</li>
+      <li>외국인, 기관, 개인수급</li>
+      <li>테마가 형성된 종목들</li>
+      <li>정배열 , 전고점 돌파 or 신고가</li>
+      <li>재료 모맨텀이 살아있는 종목 or 섹터</li>
+      <li>재무재표 좋은 종목 선호</li>
+      <li>호가창이 두꺼운 종목</li>
+      <li>끼가 있는 종목</li>
+    </ol>
+    <h3>종가배팅</h3>
+    <ol id="closeRules">
+      <li>재료파악 : 이슈의 중요성, 지속성, 새로운 이슈가 나올 가능성</li>
+      <li>거래대금 상위종목</li>
+      <li>외국인 기관 수급</li>
+      <li>앞에 내용들을 충족하는 종목의 단일가</li>
+      <li>시황</li>
+      <li>테마가 엮인 종목</li>
+      <li>차트가 이쁜 종목</li>
+      <li>자신만의 매매 원칙 (손절원칙) 정립</li>
+      <li>비중조절 (현금비중 보유)</li>
+      <li>섹터가 다른 두 종목 매매</li>
+    </ol>
+  </section>
 
   <section class="verdict" id="verdict" aria-live="polite">
     <div>
@@ -1800,7 +1832,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-78";
+  const APP_VER = "9.29-79";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
