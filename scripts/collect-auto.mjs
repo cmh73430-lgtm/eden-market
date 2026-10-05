@@ -5,9 +5,11 @@
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
 // 옵션: --when=morning|intraday|close|themes|live (기본: 지금 시각으로 판단 · live = 장중 실시간 주도 테마 → auto/live.json 만 · themes = 미국장 테마 값만 아침 기록에 채워 넣기, 새 테마를 추가한 날) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
 //       --final (close: 실행 시각과 관계없이 확정 run — 수급·일봉 포함). 오늘이 아닌 --date 로 손으로 백필하는 close run 도 확정으로 돈다 (잠정 결과가 확정을 덮지 않게)
+// 관찰 기록 (9.29-82 원장 [1556] · [1558]): 마감 확정 run 이 400종목 중 「급락일 외국인·기관 동반 매수」 종목과 그 뒤 결과를 auto/observe/crash-cobuy.json 에 쌓는다
+//   (대상 목록 auto/observe/universe.json 은 7일마다 다시 만듦 · 기록만 · 날짜 파일·앱 무변경 · --dry 는 목록만 출력)
 import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay, kstTime } from "../shared/calendar.js";
-import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE } from "../server/auto.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -34,6 +36,11 @@ const api = async (path, opts = {}) => {
   return res;
 };
 const b64 = (s) => Buffer.from(s, "utf8").toString("base64");
+// --dry(토큰 없음)일 때 관찰 기록 재현용: 공개 저장소 eden-market main 의 파일을 읽기만 한다 (토큰 안 씀 · 없으면 null)
+const PUBLIC_REPO = "cmh73430-lgtm/eden-market";
+async function readPublic(path) {
+  try { const r = await fetch(`https://raw.githubusercontent.com/${PUBLIC_REPO}/main/${path}`, { signal: AbortSignal.timeout(15000) }); return r.ok ? await r.json() : null; } catch (e) { return null; }
+}
 async function ensureBranch() {
   let r = await api(`/repos/${repo}/branches/${BRANCH}`);
   if (r.ok) return;
@@ -134,6 +141,18 @@ const got = when === "intraday" ? ["fut", "spot", "kospi"].filter((k) => part[k]
 // 장중 재판정은 하루 여러 번 → 앞선 확인 기록을 이어 붙인다
 if (when === "intraday" && prev.json && prev.json.date === date && prev.json.intraday) part.list = [...(prev.json.intraday.list || []), { at: prev.json.intraday.at, kospi: prev.json.intraday.kospi, fut: prev.json.intraday.fut, spot: prev.json.intraday.spot }].slice(-6);
 if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
+// 관찰 기록 (9.29-82 원장 [1556] · [1558]): 확정 close run 이고 오늘 종목 수급이 들어왔을 때만 (19:45 에 아직 없으면 20:20 이 함). 실패해도 날짜 파일 저장은 그대로
+let obs = null, obsOld = null;
+const LD = when === "close" && part.market ? part.market.leaders : null;
+if (when === "close" && !provisional && LD && !LD.provisional && LD.flowReady) {
+  try {
+    const rd = async (path) => { if (!save) return readPublic(path); const x = await readFile(path); if (x.sha && !x.json) throw new Error(path + " 을 못 읽음(크기·형식) — 덮지 않음"); return x.json; };
+    obsOld = await rd(OBS_FILE);
+    const uni = await rd(OBS_UNIVERSE_FILE);
+    obs = await collectObserve({ date, universe: uni, file: obsOld, at: part.at });
+    console.log(obsText(obs));
+  } catch (e) { obs = null; console.log("관찰 기록 실패:", e.message || e); }
+}
 
 if (!save) {
   if (part.candles) console.log(`일봉 ${Object.keys(part.candles).length}개 (저장 안 함): ${Object.values(part.candles).map((c) => c.code + " " + c.bars.length + "봉").join(" · ")}`);
@@ -156,5 +175,13 @@ const msg = `자동 연동 ${date} ${when === "morning" ? "아침" : when === "t
 await writeFile(autoFile(date), rec, msg);
 await writeFile(AUTO_DIR + "/latest.json", rec, msg);
 console.log(summarize(rec));
+if (obs && obs.universe) { // 대상 목록을 새로 만든 run 만 (7일마다)
+  try { await writeFile(OBS_UNIVERSE_FILE, obs.universe, `관찰 대상 목록 ${date} ${obs.universe.stocks.length}종목`); console.log(`저장: ${OBS_UNIVERSE_FILE} (${obs.universe.stocks.length}종목)`); }
+  catch (e) { console.log("관찰 대상 목록 저장 실패:", e.message || e); }
+}
+if (obs && (obs.ev.checked || obs.filled) && JSON.stringify(obs.file) !== JSON.stringify(obsOld)) { // 새로 센 종목이나 채운 결과가 있을 때만 (같은 날 두 번째 run 은 못 받은 종목만 다시 · 날짜+코드 중복 0)
+  try { obs.file.updatedAt = Date.now(); await writeFile(OBS_FILE, obs.file, `관찰 기록 ${date} 급락+동반매수 ${obs.ev.signals.length}건 · 결과 채움 ${obs.filled}`); console.log(`저장: ${OBS_FILE} (신호 ${obs.file.signals.length}건 · ${obs.file.days.length}일)`); }
+  catch (e) { console.log("관찰 기록 저장 실패:", e.message || e); }
+}
 console.log(`저장: ${autoFile(date)} (${BRANCH})`);
 if (part.errors.length) console.log("일부 실패:", part.errors.join(" / "));

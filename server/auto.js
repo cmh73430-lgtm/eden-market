@@ -729,4 +729,209 @@ export function summarize(rec) {
   return lines.join("\n");
 }
 
+// ---- 관찰 기록: 급락일 외국인·기관 동반 매수 (9.29-82 원장 [1556] "관찰 기록만 시작" · [1558] "400종목으로 넓히기" · docs/flow-research-2026-10-01.md 해석 3 · 형식 docs/observe-crash-cobuy.md) ----
+// 기록만 한다 — 앱 화면·판정·점수·주도 테마 선정에는 안 쓴다 (날짜 파일 auto/<날짜>.json 도 그대로). 마감 확정 run(19:45 · 20:20)에서 collect-auto.mjs 가 auto/observe/ 에 쌓는다.
+//  신호 = 그날 등락률 ≤ −3% (반올림 전 정수 비교) · 외국인 순매수 > 0 · 기관 순매수 > 0 (주식 수 기준)
+//  대상 = 연구 R2 와 같은 400종목: 코스피 시총 상위 200 · 코스닥 시총 상위 150 · 코스닥 151~500위 중 최근 20거래일 평균 거래대금 상위 50 · 보통주만(ETF·ETN·우선주·리츠 제외)
+//         목록은 auto/observe/universe.json 에 두고 7일마다 다시 만든다 (시총 순위 10회 + 코스닥 151~500위 거래대금 350회)
+//  결과 = 신호일 종가 기준 다음날·3일·5일 종가 수익률 · 같은 날짜 KODEX200(069500) 수익률 · 초과 · 다음날 +3% 이상 — 네이버 거래일 행으로 세서 휴장일은 저절로 건너뜀
+export const OBS_FILE = AUTO_DIR + "/observe/crash-cobuy.json", OBS_UNIVERSE_FILE = AUTO_DIR + "/observe/universe.json";
+export const OBS_CRASH = -3, OBS_KODEX = "069500", OBS_PAGE = 20, OBS_DET_PAGE = 5, OBS_MAX_SIGNALS = 1500, OBS_MAX_DAYS = 260, OBS_EXPIRE_DAYS = 30, OBS_HORIZONS = [1, 3, 5];
+export const OBS_UNIVERSE_DAYS = 7, OBS_N_KOSPI = 200, OBS_N_KOSDAQ = 150, OBS_POOL_END = 500, OBS_N_SMALL = 50, OBS_TURNOVER_DAYS = 20;
+export const OBS_CONC = 2, OBS_GAP_MS = 150, OBS_BUDGET_MS = 240000, OBS_REBUILD_MS = 120000; // 동시 2개 · 요청 사이 0.15초 · 관찰 전체 4분(목록 다시 만들기는 그중 2분까지) — Actions 10분 제한 안
+export const OBS_RULE = "등락률 <= -3% · 외국인 순매수 > 0 · 기관 순매수 > 0 (docs/flow-research-2026-10-01.md)";
+export const OBS_UNIVERSE_RULE = "코스피 시총 상위 200 · 코스닥 시총 상위 150 · 코스닥 151~500위 중 20거래일 평균 거래대금 상위 50 · 보통주만(ETF·ETN·우선주·리츠 제외) — 연구 R2 08·10번";
+export const obsTrendUrl = (code, n = OBS_PAGE) => "https://m.stock.naver.com/api/stock/" + code + "/trend?pageSize=" + n; // bizdate 를 붙이면 맨 앞 행 종가가 "-" 로 와서 안 씀 (10/5 실측)
+export const obsRankUrl = (market, page) => "https://m.stock.naver.com/api/stocks/marketValue/" + market + "?page=" + page + "&pageSize=100";
+const dashDate = (s) => { const t = String(s || ""); return /^\d{8}$/.test(t) ? t.slice(0, 4) + "-" + t.slice(4, 6) + "-" + t.slice(6) : null; };
+const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+// 네이버 종목 일별 수급 행(최근 먼저) → 오래된 순 [{ date, close, rate %(반올림), crash(반올림 전 정수 비교), fq·oq 주식 수, foreign·inst 억, value 억 }] — 종가 없는 행은 뺌
+export function trendRows(rows) {
+  return (Array.isArray(rows) ? rows : []).map((r) => {
+    const o = r || {}, date = dashDate(o.bizdate), close = num(o.closePrice), fq = num(o.foreignerPureBuyQuant), oq = num(o.organPureBuyQuant), vol = num(o.accumulatedTradingVolume);
+    let cmp = num(o.compareToPreviousClosePrice); const dir = String((o.compareToPreviousPrice && o.compareToPreviousPrice.name) || "");
+    if (cmp !== null && cmp > 0 && /FALL|LOWER/.test(dir)) cmp = -cmp; // 하락인데 부호 없이 오는 경우 대비
+    const base = close !== null && cmp !== null ? close - cmp : null;
+    return { date, close, rate: base > 0 ? round2((cmp / base) * 100) : null, crash: base > 0 ? cmp * 100 <= OBS_CRASH * base : null, // 100×(종가−전일) ≤ −3×전일 — 반올림·소수 오차 없이 −3.00% 포함
+      fq, oq, foreign: fq !== null && close ? Math.round((fq * close) / 1e8) : null, inst: oq !== null && close ? Math.round((oq * close) / 1e8) : null, value: vol !== null && close ? round2((vol * close) / 1e8) : null, vol };
+  }).filter((r) => r.date && r.close !== null && r.close > 0).sort(byDate);
+}
+// 신호 판정: crash(반올림 전) 가 있으면 그것, 없으면 rate. 수급은 주식 수 fq·oq 가 있으면 그것, 없으면 억 단위 foreign·inst
+export function isCrashCobuy(r) {
+  if (!r) return false;
+  const down = typeof r.crash === "boolean" ? r.crash : typeof r.rate === "number" && r.rate <= OBS_CRASH;
+  const f = typeof r.fq === "number" ? r.fq : r.foreign, o = typeof r.oq === "number" ? r.oq : r.inst;
+  return down && typeof f === "number" && f > 0 && typeof o === "number" && o > 0;
+}
+// ---- 대상 400종목 목록 (주 1회) ----
+const PREF_RE = /.+[0-9]?우(B)?$/; // 우선주 이름 (연구 R2 08번: 삼성전자우 · 현대차2우B …) — 보통주 "성우"(458650)도 걸려서 코드 끝자리(보통주 0 · 우선주 5·7·K …)도 같이 봄 (10/5 실측)
+const REIT_RE = /(^|[^메])리츠/;     // 리츠 (SK리츠 · 이리츠코크렙 …) — 메리츠금융지주 · 메리츠증권 은 보통주라 뺌
+export function obsExcluded(s) {
+  if (!s || String(s.stockEndType || "") !== "stock") return "etf_etn";
+  const name = String(s.stockName || "");
+  if (PREF_RE.test(name) && !String(s.itemCode || "").endsWith("0")) return "preferred";
+  if (REIT_RE.test(name)) return "reit";
+  return null;
+}
+// 시총 순위 응답들(페이지 순) → 보통주만 순서 그대로 [{code, name}] + 뺀 목록
+export function obsCommon(pages) {
+  const out = [], excluded = { etf_etn: 0, preferred: [], reit: [] }, seen = new Set();
+  for (const p of Array.isArray(pages) ? pages : []) for (const s of (p && Array.isArray(p.stocks) ? p.stocks : [])) {
+    const code = String((s && s.itemCode) || ""); if (!code || seen.has(code)) continue; seen.add(code);
+    const why = obsExcluded(s);
+    if (why === "etf_etn") excluded.etf_etn++; else if (why) excluded[why].push(s.stockName); else out.push({ code, name: String(s.stockName || "") });
+  }
+  return { list: out, excluded };
+}
+// 20거래일 평균 거래대금(억) — trendRows 의 최근 20행 종가×거래량. 10행 미만이면 null (연구 R2 02번과 같음)
+export function avgTurnover(rows, n = OBS_TURNOVER_DAYS) {
+  const xs = (Array.isArray(rows) ? rows : []).filter((r) => typeof r.vol === "number" && r.close > 0).slice(-n);
+  if (xs.length < 10) return null;
+  return round2(xs.reduce((s, r) => s + (r.close * r.vol) / 1e8, 0) / xs.length);
+}
+// 목록 고르기: kospi·kosdaq = obsCommon().list · turnover = { code: 20일 평균 억 } → 400종목 [{code, name, market, bucket}]
+export function obsPickUniverse(kospi, kosdaq, turnover = {}) {
+  const k = (kospi || []).slice(0, OBS_N_KOSPI).map((s) => Object.assign({}, s, { market: "KOSPI", bucket: "KOSPI200" }));
+  const q = (kosdaq || []).slice(0, OBS_N_KOSDAQ).map((s) => Object.assign({}, s, { market: "KOSDAQ", bucket: "KOSDAQ150" }));
+  const pool = (kosdaq || []).slice(OBS_N_KOSDAQ, OBS_POOL_END).filter((s) => typeof turnover[s.code] === "number");
+  const small = pool.sort((a, b) => turnover[b.code] - turnover[a.code]).slice(0, OBS_N_SMALL).map((s) => ({ code: s.code, name: s.name, market: "KOSDAQ", bucket: "KOSDAQ_SMALL", tv: turnover[s.code] }));
+  return [...k, ...q, ...small];
+}
+export const obsUniverseStale = (u, date) => !(u && Array.isArray(u.stocks) && u.stocks.length && typeof u.builtAt === "string" && addDays(u.builtAt, OBS_UNIVERSE_DAYS) > date);
+// 요청을 천천히: 동시 conc 개 · 한 요청 끝날 때마다 gapMs 쉼 · deadline(clock 기준) 넘으면 남은 것은 손대지 않고 돌려줌
+export async function paced(items, fn, { conc = OBS_CONC, gapMs = OBS_GAP_MS, deadline = Infinity, clock = () => Date.now(), sleep = (ms) => new Promise((ok) => setTimeout(ok, ms)) } = {}) {
+  const xs = Array.isArray(items) ? items : [], left = []; let i = 0;
+  const worker = async () => { while (i < xs.length) { const it = xs[i++]; if (clock() > deadline) { left.push(it); continue; } await fn(it); if (gapMs > 0) await sleep(gapMs); } };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(conc, xs.length)) }, worker));
+  return left;
+}
+// 목록 다시 만들기: 시총 순위(코스피 3쪽 · 코스닥 7쪽 = 10회, 앞쪽 제외 종목 자리를 다음 순위로 채울 여유) → 코스닥 151~500위 350종목 20일 거래대금(350회).
+// 코스피 200·코스닥 150 을 못 채우거나 거래대금을 300종목 넘게 못 받으면 실패(null) → 옛 목록 유지
+export async function buildUniverse({ get, date, pace = {}, deadline = Infinity, clock = () => Date.now() }) {
+  const errors = []; let requests = 0;
+  const pages = async (market, n) => { const out = []; for (let p = 1; p <= n; p++) { if (clock() > deadline) { errors.push("시간 예산 넘음: 순위 " + market); break; } try { requests++; out.push(await get(obsRankUrl(market, p))); } catch (e) { errors.push("순위 " + market + " " + p + ": " + (e.message || e)); } if (pace.sleep && pace.gapMs) await pace.sleep(pace.gapMs); } return out; };
+  const K = obsCommon(await pages("KOSPI", 3)), Q = obsCommon(await pages("KOSDAQ", 7));
+  if (K.list.length < OBS_N_KOSPI || Q.list.length < OBS_N_KOSDAQ + 300) return { universe: null, requests, errors: [...errors, `순위 부족: 코스피 보통주 ${K.list.length} · 코스닥 ${Q.list.length}`] };
+  const pool = Q.list.slice(OBS_N_KOSDAQ, OBS_POOL_END), turnover = {};
+  const left = await paced(pool, async (s) => { try { requests++; const v = avgTurnover(trendRows(await get(obsTrendUrl(s.code, OBS_TURNOVER_DAYS)))); if (v !== null) turnover[s.code] = v; } catch (e) { errors.push("거래대금 " + s.code + ": " + (e.message || e)); } }, Object.assign({}, pace, { deadline, clock }));
+  if (left.length) errors.push(`시간 예산 넘음: 거래대금 ${left.length}종목 못 받음`);
+  const got = Object.keys(turnover).length;
+  if (got < 300) return { universe: null, requests, errors: [...errors, `거래대금 부족: ${got}/${pool.length}`] };
+  const stocks = obsPickUniverse(K.list, Q.list, turnover);
+  return { universe: { app: "jangjeon-cockpit", kind: "observe-universe", v: 1, rule: OBS_UNIVERSE_RULE, builtAt: date, refreshDays: OBS_UNIVERSE_DAYS,
+    counts: { KOSPI200: stocks.filter((s) => s.bucket === "KOSPI200").length, KOSDAQ150: stocks.filter((s) => s.bucket === "KOSDAQ150").length, KOSDAQ_SMALL: stocks.filter((s) => s.bucket === "KOSDAQ_SMALL").length, poolTurnover: got },
+    excluded: { etf_etn: K.excluded.etf_etn + Q.excluded.etf_etn, preferred: [...K.excluded.preferred, ...Q.excluded.preferred], reit: [...K.excluded.reit, ...Q.excluded.reit] }, stocks }, requests, errors };
+}
+// ---- 그 날 판정 · 기록 합치기 · 결과 채우기 ----
+// stocks = 이번에 볼 종목 [{code, name, bucket}] · rowsByCode[code] = trendRows() 결과(받기 실패면 null).
+// 그 날 행이 없거나(휴장·아직 집계 전·거래정지) 수급 칸이 비거나 받기에 실패한 종목은 miss 로 돌려줌 → 같은 날 다음 run 이 그 종목만 다시
+export function obsEvaluate(date, stocks, rowsByCode = {}) {
+  let checked = 0, crashed = 0; const signals = [], crashList = [], miss = []; // crashList = 급락 종목 전부(출력용 · 기록 파일에는 안 넣음)
+  for (const u of Array.isArray(stocks) ? stocks : []) {
+    const rows = rowsByCode[u.code], r = Array.isArray(rows) ? rows.find((x) => x.date === date) : null;
+    if (!r || r.fq === null || r.oq === null || typeof r.crash !== "boolean") { miss.push(u.code); continue; }
+    checked++; if (r.crash) { crashed++; crashList.push({ code: u.code, name: u.name, rate: r.rate, foreign: r.foreign, inst: r.inst }); }
+    if (!isCrashCobuy(r)) continue;
+    const S = r.value > 0 && typeof r.foreign === "number" && typeof r.inst === "number" ? round2(((r.foreign + r.inst) / r.value) * 100) : null; // 참고: 강도 (외+기)/거래대금 % — 연구 표의 "이미 내림"은 S ≥ 1 도 걸었음
+    signals.push({ date, code: u.code, name: u.name || "", bucket: u.bucket || "", close: r.close, rate: r.rate, foreign: r.foreign, inst: r.inst, S, d1: null, d3: null, d5: null, k1: null, k3: null, k5: null, x1: null, x3: null, x5: null, up3: null, dates: {}, done: false });
+  }
+  return { date, checked, crashed, signals, crashList, miss };
+}
+export const obsEmpty = () => ({ app: "jangjeon-cockpit", kind: "crash-cobuy", v: 2, rule: OBS_RULE, updatedAt: null, days: [], signals: [] });
+const obsNorm = (f) => { const e = obsEmpty(); return f && typeof f === "object" ? Object.assign(e, f, { kind: e.kind, v: e.v, rule: OBS_RULE, days: Array.isArray(f.days) ? f.days.map((d) => Object.assign({}, d)) : [], signals: Array.isArray(f.signals) ? f.signals.slice() : [] }) : e; };
+const OBS_OUT = ["close", "d1", "d3", "d5", "k1", "k3", "k5", "x1", "x3", "x5", "up3", "dates", "done", "miss"];
+// 그 날 판정을 기록에 합친다 (target = 그날 대상 종목 수).
+//  · 같은 날 처음: 날 줄 { date, at, target, checked, crashed, n, miss[] } 을 새로 만든다
+//  · 같은 날 다음 run: 앞 run 이 못 받은 종목(miss)만 다시 본 결과를 더한다 — checked·crashed·n 은 더하고 miss 는 남은 것으로 바꿈. 이번에 하나도 못 셌으면 날 줄은 그대로(at 도 안 바뀜)
+//  · 신호는 날짜+코드로 하나만 (이미 있는 코드는 앞 것 유지 · 채운 결과 칸 보존)
+//  · 다른 날 줄의 miss 목록은 개수(missN)로 줄인다 — 파일 크기
+export function obsMergeDay(file, ev, at = null, target = null) {
+  const f = obsNorm(file);
+  for (const d of f.days) if (d.date !== (ev && ev.date) && Array.isArray(d.miss)) { d.missN = d.miss.length; delete d.miss; }
+  if (!ev) return f;
+  const i = f.days.findIndex((d) => d.date === ev.date), cur = i >= 0 ? f.days[i] : null;
+  if (!ev.checked) { if (cur) cur.miss = ev.miss.slice(); return f; } // 셈 0: 남은 목록만 (처음이면 날 줄도 안 만듦)
+  const have = new Set(f.signals.filter((s) => s && s.date === ev.date).map((s) => s.code)), fresh = [];
+  for (const s of ev.signals) if (!have.has(s.code)) { have.add(s.code); fresh.push(Object.assign({}, s)); }
+  const day = cur ? Object.assign(cur, { at, checked: (cur.checked || 0) + ev.checked, crashed: (cur.crashed || 0) + ev.crashed, n: (cur.n || 0) + fresh.length, miss: ev.miss.slice() })
+    : { date: ev.date, at, target: typeof target === "number" ? target : ev.checked + ev.miss.length, checked: ev.checked, crashed: ev.crashed, n: fresh.length, miss: ev.miss.slice() };
+  if (!cur) f.days.push(day);
+  f.days = f.days.sort(byDate).slice(-OBS_MAX_DAYS);
+  f.signals = [...f.signals.filter(Boolean), ...fresh].sort((a, b) => byDate(a, b) || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0)).slice(-OBS_MAX_SIGNALS);
+  return f;
+}
+// 결과가 덜 찬 지난 신호 (오늘 신호는 다음 거래일부터)
+export const obsPending = (file, date) => obsNorm(file).signals.filter((s) => s && !s.done && s.date < date);
+// 한 신호의 결과 채우기: rows = 그 종목 trendRows · kodex = KODEX200 trendRows · today = 실행 날짜. 신호일 뒤 n번째 거래일 행 종가로 계산 (휴장일은 행이 없어 저절로 건너뜀)
+//  5일까지 차고 KODEX 도 차면 done. 신호일이 받은 행 범위를 벗어난 채 OBS_EXPIRE_DAYS 가 지나면 done + miss (계속 요청하지 않게)
+export function obsFill(sig, rows, kodex = null, today = null) {
+  const s = Object.assign({}, sig, { dates: Object.assign({}, (sig && sig.dates) || {}) }), xs = Array.isArray(rows) ? rows : [], i = xs.findIndex((r) => r.date === s.date);
+  const expired = !!(today && addDays(s.date, OBS_EXPIRE_DAYS) < today);
+  if (i < 0) { if (expired && xs.length) { s.done = true; s.miss = "신호일 행 없음(기간 지남)"; } return s; }
+  const base = typeof s.close === "number" && s.close > 0 ? s.close : xs[i].close; s.close = base;
+  const ks = Array.isArray(kodex) ? kodex : [], ki = ks.findIndex((r) => r.date === s.date);
+  for (const n of OBS_HORIZONS) {
+    const r = xs[i + n]; if (!r) continue;
+    if (typeof s["d" + n] !== "number") { s["d" + n] = round2((r.close / base - 1) * 100); s.dates["d" + n] = r.date; }
+    const k = ki >= 0 ? ks.find((x) => x.date === r.date) : null; // 같은 날짜의 KODEX200 종가 (종목이 거래정지로 하루 빠져도 날짜로 맞춤)
+    if (typeof s["k" + n] !== "number" && k) s["k" + n] = round2((k.close / ks[ki].close - 1) * 100);
+    if (typeof s["d" + n] === "number" && typeof s["k" + n] === "number") s["x" + n] = round2(s["d" + n] - s["k" + n]);
+  }
+  if (typeof s.d1 === "number") s.up3 = s.d1 >= 3;
+  if (typeof s.d5 === "number" && (typeof s.k5 === "number" || expired)) s.done = true;
+  return s;
+}
+// 마감 확정 run 한 번:
+//  ① 목록이 없거나 7일 지났으면 다시 만들기(최대 OBS_REBUILD_MS · 실패면 옛 목록 · 옛 목록도 없으면 이번엔 관찰 건너뜀)
+//  ② 그날 수급: 오늘 날 줄이 없으면 목록 전부, 있으면 앞 run 이 못 받은 종목(miss)만 — 다 채운 날이면 요청 0
+//  ③ 판정 → 기록에 합치기 → ④ 지난 신호 결과 채우기(덜 찬 종목마다 1회 + KODEX200 1회). 전체 OBS_BUDGET_MS 를 넘으면 남은 건 다음 run
+export async function collectObserve({ fetchImpl = fetch, timeoutMs = 10000, date, universe = null, file = null, at = null, budgetMs = OBS_BUDGET_MS, rebuildMs = OBS_REBUILD_MS, conc = OBS_CONC, gapMs = OBS_GAP_MS, clock = () => Date.now(), sleep = (ms) => new Promise((ok) => setTimeout(ok, ms)) } = {}) {
+  const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+  const t0 = clock(), deadline = t0 + budgetMs, pace = { conc, gapMs, clock, sleep }, errors = [], cache = {}, req = { rebuild: 0, flow: 0, fill: 0 };
+  let U = universe, rebuilt = null, msRebuild = 0;
+  if (obsUniverseStale(universe, date)) {
+    const b = await buildUniverse({ get, date, pace, deadline: Math.min(deadline, t0 + rebuildMs), clock });
+    req.rebuild = b.requests; errors.push(...b.errors.slice(0, 5)); if (b.errors.length > 5) errors.push(`… ${b.errors.length - 5}건 더`);
+    msRebuild = clock() - t0;
+    if (b.universe) { U = b.universe; rebuilt = b.universe; } else errors.push("목록 다시 만들기 실패 — " + (universe ? "옛 목록(" + universe.builtAt + ") 그대로" : "목록 없음 · 이번 관찰 건너뜀"));
+  }
+  const f0 = obsNorm(file), stocks = U && Array.isArray(U.stocks) ? U.stocks : [];
+  const day = f0.days.find((d) => d.date === date), byCode = new Map(stocks.map((s) => [s.code, s]));
+  const todo = !stocks.length ? [] : day ? (Array.isArray(day.miss) ? day.miss : []).map((c) => byCode.get(c) || { code: c, name: "", bucket: "" }) : stocks;
+  const rowsOf = async (code, n, kind) => {
+    const key = code + ":" + n; if (key in cache) return cache[key];
+    try { req[kind]++; cache[key] = trendRows(await get(obsTrendUrl(code, n))); } catch (e) { cache[key] = null; errors.push(code + ": " + (e.message || e)); }
+    return cache[key];
+  };
+  const flowRows = {};
+  const left = await paced(todo, async (s) => { flowRows[s.code] = await rowsOf(s.code, OBS_DET_PAGE, "flow"); }, Object.assign({}, pace, { deadline }));
+  if (left.length) errors.push(`시간 예산 넘음: 수급 ${left.length}종목 다음 run 으로`);
+  const ev = obsEvaluate(date, todo, flowRows);
+  const f = obsMergeDay(f0, ev, at, stocks.length || null), pending = obsPending(f, date);
+  let filled = 0;
+  if (pending.length && clock() <= deadline) {
+    const kodex = await rowsOf(OBS_KODEX, OBS_PAGE, "fill"), out = [];
+    for (const s of f.signals) {
+      if (!s || s.done || !(s.date < date) || clock() > deadline) { out.push(s); continue; }
+      const rows = await rowsOf(s.code, OBS_PAGE, "fill"), n = rows ? obsFill(s, rows, kodex, date) : s;
+      if (JSON.stringify(n) !== JSON.stringify(s)) filled++;
+      out.push(n);
+      if (gapMs > 0) await sleep(gapMs);
+    }
+    f.signals = out;
+  }
+  return { file: f, universe: rebuilt, used: U ? { builtAt: U.builtAt, n: stocks.length } : null, ev, todo: todo.length, skippedDay: !!(day && !todo.length), requests: req.rebuild + req.flow + req.fill, req, filled, pending: pending.length, errors, ms: clock() - t0, msRebuild };
+}
+export function obsText(res) {
+  const ev = res.ev, u = res.used;
+  const list = ev.signals.map((s) => `${s.name}(${s.code}) ${s.rate}% 외인 ${signed(s.foreign)} · 기관 ${signed(s.inst)}${s.S !== null ? " · S " + s.S + "%" : ""} [${s.bucket}]`);
+  const nu = res.universe, made = nu ? ` [새 목록 코스피 ${nu.counts.KOSPI200} · 코스닥 ${nu.counts.KOSDAQ150} · 소형 ${nu.counts.KOSDAQ_SMALL} (거래대금 받은 ${nu.counts.poolTurnover}) · 뺌 ETF·ETN ${nu.excluded.etf_etn} · 우선주 ${nu.excluded.preferred.length} · 리츠 ${nu.excluded.reit.length}(${nu.excluded.reit.join("·")}) · ${(res.msRebuild / 1000).toFixed(1)}초]` : "";
+  return `관찰(급락 ≤ -3% + 외인·기관 동반 매수) ${ev.date}: 목록 ${u ? u.n + "종목(" + u.builtAt + (nu ? " 새로 만듦" : "") + ")" : "없음"}${made}`
+    + (res.skippedDay ? " · 오늘 이미 다 채움 — 수급 요청 0" : ` · 이번에 볼 ${res.todo} · 셈 ${ev.checked} · 못 받음 ${ev.miss.length} · 급락 ${ev.crashed} · 신호 ${ev.signals.length}`)
+    + (list.length ? " — " + list.join(" / ") : "")
+    + ((ev.crashList || []).length ? ` · 급락 종목 ${ev.crashList.length}: ${ev.crashList.slice(0, 40).map((c) => `${c.name} ${c.rate}% (외 ${signed(c.foreign)} 기 ${signed(c.inst)})`).join(" / ")}${ev.crashList.length > 40 ? " …" : ""}` : "")
+    + ` · 결과 채움 ${res.filled}/${res.pending} · 요청 ${res.requests}회(목록 ${res.req.rebuild} · 수급 ${res.req.flow} · 결과 ${res.req.fill})${typeof res.ms === "number" ? " " + (res.ms / 1000).toFixed(1) + "초" : ""}`
+    + (res.errors.length ? " · 실패·참고 " + res.errors.slice(0, 8).join(" / ") + (res.errors.length > 8 ? ` … 모두 ${res.errors.length}건` : "") : "");
+}
+
 export { kstDate };
