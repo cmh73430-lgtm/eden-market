@@ -28,6 +28,18 @@ export function whenOf(now = new Date()) {
   return t < "09:00" ? "morning" : t < "15:30" ? "intraday" : "close";
 }
 
+// 장중 실시간(live) 실행 시각 판정 (9.29-81 원장 [1551]): 09:05~15:30 은 그 시각 값. 15:30 이 지나 늦게 도착한 실행
+// (GitHub 예약 지연 — 10/2 15:40 칸이 15:44 에 도착해 버려짐)은 16:00 까지 「15:30 장 마감 값」으로 받는다. 16:00 뒤는 건너뜀 (16:20 잠정 · 19:45 확정 마감 수집과 안 겹침)
+export const LIVE_OPEN = "09:05", LIVE_CLOSE = "15:30", LIVE_GRACE = "16:00";
+export function liveSlot(hm) {
+  if (!hm || hm < LIVE_OPEN || hm > LIVE_GRACE) return null;
+  return hm > LIVE_CLOSE ? { at: LIVE_CLOSE, closed: true } : { at: hm, closed: false };
+}
+// 이미 저장된 오늘 「장 마감 값」(closed)을 장중 값이 덮지 않게: 덮어도 되면 true
+export function liveOverwrite(cur, next) {
+  return !(cur && next && cur.date === next.date && cur.closed && !next.closed);
+}
+
 // 네이버 투자자 매매동향 응답 {bizdate, personalValue, foreignValue, institutionalValue} (억원) → 숫자
 export function parseTrend(json) {
   if (!json || typeof json !== "object") throw new Error("trend: 응답 형식 이상");
