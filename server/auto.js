@@ -633,7 +633,7 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
     const code = k.toUpperCase();
     try {
       const q = await adapters.naver.quote("domestic:" + code);
-      out.market[k] = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, amount: q.amount || undefined, src: "naver", time: q.time || undefined };
+      out.market[k] = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, change: Number((q.price - q.prevClose).toFixed(2)), amount: q.amount || undefined, src: "naver", time: q.time || undefined }; // change = 전일 대비(원) — 블로그 '코스피 7,003.74 ▲32.30 (+0.46%)' 용 (9.29-86 원장 [1624])
     } catch (e) { out.errors.push(k + ": " + (e.message || e)); }
     try {
       const res = await fetchImpl("https://m.stock.naver.com/api/index/" + code + "/trend", {

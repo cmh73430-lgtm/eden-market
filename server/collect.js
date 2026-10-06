@@ -48,7 +48,9 @@ export async function collectAll({ sources, themes, adapters, now = new Date() }
   const sigJobs = Object.entries(sources.signals || {}).map(async ([k, conf]) => {
     try {
       const { q, c } = await firstOk(asList(conf));
-      out.signals[k] = { value: toSignal(c.kind, q), src: c.source, at, time: q.time || null, ...(q.detail ? { detail: q.detail } : {}) };
+      // 9.29-86 원장 [1624]: 블로그 「값 ▲변동폭 (+변동률%)」 용으로 종가·전일 종가(어댑터 price/prevClose · 원 데이터 그대로)를 detail 에 같이 둔다 (value 는 그대로)
+      const lvl = typeof q.price === "number" && typeof q.prevClose === "number" ? { price: q.price, prev: q.prevClose } : null;
+      out.signals[k] = { value: toSignal(c.kind, q), src: c.source, at, time: q.time || null, ...(q.detail || lvl ? { detail: Object.assign({}, q.detail || {}, lvl || {}) } : {}) };
     } catch (e) {
       out.errors.push({ key: k, error: String(e.message || e) });
     }
