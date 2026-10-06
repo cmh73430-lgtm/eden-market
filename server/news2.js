@@ -6,7 +6,7 @@
 //  점수(제목 기준): 종목명 제목 +2 / body 에만 +1 · 테마 핵심어 +1 · 업종어(79업종 별칭) 또는 테마 설명 빈출어 +1 · 인과어 +1 · 테마 종목 2개↑ +1 · 공시·계약 낱말 +1(근거어 있을 때만)
 //      시간창 밖(오늘 장전 08:00 이전 · 전일 15:30 이전) = 최대 1점 · 종목명·테마어·업종어 전부 0 = 최대 1점(오탐 보정)
 //  등급: 상 ≥4 · 중 2~3 · 하 ≤1. 검증 = 상 또는 (중 + 인과어) ← 디렉터 답 「강한 근거만」. 같은 사건 = 제목 토큰(2글자↑) 교집합 3개↑ → 하나로 묶고 출처 수 표시
-//  표시: 검증(묶음+사업 공시) ≥ 3 → 「검증 뉴스 N건」 + 목록(출처·시각·링크) · 미만 → 「검증 뉴스 N개 · 이유 확인 중」 · 검증 묶음에 테마어 든 기사 0 → 「테마명 불일치 — 대장주 이유: …」 · 거래소 강세 신호 공시는 건수 밖 「⚡강세 신호」 1줄 ([1600])
+//  표시: 검증(묶음+사업 공시) ≥ 3 → 「검증 뉴스 N건」 + 목록(출처·시각·링크) · 미만 → 「검증 뉴스 N개 · 이유 확인 중」 · 검증 묶음에 테마어 든 기사 0 → 「테마명 불일치 — 주요 종목 이유: …」(업종어 · 없으면 「종목명 · 핵심 20자…」 [1602]) · 거래소 강세 신호 공시는 건수 밖 「⚡강세 신호」 1줄 ([1600])
 //  비용: 테마 3개 × 검색 2 + DART 1 + KIND 1 = 8회/run (+ 첫 run 업종 2×3 + 업종표 1 = 7 · 하루 캐시) · 하루 상한 NEWS2_DAILY_MAX 넘으면 검색·공시 생략(종목뉴스 채점만)
 export const NEWS2_V = 1;
 export const NEWS2_DAILY_MAX = 900;   // 하루 추가 요청 상한 (5분 run 약 80회 × 8 = 640 + 캐시 7 → 여유 포함 900). 넘으면 네이버 검색·DART·KIND 를 안 부른다
@@ -133,14 +133,41 @@ export function scoreArticle(a, { names = [], words = [], indWords = [], descW =
 }
 export const verified = (s) => s.grade === "상" || (s.grade === "중" && s.causal); // 디렉터 답 「강한 근거만」
 // 불일치 이유 = 검증(상/중+인과어) 기사들이 제목에서 실제로 맞춘 업종어·설명어 가운데 빈도 최다 (gate-cockpit84: 첫 슬롯 업종어로 고르면 전고체 → 「전자장비」(정답 정유) 로 틀림).
-//  맞춘 업종어가 하나도 없으면 가장 점수 높은 검증 기사 제목(예: OLED 10/6 「LG전자, 북미 AIDC 냉각장치 공급계약에 급등」)
-export function mismatchReason(ver) {
+//  맞춘 업종어가 하나도 없으면 가장 점수 높은 검증 기사를 「종목명 · 핵심 ≤20자…」 로 짧게 (9.29-85 원장 [1602] 「짧게 자르기」 — 제목 48자 그대로는 길다 · ESS 10/6 13:32 「삼성전자·SK하이닉스 하락 속 LG전자 7%대 급등」 → 「LG전자 · 7%대 급등…」)
+export function mismatchReason(ver, ctx = {}) {
   const pick = (key) => { const freq = new Map(), pts = new Map();
     for (const r of ver) for (const w of new Set((r.s[key] || []))) { freq.set(w, (freq.get(w) || 0) + 1); pts.set(w, (pts.get(w) || 0) + r.s.pts); }
     const top = [...freq.entries()].sort((a, b) => b[1] - a[1] || pts.get(b[0]) - pts.get(a[0]) || b[0].length - a[0].length)[0]; return top ? top[0] : null; }; // 동률이면 점수 합 → 더 긴(구체적) 낱말
   const w = pick("indHit") || pick("descHit"); // 업종어(79업종 별칭) 먼저 · 없으면 테마 설명·편입 사유 빈출어 (OLED 10/6: 「차세대」 같은 설명어보다 「소부장」 업종어가 이유에 가깝다)
   if (w) return w;
-  const best = ver[0]; return best ? best.a.t.slice(0, 48) : "";
+  const best = ver[0]; return best ? shortReason(best.a, ctx) : "";
+}
+// 짧은 이유 (원장 [1602]): ① 기사가 가리키는 종목 = 제목에 있는 슬롯·테마 종목명(대장주 먼저 · 긴 이름 먼저) · 없으면 body · 없으면 대장주 ② 제목에서 「[특징주]」「[종목 NOW]」「(종합)」 류 머리말·꼬리표와 그 종목명·조사를 빼고,
+//  종목명 뒤 부분(그 종목에 대한 말)이 4자 이상이면 그 부분만 · 아니면 나머지 전체 → 낱말 경계에서 REASON_MAX 자 안쪽으로 자르고 「…」(앞부분을 버렸을 때도 「…」) ③ 「종목명 · 핵심」
+export const REASON_MAX = 20;
+const HEAD_RE = /\[[^\]]{1,14}\]|【[^】]{1,14}】|\((?:종합|상보|속보|\d보)\)/g;
+const JOSA_RE = "株?(?:에서|으로|은|는|이|가|도|의|에|을|를|과|와|로|서)?";
+const rxEsc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const trimEdge = (x) => x.replace(/^[\s,·…:;\-–—'’"”]+|[\s,·…:;\-–—'‘"“]+$/g, "");
+export function cutWords(s, max = REASON_MAX) {
+  s = trimEdge(s); if (s.length <= max) return { s, cut: false };
+  let i = -1; for (const m of s.slice(0, max + 1).matchAll(/[\s…·,]/g)) i = m.index; // max 자 안쪽 마지막 낱말 경계 · 없으면(띄어쓰기 없는 긴 제목) 글자로
+  return { s: trimEdge(i >= 4 ? s.slice(0, i) : s.slice(0, max)), cut: true };
+}
+export function shortReason(a, { leadNames = [], allNames = [], names = [] } = {}) {
+  const t = String((a && a.t) || "").replace(HEAD_RE, " ").replace(/\s+/g, " ").trim(), b = String((a && a.b) || "");
+  const full = [...new Set([...leadNames, ...allNames, ...names].map((x) => String(x || "").trim()).filter((x) => x.length >= 2))];
+  const hitIn = (txt) => { for (const n of full) for (const v of stockNames([n]).sort((x, y) => y.length - x.length)) if (txt.includes(v)) return { n, v }; return null; };
+  const hit = hitIn(t) || hitIn(b) || (full[0] ? { n: full[0], v: null } : null);
+  let core = t, dropped = false;
+  if (hit && hit.v && t.includes(hit.v)) {
+    const re = new RegExp("[,·]?\\s*" + rxEsc(hit.v) + JOSA_RE + "(?=[\\s,·…'’\"”]|$)[,·]?"); const m = re.exec(t) || { index: t.indexOf(hit.v), 0: hit.v };
+    const before = trimEdge(t.slice(0, m.index)), after = trimEdge(t.slice(m.index + m[0].length));
+    if (after.length >= 4) { core = after; dropped = before.length > 0; } else core = trimEdge(before + " " + after);
+  }
+  const c = cutWords(core); const tail = c.cut || dropped ? "…" : "";
+  if (!c.s) return hit ? hit.n : t.slice(0, REASON_MAX);
+  return (hit ? hit.n + " · " : "") + c.s + tail;
 }
 const tokens = (t) => new Set(String(t).match(/[가-힣A-Za-z0-9]{2,}/g) || []);
 // 같은 사건 묶기: 제목 토큰 교집합 3개↑ → 한 묶음. rows 는 점수 높은 순으로 들어온다 (대표 = 첫 행)
@@ -154,7 +181,7 @@ export function groupArticles(rows) {
   return groups;
 }
 // 채점·묶기·표시까지 (네트워크 0): articles[] · disclosures[](pickDisclosures 결과) → news2 블록
-export function verifyNews({ articles = [], disclosures = [], names = [], words = [], indWords = [], descW = [], allNames = [], win }) {
+export function verifyNews({ articles = [], disclosures = [], names = [], words = [], indWords = [], descW = [], allNames = [], leadNames = [], win }) {
   const seen = new Set(), rows = [];
   for (const a of articles) { if (!a.t || seen.has(a.t)) continue; seen.add(a.t); const s = scoreArticle(a, { names, words, indWords, descW, allNames, win }); rows.push({ a, s }); }
   const ver = rows.filter((r) => verified(r.s)).sort((a, b) => b.s.pts - a.s.pts || (b.a.dt || "").localeCompare(a.a.dt || ""));
@@ -165,7 +192,7 @@ export function verifyNews({ articles = [], disclosures = [], names = [], words 
   const n = all.length, themed = items.some((x) => x.themed), mismatch = items.length > 0 && !themed;
   let label = n >= NEWS2_VERIFY_MIN ? "검증 뉴스 " + n + "건" : "검증 뉴스 " + n + "개 · 이유 확인 중";
   let reason = null;
-  if (mismatch) { reason = mismatchReason(ver); label += " · 테마명 불일치 — 대장주 이유: " + reason; }
+  if (mismatch) { reason = mismatchReason(ver, { leadNames, allNames, names }); label += " · 테마명 불일치 — 주요 종목 이유: " + reason; } // 라벨 「주요 종목 이유」 로 통일 (원장 [1602] · 2등주 기사일 때 「대장주」 가 틀림 — ESS 10/6 LG전자)
   return { v: NEWS2_V, n, nWithSignals: n + signals.length, label, mismatch, reason, verified: ver.length, candidates: rows.length, items: all.slice(0, Math.max(NEWS2_SHOW, Math.min(n, 5))), signals, low: rows.filter((r) => r.s.grade === "하").length };
 }
 
@@ -196,6 +223,6 @@ export async function fetchNews2({ get, getText = null, post = null, theme, deta
   if (shared.dart === undefined && getText) shared.dart = await spend(async () => dartItems(await getText(DART_RSS_URL)), "DART RSS");
   if (shared.kind === undefined && post) shared.kind = await spend(async () => kindItems(await post(KIND_URL, kindBody(day8)), day8), "KIND");
   const disclosures = pickDisclosures([...(shared.dart || []), ...(shared.kind || [])], allNames, win);
-  const out = verifyNews({ articles, disclosures, names, words, indWords, descW, allNames, win });
+  const out = verifyNews({ articles, disclosures, names, words, indWords, descW, allNames, leadNames, win });
   return Object.assign(out, { industry: inds, words: words.slice(0, 4), requests, errors, cache: c, budget: b });
 }
