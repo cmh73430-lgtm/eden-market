@@ -277,6 +277,19 @@ textarea.jin { resize: vertical; }
 .savebar .savemsg { font-size: 12.5px; color: var(--muted); min-width: 0; }
 .savebar .savemsg.ok { color: var(--g); font-weight: 700; } .savebar .savemsg.warn { color: var(--r); font-weight: 700; }
 .topld .tll .tln { grid-column: 2 / -1; font-size: 12.5px; line-height: 1.4; } .topld .tll .tln a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; } .topld .tll .tln small { color: var(--muted); }
+/* 9.29-84 원장 [1597]: 검증 뉴스 3건(접기) · 미달 표시 · 그림자 순위 상자 */
+.topld .tll details.tln { margin: 0; } .topld .tll details.tln summary { cursor: pointer; list-style: none; } .topld .tll details.tln summary::-webkit-details-marker { display: none; }
+.topld .tll details.tln summary::after { content: " ▾"; color: var(--muted); } .topld .tll details.tln[open] summary::after { content: " ▴"; }
+.topld .tll .n2lab { font-weight: 700; color: var(--muted); } .topld .tll .n2lab.ok { color: var(--up); } .topld .tll .n2lab.n2mis { color: var(--a); }
+.topld .tll .n2list { margin: 4px 0 0; padding-left: 16px; display: grid; gap: 3px; } .topld .tll .n2list li { display: list-item; font-size: 12.5px; }
+.topld .tll .n2sig { color: var(--muted); font-size: 12px; } .topld .tll .n2sig small { color: var(--muted); }
+.topld .shadowbox { margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 6px; font-size: 12.5px; } .topld .shadowbox summary { cursor: pointer; color: var(--muted); font-weight: 700; }
+.topld .shadowbox .shtbl { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12.5px; } .topld .shadowbox .shtbl th, .topld .shadowbox .shtbl td { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.topld .shadowbox .shtbl td small, .topld .shadowbox .shnote { color: var(--muted); } .topld .shadowbox .shnote { display: block; margin-top: 6px; line-height: 1.45; }
+.ldscore { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; } .ldscore h3 { margin: 0 0 6px; font-size: 15px; } .ldscore h3 small { color: var(--muted); font-weight: 400; font-size: 12px; }
+.ldscore .ldstbl { width: 100%; border-collapse: collapse; font-size: 12.5px; } .ldscore .ldstbl th, .ldscore .ldstbl td { padding: 4px 4px; border-bottom: 1px solid var(--line); text-align: center; } .ldscore .ldstbl td:first-child, .ldscore .ldstbl th:first-child { text-align: left; white-space: nowrap; }
+.ldscore .ldstbl small { display: block; color: var(--muted); font-size: 11px; } .ldscore .ldsrecent { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 12.5px; } .ldscore .ldsrecent .mk { font-weight: 800; letter-spacing: 2px; margin-left: 6px; }
+.ldscore .ldsrecent-h { margin: 8px 0 0; font-size: 12.5px; } .ldscore .ldsrecent .mk .o { color: var(--up); } .ldscore .ldsrecent .mk .x { color: var(--down); } .ldscore .ldsnote { display: block; color: var(--muted); margin-top: 6px; line-height: 1.45; font-size: 12px; }
 /* 간단 보기: 판정에 쓰는 것만 보이고 나머지는 접힘 (전체 보기 버튼으로 전환) */
 body.simple [data-simple="hide"] { display: none; }
 body.simple #sigList .sig .valid { display: none; }
@@ -801,6 +814,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
   <section class="card topld" id="topLead" data-nav="🔥 오늘 주도 테마" hidden>
     <div class="tlh"><b id="topLeadTitle">🔥 오늘 주도 테마</b><span class="lvbadge" id="topLeadBadge" hidden></span><small id="topLeadSub"></small></div>
     <ol class="tll" id="topLeadList"></ol>
+    <details class="shadowbox" id="topShadow" hidden><summary id="topShadowSum"></summary><div id="topShadowBody"></div></details>
     <div class="tlf"><button class="btn" type="button" id="topLeadGo">자세히 (② 장 마감 · 설명) ▼</button></div>
   </section>
 
@@ -1056,6 +1070,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="charts" id="charts"></div>
     <table class="stats" id="stats"></table>
     <div class="hist" id="hist"></div>
+    <div class="ldscore" id="ldScore" hidden></div>
     <div class="hint">승률은 수익 ÷ (수익+손실+본전)이에요. 손익은 매매 내역에 매도가까지 적은 날만 계산돼요. 기록 버튼을 누르면 그날로 가요. "쉼"인 날 매매해서 자주 잃었다면, 규칙을 지키는 것부터가 공부예요.</div>
   </section>
 
@@ -1628,6 +1643,33 @@ function analyze(days) {
   return { n, withK, traded, stage: stageOf(n), modes, kept, broke, keptT: tStat(kept.p, broke.p), verdict, signals };
 }
 
+// 주도 테마 적중 성적표 요약 — 앱 성적표 카드 「주도 테마 적중」 절과 시험이 같이 쓴다 (순수 모듈 · 브라우저·Node 공용 · 9.29-84 원장 [1597])
+// 입력 = auto/observe/leaders-scorecard.json (server/scorecard.js 가 쌓음). 적중률 = 선정 슬롯 D+k 상승비율 − 그 평가일 전체 테마 종목 상승비율(기준율) 평균
+const LDS_UNITS = { a: "마감 확정", b: "장후 잠정", c: "장중 마지막", s: "그림자" };
+const LDS_REF_DAYS = 20; // 표본 20거래일(선정일 수) 전에는 「참고용」 고정 — 연구 R5 §5
+const r1 = (x) => Math.round(x * 10) / 10;
+function ldsSummary(file, today = null) {
+  const rows = file && Array.isArray(file.rows) ? file.rows.filter((r) => r && (!today || r.date <= today)) : [];
+  const dates = [...new Set(rows.map((r) => r.date))].sort();
+  const units = {};
+  for (const u of Object.keys(LDS_UNITS)) {
+    const rs = rows.filter((r) => r.unit === u); if (!rs.length) continue;
+    const k = {};
+    for (const h of [1, 2, 3, 4]) {
+      const xs = rs.filter((r) => r["d" + h] && typeof r["d" + h].ret === "number");
+      const hit = xs.filter((r) => r["d" + h].up).length, bls = xs.map((r) => r["d" + h].bl).filter((b) => typeof b === "number");
+      const hitPct = xs.length ? r1((hit / xs.length) * 100) : null, blAvg = bls.length ? r1(bls.reduce((a, b) => a + b, 0) / bls.length) : null;
+      k[h] = { n: xs.length, hit, hitPct, blAvg, blN: bls.length, diff: hitPct !== null && blAvg !== null ? r1(hitPct - blAvg) : null };
+    }
+    units[u] = { n: rs.length, days: [...new Set(rs.map((r) => r.date))].length, k };
+  }
+  // 최근 선정(마지막 선정일) · 방식 a 가 있으면 a, 없으면 있는 방식 순서대로 — 테마·종목마다 D1~D4 ○ × −(대기)
+  const last = dates[dates.length - 1] || null;
+  const pick = last ? ["a", "s", "b", "c"].find((u) => rows.some((r) => r.date === last && r.unit === u)) : null;
+  const recent = last ? rows.filter((r) => r.date === last && r.unit === pick).sort((a, b) => a.rank - b.rank || a.slot - b.slot).map((r) => ({ rank: r.rank, theme: r.theme, name: r.name, slot: r.slot, marks: [1, 2, 3, 4].map((h) => (r["d" + h] && typeof r["d" + h].ret === "number" ? (r["d" + h].up ? "○" : "×") : "-")), rets: [1, 2, 3, 4].map((h) => (r["d" + h] && typeof r["d" + h].ret === "number" ? r["d" + h].ret : null)) })) : [];
+  return { days: dates.length, ref: dates.length < LDS_REF_DAYS, units, recent: { date: last, unit: pick, rows: recent } };
+}
+
 const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09","2027-01-27","2027-03-17","2027-04-28","2027-06-09","2027-07-28","2027-09-15","2027-10-27","2027-12-08"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"2027":[{"date":"2027-01-01","name":"신정"},{"date":"2027-02-08","name":"설날 연휴"},{"date":"2027-02-09","name":"설날 대체"},{"date":"2027-03-01","name":"삼일절"},{"date":"2027-05-05","name":"어린이날"},{"date":"2027-05-13","name":"부처님오신날"},{"date":"2027-07-19","name":"제헌절 대체"},{"date":"2027-08-16","name":"광복절 대체"},{"date":"2027-09-14","name":"추석 연휴"},{"date":"2027-09-15","name":"추석"},{"date":"2027-09-16","name":"추석 연휴"},{"date":"2027-10-04","name":"개천절 대체"},{"date":"2027-10-11","name":"한글날 대체"},{"date":"2027-12-27","name":"성탄절 대체"},{"date":"2027-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). eden-market 의 calendar.yml 이 매달 1일 올해·내년을 자동으로 채운다(규칙 + 음력 날짜). KRX 공지와 다르면 손으로 고치면 그 값이 유지된다."}};
 // Eden Cockpit (구 장전 콕핏) — 손 입력 + 공부용 단일 파일 버전의 화면 코드.
 // 판정 규칙(shared/rules.js)과 달력(shared/calendar.js)은 빌드 때 이 파일 앞에 그대로 붙는다.
@@ -1850,7 +1892,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-83";
+  const APP_VER = "9.29-84";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2340,6 +2382,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const box = $("topLead"); if (!box) return;
     if (liveFresh()) { paintTopLive(box); return; }
     liveBadge(null); box.classList.remove("live", "stale"); // 실시간 카드에서 마감·어제 카드로 바뀔 때 빨간 표시가 남지 않게
+    { const sb = $("topShadow"); if (sb) sb.hidden = true; } // 그림자 상자도 실시간 카드에서만 (9.29-84)
     const ld = parseLeaders(S.journal.market.leaders).slice(0, 3);
     const a = S.auto || {}, usOf = (name) => { const u = usLinkOf(name); const v = u ? themeValue((S.us || {})[u.k]) : null; return u && v !== null ? { u, v } : null; };
     const row = (t, n, why) => { const us = usOf(t.name); const rt = typeof t.rate === "number" ? t.rate : null;
@@ -2393,13 +2436,35 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const sub = $("topLeadSub"), rf = document.createElement("button");
     rf.type = "button"; rf.className = "lvr"; rf.dataset.liveRefresh = ""; rf.textContent = "↻ 새로고침";
     sub.replaceChildren(when + chk + " ", rf, ...[mk("코스피", L.kospi, L.invest, L.program), mk("코스닥", L.kosdaq, L.investQ, L.programQ)].filter(Boolean));
+    // 뉴스 줄 (9.29-84 원장 [1597] 「강한 근거만」): news2 가 있으면 검증 뉴스 3건(접기 · 출처·시각·링크 · 같은 사건은 「외 N곳」) · 3건 미만 「검증 뉴스 N개 · 이유 확인 중」 · 테마어 0 「테마명 불일치 — 대장주 이유」 · news2 없으면 예전 1줄
+    const oneNews = (nw) => `📰 ${nw.url ? `<a href="${esc(nw.url)}" target="_blank" rel="noopener">${esc(nw.title)}</a>` : esc(nw.title)}${nw.office || nw.at ? ` <small>${esc([nw.office, nw.at ? nw.at.slice(11) : ""].filter(Boolean).join(" "))}</small>` : ""}`;
+    const newsHtml = (t) => {
+      const n2 = t.news2, nw = (t.news || [])[0];
+      if (!n2 || !Array.isArray(n2.items)) return nw ? `<span class="tln">${oneNews(nw)}</span>` : "";
+      const items = n2.items.slice(0, 3), cls = n2.mismatch ? " n2mis" : n2.n >= 3 ? " ok" : ""; // 앱 공용 .warn(단위 경고) 과 겹치지 않게 n2mis
+      const li = (x) => `<li>${x.kind === "disc" ? "📄" : "📰"} ${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>` : esc(x.title)} <small>${esc([x.office, x.at ? x.at.slice(11) : "", x.srcN > 1 ? "외 " + (x.srcN - 1) + "곳" : "", x.grade].filter(Boolean).join(" · "))}</small></li>`;
+      const sig = Array.isArray(n2.signals) && n2.signals.length ? `<span class="tln n2sig">⚡강세 신호: ${n2.signals.slice(0, 2).map((x) => `${esc(x.title)} <small>${esc([x.office, x.at ? x.at.slice(11) : ""].filter(Boolean).join(" "))}</small>`).join(" / ")}</span>` : ""; // 거래소 신호(가격제한폭·단기과열 …)는 건수 밖 1줄 (원장 [1600])
+      if (!items.length) return `<span class="tln"><small class="n2lab${cls}">${esc(n2.label)}</small>${nw ? " " + oneNews(nw) : ""}</span>` + sig;
+      return `<details class="tln n2"><summary><small class="n2lab${cls}">${esc(n2.label)}</small>${n2.mismatch ? "" : " " + esc(items[0].title)}</summary><ul class="n2list">${items.map(li).join("")}</ul></details>` + sig;
+    };
     $("topLeadList").innerHTML = L.themes.slice(0, 3).map((t, n) => {
-      const slots = (t.slots || []).slice(0, 3), flows = slots.filter((x) => x.flow); // 주요 종목 3개 (9.29-83 원장 [1580] · 고르는 기준은 수집기 그대로 = 거래대금 순)
-      const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
-      const nw = (t.news || [])[0];
-      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}${flows.length ? "" : " · 종목별 외인·기관은 장 마감 뒤"}</span>${nw ? `<span class="tln">📰 ${nw.url ? `<a href="${esc(nw.url)}" target="_blank" rel="noopener">${esc(nw.title)}</a>` : esc(nw.title)}${nw.office || nw.at ? ` <small>${esc([nw.office, nw.at ? nw.at.slice(11) : ""].filter(Boolean).join(" "))}</small>` : ""}</span>` : ""}</li>`;
+      const slots = (t.slots || []).slice(0, 3), flows = slots.filter((x) => x.flow); // 주요 종목 3개 (9.29-83 원장 [1580] · 고르는 기준은 수집기 그대로 = 거래대금 순) · RVOL(평소 대비 배수) 가 있으면 「×2.8」 병기 (9.29-84)
+      const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${typeof x.rvol === "number" ? " · ×" + x.rvol : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
+      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}${flows.length ? "" : " · 종목별 외인·기관은 장 마감 뒤"}</span>${newsHtml(t)}</li>`;
     }).join("");
+    paintShadow(L, { eok, pc });
     if (wasHidden && typeof buildNav === "function") buildNav();
+  }
+  // 그림자 순위 (9.29-84 원장 [1597] 「사본에서 만들고 2주 병행 기록 뒤 교체」): 수집기가 같이 계산한 새 기준 순위를 현행 순위 아래 접힌 상자에 — 현행 순위·점수는 그대로
+  function paintShadow(L, { eok, pc }) {
+    const box = $("topShadow"), body = $("topShadowBody"), sum = $("topShadowSum"); if (!box || !body || !sum) return;
+    const sh = L && L.shadow;
+    if (!sh || sh.error || !Array.isArray(sh.themes) || !sh.themes.length) { box.hidden = true; return; }
+    box.hidden = false;
+    sum.textContent = "그림자 순위(새 기준 · 2주 병행 · 참고): " + sh.themes.slice(0, 3).map((t, i) => (i + 1) + " " + String(t.name).split("(")[0]).join(" · ");
+    const row = (t, i) => `<tr><td>${i + 1}</td><td>${esc(t.name)}${t.nameKept ? ' <small>이름 유지</small>' : ""}<br><small>${esc((t.slots || []).slice(0, 3).map((s) => `${s.name} ${pc(s.rate)}${typeof s.rvol === "number" ? " ×" + s.rvol : ""}`).join(" / "))}</small></td><td>${typeof t.score === "number" ? t.score : "—"}</td><td>${t.L}</td><td>${typeof t.rvolMed === "number" ? "×" + t.rvolMed : "—"}</td><td>${eok(t.valueExTop10)}${t.top10Share ? `<small> · TOP10 ${t.top10Share}%</small>` : ""}</td></tr>`;
+    body.innerHTML = `<table class="shtbl"><tr><th>#</th><th>테마 · 주요 종목</th><th>점수</th><th>L</th><th>RVOL</th><th>거래대금(TOP10 제외)</th></tr>${sh.themes.slice(0, 3).map(row).join("")}</table>`
+      + `<small class="shnote">T 코스피 ${Number(sh.T && sh.T.KS).toLocaleString("ko-KR")}억 · 코스닥 ${Number(sh.T && sh.T.KQ).toLocaleString("ko-KR")}억 · 자격(L ≥ ${sh.minL}) ${sh.qualified}/${sh.scanned} · 점수 = 등락률·상승비율·강세 수·거래대금(TOP10 제외)·RVOL 표준화 합성 · RVOL = 평소(20일) 대비 거래대금 배수(장 경과율 환산) · 현행 순위는 그대로 두고 2주 뒤 디렉터 결정으로 교체</small>`;
   }
   // 미국장 테마를 많이 오른 순으로 (빈 칸은 아래, 원래 순서). 칸에 입력하는 중에는 줄이 움직이지 않게 기다림
   function paintUsOrder() {
@@ -3702,8 +3767,24 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     try { const l = (liveWindow() ? await liveRelay() : null) || await pubGet(PUB_RAW + "live.json"); liveChecked = kstHM(); if (l && l.date <= kstDate() && (!LIVE || liveKey(l) !== liveKey(LIVE))) LIVE = l; if (LIVE) paintTopLead(); }
     catch (e) {} finally { liveBusy = false; }
   }
+  // 주도 테마 적중 성적표 (9.29-84 원장 [1597] · [1585]): 수집기 마감 run 이 쌓는 auto/observe/leaders-scorecard.json 을 한 번 받아 📊 성적표 카드에 「주도 테마 적중」 절로 — 방식별 누적(기준율 대비 차이) · 최근 선정 D1~D4 ○×- · 20거래일 전 「참고용」 고정
+  let LDS = null;
+  async function ldsPull() { try { LDS = await pubGet(PUB_RAW + "observe/leaders-scorecard.json"); } catch (e) {} paintLdScore(); }
+  function paintLdScore() {
+    const box = $("ldScore"); if (!box) return;
+    const sm = ldsSummary(LDS, kstDate()), U = LDS_UNITS, fx1 = (v) => (typeof v === "number" ? (v > 0 ? "+" : "") + v.toFixed(1) : "—");
+    box.hidden = false;
+    if (!sm.days) { box.innerHTML = `<h3>🎯 주도 테마 적중 <small>참고용</small></h3><div class="empty">마감 확정 수집이 쌓이면 테마 주도 종목의 D+1~D+4 상승(○)·하락(×)이 날마다 채워져요.</div>`; return; }
+    const cell = (k) => (!k || !k.n ? "<td>—</td>" : `<td><b>${k.hitPct}%</b> <small>${k.hit}/${k.n} · 기준 ${k.blAvg === null ? "—" : k.blAvg + "%"} · 차이 ${fx1(k.diff)}</small></td>`);
+    const rows = Object.keys(U).filter((u) => sm.units[u]).map((u) => `<tr><td><b>${esc(U[u])}</b><small>${sm.units[u].days}일 · ${sm.units[u].n}슬롯</small></td>${[1, 2, 3, 4].map((h) => cell(sm.units[u].k[h])).join("")}</tr>`).join("");
+    const rc = sm.recent, mark = (m) => `<span class="${m === "○" ? "o" : m === "×" ? "x" : ""}">${m}</span>`;
+    const recent = rc.date ? `<p class="ldsrecent-h"><b>${mdw(rc.date)} 선정</b> <small>(${esc(U[rc.unit] || rc.unit)} · D+1 → D+4 · - = 아직)</small></p><ul class="ldsrecent">${rc.rows.map((r) => `<li>${r.rank} ${esc(r.theme)} · ${esc(r.name)}<span class="mk">${r.marks.map(mark).join("")}</span></li>`).join("")}</ul>` : "";
+    box.innerHTML = `<h3>🎯 주도 테마 적중 <small>표본 ${sm.days}거래일${sm.ref ? " · 20거래일 전 「참고용」" : ""}</small></h3>`
+      + `<table class="ldstbl"><tr><th>방식</th><th>D+1</th><th>D+2</th><th>D+3</th><th>D+4</th></tr>${rows}</table>${recent}`
+      + `<small class="ldsnote">○ = 선정일 종가 → D+k 종가 상승 · 기준 = 그 평가일 전체 테마 종목 상승비율 · 차이 = 선정 종목 상승비율 − 기준 (양수면 전체보다 잘 고름) · 마감 봉만 · 매매 권유 아님</small>`;
+  }
   function pubStart() {
-    livePull(true); clearInterval(liveTimer);
+    livePull(true); ldsPull(); clearInterval(liveTimer);
     liveTimer = setInterval(() => { if (document.visibilityState === "visible") livePull(); }, 60000); // 실시간 주도 테마: 1분마다 (9.29-83 원장 [1583] · 장중 창에서만 실제로 받음)
     if (!liveHooked) { // 폰에서 화면이 꺼지거나 다른 앱에 갔다 오면 타이머가 멈춰 있으므로, 돌아오는 즉시 한 번 받는다 · ↻ 버튼 (9.29-69)
       liveHooked = true;

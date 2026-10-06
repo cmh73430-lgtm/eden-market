@@ -7,9 +7,15 @@
 //       --final (close: 실행 시각과 관계없이 확정 run — 수급·일봉 포함). 오늘이 아닌 --date 로 손으로 백필하는 close run 도 확정으로 돈다 (잠정 결과가 확정을 덮지 않게)
 // 관찰 기록 (9.29-82 원장 [1556] · [1558]): 마감 확정 run 이 400종목 중 「급락일 외국인·기관 동반 매수」 종목과 그 뒤 결과를 auto/observe/crash-cobuy.json 에 쌓는다
 //   (대상 목록 auto/observe/universe.json 은 7일마다 다시 만듦 · 기록만 · 날짜 파일·앱 무변경 · --dry 는 목록만 출력)
+// 그림자(shadow) 선정 V2 · 뉴스 v2 · 성적표 (9.29-84 원장 [1597]): live run 과 close run 이 현행 결과 옆에 shadow 블록(live.json · 날짜 파일 close.shadow)과 테마별 news2 를 더한다 · 기존 블록 무변경
+//   RVOL 20일 평균은 중계 /day 일봉(실패하면 네이버 일봉) · 직전 live.json 의 shadow.rvolCache(하루 1회) 를 이어 쓴다 · 뉴스 캐시·하루 상한도 live.json 의 news2 에서 이어 씀
+//   성적표: 확정 close run(close.at ≥ 16:20) 이 auto/observe/leaders-scorecard.json 에 오늘 선정(a 확정 · b 잠정 · c live 마지막 · s shadow)을 적고 지난 행 D+1~D+4 를 채운다
+// 옵션 추가: --trace (요청 수·걸린 시간 출력 · 재현용)
 import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay, kstTime } from "../shared/calendar.js";
-import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl } from "../server/auto.js";
+import { RVOL_BAR_COUNT } from "../server/shadow.js";
+import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -18,6 +24,9 @@ import tradingview from "../server/sources/tradingview.js";
 
 const arg = (name, def) => { const a = process.argv.find((x) => x.startsWith("--" + name + "=")); return a ? a.slice(name.length + 3) : def; };
 const has = (name) => process.argv.includes("--" + name);
+// --trace: 바깥 요청 수·걸린 시간 (fetch 전부 · 재현 보고용)
+const T0 = Date.now(); let FETCH_N = 0;
+if (has("trace")) { const f0 = globalThis.fetch; globalThis.fetch = (...a) => { FETCH_N++; return f0(...a); }; process.on("exit", () => console.log(`[trace] 요청 ${FETCH_N}회 · ${((Date.now() - T0) / 1000).toFixed(1)}초`)); }
 const BRANCH = process.env.AUTO_BRANCH || "cockpit-data"; // 공개 저장소 eden-market 은 main
 const now = new Date();
 const date = arg("date", kstDate(now));
@@ -79,17 +88,33 @@ async function writeFile(path, obj, message) {
 }
 
 const save = !has("dry") && token && repo;
+// ---- 그림자 V2 · 뉴스 v2 입력 (9.29-84) ----
+// RVOL 20일 평균용 일봉: 중계 /day(종가×거래량 근사 · 앱과 같은 길) → 못 받으면 네이버 일봉(C 등급 계산과 같은 주소). server/shadow.js barRows 가 두 모양 다 읽는다
+const RELAY = "https://eden-chart.cmh-eden.workers.dev", NV_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+async function rvolBars(code) {
+  try { const r = await fetch(`${RELAY}/day?code=${code}&count=${RVOL_BAR_COUNT}`, { signal: AbortSignal.timeout(10000) }); if (r.ok) return await r.json(); } catch (e) {}
+  const r = await fetch(chartUrl(code, date), { headers: { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": NV_UA }, signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json();
+}
+// 직전 live.json(오늘 것) = RVOL 캐시 · 이름 안정화 · 뉴스 캐시·하루 상한의 원천. 저장 모드면 저장소, --dry 면 공개 저장소를 읽기만 한다 (없으면 null → 캐시 없이)
+async function prevLive() { try { const j = save ? (await readFile(AUTO_DIR + "/live.json")).json : await readPublic(AUTO_DIR + "/live.json"); return j && j.date === date ? j : null; } catch (e) { return null; } }
+const shadowOpts = (pl) => ({ bars: rvolBars, rvolCache: pl && pl.shadow ? pl.shadow.rvolCache : null, prevNames: pl && pl.shadow && Array.isArray(pl.shadow.names) ? pl.shadow.names : [] });
+const news2Opts = (pl) => ({ prevDate: prevBusinessDay(date, cfg.holidays), cache: pl && pl.news2 ? pl.news2.cache : null, budget: pl && pl.news2 ? pl.news2.budget : null });
+const shadowText = (sh) => !sh ? "그림자 없음" : sh.error ? "그림자 실패: " + sh.error : `그림자 V2 T 코스피 ${sh.T.KS}·코스닥 ${sh.T.KQ} · 게이트 ${sh.gatePassed} → 상세 ${sh.scanned} → 자격(L≥${sh.minL}) ${sh.qualified} · 요청 네이버 +${(sh.requests || {}).naver ?? "?"} · 일봉 ${(sh.requests || {}).rvol ?? 0} · ${sh.ms}ms: `
+  + (sh.themes || []).map((t, i) => `${i + 1}.${t.name}${t.nameKept ? "(이름 유지)" : ""} ${t.score} L${t.L} RVOL ${t.rvolMed ?? "—"} 대금 ${t.valueExTop10}억(TOP10 제외${t.top10Share ? " · TOP10 " + t.top10Share + "%" : ""})`).join(" / ") + (sh.errors && sh.errors.length ? ` · 참고 ${sh.errors.length}건` : "");
+const news2Text = (live) => (live.themes || []).map((t) => t.news2 ? `${t.name}: ${t.news2.label}${t.news2.items.length ? " — " + t.news2.items.slice(0, 3).map((x) => `[${x.grade}] ${x.title.slice(0, 40)} (${x.office}${x.srcN > 1 ? " 외 " + (x.srcN - 1) : ""})`).join(" · ") : ""}${(t.news2.signals || []).length ? " · ⚡강세 신호: " + t.news2.signals.map((x) => `${x.title.slice(0, 36)} (${x.office} ${x.at ? x.at.slice(11) : ""})`).join(" / ") : ""}` : `${t.name}: 뉴스 v2 없음`).join("\n") + (live.news2 ? `\n뉴스 v2 요청 +${live.news2.requests} · 오늘 누적 ${live.news2.budget ? live.news2.budget.used : "?"}${live.news2.errors.length ? " · 참고 " + live.news2.errors.slice(0, 3).join(" / ") : ""}` : "");
 // ---- 장중 실시간 (live): 09:05~15:30 + 마감 뒤 늦게 도착한 실행은 16:00 까지 「15:30 장 마감 값」(server/auto.js liveSlot), auto/live.json 하나에 덮어쓰고 끝 (날짜 파일·latest 는 손대지 않음) ----
 if (when === "live") {
   const hm = kstTime(now).slice(0, 5), slot = liveSlot(hm);
   if (!has("force") && !slot) { console.log(`${hm} 장중 아님 — 건너뜀`); process.exit(0); }
   const tm = save ? (await readFile(autoFile(date)).catch(() => ({ json: null }))).json : null;
-  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date) });
+  const pl = await prevLive(); // 그림자 캐시·이름 안정화·뉴스 캐시 (오늘 것만)
+  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), shadow: shadowOpts(pl), news2: news2Opts(pl) });
   if (slot && slot.closed) { live.at = slot.at; live.closed = true; console.log(`${hm} 도착 — 장 마감(15:30) 뒤 늦게 시작한 실시간 실행이라 「15:30 장 마감 값」으로 받음`); }
   if (save && !liveOverwrite((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, live)) { console.log("오늘 장 마감 값이 이미 있어 장중 값으로 덮지 않음 — 건너뜀"); process.exit(0); }
   console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${(live.themes || []).map((t) => `${t.name} ${t.rate > 0 ? "+" : ""}${t.rate}% (대금 ${Math.round(t.value || 0).toLocaleString("ko-KR")}억 · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
   if (live.errors.length) console.log("일부 실패:", live.errors.join(" / "));
   console.log("후보:", (live.candidates || []).map((c) => `${c.name}${c.alias.length ? "=" + c.alias.join("=") : ""} ${c.score} [${c.stocks.join(",")}]`).join(" / "));
+  console.log(shadowText(live.shadow)); console.log(news2Text(live));
   if (!live.themes || !live.themes.length) { console.error("주도 테마를 못 골랐음"); process.exit(1); }
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
@@ -133,7 +158,7 @@ let part = when === "intraday"
   ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: todayMorning })
   : when === "morning"
   ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null }), listings: () => fetchListings(fetch, { today: date }) })
-  : await collectClose({ adapters: { naver }, now, leaders: async (market) => collectLeaders({ now, date, kospi: market.kospi || null, us: todayMorning && todayMorning.us, history: await loadHistory(date), provisional }), listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502])
+  : await collectClose({ adapters: { naver }, now, leaders: async (market) => collectLeaders({ now, date, kospi: market.kospi || null, kosdaq: market.kosdaq || null, us: todayMorning && todayMorning.us, history: await loadHistory(date), provisional, shadow: shadowOpts(await prevLive()) }), listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
 // 같은 날 앞선 close run 과 합친다: 잠정 → 확정이면 잠정은 leadersProvisional 로 보관, 확정 뒤 잠정이 늦게 오면 확정 유지 (server/auto.js mergeCloseLeaders)
 if (when === "close" && prev.json && prev.json.date === date && prev.json.close) mergeCloseLeaders(prev.json.close, part);
 const saveAs = when === "themes" ? "morning" : when; // 테마만 받은 것도 아침 기록에 들어간다
@@ -153,8 +178,21 @@ if (when === "close" && !provisional && LD && !LD.provisional && LD.flowReady) {
     console.log(obsText(obs));
   } catch (e) { obs = null; console.log("관찰 기록 실패:", e.message || e); }
 }
+// 성적표 (9.29-84 원장 [1597]): 확정 close run · close.at ≥ 16:20(마감 봉 규칙) 일 때 오늘 선정 a(확정)·b(16:20 잠정)·c(live 마지막)·s(그림자) 행 추가 + 지난 행 D+1~D+4 채움. 실패해도 날짜 파일 저장은 그대로
+let sc = null, scOld = null;
+if (when === "close" && !provisional && LD && !LD.provisional) {
+  try {
+    const rd = async (path) => { if (!save) return readPublic(path); const x = await readFile(path); if (x.sha && !x.json) throw new Error(path + " 을 못 읽음(크기·형식) — 덮지 않음"); return x.json; };
+    scOld = await rd(SC_FILE);
+    const pl = await prevLive(), pc = prev.json && prev.json.date === date && prev.json.close ? prev.json.close : null;
+    const b = part.market.leadersProvisional || (pc && pc.market && pc.market.leadersProvisional) || null;
+    sc = await collectScorecard({ date, closeAt: part.at, file: scOld, units: { a: LD.themes, b: b && b.themes, c: pl && pl.themes, s: part.shadow && part.shadow.themes }, allThemes: part.themes });
+    console.log(scText(sc));
+  } catch (e) { sc = null; console.log("성적표 실패:", e.message || e); }
+}
 
 if (!save) {
+  if (part.shadow) console.log(shadowText(part.shadow));
   if (part.candles) console.log(`일봉 ${Object.keys(part.candles).length}개 (저장 안 함): ${Object.values(part.candles).map((c) => c.code + " " + c.bars.length + "봉").join(" · ")}`);
   const rec = mergeAuto(null, date, saveAs, part);
   console.log(summarize(rec));
@@ -183,5 +221,10 @@ if (obs && (obs.ev.checked || obs.filled) && JSON.stringify(obs.file) !== JSON.s
   try { obs.file.updatedAt = Date.now(); await writeFile(OBS_FILE, obs.file, `관찰 기록 ${date} 급락+동반매수 ${obs.ev.signals.length}건 · 결과 채움 ${obs.filled}`); console.log(`저장: ${OBS_FILE} (신호 ${obs.file.signals.length}건 · ${obs.file.days.length}일)`); }
   catch (e) { console.log("관찰 기록 저장 실패:", e.message || e); }
 }
+if (sc && !sc.skipped && (sc.added || sc.filled) && JSON.stringify(sc.file) !== JSON.stringify(scOld)) { // 새 행이나 채운 칸이 있을 때만 (열쇠 중복 0)
+  try { sc.file.updatedAt = Date.now(); await writeFile(SC_FILE, sc.file, `성적표 ${date} 새 행 ${sc.added} · 채움 ${sc.filled}`); console.log(`저장: ${SC_FILE} (행 ${sc.file.rows.length} · ${sc.file.days.length}일)`); }
+  catch (e) { console.log("성적표 저장 실패:", e.message || e); }
+}
+if (part.shadow) console.log(shadowText(part.shadow));
 console.log(`저장: ${autoFile(date)} (${BRANCH})`);
 if (part.errors.length) console.log("일부 실패:", part.errors.join(" / "));

@@ -4,6 +4,10 @@
 import { kstDate, kstTime, weekday, holidayGap, lastUsTradingDayBefore, usDateOf, addDays } from "../shared/calendar.js";
 import { usKeyOf } from "../shared/us-themes.js";
 import { collectAll, normalizeYield } from "./collect.js";
+// 9.29-84 원장 [1597]: 그림자(shadow) 선정 V2 · 뉴스 v2 — 현행 선정·화면은 그대로, 옵션(shadow·news2)을 넘긴 run 만 같이 계산해 블록을 더한다 (server/shadow.js · server/news2.js)
+import { selectThemesV2, memoGet, attachRvol } from "./shadow.js";
+import { fetchNews2 } from "./news2.js";
+export { selectThemesV2, memoGet, attachRvol, fetchNews2 };
 
 export const AUTO_DIR = "auto";
 export const autoFile = (date) => AUTO_DIR + "/" + date + ".json";
@@ -489,16 +493,26 @@ const slim = (t) => ({
   stocks: (t.slots || []).slice(0, 2).map((x) => x.name), grades: t.grades, score: t.score, slots: (t.slots || []).slice(0, SLOT_N), alias: t.alias || [], warn: t.warn || [],
   chart: t.chart ? { lead: t.chart.lead && { grade: t.chart.lead.grade, tag: t.chart.lead.tag, offHigh: t.chart.lead.offHigh }, second: t.chart.second && { grade: t.chart.second.grade, tag: t.chart.second.tag } } : undefined,
 });
-export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now = new Date(), bizdate = null, kospi = null, us = null, history = [], provisional = false, chart = !provisional, date = null, n = 3 } = {}) {
-  const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+// kosdaq · shadow (9.29-84): shadow = { bars(code), rvolCache, prevNames, hm } 를 넘기면 같은 응답(memoGet)으로 그림자 선정 V2 를 같이 계산해 res.shadow 에 둔다. get 을 넘기면 그 요청 함수를 쓴다(collectLive 가 뉴스와 공유)
+export async function collectLeaders({ fetchImpl = fetch, timeoutMs = 10000, now = new Date(), bizdate = null, kospi = null, kosdaq = null, us = null, history = [], provisional = false, chart = !provisional, date = null, n = 3, shadow = null, get = null } = {}) {
+  const raw = get || (async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  const g = shadow ? (raw.count ? raw : memoGet(raw)) : raw;
   // 종목 수급은 그 날 값만. 네이버 종목별 외인·기관은 늦게(저녁~다음 날 아침) 올라와서, 16:20 잠정 run 은 요청을 생략하고 18:40 확정 run·다음 날 아침 백필이 채운다
   const day = date || kstDate(now);
-  const sel = await selectThemes({ get, n, bizdate: bizdate || day.replace(/-/g, ""), kospi, us, history, provisional, chart, date: day });
+  const sel = await selectThemes({ get: g, n, bizdate: bizdate || day.replace(/-/g, ""), kospi, us, history, provisional, chart, date: day });
   const themes = sel.themes.map(slim), candidates = sel.candidates.map(slim);
   // 관망(거래대금)과 주도 약함(1위 L ≤ 1)은 별개 배지 — 둘 다면 "관망·약함", weakLead 도 따로 둔다
   const weakLead = !!(themes[0] && themes[0].grades && themes[0].grades.L <= 1);
   const regime = [regimeOf(sel.amount, history), weakLead ? "약함" : ""].filter(Boolean).join("·");
   const res = { text: leadersText(sel.themes, sel.T), flowReady: sel.flowReady, chartReady: sel.chartReady, provisional: sel.provisional, T: sel.T, regime, weakLead: weakLead || undefined, relaxed: sel.relaxed || undefined, kospiRate: sel.kospiRate, decidedAt: now.getTime(), themes, candidates, all: sel.all };
+  if (shadow) { // 그림자 V2 (실패해도 현행 결과는 그대로)
+    const before = g.count();
+    try {
+      const v2 = await selectThemesV2({ get: g, n, kospi, kosdaq, hm: shadow.hm ?? null, date: day, bizdate: bizdate || day.replace(/-/g, ""), bars: shadow.bars || null, rvolCache: shadow.rvolCache || null, prevNames: shadow.prevNames || [], extraCodes: sel.themes.flatMap((t) => (t.slots || []).slice(0, 3).map((s) => s.code)), provisional, chart, pool: shadow.pool, scan: shadow.scan });
+      v2.requests = Object.assign(v2.requests || {}, { naver: g.count() - before });
+      res.shadow = v2;
+    } catch (e) { res.shadow = { v: 1, error: String((e && e.message) || e) }; }
+  }
   return Object.defineProperty(res, "rawBars", { value: sel.rawBars || {}, enumerable: false }); // 저장 파일에는 안 들어감 (숨은 속성)
 }
 
@@ -534,9 +548,13 @@ export async function fetchNews(fetchImpl, code, { n = 2, timeoutMs = 10000, wor
 }
 // 장중 한 번: 코스피(등락·거래대금) · 코스피 외인/기관(장중 누적) · 프로그램 · 잠정 규칙으로 고른 주도 테마 3개(테마 거래대금·대장주 등락·거래대금) + 대장주 뉴스 2개 + 종목별 외인/기관(그 날 값이 이미 있을 때만 — 보통 장 마감 뒤)
 // 결과는 auto/live.json 하나에 덮어쓴다 (날짜 파일에는 안 넣음). 실패한 조각은 errors 에 적고 나머지는 남긴다
-export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, us = null, history = [], date = null, n = 3 } = {}) {
+// shadow · news2 (9.29-84 원장 [1597]): shadow = { bars, rvolCache, prevNames } → out.shadow(그림자 순위·RVOL·TOP10 제외) + 현행 3테마 슬롯에 rvol · news2 = { prevDate, cache, budget } → 테마마다 row.news2(검증 뉴스) + out.news2(캐시·상한). 둘 다 없으면 예전과 같다
+export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, us = null, history = [], date = null, n = 3, shadow = null, news2 = null } = {}) {
   const day = date || kstDate(now), out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), date: day, errors: [] };
-  const get = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+  const get0 = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+  const get = shadow || news2 ? memoGet(get0) : get0;
+  const getText = async (u) => { const r = await fetchImpl(u, { headers: { Accept: "application/rss+xml, text/xml, text/html", "User-Agent": NV_HEAD["User-Agent"] }, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
+  const post = async (u, body) => { const r = await fetchImpl(u, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "text/html", "User-Agent": NV_HEAD["User-Agent"] }, body, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
   try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스피: " + (e.message || e)); }
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSPI/trend")); out.invest = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("현물 수급: " + (e.message || e)); }
   try { out.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); }
@@ -545,9 +563,11 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSDAQ/trend")); out.investQ = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("코스닥 수급: " + (e.message || e)); }
   try { out.programQ = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); }
   try {
-    const L = await collectLeaders({ fetchImpl, timeoutMs, now, date: day, kospi: out.kospi || null, us, history, provisional: true, chart: true, n }); // 장중: 수급(F)만 빼고 C 차트 자리까지 사용자 규칙대로
+    const L = await collectLeaders({ fetchImpl, timeoutMs, now, date: day, kospi: out.kospi || null, kosdaq: out.kosdaq || null, us, history, provisional: true, chart: true, n, get, shadow: shadow ? Object.assign({ hm: out.at }, shadow) : null }); // 장중: 수급(F)만 빼고 C 차트 자리까지 사용자 규칙대로
     out.chartReady = !!L.chartReady; out.T = L.T; out.regime = L.regime; out.relaxed = L.relaxed; out.text = L.text; out.candidates = (L.candidates || []).map((t) => ({ name: t.name, score: t.score, alias: t.alias || [], stocks: (t.slots || []).map((s) => s.code) }));
+    if (L.shadow) out.shadow = L.shadow;
     const bizdate = day.replace(/-/g, "");
+    const n2 = news2 ? { cache: news2.cache || null, budget: news2.budget || null, shared: {}, requests: 0, errors: [] } : null;
     out.themes = [];
     for (const t of L.themes.slice(0, n)) {
       const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, ...(s.chart ? { chart: s.chart } : {}) })), news: [] };
@@ -561,8 +581,19 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
           if (themed.length || !row.news.length) row.news = themed.length ? [...themed, ...got.filter((x) => !themed.includes(x))].slice(0, 2) : got;
           if (themed.length) break; } catch (e) { out.errors.push("뉴스 " + s.name + ": " + (e.message || e)); }
       }
+      // 뉴스 v2 (9.29-84): 검증 뉴스 3건 — 종목뉴스는 위와 같은 주소(memoGet)라 추가 요청 0 · 검색 2 · 공시는 run 당 1회씩 공유. 실패해도 row.news 는 그대로
+      if (n2) {
+        try {
+          let detail = null; try { detail = await get("https://m.stock.naver.com/api/stocks/theme/" + t.no + "?page=1&pageSize=100"); } catch (e) {}
+          const r2 = await fetchNews2({ get, getText, post, theme: { no: t.no, name: t.name, alias: t.alias || [], slots: t.slots || [] }, detail, date: day, prevDate: news2.prevDate || null, hm: out.at, cache: n2.cache, shared: n2.shared, budget: n2.budget });
+          n2.cache = r2.cache; n2.budget = r2.budget; n2.requests += r2.requests; n2.errors.push(...r2.errors);
+          row.news2 = { v: r2.v, n: r2.n, label: r2.label, mismatch: r2.mismatch, reason: r2.reason, verified: r2.verified, candidates: r2.candidates, industry: r2.industry, words: r2.words, items: r2.items, signals: r2.signals || [] };
+        } catch (e) { n2.errors.push(t.name + ": " + (e.message || e)); }
+      }
       out.themes.push(row);
     }
+    if (out.shadow) attachRvol(out.themes, out.shadow); // 현행 3테마 주요 종목에도 RVOL(평소 대비 배수) 병기 — 원장 [1596] 권장안 ⑧
+    if (n2) out.news2 = { v: 1, cache: n2.cache, budget: n2.budget, requests: n2.requests, errors: n2.errors.slice(0, 12) };
   } catch (e) { out.errors.push("주도 테마: " + (e.message || e)); }
   return out;
 }
@@ -575,7 +606,7 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
 export function mergeCloseLeaders(oldClose, part) {
   const old = (oldClose && oldClose.market) || {}, m = part.market || (part.market = {}), cur = m.leaders;
   if (!cur && old.leaders) m.leaders = old.leaders;
-  if (cur && cur.provisional && old.leaders && !old.leaders.provisional) { m.leaders = old.leaders; m.leadersProvisional = cur; }
+  if (cur && cur.provisional && old.leaders && !old.leaders.provisional) { m.leaders = old.leaders; m.leadersProvisional = cur; if (oldClose.shadow) part.shadow = oldClose.shadow; } // 그림자도 확정 run 것 유지 (9.29-84)
   else if (old.leaders && old.leaders.provisional && cur && !cur.provisional) m.leadersProvisional = old.leaders;
   else if (old.leadersProvisional && !(cur && cur.provisional)) m.leadersProvisional = old.leadersProvisional;
   if (!part.themes && oldClose && oldClose.themes) part.themes = oldClose.themes;
@@ -621,6 +652,7 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
     try {
       const l = await leaders(out.market); // 코스피 등락률·거래대금(T·초과수익 게이트) 을 넘긴다
       if (l && l.all) { out.themes = l.all; delete l.all; } // 테마 100개 compact 는 close.themes 에 (지속일수 D · 다음 날 정답표)
+      if (l && l.shadow) { out.shadow = l.shadow; delete l.shadow; } // 그림자 V2 (9.29-84) 는 close.shadow 에 — leaders 블록은 무변경
       if (l && l.text !== undefined) out.market.leaders = l;
       if (candles && saveCandles && l && l.text !== undefined && !l.provisional) { // 앱 차트용 일봉 (확정 run 만 · 9.29-76 원장 [1502] · 9.29-77 부터 기본 꺼짐 CANDLE_SAVE) — 날짜 파일에는 안 넣고 숨은 속성으로 넘김 → collect-auto 가 auto/candles/<코드>.json 으로 저장
         try { const c = await candles(l, l.rawBars || {}); Object.defineProperty(out, "candles", { value: c.candles || {}, enumerable: false }); (c.errors || []).forEach((e) => out.errors.push(e)); }

@@ -1,0 +1,59 @@
+{
+ "kind": "kospi-top10",
+ "refresh": "갱신 주기: 월 1회 손으로 (m.stock.naver.com/api/stocks/marketValue/KOSPI?page=1&pageSize=100 상위 10 · 보통주·우선주 포함 · 코드셋은 고정값으로 두고 바뀐 날짜를 snapshot_time 에 적는다). 자동 갱신 0 — 매 run 바뀌면 「TOP10 제외 거래대금」 이 날마다 다른 기준이 되므로",
+ "snapshot_time": "2026-10-06T10:51",
+ "definition": "코스피(KS) 상장 종목 시총 내림차순 상위 10 (m.stock.naver.com/api/stocks/marketValue/KOSPI, 10:51 fetch) — 고정 코드셋",
+ "source": "E:/에덴_cockpit/work/lead_R1/data/top10_kospi.json (연구 R1 라운드3 · 게이트 r3 확인 · 원장 [1596] 정의 단일화)",
+ "adopted_top10": [
+  {
+   "rank": 1,
+   "code": "005930",
+   "name": "삼성전자"
+  },
+  {
+   "rank": 2,
+   "code": "000660",
+   "name": "SK하이닉스"
+  },
+  {
+   "rank": 3,
+   "code": "005935",
+   "name": "삼성전자우"
+  },
+  {
+   "rank": 4,
+   "code": "402340",
+   "name": "SK스퀘어"
+  },
+  {
+   "rank": 5,
+   "code": "009150",
+   "name": "삼성전기"
+  },
+  {
+   "rank": 6,
+   "code": "373220",
+   "name": "LG에너지솔루션"
+  },
+  {
+   "rank": 7,
+   "code": "005380",
+   "name": "현대차"
+  },
+  {
+   "rank": 8,
+   "code": "207940",
+   "name": "삼성바이오로직스"
+  },
+  {
+   "rank": 9,
+   "code": "105560",
+   "name": "KB금융"
+  },
+  {
+   "rank": 10,
+   "code": "032830",
+   "name": "삼성생명"
+  }
+ ]
+}
