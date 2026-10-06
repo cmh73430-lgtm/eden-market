@@ -1,0 +1,1 @@
+{"app":"jangjeon-cockpit","kind":"crash-cobuy","v":2,"rule":"등락률 <= -3% · 외국인 순매수 > 0 · 기관 순매수 > 0 (docs/flow-research-2026-10-01.md)","updatedAt":1791286635457,"days":[{"date":"2026-10-06","at":"20:34","target":400,"checked":400,"crashed":14,"n":0,"miss":[]}],"signals":[]}
