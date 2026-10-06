@@ -255,12 +255,27 @@ textarea.jin { resize: vertical; }
 .topld .tll { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .topld .tll li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: baseline; gap: 6px 8px; font-size: 15px; }
 .topld .tll .rk { font-weight: 800; color: var(--muted); } .topld .tll .tn { font-weight: 700; } .topld .tll .tn small { font-weight: 400; color: var(--muted); margin-left: 4px; }
-.topld .tll .rt { font-weight: 800; } .topld .tll .rt.p { color: var(--up); } .topld .tll .rt.n { color: var(--dn); }
+.topld .tll .rt { font-weight: 800; } .topld .tll .rt.p { color: var(--up); } .topld .tll .rt.n { color: var(--down); }
 .topld .tll .tlw { grid-column: 2 / -1; font-size: 12.5px; color: var(--muted); }
 .topld .tlf { margin-top: 8px; } .topld .tlf .btn { font-size: 12.5px; padding: 4px 10px; }
 .topld.prev { border-left-color: var(--line); }
-.lvr { font: inherit; font-size: 12px; padding: 1px 8px; margin-left: 4px; border: 1px solid #e0245e; color: #e0245e; background: transparent; border-radius: 12px; cursor: pointer; }
-.topld.live { border-left-color: #e0245e; } .topld.live .tlh b { color: #e0245e; }
+.lvr { font: inherit; font-size: 12px; padding: 1px 8px; margin-left: 4px; border: 1px solid var(--up); color: var(--up); background: transparent; border-radius: 12px; cursor: pointer; }
+.topld.live { border-left-color: var(--up); } .topld.live .tlh b { color: var(--up); }
+/* 실시간 배지 · 등락 색 (9.29-83 원장 [1577]): 장중 = 빨간 배지 + 깜빡이는 점(움직임 줄이기 설정이면 멈춤) · 장 마감/마지막 값 = 회색 · 숫자 + 빨강(--up) / − 파랑(--down) / 0 기본색 */
+.topld .tlh .lvbadge { display: inline-flex; align-items: center; gap: 5px; align-self: center; font-size: 12px; font-weight: 800; line-height: 1; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
+.topld .tlh .lvbadge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.topld .tlh .lvbadge[data-state="live"] { background: var(--up); color: var(--surface); }
+.topld .tlh .lvbadge[data-state="stale"] { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.topld .tlh .lvbadge[data-state="stale"]::before { background: transparent; border: 1.5px solid currentColor; box-sizing: border-box; }
+@media (prefers-reduced-motion: no-preference) { .topld .tlh .lvbadge[data-state="live"]::before { animation: lvblink 1.2s ease-in-out infinite; } }
+@keyframes lvblink { 50% { opacity: .25; } }
+.topld.live.stale { border-left-color: var(--line); } .topld.live.stale .tlh b { color: var(--ink); }
+.topld .tlh .lvq { display: block; margin-top: 3px; font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.45; } .topld .tlh .lvq .lvi { white-space: nowrap; }
+.topld .tlh .lvq .lvn { font-weight: 800; } .topld .tlh .lvq .lvn.p { color: var(--up); } .topld .tlh .lvq .lvn.n { color: var(--down); }
+/* 💾 저장 버튼 (9.29-83 원장 [1584]) — 자동 저장은 그대로, 누르면 지금 저장 + 연동 저장 */
+.savebar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: -4px; }
+.savebar .savemsg { font-size: 12.5px; color: var(--muted); min-width: 0; }
+.savebar .savemsg.ok { color: var(--g); font-weight: 700; } .savebar .savemsg.warn { color: var(--r); font-weight: 700; }
 .topld .tll .tln { grid-column: 2 / -1; font-size: 12.5px; line-height: 1.4; } .topld .tll .tln a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; } .topld .tll .tln small { color: var(--muted); }
 /* 간단 보기: 판정에 쓰는 것만 보이고 나머지는 접힘 (전체 보기 버튼으로 전환) */
 body.simple [data-simple="hide"] { display: none; }
@@ -784,7 +799,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
   </section>
 
   <section class="card topld" id="topLead" data-nav="🔥 오늘 주도 테마" hidden>
-    <div class="tlh"><b id="topLeadTitle">🔥 오늘 주도 테마</b><small id="topLeadSub"></small></div>
+    <div class="tlh"><b id="topLeadTitle">🔥 오늘 주도 테마</b><span class="lvbadge" id="topLeadBadge" hidden></span><small id="topLeadSub"></small></div>
     <ol class="tll" id="topLeadList"></ol>
     <div class="tlf"><button class="btn" type="button" id="topLeadGo">자세히 (② 장 마감 · 설명) ▼</button></div>
   </section>
@@ -925,6 +940,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 
   <section class="card journal" id="marketCard" data-nav="📰 당일 시황">
     <h2>📰 당일 시황 <small>장 끝나고 3분 · 지수·수급·주도 테마는 오후 4:20 자동 (종목 외인·기관은 저녁~다음 날 아침) · 매매 안 한 날도 시황일지로 남겨요</small></h2>
+    <div class="savebar"><button class="btn savebtn" type="button" id="mktSave" data-save>💾 저장</button><small class="savemsg" id="mktSaveMsg" aria-live="polite"></small></div>
     <div class="jsec">
       <h3>① 장전 판단 <small>아침에 정한 것 (자동)</small></h3>
       <div class="mkt" id="jMorning"></div>
@@ -983,6 +999,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 
   <section class="card journal" id="journal" data-nav="📓 매매 일지">
     <h2>📓 매매 일지 <small>장 끝나고 5분 · 쌓이면 최고의 공부</small></h2>
+    <div class="savebar"><button class="btn savebtn" type="button" id="jSave" data-save>💾 저장</button><small class="savemsg" id="jSaveMsg" aria-live="polite"></small></div>
 
     <div class="jsec">
       <h3>① 장전 판단 <small>아침에 정한 매매 모드와 이유 (자동)</small></h3>
@@ -1833,7 +1850,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-82";
+  const APP_VER = "9.29-83";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2317,9 +2334,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const liveAsOf = (L) => { const t = (L && L.kospi && L.kospi.time) || ""; if (/^\d{4}-\d\d-\d\d/.test(t)) return t.slice(0, 10); const b = (L && L.invest && L.invest.bizdate) || ""; return /^\d{8}$/.test(b) ? b.slice(0, 4) + "-" + b.slice(4, 6) + "-" + b.slice(6) : (L && L.date) || ""; };
   const liveHas = () => !!(LIVE && Array.isArray(LIVE.themes) && LIVE.themes.length);
   const liveFresh = () => !!(liveHas() && LIVE.date === DATE && liveAsOf(LIVE) === DATE && (LIVE.at || "") >= "09:00" && liveWindow() && !((S.auto || {})["at.close"] && (S.auto || {})["at.close"] > (LIVE.at || "")));
+  // 실시간 배지: state = "live" | "stale" | null(숨김 · 오늘/어제 주도 테마 카드)
+  function liveBadge(state, text) { const el = $("topLeadBadge"); if (!el) return; el.hidden = !state; el.dataset.state = state || ""; el.textContent = state ? text : ""; }
   function paintTopLead() {
     const box = $("topLead"); if (!box) return;
     if (liveFresh()) { paintTopLive(box); return; }
+    liveBadge(null); box.classList.remove("live", "stale"); // 실시간 카드에서 마감·어제 카드로 바뀔 때 빨간 표시가 남지 않게
     const ld = parseLeaders(S.journal.market.leaders).slice(0, 3);
     const a = S.auto || {}, usOf = (name) => { const u = usLinkOf(name); const v = u ? themeValue((S.us || {})[u.k]) : null; return u && v !== null ? { u, v } : null; };
     const row = (t, n, why) => { const us = usOf(t.name); const rt = typeof t.rate === "number" ? t.rate : null;
@@ -2346,14 +2366,35 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   function paintTopLive(box, stale) {
     const L = LIVE, eok = (v) => (typeof v !== "number" ? "—" : Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억"), sg = (v) => (typeof v !== "number" ? "—" : (v > 0 ? "+" : "") + eok(v)), pc = (v) => (typeof v !== "number" ? "" : (v > 0 ? "+" : "") + v + "%");
-    const wasHidden = box.hidden; box.hidden = false; box.classList.toggle("prev", !!stale); box.classList.add("live");
+    const wasHidden = box.hidden; box.hidden = false; box.classList.toggle("prev", !!stale); box.classList.add("live"); box.classList.toggle("stale", !!stale);
     const asOf = liveAsOf(L), md = asOf ? Number(asOf.slice(5, 7)) + "/" + Number(asOf.slice(8, 10)) : "";
-    const when = stale ? `⏸ 지금은 장중이 아니에요 · ${md} ${asOf === L.date ? L.at + " 기준" : "장 마감 기준"} 마지막 값 · 장중 09:00~15:40 에 20분마다 새로 바뀌어요` : `${L.at} 기준 · 20분마다`;
-    $("topLeadTitle").textContent = stale ? "🔴 실시간 주도 테마 (마지막 값)" : "🔴 실시간 주도 테마"; const mk = (nm, k, inv, pg) => k ? `${nm} ${pc(k.value)}${k.amount ? " · 거래대금 " + eok(k.amount) : ""}${inv ? " · 외인 " + sg(inv.foreign) + " · 기관 " + sg(inv.institution) : ""}${pg && typeof pg.total === "number" ? " · 프로그램 " + sg(pg.total) : ""}` : "";
+    // 1분 갱신 (9.29-83 원장 [1583]): 중계 서버가 숫자를 새로 덮은 값이면 「1분마다 · 갱신 시각(초까지) · 테마 고른 시각」 · 중계를 못 쓰면 예전처럼 live.json(20분마다)
+    const fr = L.fresh && L.fresh.overlay && typeof L.fresh.at === "string" ? L.fresh : null;
+    const when = stale ? `⏸ 지금은 장중이 아니에요 · ${md} ${asOf === L.date ? L.at + " 기준" : "장 마감 기준"} 마지막 값 · 장중 09:00~15:40 에 새로 바뀌어요` : fr ? `1분마다 · ${fr.at} 갱신 · 테마 고름 ${L.at}` : `${L.at} 기준 · 20분마다`;
+    // 제목 옆 배지 (9.29-83 원장 [1577] "실시간인거 표시"): 장중 갱신 중 = 빨간 「● LIVE 실시간」 · stale(위 판단 그대로) = 회색 「장 마감」(15:30 장 마감 값·어제 장 값) / 「마지막 값」
+    $("topLeadTitle").textContent = "실시간 주도 테마";
+    liveBadge(stale ? "stale" : "live", stale ? (asOf !== L.date || (L.at || "") >= "15:30" ? "장 마감" : "마지막 값") : "LIVE 실시간");
+    // 코스피·코스닥 한 줄씩 (9.29-69) · 등락률·외인·기관·프로그램 숫자만 + 빨강 / − 파랑 / 0 기본색 (9.29-83 원장 [1577]) · 거래대금은 색 없음 · 글자는 예전과 같은 한 줄 · DOM 으로 만들어 바깥 값은 글자로만 들어감
+    const cls = (v) => (typeof v !== "number" ? "" : v > 0 ? "p" : v < 0 ? "n" : "z");
+    const mk = (nm, k, inv, pg) => {
+      if (!k) return null;
+      const line = document.createElement("span"); line.className = "lvq";
+      // 「외인 -5,070억」 처럼 이름+숫자 한 덩어리는 휴대폰에서 줄이 바뀌어도 안 쪼개지게 (lvi · 글자는 그대로)
+      const item = (label, txt, v, colored) => { const it = document.createElement("span"); it.className = "lvi"; it.append(label + " ");
+        if (colored) { const s = document.createElement("span"); s.className = "lvn" + (cls(v) ? " " + cls(v) : ""); s.textContent = txt; it.append(s); } else it.append(txt);
+        if (line.childNodes.length) line.append(" · "); line.append(it); };
+      item(nm, pc(k.value), k.value, true);
+      if (k.amount) item("거래대금", eok(k.amount));
+      if (inv) { item("외인", sg(inv.foreign), inv.foreign, true); item("기관", sg(inv.institution), inv.institution, true); }
+      if (pg && typeof pg.total === "number") item("프로그램", sg(pg.total), pg.total, true);
+      return line;
+    };
     const chk = liveChecked ? ` · 앱 확인 ${liveChecked}` : "";
-    $("topLeadSub").innerHTML = [esc(when + chk) + ' <button type="button" class="lvr" data-live-refresh>↻ 새로고침</button>', esc(mk("코스피", L.kospi, L.invest, L.program)), esc(mk("코스닥", L.kosdaq, L.investQ, L.programQ))].filter(Boolean).join("<br>"); // 코스피·코스닥 한 줄씩 (9.29-69)
+    const sub = $("topLeadSub"), rf = document.createElement("button");
+    rf.type = "button"; rf.className = "lvr"; rf.dataset.liveRefresh = ""; rf.textContent = "↻ 새로고침";
+    sub.replaceChildren(when + chk + " ", rf, ...[mk("코스피", L.kospi, L.invest, L.program), mk("코스닥", L.kosdaq, L.investQ, L.programQ)].filter(Boolean));
     $("topLeadList").innerHTML = L.themes.slice(0, 3).map((t, n) => {
-      const slots = (t.slots || []).slice(0, 2), flows = slots.filter((x) => x.flow);
+      const slots = (t.slots || []).slice(0, 3), flows = slots.filter((x) => x.flow); // 주요 종목 3개 (9.29-83 원장 [1580] · 고르는 기준은 수집기 그대로 = 거래대금 순)
       const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
       const nw = (t.news || [])[0];
       return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}${flows.length ? "" : " · 종목별 외인·기관은 장 마감 뒤"}</span>${nw ? `<span class="tln">📰 ${nw.url ? `<a href="${esc(nw.url)}" target="_blank" rel="noopener">${esc(nw.title)}</a>` : esc(nw.title)}${nw.office || nw.at ? ` <small>${esc([nw.office, nw.at ? nw.at.slice(11) : ""].filter(Boolean).join(" "))}</small>` : ""}</span>` : ""}</li>`;
@@ -3648,14 +3689,22 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     } catch (x) {}
   }
   let liveTimer = null, liveBusy = false, liveHooked = false;
+  // 1분 갱신 (9.29-83 원장 [1583]): 장중엔 중계 서버 /live-themes(live.json 의 테마 3개 + 네이버 최신 숫자 · 60초 캐시)를 먼저 · 실패하면 기존 live.json
+  // 바탕화면 설치판(file://)은 중계가 받지 않는 주소(Origin null → 403)라 부르지 않는다 (콘솔 오류 없이 live.json 길)
+  async function liveRelay() {
+    if (location.protocol === "file:") return null;
+    let signal; try { signal = AbortSignal.timeout(15000); } catch (e) {}
+    try { const r = await fetch(RELAY + "/live-themes", { cache: "no-store", signal }); if (!r.ok) return null; const j = await r.json(); return j && j.date && Array.isArray(j.themes) && j.themes.length ? j : null; } catch (e) { return null; }
+  }
+  const liveKey = (l) => l.ts + "/" + (l.fresh && l.fresh.overlay ? l.fresh.ts : "");
   async function livePull(first) {
     if (liveBusy || (!first && !liveWindow())) return; liveBusy = true; // 처음 열 때는 장 밖에서도 한 번 (마지막 값 보여 주기), 그 뒤엔 장중에만
-    try { const l = await pubGet(PUB_RAW + "live.json"); liveChecked = kstHM(); if (l && l.date <= kstDate() && (!LIVE || l.ts !== LIVE.ts)) LIVE = l; if (LIVE) paintTopLead(); }
+    try { const l = (liveWindow() ? await liveRelay() : null) || await pubGet(PUB_RAW + "live.json"); liveChecked = kstHM(); if (l && l.date <= kstDate() && (!LIVE || liveKey(l) !== liveKey(LIVE))) LIVE = l; if (LIVE) paintTopLead(); }
     catch (e) {} finally { liveBusy = false; }
   }
   function pubStart() {
     livePull(true); clearInterval(liveTimer);
-    liveTimer = setInterval(() => { if (document.visibilityState === "visible") livePull(); }, 2 * 60000); // 실시간 주도 테마: 2분마다 (장중 창에서만 실제로 받음)
+    liveTimer = setInterval(() => { if (document.visibilityState === "visible") livePull(); }, 60000); // 실시간 주도 테마: 1분마다 (9.29-83 원장 [1583] · 장중 창에서만 실제로 받음)
     if (!liveHooked) { // 폰에서 화면이 꺼지거나 다른 앱에 갔다 오면 타이머가 멈춰 있으므로, 돌아오는 즉시 한 번 받는다 · ↻ 버튼 (9.29-69)
       liveHooked = true;
       document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") livePull(true); });
@@ -3782,6 +3831,23 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     });
     return ghChain;
   }
+  // 💾 저장 버튼 (9.29-83 원장 [1584] "당일시황이랑 매매일지에 저장버튼"): 자동 저장(칸 입력마다 save)은 그대로 두고,
+  // 누르면 지금 save() + 연동이 켜져 있으면 연동 저장을 기다리지 않고 바로 올린 뒤 결과를 버튼 옆에: 「저장됨 HH:MM:SS · GitHub 반영」 / 「저장됨 HH:MM:SS · 브라우저에만 저장됨」
+  async function saveNow(btn) {
+    const msg = btn.parentNode.querySelector(".savemsg"); if (btn.disabled) return;
+    btn.disabled = true; msg.className = "savemsg"; msg.textContent = "저장 중…";
+    let synced = null; // null = 연동 꺼짐 · true = 올라감 · false = 실패
+    try {
+      save();
+      if (gh) { clearTimeout(ghTimer); ghPending.add(DATE); await ghPush(); synced = cloudState === "on" && !ghPending.has(DATE); }
+      else if (cloud) { clearTimeout(pushTimer); pending.set(DATE, true); await flushPush(); synced = cloudState === "on" && !pending.has(DATE); }
+    } catch (e) { if (gh || cloud) synced = false; }
+    const ok = localOk && !!store.get(DATE), t = kstTime();
+    msg.className = "savemsg" + (!ok || synced === false ? " warn" : synced ? " ok" : ""); // 초록 = 연동까지 · 회색 = 연동 꺼짐(브라우저 저장) · 빨강 = 연동 실패/저장 막힘
+    msg.textContent = !ok ? "⚠ 저장 안 됨 (이 브라우저는 저장이 막혀 있어요)" : "저장됨 " + t + (synced ? (gh ? " · GitHub 반영" : " · PC·폰 동기화 반영") : " · 브라우저에만 저장됨");
+    btn.disabled = false;
+  }
+  document.querySelectorAll("[data-save]").forEach((b) => b.addEventListener("click", () => saveNow(b)));
   function ghFail(e) {
     const st = e && e.status;
     cloudState = st === 401 || st === 403 || st === 404 ? "auth" : "error";
