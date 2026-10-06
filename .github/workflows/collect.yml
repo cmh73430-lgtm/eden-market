@@ -44,6 +44,6 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${{ github.event.inputs.when }}" ]; then ARGS="$ARGS --when=${{ github.event.inputs.when }}"; fi
-          if [ "${{ github.event.schedule }}" = "*/20 0-6 * * 1-5" ]; then ARGS="$ARGS --when=live"; fi
+          case "${{ github.event.schedule }}" in "*/5 0-6 * * 1-5"|"*/20 0-6 * * 1-5") ARGS="$ARGS --when=live" ;; esac
           if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
           node --disable-warning=ExperimentalWarning scripts/collect-auto.mjs $ARGS
