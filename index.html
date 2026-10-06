@@ -328,7 +328,7 @@ body.simple #mv-leaders .mvsub .subtxt { display: none; }
 .tr .pnl.pos { color: var(--up); } .tr .pnl.neg { color: var(--down); }
 .tr .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .tr .grid label.wide { grid-column: 1 / -1; }
-.tr .candlebox svg.candles { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); box-sizing: border-box; }
+.tr .candlebox svg.candles { display: block; width: 100%; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; box-sizing: border-box; } /* 9.29-88 원장 [1659]: 네이버 「차트보기」 처럼 흰 바탕 (다크 모드에도) */
 .tr .chartimg { width: 100%; max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: #fff; image-rendering: -webkit-optimize-contrast; }
 .tr .rowx { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; }
 .tr .rowx label.inline { display: flex; gap: 6px; align-items: center; color: var(--ink); font-size: 13px; }
@@ -1896,7 +1896,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-87";
+  const APP_VER = "9.29-88";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2568,42 +2568,68 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function volTone(v, pv) {
     return typeof v !== "number" || typeof pv !== "number" || v === pv ? "flat" : v > pv ? "up" : "down";
   }
-  // 앱 일봉 그림 좌표 (9.29-76 원장 [1502]·[1503]): 일봉 bars 최근 60봉(그날이 들어가게) → 캔들 · 그날 봉 x · B(매수가)·S(매도가) 높이 · 아래 거래량 칸
+  // 앱 일봉 그림 좌표 (9.29-76 원장 [1502]·[1503]): 일봉 bars 최근 60봉(≈ 3개월 · 그날이 들어가게) → 캔들 · 그날 봉 x · B(매수가)·S(매도가) 높이 · 아래 거래량 칸
   // 그날(일지 날짜) 봉이 없으면 null (네이버 그림으로 대신)
   // 9.29-77 원장 [1513]: o.dB·o.dS = 매수·매도 시점 칸의 날짜(없으면 그날) → 그 날 봉에 B·S · 그 날 봉이 60봉 안에 없으면 표식 생략(out.B/out.S = true · 날짜는 값 띠에)
+  // 9.29-88 원장 [1658]·[1659] 네이버 「차트보기」 일봉 그림과 같은 요소: 위 범례 줄(LH) · 캔들 칸(H · 오른쪽 가격 눈금 7단 ticks · 최고 hiPt · 최저 loPt · 이동평균 mas 5·20·60·120 = 받은 봉 전체로 계산 · 봉이 모자란 점은 없음)
+  //  · 경계선(bot) · 거래량 칸(VH · 자기 눈금 = 창 최대 거래량) · 맨 아래 날짜 축(DH · dates 약 9칸) · 오른쪽 눈금 폭 axis · 위·아래 여유 15% = 최고·최저 글자 자리
   function candleGeom(bars, day, buy, sell, o = {}) {
-    const W = o.W || 600, H = o.H || 220, VH = o.VH || 56, GAP = 8, pad = 8, axis = 52;
+    const W = o.W || 400, H = o.H || 200, VH = o.VH || 56, LH = 16, DH = 16, axis = 50;
     const rows = (Array.isArray(bars) ? bars : []).filter((b) => b && typeof b.c === "number" && typeof b.o === "number" && typeof b.h === "number" && typeof b.l === "number");
     const di = rows.findIndex((b) => b.date === day);
     if (di < 0) return null;
     let end = rows.length - 1, start = Math.max(0, end - 59);
     if (di < start) { start = Math.max(0, di - 30); end = Math.min(rows.length - 1, start + 59); }
-    const win = rows.slice(start, end + 1), n = win.length, cw = (W - axis) / n, bw = Math.max(1, Math.min(10, cw * 0.62));
+    const win = rows.slice(start, end + 1), n = win.length, PW = W - axis, cw = PW / n, bw = Math.max(1, Math.min(10, cw * 0.62));
     const at = (dd) => { const k = rows.findIndex((b) => b.date === (dd || day)); return k >= start && k <= end ? k : -1; };
     const iB = typeof buy === "number" && buy > 0 ? at(o.dB) : -2, iS = typeof sell === "number" && sell > 0 ? at(o.dS) : -2; // -2 = 값 없음 · -1 = 범위 밖
     const marks = [iB >= 0 ? buy : null, iS >= 0 ? sell : null].filter((x) => x !== null);
     let lo = Math.min(...win.map((b) => b.l), ...marks), hi = Math.max(...win.map((b) => b.h), ...marks);
     if (hi === lo) { hi += 1; lo -= 1; }
-    const m = (hi - lo) * 0.04; lo -= m; hi += m;
-    const x = (i) => (i + 0.5) * cw, y = (p) => pad + ((hi - p) / (hi - lo)) * (H - 2 * pad);
+    const m = (hi - lo) * 0.15; lo -= m; hi += m;
+    const top = LH, bot = LH + H, vbot = bot + VH;
+    const x = (i) => (i + 0.5) * cw, y = (p) => top + ((hi - p) / (hi - lo)) * H;
     const vmax = Math.max(0, ...win.map((b) => (typeof b.v === "number" ? b.v : 0)));
     const candles = win.map((b, i) => { const pv = start + i > 0 ? rows[start + i - 1].v : null;
-      return { date: b.date, x: x(i), yo: y(b.o), yc: y(b.c), yh: y(b.h), yl: y(b.l), up: b.c >= b.o, vh: vmax > 0 && typeof b.v === "number" ? (b.v / vmax) * VH : 0, vt: volTone(b.v, pv) }; });
+      return { date: b.date, x: x(i), yo: y(b.o), yc: y(b.c), yh: y(b.h), yl: y(b.l), up: b.c >= b.o, vh: vmax > 0 && typeof b.v === "number" ? (b.v / vmax) * (VH - 6) : 0, vt: volTone(b.v, pv) }; });
+    const ma = (N) => win.map((b, i) => { const k = start + i; if (k - N + 1 < 0) return null; let s = 0; for (let j = k - N + 1; j <= k; j++) s += rows[j].c; return { x: x(i), y: y(s / N) }; }).filter(Boolean);
+    const mas = [5, 20, 60, 120].map((N) => ({ N, pts: ma(N) }));
+    let hiI = 0, loI = 0; win.forEach((b, i) => { if (b.h > win[hiI].h) hiI = i; if (b.l < win[loI].l) loI = i; });
+    const md = (dd) => String(dd).slice(5, 7) + "/" + String(dd).slice(8, 10);
+    const hiPt = { x: x(hiI), y: y(win[hiI].h), p: win[hiI].h, md: md(win[hiI].date) }, loPt = { x: x(loI), y: y(win[loI].l), p: win[loI].l, md: md(win[loI].date) };
+    const ticks = Array.from({ length: 7 }, (_, i) => { const p = hi - ((hi - lo) * i) / 6; return { p, y: y(p) }; });
+    const step = Math.max(1, Math.round(n / 9));
+    const dates = win.map((b, i) => (i % step === 0 ? { x: x(i), md: md(b.date) } : null)).filter(Boolean);
     const d = di - start, yB = iB >= 0 ? y(buy) : null, yS = iS >= 0 ? y(sell) : null;
     const apart = yB !== null && yS !== null && iB === iS && Math.abs(yB - yS) < 18 ? 10 : 0; // 같은 봉에서 두 표식이 겹치면 좌우로 비킴
-    const ticks = [hi - m, (hi + lo) / 2, lo + m].map((p) => ({ p, y: y(p) }));
-    return { W, H, VH, GAP, TH: H + GAP + VH, axis, n, start, d, cw, bw, lo, hi, candles, ticks,
-      B: yB === null ? null : { x: x(iB - start) - apart, y: yB }, S: yS === null ? null : { x: x(iS - start) + apart, y: yS }, out: { B: iB === -1, S: iS === -1 } };
+    return { W, H, VH, LH, DH, axis, PW, TH: LH + H + VH + DH, top, bot, vbot, n, start, d, cw, bw, lo, hi, candles, mas, hiPt, loPt, ticks, dates,
+      B: yB === null ? null : { x: x(iB - start) - apart, y: yB, p: buy }, S: yS === null ? null : { x: x(iS - start) + apart, y: yS, p: sell }, out: { B: iB === -1, S: iS === -1 } };
   }
-  // 네이버 차트 그림처럼: 양봉 빨강 · 음봉 파랑 · 가격 눈금 3개 · 그날 봉에 B·S 표식 두 개만 (점선·범례·격자 없음) · 아래 거래량 막대
+  // 네이버 「차트보기」 일봉 그림 색 (9.29-88 원장 [1659] 캡처): 흰 바탕 · 양봉 빨강 · 음봉 파랑 · 이동평균 5 초록 · 20 빨강 · 60 주황 · 120 보라 · 거래량 보라 막대 · 점선 눈금 회색
+  const NVC = { up: "#e5392f", down: "#2f6fdf", ma5: "#2e9e3e", ma20: "#e8352e", ma60: "#f28c1b", ma120: "#8e44ad", vol: "#a98be0", grid: "#d4d4d4", axis: "#666", text: "#333" };
+  // 네이버 「차트보기」 일봉 그림 그대로 (9.29-88 원장 [1658]·[1659]): 범례 「■5 ■20 ■60 ■120」 · 캔들(꼬리 포함 빨강/파랑) · 이동평균선 4 · 가로 점선 + 오른쪽 가격 눈금 7단 · 「최고 9,460 (10/01)」 빨강 ↓ · 「최저 4,050 (07/30)」 파랑 ↑
+  //  · 경계선 아래 거래량 칸(보라 막대 · 오른쪽 「▮거래량」) · 맨 아래 날짜 축(MM/DD 약 9칸 · 세로 점선) · 우리 표식 = 그날 봉에 B 동그라미 + 옆에 매수가 「B 7,120」 · S 도 같은 식(네이버엔 없는 것 · 자리만 그림 위에)
   function candleSvg(g) {
-    const f = (v) => Math.round(v * 10) / 10, C = { up: "var(--up)", down: "var(--down)", flat: "var(--muted)" };
+    const f = (v) => Math.round(v * 10) / 10, C = NVC, fmt = (p) => Math.round(p).toLocaleString("ko-KR"), R = g.PW;
+    const legend = `<text class="lg" x="4" y="11" font-size="10" font-weight="700">${[5, 20, 60, 120].map((N) => `<tspan fill="${C["ma" + N]}">■</tspan><tspan fill="${C.text}">${N} </tspan>`).join("")}</text>`;
+    const grid = g.ticks.map((t) => `<line class="gy" x1="0" x2="${R}" y1="${f(t.y)}" y2="${f(t.y)}" stroke="${C.grid}" stroke-dasharray="2 2"/><text class="tk" x="${R + 4}" y="${f(Math.min(t.y + 3.5, g.bot - 1))}" font-size="10" fill="${C.axis}">${fmt(t.p)}</text>`).join("");
+    const vgrid = g.dates.map((d) => `<line class="gx" x1="${f(d.x)}" x2="${f(d.x)}" y1="${g.top}" y2="${g.vbot}" stroke="${C.grid}" stroke-dasharray="2 2"/><text class="dt" x="${f(d.x)}" y="${g.vbot + 12}" font-size="10" fill="${C.axis}" text-anchor="${d.x < 14 ? "start" : "middle"}">${d.md}</text>`).join("");
     const body = g.candles.map((c) => { const col = c.up ? C.up : C.down, top = Math.min(c.yo, c.yc), hh = Math.max(1, Math.abs(c.yo - c.yc));
-      return `<line x1="${f(c.x)}" x2="${f(c.x)}" y1="${f(c.yh)}" y2="${f(c.yl)}" style="stroke:${col}" stroke-width="1"/><rect x="${f(c.x - g.bw / 2)}" y="${f(top)}" width="${f(g.bw)}" height="${f(hh)}" style="fill:${col}"/>`; }).join("");
-    const vol = g.candles.map((c) => c.vh > 0 ? `<rect class="vol ${c.vt}" x="${f(c.x - g.bw / 2)}" y="${f(g.TH - c.vh)}" width="${f(g.bw)}" height="${f(c.vh)}" style="fill:${C[c.vt]}"/>` : "").join("");
-    const tick = g.ticks.map((t) => `<text x="${g.W - 4}" y="${f(t.y + 4)}" text-anchor="end" font-size="11" style="fill:var(--muted)">${Math.round(t.p).toLocaleString("ko-KR")}</text>`).join("");
-    const mark = (k, p, col) => p ? `<g class="bs ${k}"><circle cx="${f(p.x)}" cy="${f(p.y)}" r="9" style="fill:${col}"/><text x="${f(p.x)}" y="${f(p.y + 4)}" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">${k}</text></g>` : "";
-    return `<svg class="candles" viewBox="0 0 ${g.W} ${g.TH}" role="img" aria-label="일봉 ${g.n}개 · B 매수 · S 매도">${body}${tick}${mark("B", g.B, C.up)}${mark("S", g.S, C.down)}${vol}</svg>`;
+      return `<line x1="${f(c.x)}" x2="${f(c.x)}" y1="${f(c.yh)}" y2="${f(c.yl)}" stroke="${col}" stroke-width="1"/><rect x="${f(c.x - g.bw / 2)}" y="${f(top)}" width="${f(g.bw)}" height="${f(hh)}" fill="${col}"/>`; }).join("");
+    const mas = g.mas.filter((m) => m.pts.length > 1).map((m) => `<polyline class="ma ma${m.N}" fill="none" stroke="${C["ma" + m.N]}" stroke-width="1" points="${m.pts.map((p) => f(p.x) + "," + f(p.y)).join(" ")}"/>`).join("");
+    const lines = `<line class="sep" x1="0" x2="${g.W}" y1="${g.bot}" y2="${g.bot}" stroke="${C.axis}" stroke-width="0.6"/><line class="sep" x1="0" x2="${g.W}" y1="${g.vbot}" y2="${g.vbot}" stroke="${C.axis}" stroke-width="0.6"/>`;
+    const vol = g.candles.map((c) => c.vh > 0 ? `<rect class="vol ${c.vt}" x="${f(c.x - g.bw / 2)}" y="${f(g.vbot - c.vh)}" width="${f(g.bw)}" height="${f(c.vh)}" fill="${C.vol}"/>` : "").join("");
+    const volLabel = `<text class="vl" x="${R + 4}" y="${g.bot + 11}" font-size="10" fill="${C.axis}"><tspan fill="${C.vol}">▮</tspan>거래량</text>`;
+    const hilo = (pt, k) => { const up = k === "hi", col = up ? C.up : C.down, end = pt.x > R / 2, tx = end ? pt.x - 5 : pt.x + 5, ty = up ? pt.y - 12 : pt.y + 19, ay = up ? pt.y - 2 : pt.y + 9;
+      return `<g class="hilo ${k}"><text x="${f(pt.x)}" y="${f(ay)}" font-size="10" fill="${col}" text-anchor="middle">${up ? "↓" : "↑"}</text><text x="${f(tx)}" y="${f(ty)}" font-size="10" font-weight="700" fill="${col}" text-anchor="${end ? "end" : "start"}">${up ? "최고" : "최저"} ${fmt(pt.p)} (${pt.md})</text></g>`; };
+    // 표식 옆 가격 글자 자리: 오른쪽 끝 가까우면 왼쪽에 · 두 표식이 붙어 있으면(봉 5개 안 · 높이 12 안) 같은 쪽에 위·아래로 나눠서(겹침 0)
+    const near = g.B && g.S && Math.abs(g.B.x - g.S.x) < 30 && Math.abs(g.B.y - g.S.y) < 12, side = (xx) => xx > R - 36;
+    const pos = (p, other, upper) => { if (!p) return null; if (!near) { const end = side(p.x); return { x: end ? p.x - 9 : p.x + 9, y: p.y + 3.5, a: end ? "end" : "start" }; }
+      const end = side(Math.max(p.x, other.x)), mid = (p.y + other.y) / 2; return { x: end ? Math.min(p.x, other.x) - 9 : Math.max(p.x, other.x) + 9, y: mid + (upper ? -5.5 : 5.5) + 3.5, a: end ? "end" : "start" }; };
+    const pB = pos(g.B, g.S, near && g.B.y <= g.S.y), pS = pos(g.S, g.B, near && g.S.y < g.B.y);
+    const mark = (k, p, t, col) => { if (!p) return "";
+      return `<g class="bs ${k}"><circle cx="${f(p.x)}" cy="${f(p.y)}" r="7" fill="${col}"/><text x="${f(p.x)}" y="${f(p.y + 3.5)}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff">${k}</text><text class="px" x="${f(t.x)}" y="${f(t.y)}" text-anchor="${t.a}" font-size="10" font-weight="700" fill="${col}" stroke="#fff" stroke-width="2.5" paint-order="stroke">${fmt(p.p)}</text></g>`; };
+    return `<svg class="candles" viewBox="0 0 ${g.W} ${g.TH}" role="img" aria-label="일봉 ${g.n}개 · 이동평균 5·20·60·120 · 거래량 · B 매수 · S 매도">${legend}${grid}${vgrid}${body}${mas}${hilo(g.hiPt, "hi")}${hilo(g.loPt, "lo")}${lines}${vol}${volLabel}${mark("B", g.B, pB, C.up)}${mark("S", g.S, pS, C.down)}</svg>`;
   }
   // 일봉 받기 (9.29-77 원장 [1513]): ① 중계 서버(아무 종목 · 네이버 일봉 120봉) → ② 수집기 auto/candles/<코드>.json(링크판 jsDelivr · 홈페이지 raw) → ③ 둘 다 없으면 네이버 그림 + B/S 값 띠
   // 한 번 받은 건 이 화면 동안 기억(CANDLES · 저장 0) · 요청마다 15초 제한 · 링크판에서 중계가 막혀도(CORS·접속 제한) 화면 문구 없이 다음 길로
