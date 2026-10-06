@@ -13,7 +13,7 @@
 // 옵션 추가: --trace (요청 수·걸린 시간 출력 · 재현용)
 import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay, kstTime } from "../shared/calendar.js";
-import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS } from "../server/auto.js";
 import { RVOL_BAR_COUNT } from "../server/shadow.js";
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import naver from "../server/sources/naver.js";
@@ -117,6 +117,20 @@ if (when === "live") {
   console.log(shadowText(live.shadow)); console.log(news2Text(live));
   if (!live.themes || !live.themes.length) { console.error("주도 테마를 못 골랐음"); process.exit(1); }
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
+  process.exit(0);
+}
+// ---- 「오후 4시 기준」 묶음 (--when=close1600 · 16:00 KST run · 9.29-87 원장 [1662]~[1666]): 미국 선물 4종·코스피200 선물·원달러·WTI·비트코인만 받아 날짜 파일 「장마감_1600」 에 저장 (close 블록은 손대지 않음 · 실패 항목은 errors · 지어내기 0) ----
+if (when === "close1600") {
+  const snap = await collectCloseSnap({ sources: cfg.sources, adapters: { naver, yahoo, upbit }, now });
+  console.log(`오후 4시 기준 ${snap.at} · ` + CLOSE_SNAP_ITEMS.map(([k, n]) => { const x = snap.items[k]; return x ? `${n} ${x.price} (${x.pct > 0 ? "+" : ""}${x.pct}%)` : `${n} 없음`; }).join(" · "));
+  if (snap.errors.length) console.log("일부 실패:", snap.errors.join(" / "));
+  if (!Object.keys(snap.items).length) { console.error("받은 값이 하나도 없음"); process.exit(1); }
+  if (save) {
+    await ensureBranch();
+    const rec = mergeAuto((await readFile(autoFile(date))).json, date, CLOSE_SNAP_KEY, snap), msg = `자동 연동 ${date} 오후 4시 기준 ${snap.at}`;
+    await writeFile(autoFile(date), rec, msg); await writeFile(AUTO_DIR + "/latest.json", rec, msg);
+    console.log(`저장: ${autoFile(date)} ${CLOSE_SNAP_KEY} (${BRANCH})`);
+  } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
 const prevDay = prevBusinessDay(date, cfg.holidays); // 어제(직전 거래일)

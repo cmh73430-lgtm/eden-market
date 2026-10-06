@@ -49,7 +49,8 @@ export async function collectAll({ sources, themes, adapters, now = new Date() }
     try {
       const { q, c } = await firstOk(asList(conf));
       // 9.29-86 원장 [1624]: 블로그 「값 ▲변동폭 (+변동률%)」 용으로 종가·전일 종가(어댑터 price/prevClose · 원 데이터 그대로)를 detail 에 같이 둔다 (value 는 그대로)
-      const lvl = typeof q.price === "number" && typeof q.prevClose === "number" ? { price: q.price, prev: q.prevClose } : null;
+      // 9.29-87 원장 [1652]·[1657]: 야후 값의 부동소수 찌꺼기(실측 15.520000457763672)는 소수 2자리로 정리 (네이버 값은 2자리 이하라 그대로)
+      const lvl = typeof q.price === "number" && typeof q.prevClose === "number" ? { price: round(q.price, 2), prev: round(q.prevClose, 2) } : null;
       out.signals[k] = { value: toSignal(c.kind, q), src: c.source, at, time: q.time || null, ...(q.detail || lvl ? { detail: Object.assign({}, q.detail || {}, lvl || {}) } : {}) };
     } catch (e) {
       out.errors.push({ key: k, error: String(e.message || e) });

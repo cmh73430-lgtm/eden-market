@@ -85,7 +85,9 @@ export function cumChange(k, bars, prevKr, expectedUs) {
   const base = [...bars].filter((b) => b.date < prevKr).pop(), last = [...bars].filter((b) => b.date <= expectedUs).pop();
   if (!base || !last || last.date <= base.date) return null;
   const value = k === "ust" ? Number(((normalizeYield(last.close) - normalizeYield(base.close)) * 100).toFixed(1)) : Number(((last.close / base.close - 1) * 100).toFixed(2));
-  return { value, from: base.date, to: last.date, level: k === "ust" ? Number(normalizeYield(last.close).toFixed(2)) : undefined };
+  // 9.29-87 원장 [1652]: 연휴 누적일 때도 「값 ▲변동폭 (+%)」 용 수준값 — price = 최근 미국 종가 · prev = 누적 기준(직전 한국 거래일 전 미국 종가) · 야후 일봉 찌꺼기는 2자리
+  const r2 = (x) => Number((k === "ust" ? normalizeYield(x) : x).toFixed(2));
+  return { value, from: base.date, to: last.date, level: k === "ust" ? Number(normalizeYield(last.close).toFixed(2)) : undefined, price: r2(last.close), prev: r2(base.close) };
 }
 // 받아온 미국 값의 기준 날짜가 '기대하는 미국 거래일'보다 오래됐는지 (연휴·주말 뒤 묵은 값 방지). 선물·환율처럼 밤새 거래되는 값은 시각이 최신이라 걸리지 않는다
 export const US_DATED = ["sox", "vix", "ust", "ustlvl", "dji", "ixic", "spx", "rut", "fut", "es", "ym", "rty", "oil"];
@@ -110,7 +112,7 @@ export async function collectMorning({ sources, themes, adapters, now = new Date
         const c = cumChange(k, await adapters.yahoo.daily(sym), gap.prevKr, expectedUs);
         if (!c) continue;
         const single = out.signals[k] ? out.signals[k].value : null;
-        out.signals[k] = Object.assign({}, out.signals[k] || {}, { value: c.value, src: "yahoo", time: c.to, detail: Object.assign({}, (out.signals[k] || {}).detail || {}, { cum: { from: c.from, to: c.to, single } }) });
+        out.signals[k] = Object.assign({}, out.signals[k] || {}, { value: c.value, src: "yahoo", time: c.to, detail: Object.assign({}, (out.signals[k] || {}).detail || {}, { cum: { from: c.from, to: c.to, single }, price: c.price, prev: c.prev }) }); // price/prev = 누적 기준 수준값 (9.29-87 원장 [1652])
         out.gap.from = c.from; out.gap.to = c.to;
         if (k === "ust" && c.level !== undefined) out.signals.ustlvl = { value: c.level, src: "yahoo", time: c.to, detail: { asOf: c.to } }; // 금리 수준도 같은 날(최근 미국 종가) 기준
       } catch (e) { out.errors.push(k + " 연휴 누적: " + (e.message || e)); }
@@ -137,7 +139,7 @@ export async function collectIntraday({ adapters, fetchImpl = fetch, now = new D
   };
   try { const f = await get("FUT"); out.fut = { foreign: f.foreign, institution: f.institution, personal: f.personal, bizdate: f.bizdate }; } catch (e) { out.errors.push("선물 수급: " + (e.message || e)); }
   try { const k = await get("KOSPI"); out.spot = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("현물 수급: " + (e.message || e)); }
-  try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = Number(((q.price / q.prevClose - 1) * 100).toFixed(2)); } catch (e) { out.errors.push("코스피: " + (e.message || e)); }
+  try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = Number(((q.price / q.prevClose - 1) * 100).toFixed(2)); out.kospiLv = { close: q.price, prev: q.prevClose }; } catch (e) { out.errors.push("코스피: " + (e.message || e)); } // kospiLv = 장중 지수·전일 종가 → 앱 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1652])
   try { out.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); } // 장중 누적 프로그램 순매수(억) → 앱 재판정·프로그램 칸
   return out;
 }
@@ -188,8 +190,15 @@ export function leadStocks(stocks, n = SLOT_N, minValue = 0) {
 }
 export const parseStocks = (stocks) => (Array.isArray(stocks) ? stocks : []).map((x) => {
   const raw = num(x.accumulatedTradingValueRaw) ?? num(x.accumulatedTradingValue);
-  return { code: x.itemCode, name: x.stockName, rate: num(x.fluctuationsRatio), value: raw === null ? null : round2(raw / 1e8), price: num(x.closePrice) };
+  return { code: x.itemCode, name: x.stockName, rate: num(x.fluctuationsRatio), value: raw === null ? null : round2(raw / 1e8), price: num(x.closePrice), prev: prevCloseOf(x) };
 });
+// 종목 전일 종가 = 현재가 − 전일 대비(네이버 compareToPreviousClosePrice 는 부호 없이 오고 방향은 compareToPreviousPrice) → 앱 「현재가 ▲전일대비 (+%)」 (9.29-87 원장 [1656]) · 못 구하면 null
+export function prevCloseOf(x) {
+  const price = num(x && x.closePrice), chg = num(x && x.compareToPreviousClosePrice), dir = x && x.compareToPreviousPrice;
+  if (price === null || chg === null) return null;
+  const falling = !!dir && (dir.name === "FALLING" || dir.name === "LOWER_LIMIT" || dir.code === "5" || dir.code === "4");
+  return price - (falling && chg > 0 ? -chg : chg);
+}
 // 테마 전체 거래대금 (억원) · 강세 종목(+5% 이상) 거래대금과 개수
 export const themeValue = (stocks) => Math.round((Array.isArray(stocks) ? stocks : []).reduce((s, x) => s + (num(x.accumulatedTradingValueRaw) || 0), 0) / 1e8);
 export function hotValue(stocks) {
@@ -555,11 +564,11 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
   const get = shadow || news2 ? memoGet(get0) : get0;
   const getText = async (u) => { const r = await fetchImpl(u, { headers: { Accept: "application/rss+xml, text/xml, text/html", "User-Agent": NV_HEAD["User-Agent"] }, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
   const post = async (u, body) => { const r = await fetchImpl(u, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "text/html", "User-Agent": NV_HEAD["User-Agent"] }, body, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
-  try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스피: " + (e.message || e)); }
+  try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, prev: q.prevClose, amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스피: " + (e.message || e)); } // prev = 전일 종가 (장중에 close 가 바뀌어도 그대로) → 앱 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1652])
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSPI/trend")); out.invest = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("현물 수급: " + (e.message || e)); }
   try { out.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); }
   // 코스닥도 같은 방식 (9.29-69 사용자 요청): 등락·거래대금 · 외인/기관(장중 누적) · 프로그램
-  try { const q = await adapters.naver.quote("domestic:KOSDAQ"); out.kosdaq = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스닥: " + (e.message || e)); }
+  try { const q = await adapters.naver.quote("domestic:KOSDAQ"); out.kosdaq = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, prev: q.prevClose, amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스닥: " + (e.message || e)); }
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSDAQ/trend")); out.investQ = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("코스닥 수급: " + (e.message || e)); }
   try { out.programQ = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); }
   try {
@@ -570,7 +579,7 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
     const n2 = news2 ? { cache: news2.cache || null, budget: news2.budget || null, shared: {}, requests: 0, errors: [] } : null;
     out.themes = [];
     for (const t of L.themes.slice(0, n)) {
-      const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, ...(s.chart ? { chart: s.chart } : {}) })), news: [] };
+      const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, ...(typeof s.prev === "number" ? { prev: s.prev } : {}), ...(s.chart ? { chart: s.chart } : {}) })), news: [] }; // prev = 종목 전일 종가 (9.29-87 원장 [1656])
       for (const s of row.slots.slice(0, 2)) { // 종목별 외인·기관: 오늘 bizdate 가 있을 때만 (장중엔 보통 없음)
         try { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) s.flow = { foreign: f.foreign, inst: f.inst }; } catch (e) {}
       }
@@ -623,6 +632,26 @@ export async function collectThemesOnly({ themes, sources, adapters, now = new D
   base.themesAt = kstTime(now).slice(0, 5);
   base.errors = [...(base.errors || []).filter((e) => !e.startsWith("us.")), ...got.errors.map((e) => e.key + ": " + e.error)];
   return base;
+}
+
+// ---- 「오후 4시 기준」 묶음 (9.29-87 원장 [1662][1664][1665][1666]): 16:00 KST run(--when=close1600 · collect.yml cron "0 7 * * 1-5") 이 미국 선물 4종·코스피200 선물(주간 마감)·원달러 환율·WTI·비트코인의
+//  값·전일 종가·전일 대비·등락률·기준 시각을 날짜 파일 「장마감_1600」 에 저장 → 앱·복사 글 ② 장 마감 「• 오후 4시 기준」 (없으면 「(4시 자료 없음)」 · 지어내기 0) ----
+//  원천: 미국 선물·환율·WTI = config/sources.json 그대로(네이버 → 야후) · 코스피200 선물 = 네이버 domestic:FUT(주간 마감가 · 전일 대비 부호 포함 · 실측 10/6 1,103.00 ▼10.20) · 비트코인 = 업비트 KRW-BTC(전일 종가 = 업비트 기준 00:00 UTC)
+export const CLOSE_SNAP_KEY = "장마감_1600";
+export const CLOSE_SNAP_ITEMS = [["fut", "나스닥100 선물"], ["es", "S&P500 선물"], ["ym", "다우 선물"], ["rty", "러셀2000 선물"], ["k200d", "코스피200 선물"], ["fx", "원달러 환율"], ["oil", "WTI 유가"], ["btc", "비트코인"]];
+export const CLOSE_SNAP_EXTRA = { k200d: [{ source: "naver", symbol: "domestic:FUT", kind: "pct" }], btc: [{ source: "upbit", symbol: "KRW-BTC", kind: "pct" }] };
+export async function collectCloseSnap({ sources, adapters, now = new Date() }) {
+  const signals = {};
+  for (const [k] of CLOSE_SNAP_ITEMS) { const c = CLOSE_SNAP_EXTRA[k] || ((sources && sources.signals) || {})[k]; if (c) signals[k] = c; }
+  const got = await collectAll({ sources: { signals, themeSource: [] }, themes: { themes: [] }, adapters, now });
+  const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), items: {}, errors: got.errors.map((e) => e.key + ": " + e.error) };
+  for (const [k, v] of Object.entries(got.signals)) {
+    const d = v.detail || {};
+    if (typeof d.price !== "number" || typeof d.prev !== "number" || d.prev === 0) { out.errors.push(k + ": 수준값 없음"); continue; }
+    out.items[k] = { price: d.price, prev: d.prev, change: Number((d.price - d.prev).toFixed(4)), pct: Number(((d.price / d.prev - 1) * 100).toFixed(2)), src: v.src, time: v.time || undefined };
+  }
+  for (const [k] of CLOSE_SNAP_ITEMS) if (!signals[k]) out.errors.push(k + ": 원천 없음");
+  return out;
 }
 
 // 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)

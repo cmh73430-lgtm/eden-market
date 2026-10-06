@@ -10,7 +10,7 @@
 //  ⑥ 이름: 직전 run 과 같은 무리(대장주 같거나 구성 테마가 겹침)면 이전 이름 유지 · 연속 2 run 다른 대표가 나올 때만 교체
 //  ⑦ TOP10 = shared/top10_kospi.json (marketValue 전수 · 고정 코드셋 · 갱신 주기는 그 파일 refresh 항목)
 import TOP10 from "../shared/top10_kospi.json" with { type: "json" };
-import { thresholdFor, compactThemes, breadthOf, dedupeThemes, gradeC, withToday, chartUrl, stockFlow, themeFlow, gradeF, kstDate, LEAD_MIN_RATE, LEAD_MIN_EXCESS, PREV_MIN_STOCKS, SLOT_N, FLOW_TOP, FLOW_STOCKS, CHART_TOP, CHART_STOCKS } from "./auto.js";
+import { thresholdFor, compactThemes, breadthOf, dedupeThemes, gradeC, withToday, chartUrl, stockFlow, themeFlow, gradeF, kstDate, prevCloseOf, LEAD_MIN_RATE, LEAD_MIN_EXCESS, PREV_MIN_STOCKS, SLOT_N, FLOW_TOP, FLOW_STOCKS, CHART_TOP, CHART_STOCKS } from "./auto.js";
 
 export const TOP10_CODES = new Set((TOP10.adopted_top10 || []).map((x) => String(x.code)));
 export const TOP10_ASOF = TOP10.snapshot_time;
@@ -52,7 +52,7 @@ export const marketOf = (x) => { const c = x && x.stockExchangeType && x.stockEx
 export function parseStocksV2(stocks) {
   return (Array.isArray(stocks) ? stocks : []).map((x) => {
     const raw = num(x.accumulatedTradingValueRaw) ?? num(x.accumulatedTradingValue), cap = num(x.marketValueRaw);
-    return { code: x.itemCode, name: x.stockName, rate: num(x.fluctuationsRatio), value: raw === null ? null : round2(raw / 1e8), price: num(x.closePrice), market: marketOf(x), cap: cap === null ? null : Math.round(cap / 1e8), top10: TOP10_CODES.has(String(x.itemCode)) };
+    return { code: x.itemCode, name: x.stockName, rate: num(x.fluctuationsRatio), value: raw === null ? null : round2(raw / 1e8), price: num(x.closePrice), prev: prevCloseOf(x), market: marketOf(x), cap: cap === null ? null : Math.round(cap / 1e8), top10: TOP10_CODES.has(String(x.itemCode)) }; // prev = 전일 종가 (9.29-87 원장 [1656])
   }).filter((x) => x.code);
 }
 const tOf = (T, s) => (s.market === "KQ" ? T.KQ : T.KS);
@@ -208,7 +208,7 @@ export async function selectThemesV2({ get, n = 3, kospi = null, kosdaq = null, 
       if (cs[0]) { chartReady = true; t.grades.C = cs[0].grade; }
     }
   }
-  const slimSlot = (s) => Object.assign({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, market: s.market, top10: s.top10 || undefined, rvol: s.rvol ?? null }, s.flow ? { flow: s.flow } : {}, s.chart ? { chart: s.chart } : {});
+  const slimSlot = (s) => Object.assign({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, market: s.market, top10: s.top10 || undefined, rvol: s.rvol ?? null }, typeof s.prev === "number" ? { prev: s.prev } : {}, s.flow ? { flow: s.flow } : {}, s.chart ? { chart: s.chart } : {}); // prev = 전일 종가 (9.29-87 원장 [1656])
   const slim = (t) => ({ no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, rise: round2(t.rise), count: t.count, excess: t.excess, excessMix: t.excessMix, wKQ: t.wKQ, value: t.value, valueExTop10: t.valueExTop10, top10Share: t.top10Share, top10In: t.top10In,
     L: t.L, N30: t.N30, hotN: t.hotN, rvolMed: t.rvolMed ?? null, z: t.z, score: t.score, grades: t.grades, flow: t.flow, chart: t.chart, nameKept: t.nameKept || undefined, nameSwitched: t.nameSwitched || undefined, slots: t.slots.map(slimSlot) });
   const extra = {}; for (const c of extraCodes) { const a = cache.codes[c]; if (a && typeof a.avg20 === "number") extra[c] = a.avg20; }

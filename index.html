@@ -318,6 +318,7 @@ body.simple #mv-leaders .mvsub .subtxt { display: none; }
 .lds .fi { font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 1px 5px; border-radius: 99px; white-space: nowrap; } .lds .fi.p { background: var(--up-bg); color: var(--up); } .lds .fi.n { background: var(--down-bg); color: var(--down); }
 .lds .trate { font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; } .lds .trate.p { color: var(--up); } .lds .trate.n { color: var(--down); }
 .mv .ldnote { font-size: 11px; color: var(--muted); }
+.mv .snaplist { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.6; font-variant-numeric: tabular-nums; } .mv .snaplist .p { color: var(--up); } .mv .snaplist .n { color: var(--down); } /* 「오후 4시 기준」 묶음 (9.29-87) · + 빨강 − 파랑 */
 .jq { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 .tr { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: var(--surface); }
 .tr .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -974,6 +975,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <div class="jgrid">
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
+        <div class="wide mv" id="mv-snap"><div class="mvh"><b>오후 4시 기준</b></div><small class="mvsub" id="mvs-snap"></small><div class="mvbody" id="mvb-snap"></div></div>
         <div class="wide mv" id="mv-invest"><div class="mvh"><b>수급 · 거래대금 (억원)</b><button class="mved" type="button" data-for="invest">✏️ 고치기</button></div><div class="mvbody" id="mvb-invest"></div><label class="mvin"><input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억 · 거래대금 12조"></label><small class="autoat" id="aa-market.invest" hidden></small></div>
         <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small>
           <details class="learn" id="ldHelp"><summary>📘 설명 — 주요 테마는 어떻게 뽑나요? (누르면 펼쳐져요)</summary>
@@ -1894,7 +1896,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-86";
+  const APP_VER = "9.29-87";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2244,9 +2246,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     SIGNALS.forEach((s) => {
       const v = parseNum(S.signals[s.k]); const st = r.statuses[s.k];
       if (v === null || !st) return;
-      const val = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit;
+      const val = sigQuoteOf(S, s.k) || (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit; // 「종가 ▲전일대비 (+%)」 · 수준값 없으면 등락률만 (9.29-87 원장 [1655])
       if (s.k === "ustlvl") return; // 금리 칸 한 줄에 같이 보여 줌
-      if (s.k === "ust" && r.ustLevel) { const L = r.ustLevel; main.push(sigRow(st, "미국 10년 금리", `${val} · ${L.level}%`, LABEL[st], L.raised ? `금리 수준 ${L.level}%가 ${L.st === "r" ? "4.75%" : "4.5%"} 이상인데 또 올라서 한 단계 올림 (검증: 다음 날 하락 ${L.st === "r" ? "67" : "58"}%)` : `${s.rule[st].split(" → ")[0]} · 수준 ${L.level}% (4.5% 넘고 오르면 조심)`)); return; }
+      if (s.k === "ust" && r.ustLevel) { const L = r.ustLevel; main.push(sigRow(st, "미국 10년 금리", sigQuoteOf(S, "ust") || `${val} · ${L.level}%`, LABEL[st], L.raised ? `금리 수준 ${L.level}%가 ${L.st === "r" ? "4.75%" : "4.5%"} 이상인데 또 올라서 한 단계 올림 (검증: 다음 날 하락 ${L.st === "r" ? "67" : "58"}%)` : `${s.rule[st].split(" → ")[0]} · 수준 ${L.level}% (4.5% 넘고 오르면 조심)`)); return; }
       if (r.excluded[s.k]) { refs.push(sigRow(s.k === "fut" || REF_KEYS.includes(s.k) ? "ref" : st + " ref", s.name, val, "참고", REF_WHY[s.k](st))); return; }
       main.push(sigRow(st, s.name, val, LABEL[st], s.rule[st].split(" → ")[0]));
     });
@@ -2288,7 +2290,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function paintIntra(r) {
     const el = $("intraInfo"); if (!el) return;
     const a = S.auto || {}, it = r.intraday, n = (v) => (v === null || v === undefined || v === "" ? "—" : (Number(v) > 0 ? "+" : "") + Number(v).toLocaleString("ko-KR"));
-    const vals = a["intra.at"] ? `🤖 ${esc(a["intra.at"])} 확인 · 코스피 ${esc(n(a["intra.kospi"]))}% · 외인 선물 ${esc(n(a["intra.fut"]))} · 현물 외인 ${esc(n(a["intra.spotF"]))}억 · 기관 ${esc(n(a["intra.spotI"]))}억${a["intra.prog"] !== undefined && a["intra.prog"] !== "" ? ` · 프로그램 ${esc(n(a["intra.prog"]))}억` : ""}` : "🤖 평일 09:30·10:30쯤 자동으로 확인해요 (GitHub가 10~20분 늦을 수 있음)";
+    const kq = (() => { try { const x = JSON.parse(a["intra.kospiLv"] || "null"); return Array.isArray(x) ? closeQuote(x[0], x[1]) : null; } catch (e) { return null; } })(); // 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만
+    const vals = a["intra.at"] ? `🤖 ${esc(a["intra.at"])} 확인 · 코스피 ${kq ? esc(kq) : esc(n(a["intra.kospi"])) + "%"} · 외인 선물 ${esc(n(a["intra.fut"]))} · 현물 외인 ${esc(n(a["intra.spotF"]))}억 · 기관 ${esc(n(a["intra.spotI"]))}억${a["intra.prog"] !== undefined && a["intra.prog"] !== "" ? ` · 프로그램 ${esc(n(a["intra.prog"]))}억` : ""}` : "🤖 평일 09:30·10:30쯤 자동으로 확인해요 (GitHub가 10~20분 늦을 수 있음)";
     const res = !it ? "" : it.down ? `<div class="r"><b>→ 한 단계 낮춤</b> · 외인 선물 매도 + ${esc(it.by)} 매도가 함께 나왔어요</div>` : `<div class="g">→ 그대로 · ${it.futSell ? "외인 선물은 매도지만 " + esc(it.by) + " 매도가 기준보다 작아요" : "외인 선물 매도가 기준보다 작아요"}</div>`;
     el.innerHTML = `<div>${vals}</div>${res}`;
   }
@@ -2317,7 +2320,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         + (both.length ? `<div class="nxline"><b class="upc">✅ 미국장도 같은 방향</b> ${esc(both.join(" · "))} → 오늘 더 강할 가능성</div>` : "")
       : `<span class="muted">아직 안 넣음 (아래 '전일 주도 테마' 칸)</span>`;
     const secs = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]);
-    const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S.signals))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
+    const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
     const idxLine = (S.auto || {}).usidx ? `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>` : "";
     return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml)}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🇰🇷", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
   }
@@ -2353,6 +2356,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   function paintMktView() {
     const inv = parseInvest(S.journal.market.invest), ld = parseLeaders(S.journal.market.leaders);
+    { const sn = snapRows(S), box = $("mv-snap"); if (box) { box.classList.toggle("has", !!sn); $("mvs-snap").textContent = sn ? sn.label + " · 미국 선물·코스피200 선물·환율·WTI·비트코인 (🤖 16:00 자동)" : "(4시 자료 없음)"; // ② 장 마감 「오후 4시 기준」 (9.29-87 원장 [1662]~[1666])
+      $("mvb-snap").innerHTML = sn ? `<ul class="snaplist">${sn.rows.map(([n, q]) => `<li>${esc(n)} ${q ? `<span class="${quoteSign(q) > 0 ? "p" : quoteSign(q) < 0 ? "n" : ""}">${esc(q)}</span>` : "없음"}</li>`).join("")}</ul>` : ""; } }
     $("mv-invest").classList.toggle("has", inv.length > 0);
     const hasA = inv.some((r) => r.a), jo = (v) => (v >= 10000 ? (v / 10000).toFixed(1) + "조" : v.toLocaleString("ko-KR") + "억");
     $("mvb-invest").innerHTML = inv.length ? `<div class="flow${hasA ? " wa" : ""}"><span class="fh fm"></span><span class="fh">외국인</span><span class="fh">기관</span>${hasA ? `<span class="fh">거래대금</span>` : ""}${inv.map((r) => `<span class="fm">${esc(r.mk)}</span><span class="${sgn(r.f)}">${r.f === null ? "—" : fmtEok(r.f)}</span><span class="${sgn(r.i)}">${r.i === null ? "—" : fmtEok(r.i)}</span>${hasA ? `<span class="am">${r.a ? jo(r.a) : "—"}</span>` : ""}`).join("")}</div>` : "";
@@ -2428,7 +2433,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const item = (label, txt, v, colored) => { const it = document.createElement("span"); it.className = "lvi"; it.append(label + " ");
         if (colored) { const s = document.createElement("span"); s.className = "lvn" + (cls(v) ? " " + cls(v) : ""); s.textContent = txt; it.append(s); } else it.append(txt);
         if (line.childNodes.length) line.append(" · "); line.append(it); };
-      item(nm, pc(k.value), k.value, true);
+      item(nm, closeQuote(k.close, k.prev, k.change) || pc(k.value), k.value, true); // 「코스피 6,941.39 ▼62.35 (-0.89%)」 — prev(전일 종가)는 장중에 close 가 바뀌어도 그대로 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만
       if (k.amount) item("거래대금", eok(k.amount));
       if (inv) { item("외인", sg(inv.foreign), inv.foreign, true); item("기관", sg(inv.institution), inv.institution, true); }
       if (pg && typeof pg.total === "number") item("프로그램", sg(pg.total), pg.total, true);
@@ -2451,7 +2456,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     };
     $("topLeadList").innerHTML = L.themes.slice(0, 3).map((t, n) => {
       const slots = (t.slots || []).slice(0, 3), flows = slots.filter((x) => x.flow); // 주요 종목 3개 (9.29-83 원장 [1580] · 고르는 기준은 수집기 그대로 = 거래대금 순) · RVOL(평소 대비 배수) 가 있으면 「×2.8」 병기 (9.29-84)
-      const stocks = slots.map((x) => `${esc(x.name)} ${pc(x.rate)}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${typeof x.rvol === "number" ? " · ×" + x.rvol : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
+      const stocks = slots.map((x) => `${esc(x.name)} ${esc(closeQuote(x.price, x.prev) || pc(x.rate))}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${typeof x.rvol === "number" ? " · ×" + x.rvol : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
       return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}${flows.length ? "" : " · 종목별 외인·기관은 장 마감 뒤"}</span>${newsHtml(t)}</li>`;
     }).join("");
     paintShadow(L, { eok, pc });
@@ -2464,7 +2469,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (!sh || sh.error || !Array.isArray(sh.themes) || !sh.themes.length) { box.hidden = true; return; }
     box.hidden = false;
     sum.textContent = "그림자 순위(새 기준 · 2주 병행 · 참고): " + sh.themes.slice(0, 3).map((t, i) => (i + 1) + " " + String(t.name).split("(")[0]).join(" · ");
-    const row = (t, i) => `<tr><td>${i + 1}</td><td>${esc(t.name)}${t.nameKept ? ' <small>이름 유지</small>' : ""}<br><small>${esc((t.slots || []).slice(0, 3).map((s) => `${s.name} ${pc(s.rate)}${typeof s.rvol === "number" ? " ×" + s.rvol : ""}`).join(" / "))}</small></td><td>${typeof t.score === "number" ? t.score : "—"}</td><td>${t.L}</td><td>${typeof t.rvolMed === "number" ? "×" + t.rvolMed : "—"}</td><td>${eok(t.valueExTop10)}${t.top10Share ? `<small> · TOP10 ${t.top10Share}%</small>` : ""}</td></tr>`;
+    const row = (t, i) => `<tr><td>${i + 1}</td><td>${esc(t.name)}${t.nameKept ? ' <small>이름 유지</small>' : ""}<br><small>${esc((t.slots || []).slice(0, 3).map((s) => `${s.name} ${closeQuote(s.price, s.prev) || pc(s.rate)}${typeof s.rvol === "number" ? " ×" + s.rvol : ""}`).join(" / "))}</small></td><td>${typeof t.score === "number" ? t.score : "—"}</td><td>${t.L}</td><td>${typeof t.rvolMed === "number" ? "×" + t.rvolMed : "—"}</td><td>${eok(t.valueExTop10)}${t.top10Share ? `<small> · TOP10 ${t.top10Share}%</small>` : ""}</td></tr>`;
     body.innerHTML = `<table class="shtbl"><tr><th>#</th><th>테마 · 주요 종목</th><th>점수</th><th>L</th><th>RVOL</th><th>거래대금(TOP10 제외)</th></tr>${sh.themes.slice(0, 3).map(row).join("")}</table>`
       + `<small class="shnote">T 코스피 ${Number(sh.T && sh.T.KS).toLocaleString("ko-KR")}억 · 코스닥 ${Number(sh.T && sh.T.KQ).toLocaleString("ko-KR")}억 · 자격(L ≥ ${sh.minL}) ${sh.qualified}/${sh.scanned} · 점수 = 등락률·상승비율·강세 수·거래대금(TOP10 제외)·RVOL 표준화 합성 · RVOL = 평소(20일) 대비 거래대금 배수(장 경과율 환산) · 현행 순위는 그대로 두고 2주 뒤 디렉터 결정으로 교체</small>`;
   }
@@ -2683,19 +2688,43 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     } else $("resultHint").textContent = "";
   }
 
+  // ---------- 시세 한 토막 「이름 종가 ▲전일대비 (+등락률%)」 (9.29-87 원장 [1652]·[1655]·[1656]·[1657] "다우 46,316.07 ▲18.52 (+0.04%) 이런식으로 전부다") ----------
+  // 앱 화면·복사 글의 모든 시세 자리가 이 함수들을 쓴다 (한 가지 형식). 수준값(종가·전일)이 없으면 null → 부르는 쪽이 예전 등락률만 (지어내지 않음)
+  // 단위: 환율 「원」 · VIX 「점」 · WTI 「$」(앞) · 지수·선물 없음 · 금리 = 수준(ustlvl) + bp 「5.31% ▲7.4bp (+1.41%)」
+  function lvlOf(st, k) { try { const a = JSON.parse(((st || {}).auto || {})["lvl." + k] || "null"); return Array.isArray(a) && a.length === 2 ? a : null; } catch (e) { return null; } }
+  function sigQuoteOf(st, k) {
+    st = st || S; const sg = st.signals || {};
+    if (k === "ust") { const L = parseNum(sg.ustlvl), bp = parseNum(sg.ust); if (L === null || bp === null) return null; const q = blogQuote(L, Number((L - bp / 100).toFixed(4)), "%"); return q ? q.replace(/^(\S+%) ([▲▼]?)\S+% /, (m0, a, ar) => `${a} ${ar}${Math.abs(bp)}bp `) : null; }
+    const L = lvlOf(st, k); return L ? blogQuote(L[0], L[1], { fx: "원", vix: "점", oil: "$" }[k] || "") : null;
+  }
+  // 종가 + 전일 종가(prev) 또는 종가 + 전일 대비(chg) — 코스피·코스닥 마감·장중·실시간 · 종목 현재가 → 토막 · 없으면 null
+  function closeQuote(close, prev, chg) { return typeof close === "number" && typeof prev === "number" ? blogQuote(close, prev, "") : typeof close === "number" && typeof chg === "number" ? blogQuote(close, Number((close - chg).toFixed(2)), "") : null; }
+  // 토막의 방향 (색용): ▲ = 1 · ▼ = -1 · 없으면 raw 값의 부호
+  function quoteSign(q, raw) { return /▲/.test(String(q || "")) ? 1 : /▼/.test(String(q || "")) ? -1 : /^\s*[-−]/.test(String(raw ?? "")) ? -1 : 1; }
+
   // 장전 시황 판단 → 일지 시황 (자동). st·auto를 넘기면 다른 날짜 것도 만든다.
   function morningSummary(r, st, auto) {
     st = st || S; auto = auto || AUTO;
-    // [이름, 값, 판정, 뺀 이유] — 일지·블로그 복사와 같은 모양 (예: 원달러 환율: +1원 → 참고 (혼자서는 판정 제외))
-    const vals = SIGNALS.map((s) => { const v = parseNum(st.signals[s.k]); if (v === null || s.k === "ustlvl" || REF_KEYS.includes(s.k)) return null; const ex = r.excluded[s.k]; /* 판정 7개만 (es·ym·rty · 금리 수준은 넣지 않음) */ return [s.name, (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit, ex ? "참고" : LABEL[r.statuses[s.k]] || "", ex && s.k === "fx" ? "혼자서는 판정 제외" : "", s.k]; }).filter(Boolean); // 5번째 = 지표 키 (블로그 시간대 묶음 · 9.29-76)
+    // [이름, 값, 판정, 뺀 이유, 키, 원래 값] — 일지·블로그 복사와 같은 모양 (예: 원달러 환율: 1,342.5원 ▼17원 (-1.25%) → 참고 (혼자서는 판정 제외)) · 값 = 「종가 ▲전일대비 (+%)」(9.29-87 · 수준값 없으면 예전 「+1원」)
+    const vals = SIGNALS.map((s) => { const v = parseNum(st.signals[s.k]); if (v === null || s.k === "ustlvl" || REF_KEYS.includes(s.k)) return null; const ex = r.excluded[s.k]; /* 판정 7개만 (es·ym·rty · 금리 수준은 넣지 않음) */ const raw = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit; return [s.name, sigQuoteOf(st, s.k) || raw, ex ? "참고" : LABEL[r.statuses[s.k]] || "", ex && s.k === "fx" ? "혼자서는 판정 제외" : "", s.k, raw]; }).filter(Boolean); // 5번째 = 지표 키 (블로그 시간대 묶음 · 9.29-76) · 6번째 = 등락률만(색·예전 모양)
     const evs = [...auto.filter((e) => e.lv).map((e) => e.k), ...(st.events || [])];
     const first = r.themeFirst.map((t) => t[0]), back = r.themeBack.map((t) => t[0]);
-    if (!vals.length) return { html: "장전 신호 칸에 숫자를 넣으면 여기에 장전 시황 판단이 자동으로 들어와요.", vals, evs, first, back };
+    // 어젯밤 미국 지수 마감 4줄 (9.29-87 원장 [1661] ▶"①로 옮기고"◀: ② 장 마감에서 ① 장전 판단으로) — [이름, 「종가 ▲전일대비 (+%)」] (fillAuto usidx · 수준값 없으면 「+0.18%」)
+    const idx = String((st.auto || {}).usidx || "").split(" · ").filter(Boolean).map((x) => { const m2 = x.match(/^(다우|나스닥|S&P500|러셀2000) (.+)$/); return m2 ? [m2[1], m2[2]] : null; }).filter(Boolean);
+    if (!vals.length) return { html: "장전 신호 칸에 숫자를 넣으면 여기에 장전 시황 판단이 자동으로 들어와요.", vals, evs, first, back, idx };
     const html = `<b>매매 모드: ${esc(r.mode)}</b> (${esc(r.why)})<br><br>` +
-      vals.map(([n, v, s2, why]) => `• ${esc(n)}: ${esc(v)} → ${esc(s2)}${why ? " (" + esc(why) + ")" : ""}`).join("<br>") + (r.combo ? "<br>• 환율+유가 동반 급등 → 주의 1개" : "") +
+      [...idx.map(([n, q]) => `• ${esc(n)}: ${esc(q)}`), ...vals.map(([n, v, s2, why]) => `• ${esc(n)}: ${esc(v)} → ${esc(s2)}${why ? " (" + esc(why) + ")" : ""}`)].join("<br>") + (r.combo ? "<br>• 환율+유가 동반 급등 → 주의 1개" : "") +
       (evs.length ? `<br>주요 일정: ${esc(evs.join(", "))}` : "") +
       (first.length ? `<br>우선 관심: ${esc(first.join(", "))}` : "") + (back.length ? ` · 후순위: ${esc(back.join(", "))}` : "");
-    return { html, vals, evs, first, back };
+    return { html, vals, evs, first, back, idx };
+  }
+  // 「오후 4시 기준」 묶음 (9.29-87 원장 [1662]~[1666]): 수집기 날짜 파일 「장마감_1600」 → auto["snap1600"] = JSON · 항목 순서·이름 고정 · 단위 환율·비트코인 「원」 · WTI 「$」
+  const SNAP_ITEMS = [["fut", "나스닥100 선물"], ["es", "S&P500 선물"], ["ym", "다우 선물"], ["rty", "러셀2000 선물"], ["k200d", "코스피200 선물"], ["fx", "원달러 환율"], ["oil", "WTI 유가"], ["btc", "비트코인"]], SNAP_UNIT = { fx: "원", btc: "원", oil: "$" };
+  function snapOf(st) { try { const s = JSON.parse(((st || {}).auto || {})["snap1600"] || "null"); return s && s.items && typeof s.items === "object" ? s : null; } catch (e) { return null; } }
+  // [이름, 토막 | null] 8줄 · 라벨 「오후 4시 기준」(+ 실제 수집 시각이 16:00 이 아니면 「(16:07 값)」) · 자료 없으면 null
+  function snapRows(st) {
+    const s = snapOf(st); if (!s) return null;
+    return { label: "오후 4시 기준" + (s.at && s.at !== "16:00" ? " (" + s.at + " 값)" : ""), rows: SNAP_ITEMS.map(([k, n]) => { const x = s.items[k]; return [n, x ? blogQuote(x.price, x.prev, SNAP_UNIT[k] || "") : null]; }) };
   }
 
   // 날짜 하나의 전체 기록과 판정
@@ -2711,9 +2740,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     ust: ["미국 10년 금리", "은행·보험 (검증: 종가 기준 코스피보다 더 오름 64%)", "성장주·바이오"],
     sox: ["SOX 반도체지수", "반도체 장비·재료 (검증: 시가에서만 63%, 종가는 반반)", ""],
   };
-  const sectorLine = (k, sigs) => {
-    const [name, good, bad] = SECTOR_NAMES[k], s = SIGNALS.find((x) => x.k === k), v = parseNum((sigs || {})[k]);
-    return `${name} 상승${v === null ? "" : " (" + (v > 0 ? "+" : "") + v + s.unit + ")"} → ${good} 수혜${bad ? " · " + bad + " 불리" : ""}`;
+  const sectorLine = (k, st) => {
+    const [name, good, bad] = SECTOR_NAMES[k], s = SIGNALS.find((x) => x.k === k), v = parseNum(((st || {}).signals || {})[k]), q = sigQuoteOf(st, k); // 「종가 ▲전일대비 (+%)」 (9.29-87 원장 [1656])
+    return `${name} 상승${q ? " (" + q + ")" : v === null ? "" : " (" + (v > 0 ? "+" : "") + v + s.unit + ")"} → ${good} 수혜${bad ? " · " + bad + " 불리" : ""}`;
   };
   const PREV_NAMES = { up: "애프터마켓 강세", flat: "애프터마켓 보합", down: "애프터마켓 약세" };
   const PRE_NAMES = { up: "프리마켓 강세", flat: "프리마켓 보합", down: "프리마켓 약세" };
@@ -2772,7 +2801,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const f = (x, k) => x.toLocaleString("ko-KR", { minimumFractionDigits: k, maximumFractionDigits: k });
     const pc = (price / prev - 1) * 100, pcs = pc.toFixed(2), pct = Number(pcs) === 0 ? "0.00%" : (pc > 0 ? "+" : "") + pcs + "%";
     const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "";
-    return `${f(price, n)}${u} ${arrow}${f(Math.abs(d), u === "원" ? dec(Math.abs(d)) : n)}${u} (${pct})`;
+    const pre = u === "$" ? "$" : "", suf = pre ? "" : u; // 「$88.42 ▼1.01 (-1.13%)」 — 디렉터 캡처 「$238.90 | ▲4.95」 처럼 $ 는 값 앞 (9.29-87 WTI)
+    return `${pre}${f(price, n)}${suf} ${arrow}${f(Math.abs(d), suf === "원" ? dec(Math.abs(d)) : n)}${suf} (${pct})`;
   }
   // 블로그 ①·② 시간대 라벨 (9.29-76 원장 [1499]): 한국 전 거래일(prevBusinessDay) · 미국 날짜(lastUsTradingDayBefore) · 서머타임(isUsDst)이 아니면 미국 마감 묶음만 1시간 늦게
   //  9.29-86 원장 [1627]·[1628]: 미국장 마감·새벽 시세·주요 일정·주요 테마(미국) 머리줄에도 날짜 (미국장 = 전 거래일 · 새벽 시세·일정 = 당일)
@@ -2840,7 +2870,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
     // 1. 장전 시황 판단 · 이유
     const BT = blogTimes(dd0, CAL.holidays); // 시간대 라벨 (9.29-76 원장 [1499])
-    head(BT.morning);
+    // 9.29-87 원장 [1653] "칸도 지금 내가 맞춘거대로": 큰 번호(②③) 앞 빈 줄 2 · ① 머리줄 다음 빈 줄 1 · 묶음 사이 빈 줄 1 · 테마는 한 줄에 하나씩
+    const head2 = (text) => { gap(); blank(); head(text); };
+    head(BT.morning); blank();
     const krLead = parseLeaders(mk.leaders), ek = (v) => blogEok(v);
     const sg = (v) => blogEok(v, true); // 부호 붙은 억/조
     // 블로그(네이버)는 국기 이모지가 "KRUS" 글자로 깨지므로 글자로: 한국·미국 둘 다 오르면 [한·미], 한국만 [한]
@@ -2853,21 +2885,19 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const upNames = new Set(r.themeFirst.filter((t) => !isUs(t)).map((t) => t[0].trim())), dnNames = new Set(r.themeBack.filter((t) => !isUs(t)).map((t) => t[0].trim()));
       const krItems = prevAll.slice(0, 3).map((t) => { const tag = upNames.has(t.name) ? "(강세)" : dnNames.has(t.name) ? "(약세)" : ""; const fl = [t.f !== null && t.f !== undefined ? "외인 " + sg(t.f) : "", t.i !== null && t.i !== undefined ? "기관 " + sg(t.i) : ""].filter(Boolean).join(" · ");
         return t.name + tag + (typeof t.rate === "number" ? " " + pct(t.rate) : "") + (fl ? " · " + fl : ""); });
-      const usTop = US.map((u) => [u, parseNum((st.us || {})[u.k])]).filter(([, v]) => v !== null && v > 0).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([u, v]) => u.name.split(" (")[0] + " " + pct(v));
+      // 미국 전일 강세 테마 한 묶음 (9.29-87 원장 [1661] ②의 「주요 테마 (미국)」 과 합침 · 중복 0): 오른 테마 3개 + 대표 종목 (테마는 바구니라 종가 없음 → 등락률만)
+      const usTop = US.map((u) => [u, parseNum((st.us || {})[u.k])]).filter(([, v]) => v !== null && v > 0).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([u, v]) => u.name.split(" (")[0] + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
       // 라벨만 한 줄(굵게) → 테마마다 "• … /" 한 줄 (마지막 줄은 " /" 없음) · 한국↔미국 사이 빈 줄 · 미국 묶음 바로 밑 지표 (9.29-76 사용자 블로그 글 그대로 · 원장 [1497])
-      const themeRows = (label, rows) => { P(`· <b>${esc(label)}</b>`, "· " + label); (rows.length ? rows : ["없음"]).forEach((x, i, a) => say("• " + x + (i < a.length - 1 ? " /" : ""))); };
-      themeRows(BT.krTheme, krItems); blank(); themeRows(BT.usTheme, usTop); }
+      const themeRows = (label, rows, b) => { P(`· <b>${esc(label)}</b>`, "· " + label); (rows.length ? rows : ["없음"]).forEach((x, i, a) => say((b || "• ") + x + (i < a.length - 1 ? " /" : ""))); }; // 테마는 한 줄에 하나씩 · 줄 끝 " /" · 마지막 줄 없음 · 불릿은 원장 [1653] 그대로(한국 「·」 · 미국 「•」)
+      themeRows(BT.krTheme, krItems, "· "); blank(); themeRows(BT.usTheme, usTop); }
     blank();
-    // 9.29-86 원장 [1619]①·[1624]·[1625]: 시세 값 자리는 「값 ▲변동폭 (+변동률%)」 — 수준값(auto["lvl.키"] = [종가, 전일] · 수집기 detail.price/prev · k200 은 야간/주간 종가 · 금리는 ustlvl) 이 있을 때만 · 없으면 예전 「+0.5%」 그대로(지어내지 않음) · 색은 변동 부호 그대로
-    const lvlOf = (k) => { try { const a = JSON.parse((st.auto || {})["lvl." + k] || "null"); return Array.isArray(a) && a.length === 2 ? a : null; } catch (e) { return null; } };
-    const sigQuote = (k, v) => {
-      if (k === "ust") { const L = parseNum(st.signals.ustlvl), bp = parseNum(v); if (L === null || bp === null) return null; const q = blogQuote(L, Number((L - bp / 100).toFixed(4)), "%"); return q ? q.replace(/^(\S+%) ([▲▼]?)\S+% /, (m0, a, ar) => `${a} ${ar}${Math.abs(bp)}bp `) : null; } // 「4.12% ▲3bp (+0.73%)」
-      const L = lvlOf(k); return L ? blogQuote(L[0], L[1], k === "fx" ? "원" : "") : null;
-    };
+    // 9.29-86 원장 [1624]·[1625] · 9.29-87 [1657]: 시세 값 자리는 「종가 ▲전일대비 (+등락률%)」 — morningSummary 가 sigQuoteOf 로 이미 만든 값(수준값 없으면 예전 「+0.5%」 그대로 · 지어내지 않음) · 색은 ▲▼(없으면 변동 부호)
     if (m.vals.length) {
       // 시간대 묶음마다 굵은 제목 → 지표마다 한 줄 "• 이름: 값 → 판정 (이유)" (값이 오르면(부호 없는 값 포함) 빨강, 내리면 파랑) → 빈 줄 · 환율+유가 동반 급등 줄은 아침 묶음 끝 (9.29-76 원장 [1499])
-      blogGroups(m.vals, BT).forEach(([gt, rows]) => { P(`<b>${esc(gt)}</b>`, gt);
-        rows.forEach(([n, v, s2, why, k]) => { const t = `${sigQuote(k, v) || v} → ${s2}${why ? " (" + why + ")" : ""}`, sv = /^\s*[-−]/.test(String(v)) ? -1 : 1; P(`• ${esc(n)}: ${paint(esc(t), sv)}`, `• ${n}: ${t}`); });
+      const groups = blogGroups(m.vals, BT); if (m.idx.length && !groups.some(([gt]) => gt === BT.usClose)) groups.unshift([BT.usClose, []]);
+      groups.forEach(([gt, rows]) => { P(`<b>${esc(gt)}</b>`, gt);
+        if (gt === BT.usClose) m.idx.forEach(([n, q]) => P(`• ${esc(n)}: ${paint(esc(q), quoteSign(q, q))}`, `• ${n}: ${q}`)); // 다우·나스닥·S&P500·러셀2000 (9.29-87 원장 [1661] ② → ①)
+        rows.forEach(([n, v, s2, why, k, raw]) => { const t = `${v} → ${s2}${why ? " (" + why + ")" : ""}`, sv = quoteSign(v, raw); P(`• ${esc(n)}: ${paint(esc(t), sv)}`, `• ${n}: ${t}`); });
         if (gt === BT.early && r.combo) say("환율과 기름값이 같은 날 함께 급등해 주의 1개로 넣었다.");
         blank(); });
     } else { say("아침 신호를 넣지 않았다."); blank(); }
@@ -2878,39 +2908,33 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     { const kC = pnum(mk.kospi), av = kC === null || r.mode === "—" ? "" : r.mode === "정상" ? (kC >= -0.5 ? "맞았다" : kC >= -1 ? "반쯤" : "틀렸다") : r.mode === "쉼" ? (kC <= -0.5 ? "맞았다" : kC <= 0.5 ? "반쯤" : "틀렸다") : Math.abs(kC) <= 1 ? "맞았다" : "반쯤";
       if (false && (VERDICT[j.verdict] || av)) line("장전 판단이 맞았나:", (VERDICT[j.verdict] || av) + (kC !== null ? ` (${r.mode} 모드 · 코스피 ${pct(kC)}${VERDICT[j.verdict] ? "" : " · 자동"})` : "")); }
 
-    // ② 장 마감: 미국장 한 줄(강세/약세/보합 · 지수 · SOX) · 국장 한 줄(강세/약세/혼조 · 코스피·코스닥) · 수급(외국인·기관·거래대금) · 주도 테마 (미국·국장 둘 다, 대표 종목)
-    head("② 장 마감");
+    // ② 장 마감 (9.29-87 원장 [1661]·[1666]): 한국장(코스피·코스닥) → 「• 오후 4시 기준」 묶음 → 수급 → 주요 테마(한국). 미국 지수·미국 테마는 ① 장전 판단으로 옮김(중복 0)
+    head2("② 장 마감"); // 앞 빈 줄 2 (원장 [1653])
     const n0 = txt.length;
-    const soxV = parseNum(st.signals.sox), usAll = US.map((u) => [u, parseNum((st.us || {})[u.k])]).filter(([, v]) => v !== null).sort((a, b) => b[1] - a[1]);
-    const idxVals = ((st.auto || {}).usidx || "").match(/[+-][\d.]+%/g) || [], usAvg = idxVals.length ? idxVals.reduce((a, x) => a + parseFloat(x), 0) / idxVals.length : soxV;
     const tone = (v) => (v === null || v === undefined ? "" : v >= 0.5 ? "강세" : v <= -0.5 ? "약세" : "보합");
-    // 미국 지수·SOX 줄도 「값 ▲변동폭 (+%)」 (9.29-86 원장 [1624]): usidx 토막 "다우 +0.04%" 의 지수에 수준값(lvl.dji …)이 있으면 바꿔 쓰고 없으면 그 토막 그대로
-    const US_IDX = [["dji", "다우"], ["ixic", "나스닥"], ["spx", "S&P500"], ["rut", "러셀2000"]];
-    const idxQuote = (x) => { const m2 = US_IDX.find(([, nm]) => x.startsWith(nm + " ")), L = m2 && lvlOf(m2[0]), q = L && blogQuote(L[0], L[1], ""); return q ? m2[1] + " " + q : x; };
-    const usItems = [...String((st.auto || {}).usidx || "").split(" · ").filter(Boolean).map(idxQuote), soxV !== null ? "반도체 SOX " + (sigQuote("sox", pct(soxV)) || pct(soxV)) : ""].filter(Boolean), usLine = [tone(usAvg), ...usItems].filter(Boolean).join(" · ");
     const inv = parseInvest(mk.invest);
     const kv = pnum(mk.kospi), qv = pnum(mk.kosdaq), krTone = kv === null ? "" : qv !== null && Math.sign(kv) !== Math.sign(qv) && Math.abs(kv - qv) > 0.3 ? "혼조" : tone((kv + (qv ?? kv)) / 2);
-    const krLine = [krTone, mk.kospi && "코스피 " + pct(kv ?? 0), mk.kosdaq && "코스닥 " + pct(qv ?? 0)].filter(Boolean).join(" · ");
-    const usLead = usAll.filter(([, v]) => v >= 1).slice(0, 3).map(([u, v], i) => (i + 1) + " " + u.name + " " + pct(v) + (u.links && u.links.length ? " (" + u.links.slice(0, 3).map((l) => l[0]).join("·") + ")" : ""));
-    // 미국장: 첫 줄 "• 미국장 (10/1 밤 마감): 보합" (9.29-76), 아래로 지수 하나씩 "· 다우 +0.04%" (9.29-72 사용자 요청)
-    if (usLine) { const tn = tone(usAvg); P(`• <b>${esc(BT.usMkt)}</b>${tn ? " " + esc(tn) : ""}`, "• " + BT.usMkt + (tn ? " " + tn : "")); usItems.forEach((x) => P("· " + paintPct(x), "· " + x)); } // "• 미국장 (10/1 밤 마감): 보합" — 선물이 아니라 전날 밤 미국 정규장 지수 마감 (9.29-76 원장 [1499] · [1498] 대체) · 한국장 앞 빈 줄 한 칸 (9.29-76 사용자 블로그 글)
     // 한국장: 첫 줄 "• 한국장 (10/2 오후 3:30 마감): 혼조" (9.29-76 원장 [1499]), 아래로 "· 코스피 +0.46%" · "· 코스닥 -0.11%" (9.29-72 사용자 요청)
     const lv = (k) => { const x = (st.auto || {})["close." + k]; return typeof x === "number" ? x.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""; };
     // '· 코스피 7,003.74 ▲32.30 (+0.46%)' — 전일 대비(auto["chg.kospi"] · 수집기 close.market.kospi.change)가 있을 때 (9.29-86 원장 [1624]) · 없으면 예전 '· 코스피 7,003.74 (+0.46%)' 그대로
-    const krRow = (nm, k, v) => { const L = lv(k), x = (st.auto || {})["close." + k], ch = (st.auto || {})["chg." + k], q = typeof x === "number" && typeof ch === "number" ? blogQuote(x, Number((x - ch).toFixed(2)), "") : null, t = q || (L ? `${L} (${pct(v)})` : pct(v)); P(`· ${nm} ${paint(esc(t), v)}`, `· ${nm} ${t}`); };
+    const krRow = (nm, k, v) => { const L = lv(k), x = (st.auto || {})["close." + k], ch = (st.auto || {})["chg." + k], q = closeQuote(x, null, ch), t = q || (L ? `${L} (${pct(v)})` : pct(v)); P(`· ${nm} ${paint(esc(t), v)}`, `· ${nm} ${t}`); };
     if (kv !== null || qv !== null) { gap(); P(`• <b>${esc(BT.krMkt)}</b>${krTone ? " " + esc(krTone) : ""}`, "• " + BT.krMkt + (krTone ? " " + krTone : "")); if (kv !== null) krRow("코스피", "kospi", kv); if (qv !== null) krRow("코스닥", "kosdaq", qv); }
+    // 「• 오후 4시 기준」 묶음 (9.29-87 원장 [1662]~[1666]): 미국 선물 4종 · 코스피200 선물 · 원달러 환율 · WTI · 비트코인 「이름 값 ▲전일대비 (+%)」 · 자료 없으면 「(4시 자료 없음)」 (지어내기 0)
+    { const sn = snapRows(st); gap();
+      if (sn) { P(`• <b>${esc(sn.label)}</b>`, "• " + sn.label); sn.rows.forEach(([n, q]) => (q ? P(`· ${esc(n)} ${paint(esc(q), quoteSign(q, q))}`, `· ${n} ${q}`) : say(`· ${n} 없음`))); }
+      else P(`• <b>오후 4시 기준</b> (4시 자료 없음)`, "• 오후 4시 기준 (4시 자료 없음)"); }
     // 수급은 시장마다 한 줄, 주요 테마는 번호마다 한 줄
-    // 수급 (사용자 블로그 글 그대로 9.29-76): 한국장 바로 밑 "수급:" → "• 코스피" → "- 외국인 … / 기관 … / 프로그램 … / 거래대금 …" (시장 사이 빈 줄 없음)
-    if (inv.length) { sub0("수급:");
+    // 수급 (사용자 블로그 글 그대로 9.29-76 · 9.29-87 원장 [1653]: 한국장 묶음과 빈 줄 1): "수급:" → "• 코스피" → "- 외국인 … / 기관 … / 프로그램 … / 거래대금 …" (시장 사이 빈 줄 없음)
+    if (inv.length) { gap(); sub0("수급:");
       const progOf = (mkName) => { const a0 = st.auto || {}, v = /닥/.test(mkName) ? a0["close.progQ"] : a0["close.progK"] ?? parseNum((st.signals || {}).prog); return typeof v === "number" ? v : null; };
       inv.forEach((x) => { say("• " + x.mk);
         say(blogSupply(x, progOf(x.mk))); }); } // 프로그램 값이 없으면 "프로그램 —" (9.29-75)
     const blueList = (label, rows) => { P(tint(`<b>${esc(label)}</b>`, BLUE2), label); rows.forEach((x) => P(tint(esc("· " + x), BLUE2), "· " + x)); };
-    if (krLead.length) { blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t) => `${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks ? " (" + t.stocks + ")" : ""} · ${blogFlow(t.f, t.i)}`)); } // 한국 주요 테마: 외인·기관 매매 현황 (없으면 —) (9.29-75)
-    if (usLead.length) { gap(); blueList(BT.usLead, usLead.map((x) => x.replace(/^\d+\s+/, ""))); } // 미국: 외인·기관 자료 없음 → 표시 안 함 · 앞 줄(한국 묶음이든 미국장 지수 줄이든)과 빈 줄 한 칸 (9.29-76 사용자 블로그 글 · 9.29-86 원장 [1619]②) · 라벨에 미국 날짜 (원장 [1628])
+    if (krLead.length) { gap(); blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t) => `${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks ? " (" + t.stocks + ")" : ""} · ${blogFlow(t.f, t.i)}`)); } // 한국 주요 테마: 외인·기관 매매 현황 (없으면 —) (9.29-75)
+    // 「주요 테마 (미국)」 은 ① 「미국 전일 강세 테마」 로 합침 (9.29-87 원장 [1661] · 중복 0)
     // 왜 주요 테마인지: 맨 밑에 참고 줄 하나 (얇게)
     // grades(새 모양: 대금 기준 종목 수·수급·미장·차트)가 있으면 그 근거를, 옛 모양이면 강세 종목 수·거래대금을 적는다
-    if (false && (krLead.length || usLead.length)) { // 블로그에는 넣지 않음 (9.29-72 사용자 요청)
+    if (false && krLead.length) { // 블로그에는 넣지 않음 (9.29-72 사용자 요청)
       const graded = krLead.some((t) => t.L !== null && t.L !== undefined);
       const why = graded ? krLead.filter((t) => leaderWhy(t)).map((t) => t.name + " " + leaderWhy(t)).join(" / ") : krLead.filter((t) => t.hot).map((t) => t.name + " " + t.hotN + "종목 " + ek(t.hot)).join(" · ");
       const base = graded ? "※ 주요 테마(한국)는 거래대금 기준 종목 수 → 외인·기관 수급 → 미국장 방향 → 상승 근거 → 대장주 차트 순" : "※ 주요 테마(한국)는 +5% 넘게 오른 종목에 돈이 몰린 순";
@@ -2919,7 +2943,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (txt.length === n0) say("아직 장 마감 값이 없다 (오후 4:20 자동).");
 
     // ③ 오늘 시장 이야기: 화면 칸 그대로 (자동 초안이어도 넣는다)
-    head("③ 오늘 시장 이야기");
+    head2("③ 오늘 시장 이야기"); // 앞 빈 줄 2 (원장 [1653])
     // 긴 칸은 항목마다 한 줄: 장 흐름은 ' → ' 단계마다, 특징주·이슈는 ' / ' 테마마다 (손으로 적은 글도 같은 기호면 나뉨)
     const split = (v, sep) => String(v || "").split(sep).map((x) => x.trim()).filter(Boolean);
     // 사용자 블로그 글 그대로 (9.29-74): 장 흐름 줄은 넣지 않음 · 특징주는 파랑 · 내일 볼 것은 빨강
@@ -3030,10 +3054,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const cols = [
       { h: "날짜", get: (x) => x.d },
       { h: "매매 모드", get: (x) => (x.r.mode === "—" ? "" : x.r.mode), cls: (x) => MODE_CLS[x.r.mode] || "" },
-      ...sigs.map((s) => ({ h: s.name.replace(/ \(.*\)/, "") + " (" + s.unit + ")", num: true, get: (x) => parseNum(x.st.signals[s.k]), cls: (x) => (x.r.diverge && s.k === "fut" ? "" : x.r.statuses[s.k] || "") })),
+      // 화면 칸은 「종가 ▲전일대비 (+%)」(txt · 9.29-87 원장 [1656]) · 숫자(get)는 등락률 그대로 → 평균·최고·최저 · 엑셀 복사(trendRows)는 숫자
+      ...sigs.map((s) => ({ h: s.name.replace(/ \(.*\)/, "") + " (" + s.unit + ")", num: true, get: (x) => parseNum(x.st.signals[s.k]), txt: (x) => sigQuoteOf(x.st, s.k), cls: (x) => (x.r.diverge && s.k === "fut" ? "" : x.r.statuses[s.k] || "") })),
       ...(all ? US.map((u) => ({ h: "미국장 " + u.name.split(" (")[0] + " (%)", num: true, get: (x) => parseNum((x.st.us || {})[u.k]), cls: (x) => ({ first: "g", back: "r" })[x.r.themeStatus[u.k]] || "" })) : []),
-      { h: "코스피 (%)", num: true, get: (x) => pnum(x.st.journal.market.kospi) },
-      { h: "코스닥 (%)", num: true, get: (x) => pnum(x.st.journal.market.kosdaq) },
+      { h: "코스피 (%)", num: true, get: (x) => pnum(x.st.journal.market.kospi), txt: (x) => closeQuote((x.st.auto || {})["close.kospi"], null, (x.st.auto || {})["chg.kospi"]) },
+      { h: "코스닥 (%)", num: true, get: (x) => pnum(x.st.journal.market.kosdaq), txt: (x) => closeQuote((x.st.auto || {})["close.kosdaq"], null, (x.st.auto || {})["chg.kosdaq"]) },
       { h: "매매 수", num: true, get: (x) => (x.T.n || null) },
       { h: "손익 (원)", num: true, get: (x) => (x.T.n ? Math.round(x.T.total) : null), cls: (x) => (x.T.total > 0 ? "g" : x.T.total < 0 ? "r" : "") },
       { h: "장전 판단 적중", get: (x) => VERDICT[x.st.journal.verdict] || "" },
@@ -3058,7 +3083,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const head = `<tr>${cols.map((c) => `<th>${esc(c.h)}</th>`).join("")}</tr>`;
     const body = days.map((x) => `<tr>${cols.map((c, i) => i === 0
       ? `<td><button type="button" data-go="${x.d}">${x.d.slice(5).replace("-", "/")} (${WEEKDAYS[weekday(x.d)]})</button></td>`
-      : `<td class="${c.cls ? c.cls(x) : ""}">${esc(fmtCell(c.get(x), c))}</td>`).join("")}</tr>`).join("");
+      : `<td class="${c.cls ? c.cls(x) : ""}">${esc((c.txt && c.txt(x)) || fmtCell(c.get(x), c))}</td>`).join("")}</tr>`).join("");
     const sums = days.length > 1 ? trendStats(cols, days).map((row) => `<tr class="sum">${row.map((v, i) => `<td>${esc(i === 0 ? v : fmtCell(v, cols[i]))}</td>`).join("")}</tr>`).join("") : "";
     $("trend").innerHTML = head + body + sums;
   }
@@ -3571,7 +3596,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const th = (c.leaders && c.leaders.themes) || [], names = th.map((t) => String(t.name).trim());
     const out = {};
     // 장 흐름 = 마감 종가(지수·등락률) · 거래대금 · 외국인·기관 · 프로그램(장중 재판정 칸에 손으로 넣은 값이 있을 때)
-    const sg = (v) => (v > 0 ? "+" : "-") + ek(v), idx = (m, n) => (m && typeof m.value === "number" ? n + " " + (typeof m.close === "number" ? m.close.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (" + pc(m.value) + ")" : pc(m.value)) : "");
+    const sg = (v) => (v > 0 ? "+" : "-") + ek(v), idx = (m, n) => (m && typeof m.value === "number" ? n + " " + (closeQuote(m.close, m.prev, m.change) || (typeof m.close === "number" ? m.close.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " (" + pc(m.value) + ")" : pc(m.value))) : ""); // 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1657]) · 전일 대비 없으면 예전 모양
     const amt = [iv.kospi && iv.kospi.amount ? "코스피 " + ek(iv.kospi.amount) : "", iv.kosdaq && iv.kosdaq.amount ? "코스닥 " + ek(iv.kosdaq.amount) : ""].filter(Boolean).join(" · ");
     const flow = [idx(c.kospi, "코스피"), idx(c.kosdaq, "코스닥"), amt ? "거래대금 " + amt : "", typeof kf === "number" ? "외국인 " + sg(kf) : "", typeof ki === "number" ? "기관 " + sg(ki) : "", typeof prog === "number" ? "프로그램 " + sg(prog) : ""].filter(Boolean);
     if (flow.length) out.flow = "마감 " + flow.join(" · ");
@@ -3579,7 +3604,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 한 줄 시황: 코스피·코스닥 둘 다 + 코스피 수급 + 코스닥 수급 + 주도 테마
     const qf = iv.kosdaq && iv.kosdaq.foreign, qi = iv.kosdaq && iv.kosdaq.institution;
     const flowTxt = (f, i) => [typeof f === "number" ? "외국인 " + (f > 0 ? "순매수 " : "순매도 ") + ek(f) : "", typeof i === "number" ? "기관 " + (i > 0 ? "순매수 " : "순매도 ") + ek(i) : ""].filter(Boolean).join(" · ");
-    if (typeof k === "number") out.note = "코스피 " + pc(k) + (flowTxt(kf, ki) ? " (" + flowTxt(kf, ki) + ")" : "") + (typeof q === "number" ? " · 코스닥 " + pc(q) + (flowTxt(qf, qi) ? " (" + flowTxt(qf, qi) + ")" : "") : "") + (names.length ? " · 주도 " + names.join("·") : "");
+    const kq = closeQuote(c.kospi && c.kospi.close, c.kospi && c.kospi.prev, c.kospi && c.kospi.change) || pc(k), qq = closeQuote(c.kosdaq && c.kosdaq.close, c.kosdaq && c.kosdaq.prev, c.kosdaq && c.kosdaq.change) || pc(q); // 한 줄 시황도 「종가 ▲전일대비 (+%)」 (9.29-87 원장 [1657])
+    if (typeof k === "number") out.note = "코스피 " + kq + (flowTxt(kf, ki) ? " (" + flowTxt(kf, ki) + ")" : "") + (typeof q === "number" ? " · 코스닥 " + qq + (flowTxt(qf, qi) ? " (" + flowTxt(qf, qi) + ")" : "") : "") + (names.length ? " · 주도 " + names.join("·") : "");
     const nd = nextBusinessDays(d, CAL.holidays, 1)[0];
     if (nd) { const evs = autoEvents(nd, CAL).filter((e) => e.lv).map((e) => e.k); out.next = mdw(nd) + " " + (evs.length ? evs.join(", ") + " · " : "") + (names.length ? names.join("·") + " 이어지는지 프리마켓 확인" : "프리마켓 주도 테마 확인") + " · 밤 미국장 테마 확인"; }
     return out;
@@ -3614,6 +3640,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (itd && itd.at) {
       const sa = (k, v) => { v = v === undefined || v === null ? "" : String(v); if (st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, itd.ts]); } };
       sa("intra.at", itd.at); sa("intra.prog", itd.program && itd.program.total); sa("intra.fut", itd.fut && itd.fut.foreign); sa("intra.spotF", itd.spot && itd.spot.foreign); sa("intra.spotI", itd.spot && itd.spot.institution); sa("intra.kospi", itd.kospi);
+      sa("intra.kospiLv", itd.kospiLv && typeof itd.kospiLv.close === "number" && typeof itd.kospiLv.prev === "number" ? JSON.stringify([itd.kospiLv.close, itd.kospiLv.prev]) : ""); // 장중 지수·전일 종가 → 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1656])
     }
     // 프로그램 순매수(억): 마감 확정값(close.market.program) 이 있으면 그것, 아니면 장중 누적(intraday.program). 손으로 넣은 값이 있으면 그대로 둔다
     { const pc = c.program && typeof c.program.total === "number" ? c.program : itd && itd.program && typeof itd.program.total === "number" ? itd.program : null;
@@ -3621,21 +3648,24 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 연휴 누적 · 오래된 값 표시 (칸 아래 회색 줄)
     const setAuto = (k, v) => { if (v === undefined) { if (st.auto[k] !== undefined) { delete st.auto[k]; changed.push(["auto." + k, m.ts]); } return; } if (st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, m.ts]); } };
     const md2 = (d) => d.slice(5).replace(/^0/, "").replace(/-0?/, "/");
+    // 시세 수준값 (9.29-86 원장 [1624] · 9.29-87 [1652]): 아침 신호의 종가·전일 종가(수집기 detail.price/prev · k200 은 detail.night/dayClose · 연휴 누적은 누적 기준 price/prev) → auto["lvl.키"] = "[종가, 전일]" · 값이 없는 옛 파일은 안 넣음(화면·블로그는 등락률만)
+    Object.entries(m.signals || {}).forEach(([k, v]) => { const d = (v && v.detail) || {};
+      const p = typeof d.price === "number" ? d.price : k === "k200" && typeof d.night === "number" ? d.night : null, b = typeof d.prev === "number" ? d.prev : k === "k200" && typeof d.dayClose === "number" ? d.dayClose : null;
+      if (p === null || b === null) return; const js = JSON.stringify([p, b]); if (st.auto["lvl." + k] !== js) { st.auto["lvl." + k] = js; changed.push(["auto.lvl." + k, m.ts]); } });
+    // 칸 아래 회색 줄: 「종가 ▲전일대비 (+%)」 (9.29-87 원장 [1655]) + 연휴 누적 설명 · 야간선물 근거
+    const kd = m.signals && m.signals.k200 && m.signals.k200.detail; // 야간선물 근거: 야간 종가 · 전날 주간 종가
     Object.entries(m.signals || {}).forEach(([k, v]) => {
-      const c = v && v.detail && v.detail.cum;
-      if (c && k !== "k200") setAuto("detail." + k, "연휴 누적: 미국 " + md2(c.from) + " 종가 → " + md2(c.to) + " 종가" + (typeof c.single === "number" ? " · 하루치만 보면 " + (c.single > 0 ? "+" : "") + c.single : ""));
+      const c = v && v.detail && v.detail.cum, q = sigQuoteOf(st, k);
+      const cum = c && k !== "k200" ? "연휴 누적: 미국 " + md2(c.from) + " 종가 → " + md2(c.to) + " 종가" + (typeof c.single === "number" ? " · 하루치만 보면 " + (c.single > 0 ? "+" : "") + c.single : "") : "";
+      const night = k === "k200" && kd && kd.night && kd.dayClose ? "야간 종가 " + kd.night.toLocaleString("ko-KR", { minimumFractionDigits: 2 }) + " ÷ 전날 주간 종가 " + kd.dayClose.toLocaleString("ko-KR", { minimumFractionDigits: 2 }) : "";
+      const t = [q, cum, night].filter(Boolean).join(" · ");
+      if (t) setAuto("detail." + k, t); else if (c || k === "k200") setAuto("detail." + k, undefined);
     });
     Object.keys(m.signals || {}).forEach((k) => { const sv = m.stale && m.stale[k]; setAuto("stale." + k, sv ? "⚠ 받아온 값의 날짜가 미국 " + md2(sv.date) + "이에요 (기대 " + md2(sv.expected) + ") · 오래된 값일 수 있어요" : undefined); });
     setAuto("gap", m.gap ? "🗓 연휴 뒤 첫 거래일 · 미국 신호는 연휴 누적 기준 (미국 " + md2(m.gap.from || m.gap.prevKr) + " 종가 → " + md2(m.gap.to || "") + " 종가)" : undefined);
-    // 어젯밤 미국 지수 마감 (다우·나스닥·S&P500·러셀2000) → 한 줄 요약
-    const idx = [["dji", "다우"], ["ixic", "나스닥"], ["spx", "S&P500"], ["rut", "러셀2000"]].map(([k, n]) => { const v = m.signals && m.signals[k] && m.signals[k].value; return typeof v === "number" ? n + " " + (v > 0 ? "+" : "") + v + "%" : null; }).filter(Boolean).join(" · ");
+    // 어젯밤 미국 지수 마감 (다우·나스닥·S&P500·러셀2000) → 한 줄 요약 「다우 46,316.07 ▲18.52 (+0.04%) · …」 (9.29-87 원장 [1654] · 수준값 없으면 「다우 +0.18%」)
+    const idx = [["dji", "다우"], ["ixic", "나스닥"], ["spx", "S&P500"], ["rut", "러셀2000"]].map(([k, n]) => { const v = m.signals && m.signals[k] && m.signals[k].value; return typeof v === "number" ? n + " " + (sigQuoteOf(st, k) || (v > 0 ? "+" : "") + v + "%") : null; }).filter(Boolean).join(" · ");
     if (idx && st.auto.usidx !== idx) { st.auto.usidx = idx; changed.push(["auto.usidx", m.ts]); }
-    // 시세 수준값 (9.29-86 원장 [1624]): 아침 신호의 종가·전일 종가(수집기 detail.price/prev · k200 은 detail.night/dayClose) → auto["lvl.키"] = "[종가, 전일]" · 연휴 누적(detail.cum)이거나 값이 없는 옛 파일은 안 넣음(블로그는 예전 글 그대로)
-    Object.entries(m.signals || {}).forEach(([k, v]) => { const d = (v && v.detail) || {}; if (d.cum) return;
-      const p = typeof d.price === "number" ? d.price : k === "k200" && typeof d.night === "number" ? d.night : null, b = typeof d.prev === "number" ? d.prev : k === "k200" && typeof d.dayClose === "number" ? d.dayClose : null;
-      if (p === null || b === null) return; const js = JSON.stringify([p, b]); if (st.auto["lvl." + k] !== js) { st.auto["lvl." + k] = js; changed.push(["auto.lvl." + k, m.ts]); } });
-    const kd = m.signals && m.signals.k200 && m.signals.k200.detail; // 야간선물 근거: 야간 종가 · 전날 주간 종가
-    if (kd && kd.night && kd.dayClose) { const t = "야간 종가 " + kd.night.toLocaleString("ko-KR", { minimumFractionDigits: 2 }) + " ÷ 전날 주간 종가 " + kd.dayClose.toLocaleString("ko-KR", { minimumFractionDigits: 2 }); if (st.auto["detail.k200"] !== t) { st.auto["detail.k200"] = t; changed.push(["auto.detail.k200", m.ts]); } }
     Object.entries(m.us || {}).forEach(([k, v]) => { if (US.some((u) => u.k === k) && v) fillOne("us." + k, st.us[k], (x) => (st.us[k] = x), v.value, m.ts); });
     // 전일 주도 테마: 이름 + 어제 저녁 애프터마켓 · 오늘 아침 프리마켓 (주도주 NXT 가격 ÷ 어제 종가)
     { // 블로그 ① 한국 전일 강세 테마 3개 (화면 칸은 2개 그대로) (9.29-74)
@@ -3659,6 +3689,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (c[k] && typeof c[k].close === "number" && st.auto["close." + k] !== c[k].close) { st.auto["close." + k] = c[k].close; changed.push(["auto.close." + k, a.close.ts]); }
       if (c[k] && typeof c[k].change === "number" && st.auto["chg." + k] !== c[k].change) { st.auto["chg." + k] = c[k].change; changed.push(["auto.chg." + k, a.close.ts]); } }); // 전일 대비(원) — 블로그 '코스피 7,003.74 ▲32.30 (+0.46%)' 용 (9.29-86 원장 [1624])
     [["progK", c.program], ["progQ", c.programQ]].forEach(([k, pg]) => { if (pg && typeof pg.total === "number" && st.auto["close." + k] !== pg.total) { st.auto["close." + k] = pg.total; changed.push(["auto.close." + k, a.close.ts]); } }); // 블로그 수급 '프로그램' (9.29-74) // 블로그 '코스피 7,003.74 (+0.46%)' 용 (9.29-73)
+    { const sn = a["장마감_1600"], js = sn && sn.items && typeof sn.items === "object" ? JSON.stringify({ at: sn.at, items: sn.items }) : undefined; // 「오후 4시 기준」 묶음 (9.29-87 원장 [1666])
+      if (js !== undefined && st.auto["snap1600"] !== js) { st.auto["snap1600"] = js; changed.push(["auto.snap1600", sn.ts]); } }
     if (c.leaders && c.leaders.text) fillOne("market.leaders", st.journal.market.leaders, (x) => (st.journal.market.leaders = x), c.leaders.text, a.close.ts);
     { const b = leadersBadge(c.leaders, (a.close || {}).at) || undefined; if (st.auto["leaders.badge"] !== b) { if (b === undefined) delete st.auto["leaders.badge"]; else st.auto["leaders.badge"] = b; changed.push(["auto.leaders.badge", (a.close || {}).ts]); } }
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
