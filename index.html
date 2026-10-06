@@ -418,6 +418,28 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .how { font-size: 13px; line-height: 1.7; } .how ol { margin: 4px 0; padding-left: 20px; }
 /* 9.29-79 원장 [1537]: 매매수칙 카드 (첫 화면 맨 위 · 메뉴 첫 항목) */
 .rulecard h3 { margin: 0; font-size: 14px; font-weight: 900; } .rulecard ol { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.75; }
+/* 9.29-89 원장 [1679]·[1685]: 「오늘 무엇을 살까」 카드 (디렉터 인계서 §4-2 · 에덴 색 토큰만 · 다크 자동) */
+#pickGuide details, #pickGuide summary, .pg-tbl { min-width: 0; } /* .card 가 grid 라 판별표 min-width 가 카드 폭을 밀지 않게 (연구 요점 10) */
+#pickGuide summary { cursor: pointer; list-style: none; display: grid; gap: 4px; }
+#pickGuide summary::-webkit-details-marker { display: none; }
+#pickGuide summary::after { content: "펼치기 ▾"; font-size: 12px; color: var(--down); font-weight: 700; }
+#pickGuide details[open] summary::after { content: "접기 ▴"; }
+#pickGuide summary small { color: var(--muted); font-size: 12px; font-weight: 500; }
+.pg-now { font-size: 14px; font-weight: 700; border-radius: 6px; padding: 6px 10px; background: var(--note); }
+.pg-now.g { background: var(--g-bg); color: var(--g); } .pg-now.a { background: var(--a-bg); color: var(--a); } .pg-now.r { background: var(--r-bg); color: var(--r); }
+#pickGuide h3 { font-size: 14px; margin: 14px 0 6px; } #pickGuide h3 small { color: var(--muted); font-weight: 500; font-size: 12px; }
+.pg-tbl { overflow-x: auto; } .pg-tbl table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 13px; }
+.pg-tbl th, .pg-tbl td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.pg-tbl td:first-child { font-weight: 700; white-space: nowrap; }
+.pg-idx { color: var(--down); } .pg-own { color: var(--up); } .pg-hdg { color: var(--g); }
+.pg-ol { margin: 0; padding-left: 20px; display: grid; gap: 5px; font-size: 13.5px; }
+.pg-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 13px; }
+.pg-modes div { border-radius: 6px; padding: 6px 8px; } .pg-modes b { display: block; font-size: 15px; }
+.pg-modes .g { background: var(--g-bg); color: var(--g); } .pg-modes .a { background: var(--a-bg); color: var(--a); } .pg-modes .r { background: var(--r-bg); color: var(--r); }
+.pg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
+.pg-box { background: var(--note); border-radius: 6px; padding: 8px 10px; font-size: 13px; } .pg-box p { margin: 4px 0 0; } .pg-box small { color: var(--muted); }
+.pg-tip { font-size: 13px; background: var(--note); border-left: 3px solid var(--up); padding: 6px 10px; border-radius: 0 6px 6px 0; margin: 10px 0 0; }
+@media (max-width: 420px) { .pg-modes { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -811,6 +833,61 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <div class="act" id="modeAct"></div>
     </div>
     <div class="counts" id="counts"></div>
+  </section>
+
+  <!-- 9.29-89 원장 [1679]·[1685]: 「오늘 무엇을 살까」 접이식 카드 — 판정 배너 바로 아래 · 표시만(판정 로직 무변경) · 디렉터 인계서 §4-1 코드 + [1685] 결정(보통주 10 · 프로그램 문구 · KBI동양철관 · 금 ETF 4종 · 코스닥 문구 · 메뉴 노출) -->
+  <section class="card" id="pickGuide" data-nav="🧭 무엇을 살까">
+    <details id="pgBox">
+      <summary><b>🧭 오늘 무엇을 살까</b> <small>지수주 · 개별주 · 헷지 고르는 법</small>
+        <div class="pg-now" id="pgNow">신호를 넣으면 오늘 고를 종류가 나옵니다</div>
+      </summary>
+
+      <h3>① 1분 판별 — 4가지만 물어보세요</h3>
+      <div class="pg-tbl"><table>
+        <thead><tr><th>질문</th><th class="pg-idx">지수주</th><th class="pg-own">개별주</th><th class="pg-hdg">헷지</th></tr></thead>
+        <tbody>
+          <tr><td>오늘 지수와 같은 방향?</td><td>거의 같이 움직임</td><td>지수와 상관없음</td><td><b>반대로</b> 움직임</td></tr>
+          <tr><td>등락폭은?</td><td>지수의 1~2배</td><td>지수보다 훨씬 큼 (+10~30%)</td><td>지수 하락일에 오름</td></tr>
+          <tr><td>누가 사나?</td><td><b>프로그램</b> 순매수 비중 큼</td><td>외인 일반·기관·기타법인</td><td>기관·외인 피난 자금</td></tr>
+          <tr><td>왜 움직이나?</td><td>미국장·환율·금리</td><td>그 종목 뉴스·공시·수주</td><td>위험회피 (금리↑·환율↑·불안)</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>② 확인하는 방법</h3>
+      <ol class="pg-ol">
+        <li><b>지수와 겹쳐 보기</b> — 종합차트에서 코스피(코스닥) 지수 중첩. 최근 20일 같이 오르내리면 지수주, 혼자 튀면 개별주, 지수 빠질 때만 오르면 헷지</li>
+        <li><b>지수 편입·시총</b> — 코스피200·코스닥150 편입 + 시총 상위면 지수주 (ETF 바스켓으로 기계적 매매)</li>
+        <li><b>프로그램 비중</b> — HTS 종목별 프로그램매매에서 프로그램 순매수가 외인 순매수의 대부분이면 지수 따라 산 것. <b>프로그램을 뺀 외인 순매수</b>가 크면 그 종목을 골라 산 것</li>
+        <li><b>오른 이유</b> — 뉴스에 "미국장·외인 대형주 매수"면 지수 흐름, 종목 이름이 나오면 개별 재료, "안전자산·방어"면 헷지</li>
+      </ol>
+
+      <h3>③ 모드별로 고르기</h3>
+      <div class="pg-modes">
+        <div class="g"><b>정상</b>지수주·개별주 모두 가능</div>
+        <div class="a"><b>절반</b>지수주 빼고, 지수 빠져도 버티는 개별주만</div>
+        <div class="r"><b>쉼</b>신규 없음. 지킬 때만 헷지 소량</div>
+      </div>
+      <p class="pg-tip">지수가 빠지는 날 같이 빠지는 테마 = 재료가 약한 테마. <b>지수 하락에도 버티거나 오르는 테마가 진짜 주도테마</b>입니다.</p>
+
+      <h3>④ 관련 종목 예시 <small>순위·구성은 바뀌니 HTS에서 다시 확인</small></h3>
+      <div class="pg-grid">
+        <div class="pg-box"><b class="pg-idx">지수주</b>
+          <p>코스피 보통주 시총 상위 10 (2026.10.6 기준): 삼성전자 · SK하이닉스 · SK스퀘어 · 삼성전기 · LG에너지솔루션 · 현대차 · 삼성바이오로직스 · KB금융 · 삼성생명 · 삼성물산</p>
+          <p>코스닥: 시총 상위 반도체 장비·부품·2차전지·바이오·로봇 대형주 (HTS "코스닥 시가총액 상위")</p></div>
+        <div class="pg-box"><b class="pg-hdg">헷지 ETF</b>
+          <p>코스피 하락: KODEX 인버스 · TIGER 인버스 · KODEX 200선물인버스2X<small>(2배는 하루~이틀만)</small></p>
+          <p>코스닥 하락: KODEX 코스닥150선물인버스</p>
+          <p>환율 급등: KODEX 미국달러선물 · 위험회피: 금 ETF (ACE KRX금현물 · TIGER KRX금현물 · KODEX 골드선물(H) · TIGER 골드선물(H))</p></div>
+        <div class="pg-box"><b class="pg-hdg">방어 업종</b> <small>덜 빠지는 쪽</small>
+          <p>금리↑ 은행·보험 (KB금융·신한지주·하나금융·삼성화재·DB손해보험)</p>
+          <p>유가↑ 정유 (S-Oil·SK이노베이션) · 환율↑ 수출주 (현대차·기아·HD현대중공업·한화에어로스페이스)</p>
+          <p>전반 불안: 통신·필수소비재 (SK텔레콤·KT·KT&amp;G)</p></div>
+        <div class="pg-box"><b class="pg-own">개별주</b> <small>매일 새로 찾음</small>
+          <p>① 테마수급 금액 상위에서 시총 상위 때문에 커진 테마 빼기 → ② 수익률 상위와 겹치는 테마 → ③ 그 안에서 외인·기관이 사는 덜 오른 종목</p>
+          <p>최근 예: 반도체장비(주성엔지니어링·디아이·테스·피에스케이), 강관(금강철강·KBI동양철관·동일스틸럭스)</p></div>
+      </div>
+      <p class="pg-tip">헷지는 새로 돈을 버는 수단이 아니라 <b>이미 가진 종목을 지키는 용도</b>입니다. 종목 선택은 직접 판단하세요.</p>
+    </details>
   </section>
 
   <section class="card topld" id="topLead" data-nav="🔥 오늘 주도 테마" hidden>
@@ -1896,7 +1973,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-88";
+  const APP_VER = "9.29-89";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2180,6 +2257,24 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     document.querySelectorAll("#verdictChips .chip").forEach((b) => b.setAttribute("aria-pressed", S.journal.verdict === b.dataset.v ? "true" : "false"));
   }
 
+  // ---------- 9.29-89 원장 [1679]·[1685]: 「오늘 무엇을 살까」 카드 맨 위 한 줄 (디렉터 인계서 §4-3 · 표시만 · 판정 로직 무변경) ----------
+  const PICK_LINE = {
+    "정상": ["g", "정상 → 지수주·개별주 모두 가능. 주도테마 안에서 외인·기관이 같이 사는 종목부터"],
+    "절반": ["a", "절반 → 지수주는 빼고, 지수가 빠져도 혼자 버티는 개별주만 · 비중 절반 · 종가베팅 없음"],
+    "쉼":   ["r", "쉼 → 신규 진입 없음. 가진 종목을 지켜야 할 때만 헷지(인버스·달러 ETF) 소량, 하루~이틀"],
+  };
+  function paintPick(r) {
+    const el = document.getElementById("pgNow"); if (!el) return;
+    const [cls, txt] = PICK_LINE[r && r.mode] || ["", "신호를 넣으면 오늘 고를 종류가 나옵니다"];
+    el.className = "pg-now " + cls; el.textContent = cls ? "오늘: " + txt : txt;
+  }
+  // 펼침 상태 기억 (기기별 · cockpit-pick-open · 처음엔 접힘 · 저장소가 막혀도 동작)
+  (function () {
+    const box = document.getElementById("pgBox"); if (!box) return;
+    try { box.open = localStorage.getItem("cockpit-pick-open") === "1"; } catch (e) {}
+    box.addEventListener("toggle", () => { try { localStorage.setItem("cockpit-pick-open", box.open ? "1" : "0"); } catch (e) {} });
+  })();
+
   // ---------- 판정 + 해설 ----------
   function render() {
     const r = evaluate({ signals: S.signals, us: S.us, prev: S.prev, intraday: intraOf(S) }, [...AUTO, ...S.events], THEMES);
@@ -2202,6 +2297,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     $("verdict").className = "verdict " + r.cls;
     $("modeText").textContent = r.mode; $("modeWhy").textContent = r.mode === "—" ? "아래 칸에 숫자를 넣으면 오늘 날씨(모드)가 나와요" : r.why; $("modeAct").textContent = EASY_ACT[r.mode] ?? r.act;
     $("counts").innerHTML = `<span class="pill g">좋음 ${r.counts.g}</span><span class="pill a">주의 ${r.counts.a}</span><span class="pill r">나쁨 ${r.counts.r}</span>` + (refN ? `<span class="pill">참고 ${refN}</span>` : "");
+    paintPick(r); // 9.29-89 「오늘 무엇을 살까」 맨 위 한 줄
     document.querySelectorAll("#sector .row").forEach((row) => { const on = !!r.sectorOn[row.dataset.s]; row.classList.toggle("off", !on); row.querySelector(".k").classList.toggle("on", on); });
     US.forEach((u) => {
       const el = $("uss-" + u.k), st = r.themeStatus[u.k];
