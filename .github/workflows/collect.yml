@@ -10,6 +10,7 @@ on:
     - cron: "25 0 * * 1-5"   # 09:25 KST 월~금 장중 재판정 (외인 선물·현물 수급 · 늦으면 9:40쯤)
     - cron: "25 1 * * 1-5"   # 10:25 KST 월~금 장중 재판정
     - cron: "*/5 0-6 * * 1-5" # 09:00~15:40 KST 5분마다 — 장중 실시간 주도 테마 (--when=live → auto/live.json 만, 09:05~15:40 밖이면 스크립트가 건너뜀)
+    - cron: "0 7 * * 1-5"    # 16:00 KST 월~금 「오후 4시 기준」 묶음 (--when=close1600 · 미국 선물 4종·코스피200 선물·환율·WTI·비트코인 → 날짜 파일 장마감_1600 · 9.29-87 원장 [1666])
     - cron: "20 7 * * 1-5"   # 16:20 KST 월~금
     - cron: "45 10 * * 1-5"  # 19:45 KST 월~금 (종목별 외국인·기관 수급이 네이버에 올라온 뒤 주도 테마 확정 — 18:53 에는 아직 없었고 20:19 에 있었음, 2026-09-30 확인)
     - cron: "20 11 * * 1-5"  # 20:20 KST 월~금 (19:45 에도 수급이 비었을 때 대비한 한 번 더)
@@ -44,6 +45,6 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${{ github.event.inputs.when }}" ]; then ARGS="$ARGS --when=${{ github.event.inputs.when }}"; fi
-          case "${{ github.event.schedule }}" in "*/5 0-6 * * 1-5"|"*/20 0-6 * * 1-5") ARGS="$ARGS --when=live" ;; esac
+          case "${{ github.event.schedule }}" in "*/5 0-6 * * 1-5"|"*/20 0-6 * * 1-5") ARGS="$ARGS --when=live" ;; "0 7 * * 1-5") ARGS="$ARGS --when=close1600" ;; esac
           if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
           node --disable-warning=ExperimentalWarning scripts/collect-auto.mjs $ARGS
