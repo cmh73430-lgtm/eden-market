@@ -257,6 +257,10 @@ textarea.jin { resize: vertical; }
 .topld .tll .rk { font-weight: 800; color: var(--muted); } .topld .tll .tn { font-weight: 700; } .topld .tll .tn small { font-weight: 400; color: var(--muted); margin-left: 4px; }
 .topld .tll .rt { font-weight: 800; } .topld .tll .rt.p { color: var(--up); } .topld .tll .rt.n { color: var(--down); }
 .topld .tll .tlw { grid-column: 2 / -1; font-size: 12.5px; color: var(--muted); }
+/* 실시간 주요 종목 줄 정렬 (9.29-90 원장 [1692]): 종목·신호마다 한 줄(.tls) · 숫자·단위 덩어리(.nw)는 줄 중간에서 안 잘림(줄바꿈은 「·」 자리에서만) · 강세 신호 = 라벨 줄 + 신호 줄(들여쓰기) · 접힌 검증 뉴스의 첫 제목은 라벨 다음 줄 */
+.topld .tll .tls { display: block; } .topld .tll .tlw .nw { white-space: nowrap; } .topld .tll .n2sig .tls + .tls { padding-left: 16px; }
+.topld .tll details.tln .n2first { display: block; } .topld .tll details.tln[open] .n2first { display: none; }
+.topld .tll details.tln.n2 summary::after { content: none; } .topld .tll details.tln.n2 .n2lab::after { content: " ▾"; font-weight: 400; color: var(--muted); } .topld .tll details.tln.n2[open] .n2lab::after { content: " ▴"; }
 .topld .tlf { margin-top: 8px; } .topld .tlf .btn { font-size: 12.5px; padding: 4px 10px; }
 .topld.prev { border-left-color: var(--line); }
 .lvr { font: inherit; font-size: 12px; padding: 1px 8px; margin-left: 4px; border: 1px solid var(--up); color: var(--up); background: transparent; border-radius: 12px; cursor: pointer; }
@@ -1973,7 +1977,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-89";
+  const APP_VER = "9.29-90";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -2546,14 +2550,17 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (!n2 || !Array.isArray(n2.items)) return nw ? `<span class="tln">${oneNews(nw)}</span>` : "";
       const items = n2.items.slice(0, 3), cls = n2.mismatch ? " n2mis" : n2.n >= 3 ? " ok" : ""; // 앱 공용 .warn(단위 경고) 과 겹치지 않게 n2mis
       const li = (x) => `<li>${x.kind === "disc" ? "📄" : "📰"} ${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}</a>` : esc(x.title)} <small>${esc([x.office, x.at ? x.at.slice(11) : "", x.srcN > 1 ? "외 " + (x.srcN - 1) + "곳" : "", x.grade].filter(Boolean).join(" · "))}</small></li>`;
-      const sig = Array.isArray(n2.signals) && n2.signals.length ? `<span class="tln n2sig">⚡강세 신호: ${n2.signals.slice(0, 2).map((x) => `${esc(x.title)} <small>${esc([x.office, x.at ? x.at.slice(11) : ""].filter(Boolean).join(" "))}</small>`).join(" / ")}</span>` : ""; // 거래소 신호(가격제한폭·단기과열 …)는 건수 밖 1줄 (원장 [1600])
+      const sig = Array.isArray(n2.signals) && n2.signals.length ? `<span class="tln n2sig"><span class="tls">⚡강세 신호(거래소 공시)</span>${n2.signals.slice(0, 2).map((x) => `<span class="tls">${esc(x.title)} <small>${esc([x.office, x.at ? x.at.slice(11) : ""].filter(Boolean).join(" "))}</small></span>`).join("")}</span>` : ""; // 거래소 신호(가격제한폭·단기과열 …)는 건수 밖 (원장 [1600]) · 라벨 1줄 + 신호 각각 한 줄 (9.29-90 원장 [1692])
       if (!items.length) return `<span class="tln"><small class="n2lab${cls}">${esc(n2.label)}</small>${nw ? " " + oneNews(nw) : ""}</span>` + sig;
-      return `<details class="tln n2"><summary><small class="n2lab${cls}">${esc(n2.label)}</small>${n2.mismatch ? "" : " " + esc(items[0].title)}</summary><ul class="n2list">${items.map(li).join("")}</ul></details>` + sig;
+      return `<details class="tln n2"><summary><small class="n2lab${cls}">${esc(n2.label)}</small>${n2.mismatch ? "" : `<span class="n2first">${esc(items[0].title)}</span>`}</summary><ul class="n2list">${items.map(li).join("")}</ul></details>` + sig;
     };
     $("topLeadList").innerHTML = L.themes.slice(0, 3).map((t, n) => {
       const slots = (t.slots || []).slice(0, 3), flows = slots.filter((x) => x.flow); // 주요 종목 3개 (9.29-83 원장 [1580] · 고르는 기준은 수집기 그대로 = 거래대금 순) · RVOL(평소 대비 배수) 가 있으면 「×2.8」 병기 (9.29-84)
-      const stocks = slots.map((x) => `${esc(x.name)} ${esc(closeQuote(x.price, x.prev) || pc(x.rate))}${typeof x.value === "number" ? " · " + eok(x.value) : ""}${typeof x.rvol === "number" ? " · ×" + x.rvol : ""}${x.chart && x.chart.tag ? " · 📈" + esc(x.chart.tag) : ""}${x.flow ? " · 외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst) : ""}`).join(" / ");
-      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}${flows.length ? "" : " · 종목별 외인·기관은 장 마감 뒤"}</span>${newsHtml(t)}</li>`;
+      // 종목마다 한 줄 「• 삼성SDI 575,000 ▲46,000 (+8.70%) · 3,516억 · 거래대금 평소의 ×1.96 · 📈돌파」 (9.29-90 원장 [1692]) · 숫자·단위 덩어리(.nw)는 줄 중간에서 안 잘림(줄바꿈은 「·」 자리에서만) · 「/」 없음 · 값은 그대로(RVOL 라벨 「거래대금 평소의 ×」 쉬운 말 병기)
+      const nw = (s) => `<span class="nw">${s}</span>`;
+      const stockLine = (x) => { const parts = [nw(`• ${esc(x.name)} ${esc(closeQuote(x.price, x.prev) || pc(x.rate))}`)]; if (typeof x.value === "number") parts.push(nw(eok(x.value))); if (typeof x.rvol === "number") parts.push(nw("거래대금 평소의 ×" + x.rvol)); if (x.chart && x.chart.tag) parts.push(nw("📈" + esc(x.chart.tag))); if (x.flow) parts.push(nw("외인 " + sg(x.flow.foreign)) + " " + nw("기관 " + sg(x.flow.inst))); return `<span class="tls">${parts.join(" · ")}</span>`; };
+      const stocks = slots.map(stockLine).join("") + (flows.length ? "" : `<span class="tls tlnote">종목별 외인·기관은 장 마감 뒤</span>`);
+      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}</span>${newsHtml(t)}</li>`;
     }).join("");
     paintShadow(L, { eok, pc });
     if (wasHidden && typeof buildNav === "function") buildNav();
