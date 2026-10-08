@@ -1,5 +1,5 @@
 {
-  "_note": "시장 신호 자동 수집 설정. 각 신호는 소스 목록을 순서대로 시도한다(앞이 실패하면 다음). source는 server/sources/ 의 어댑터 이름(naver, yahoo, upbit, tradingview, kis). kind: pct=전일 대비 %, diff=전일 대비 값 차이, level=현재 값, bp=금리 전일 대비 bp. themeSource는 미국 대응주 수집에 쓰는 어댑터 순서.",
+  "_note": "시장 신호 자동 수집 설정. 각 신호는 소스 목록을 순서대로 시도한다(앞이 실패하면 다음). source는 server/sources/ 의 어댑터 이름(naver, yahoo, upbit, tradingview, kis). kind: pct=전일 대비 %, diff=전일 대비 값 차이, level=현재 값, bp=금리 전일 대비 bp. themeSource는 미국 대응주 수집에 쓰는 어댑터 순서. mu(마이크론)·skhy(SK하이닉스 ADR)는 참고 칸 전용(판정 0 · 9.29-97 원장 [1784]) — mu 는 반도체 테마(themes.json semi)와 같은 naver:MU 라 수집 안에서 같은 요청을 함께 씀(추가 요청 0).",
   "signals": {
     "k200": [{ "source": "tradingview", "symbol": "K200_NIGHT", "kind": "pct" }, { "source": "kis", "symbol": "K200_NIGHT", "kind": "pct" }],
     "fut":  [{ "source": "naver", "symbol": "futures:NQcv1", "kind": "pct" },  { "source": "yahoo", "symbol": "NQ=F",  "kind": "pct" }],
@@ -15,7 +15,9 @@
     "vix":  [{ "source": "naver", "symbol": "index:.VIX", "kind": "level" },   { "source": "yahoo", "symbol": "^VIX",  "kind": "level" }],
     "oil":  [{ "source": "naver", "symbol": "market:energy:CLcv1", "kind": "pct" }, { "source": "yahoo", "symbol": "CL=F",  "kind": "pct" }],
     "ust":  [{ "source": "naver", "symbol": "market:bond:US10YT=RR", "kind": "bp" }, { "source": "yahoo", "symbol": "^TNX",  "kind": "bp" }],
-    "ustlvl": [{ "source": "naver", "symbol": "market:bond:US10YT=RR", "kind": "yield" }, { "source": "yahoo", "symbol": "^TNX", "kind": "yield" }]
+    "ustlvl": [{ "source": "naver", "symbol": "market:bond:US10YT=RR", "kind": "yield" }, { "source": "yahoo", "symbol": "^TNX", "kind": "yield" }],
+    "mu":   [{ "source": "naver", "symbol": "MU", "kind": "pct" }, { "source": "yahoo", "symbol": "MU", "kind": "pct" }],
+    "skhy": [{ "source": "naver", "symbol": "SKHY.O", "kind": "pct" }, { "source": "yahoo", "symbol": "SKHY", "kind": "pct" }]
   },
   "themeSource": ["naver", "upbit", "yahoo"]
 }

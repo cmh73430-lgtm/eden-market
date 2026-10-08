@@ -90,14 +90,39 @@ export function cumChange(k, bars, prevKr, expectedUs) {
   return { value, from: base.date, to: last.date, level: k === "ust" ? Number(normalizeYield(last.close).toFixed(2)) : undefined, price: r2(last.close), prev: r2(base.close) };
 }
 // 받아온 미국 값의 기준 날짜가 '기대하는 미국 거래일'보다 오래됐는지 (연휴·주말 뒤 묵은 값 방지). 선물·환율처럼 밤새 거래되는 값은 시각이 최신이라 걸리지 않는다
-export const US_DATED = ["sox", "vix", "ust", "ustlvl", "dji", "ixic", "spx", "rut", "fut", "es", "ym", "rty", "oil"];
+export const US_DATED = ["sox", "vix", "ust", "ustlvl", "dji", "ixic", "spx", "rut", "fut", "es", "ym", "rty", "oil", "mu", "skhy"]; // mu·skhy (9.29-97 원장 [1784]): 연휴 뒤 묵은 미국 종목 값 차단 · 연휴 누적(CUM_SYMBOLS)에는 안 넣음(야후 daily 당일 close null)
 export function staleCheck(signals, expectedUs) {
   const out = {};
   US_DATED.forEach((k) => { const v = signals[k]; const d = v && usDateOf(v.time); if (d && d < expectedUs) out[k] = { date: d, expected: expectedUs }; });
   return out;
 }
 
-export async function collectMorning({ sources, themes, adapters, now = new Date(), prevThemes = null, holidays = [], date = null, listings = null }) {
+// ---- SK하이닉스 ADR 환산 (9.29-97 원장 [1784]) ----
+export const ADR_RATIO = 10, ADR_HIST = 20; // ADR 10주 = 보통주 1주 (2026-07-10 나스닥 상장 · 검증 보고 lead_audit/미국종목지표/검증.md 3-1)
+export const KR_BASIC_URL = (code) => "https://m.stock.naver.com/api/stock/" + code + "/basic";
+// 네이버 국내 종목 basic → 전일 종가: 오늘 장이 이미 열렸으면(localTradedAt 날짜 = 오늘) 종가 − 전일대비(부호는 compareToPreviousPrice) 로 역산, 아니면 closePrice 가 곧 마지막(전일) 종가
+export function krPrevClose(j, today) {
+  const close = num(j && j.closePrice), chg = num(j && j.compareToPreviousClosePrice), dir = j && j.compareToPreviousPrice, at = String((j && j.localTradedAt) || "");
+  if (close === null || close <= 0) throw new Error("종가 없음");
+  if (at.slice(0, 10) === today) { if (chg === null) throw new Error("전일대비 없음"); const falling = !!dir && (dir.name === "FALLING" || dir.name === "LOWER_LIMIT" || dir.code === "5" || dir.code === "4"); return { close: close - (falling && chg > 0 ? -chg : chg), how: "역산", date: today }; }
+  return { close, how: "종가", date: at.slice(0, 10) || null };
+}
+export async function fetchKrClose(fetchImpl = fetch, code = "000660", today = kstDate(), { timeoutMs = 10000 } = {}) {
+  const r = await fetchImpl(KR_BASIC_URL(code), { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return krPrevClose(await r.json(), today);
+}
+// 환산가(원/보통주 1주) = ADR × 10 × 원달러 · 괴리 % = 환산가 ÷ 한국 전일 종가 − 1 · hist = [[날짜, 괴리]] 최근 20개(같은 날은 이번 값으로) → 평균 · 개수
+export function adrPremium({ adrPrice, fx, kr, hist = [], date, ratio = ADR_RATIO }) {
+  const k = kr && typeof kr.close === "number" ? kr.close : null;
+  if (!(adrPrice > 0) || !(fx > 0) || !(k > 0)) throw new Error("환산 값 부족");
+  const krw = Math.round(adrPrice * ratio * fx), prem = round2((krw / k - 1) * 100);
+  const h = [...(Array.isArray(hist) ? hist : []).filter((x) => Array.isArray(x) && x[0] !== date && typeof x[1] === "number"), [date, prem]].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-ADR_HIST);
+  return { fx: round2(fx), krw, kr: k, krHow: kr.how, prem, hist: h, avg: round2(h.reduce((s, x) => s + x[1], 0) / h.length), n: h.length };
+}
+// SKHY 괴리 이력 합치기 (게이트 권고 ⑥): 앞 목록이 우선(같은 날짜는 앞 것) · 날짜순 · 최근 max 개
+export function mergeHist(lists, max = ADR_HIST) { const m = new Map(); for (const l of lists || []) for (const x of l || []) if (Array.isArray(x) && typeof x[1] === "number" && !m.has(x[0])) m.set(x[0], x); return [...m.values()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).slice(-max); }
+export async function collectMorning({ sources, themes, adapters, now = new Date(), prevThemes = null, holidays = [], date = null, listings = null, adr = null }) {
   const got = await collectAll({ sources, themes, adapters, now });
   const strip = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { value: v.value, src: v.src, time: v.time || undefined, detail: v.detail }]));
   const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), signals: strip(got.signals), us: strip(got.us), errors: got.errors.map((e) => e.key + ": " + e.error) };
@@ -120,6 +145,15 @@ export async function collectMorning({ sources, themes, adapters, now = new Date
   }
   const stale = staleCheck(out.signals, expectedUs);
   if (Object.keys(stale).length) out.stale = stale;
+  // SK하이닉스 ADR(SKHY) 환산·괴리 (9.29-97 원장 [1783][1784]): ADR 10주 = 보통주 1주 · 환율 = 방금 받은 fx 수준값 · 한국 SK하이닉스 전일 종가(요청 1) · 최근 20일 괴리 이력은 지난 파일에서 이어 받음(요청 0) · 실패하면 환산만 빠짐(등락률은 그대로)
+  if (adr && out.signals.skhy && out.signals.skhy.detail && typeof out.signals.skhy.detail.price === "number") {
+    try {
+      const fx = out.signals.fx && out.signals.fx.detail && typeof out.signals.fx.detail.price === "number" ? out.signals.fx.detail.price : null;
+      if (fx === null) throw new Error("환율 없음");
+      const kr = await adr.krClose();
+      Object.assign(out.signals.skhy.detail, adrPremium({ adrPrice: out.signals.skhy.detail.price, fx, kr, hist: adr.hist || [], date: today }));
+    } catch (e) { out.errors.push("skhy 환산: " + (e.message || e)); }
+  }
   if (prevThemes) {
     try { const p = await prevThemes(out); out.prev = p.themes; out.prevRaw = p.raw; } // out.us(방금 받은 미국 테마 값)으로 gapWarn 계산
     catch (e) { out.errors.push("prev: " + (e.message || e)); }
@@ -619,6 +653,7 @@ export function mergeCloseLeaders(oldClose, part) {
   else if (old.leaders && old.leaders.provisional && cur && !cur.provisional) m.leadersProvisional = old.leaders;
   else if (old.leadersProvisional && !(cur && cur.provisional)) m.leadersProvisional = old.leadersProvisional;
   if (!part.themes && oldClose && oldClose.themes) part.themes = oldClose.themes;
+  if (!part.watch && oldClose && oldClose.watch) part.watch = oldClose.watch; // 관심 후보(9.29-97 · 확정 run 만 계산)는 늦게 온 잠정 run 이 지우지 않게
   return part;
 }
 
@@ -753,8 +788,26 @@ export async function fetchListings(fetchImpl = fetch, { today = null, timeoutMs
     return j;
   };
   const js = [await get("listing-upcoming")]; // 상장대기 (청약 끝 · 상장일 확정) — 이것이 못 오면 실패로
-  try { js.push(await get("subscribing")); } catch (e) {} // 청약중 (보통 상장은 1주 뒤라 다음 거래일엔 거의 없음 · 못 와도 됨)
-  return { src: "naver", items: parseListings(js, today) };
+  const sub = []; // 청약중 · 청약예정 (9.29-97 원장 [1779]: 10/12~13 엠에스바이오 청약이 「없음」 으로 나오던 것 — subscribing-upcoming 미수집)
+  try { const j = await get("subscribing"); js.push(j); sub.push(j); } catch (e) {} // 청약중 (보통 상장은 1주 뒤라 다음 거래일엔 거의 없음 · 못 와도 됨)
+  try { const j = await get("subscribing-upcoming"); js.push(j); sub.push(j); } catch (e) {} // 청약예정 (청약 시작 전 · 상장일 확정) — 못 와도 다른 값은 그대로
+  const out = { src: "naver", items: parseListings(js, today) };
+  if (sub.length) out.subs = parseSubs(sub, today); // 청약 응답을 하나라도 받았을 때만 (둘 다 실패면 subs 없음 → 앱은 지난 값 유지)
+  return out;
+}
+// 청약 일정: 청약 시작~끝(poStartDate·poEndDate)이 있고 끝이 today 이후인 종목만 · 시작일 순 · 같은 종목 한 번 · 공모가 없으면 null (지어내기 0)
+export function parseSubs(jsons, today = null) {
+  const seen = new Set(), items = [], ok = (d) => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ""));
+  for (const j of jsons) {
+    const list = (j && j.result && Array.isArray(j.result.ipoList)) ? j.result.ipoList : [];
+    for (const x of list) {
+      const name = String((x && x.compName) || "").trim(), from = x && x.poStartDate, to = x && x.poEndDate;
+      if (!name || !ok(from) || !ok(to) || (today && to < today)) continue;
+      const key = x.ipoCode || name; if (seen.has(key)) continue; seen.add(key);
+      items.push({ name, market: String(x.marketType || "").trim(), price: num(x.fixPubPrice), from, to, list: ok(x.lcalDate) ? x.lcalDate : null, code: String(x.ipoCode || "").replace(/^A/, "") });
+    }
+  }
+  return items.sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
 }
 
 // 그 날 파일에 이번 결과를 합친다 (아침·오후 따로 두고, 같은 시점은 최신으로 덮는다)

@@ -11,9 +11,15 @@
 //   RVOL 20일 평균은 중계 /day 일봉(실패하면 네이버 일봉) · 직전 live.json 의 shadow.rvolCache(하루 1회) 를 이어 쓴다 · 뉴스 캐시·하루 상한도 live.json 의 news2 에서 이어 씀
 //   성적표: 확정 close run(close.at ≥ 16:20) 이 auto/observe/leaders-scorecard.json 에 오늘 선정(a 확정 · b 잠정 · c live 마지막 · s shadow)을 적고 지난 행 D+1~D+4 를 채운다
 // 옵션 추가: --trace (요청 수·걸린 시간 출력 · 재현용)
+// 아침 브리핑 (9.29-97 원장 [1775][1779][1780] t일정뉴스 · server/brief.js): 07:00 뒤 아침 run(07:05·08:05) 이 ① IR 실적 ② 공시 ③ 미국 큰 폭 ④ 국내 종목 뉴스를 받아 날짜 파일 최상위 brief 에 둔다 (morning 블록 밖)
+//   09:25 장중 run(10:20 전 시작)은 ② 공시만 한 번 더 · 섹션마다 받은 것만 덮고 실패하면 지난 값 유지 · 하루 요청 상한 BRIEF_DAILY_MAX · --brief 면 시각과 관계없이 4묶음
+//   SK하이닉스 ADR(SKHY) 환산 (원장 [1784]): 아침 run 이 한국 SK하이닉스 전일 종가 1회 + 지난 파일의 괴리 이력(요청 0)
+import { readFileSync } from "node:fs";
 import { loadCollectConfig } from "../server/config.js";
-import { prevBusinessDay, kstTime } from "../shared/calendar.js";
-import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS } from "../server/auto.js";
+import { prevBusinessDay, kstTime, nextBusinessDays } from "../shared/calendar.js";
+import { collectBrief, mergeBrief, briefText, BRIEF_SECTIONS } from "../server/brief.js";
+import { collectWatch, watchText, mergeWatch } from "../server/watch.js"; // 관심 후보 (9.29-97 범위 확장 · 확정 close run → close.watch → 다음 아침 brief ④)
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist } from "../server/auto.js";
 import { RVOL_BAR_COUNT } from "../server/shadow.js";
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import naver from "../server/sources/naver.js";
@@ -138,8 +144,13 @@ const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { j
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
 const todayMorning = prev.json && prev.json.date === date ? prev.json.morning : null;
 // 지난 거래일 파일들(최근 먼저, 최대 n개): 코스피 거래대금 20일 평균(관망) · 테마 목록(지속일수 D) · 전일 수급(2일 연속). 빈 날이 5번 이어지면 그만 (첫 수집 2026-09-28 이전)
+const histMemo = new Map();
 async function loadHistory(from, n = 20) {
   if (!save) return [];
+  const mk = from + ":" + n; if (histMemo.has(mk)) return histMemo.get(mk);
+  const p = loadHistory0(from, n); histMemo.set(mk, p); return p;
+}
+async function loadHistory0(from, n) {
   const recs = []; let d = from, miss = 0;
   while (recs.length < n && miss < 5) {
     d = prevBusinessDay(d, cfg.holidays);
@@ -149,6 +160,15 @@ async function loadHistory(from, n = 20) {
 }
 const prevFile = when === "morning" && save ? await readFile(autoFile(prevDay)).catch(() => ({ json: null })) : { json: null }; // 전날 파일 (확정 주도 테마 · 코스피 거래대금)
 const prevClose = prevFile.json && prevFile.json.close && prevFile.json.close.market ? prevFile.json.close.market : {};
+// SKHY 괴리 이력 (게이트 권고 ⑥): 오늘 앞선 아침 run + 최근 거래일 파일 최대 5개의 hist 를 날짜로 합침(같은 날은 최근 파일 값) — 하루 수집이 빠져도 이어짐 · 네이버 요청 0 (GitHub 읽기만)
+const histOf = (m) => { const d = m && m.signals && m.signals.skhy && m.signals.skhy.detail; return d && Array.isArray(d.hist) ? d.hist : []; };
+async function skhyHistMulti(n = 5) {
+  const lists = [histOf(todayMorning), histOf(prevFile.json && prevFile.json.morning)]; let d = prevDay;
+  for (let i = 1; i < n && save; i++) { d = prevBusinessDay(d, cfg.holidays); try { const f = await readFile(autoFile(d)); lists.push(histOf(f.json && f.json.morning)); } catch (e) {} }
+  return mergeHist(lists);
+}
+const skhyH = when === "morning" ? await skhyHistMulti() : [];
+const skhyHist = () => skhyH;
 // 잠정/확정: 오늘 날짜를 18시 전에 도는 close run 만 잠정(16:20). 지난날 --date 백필이나 --final 은 확정
 const provisional = when === "close" && !has("final") && date === kstDate(now) && kstTime(now).slice(0, 5) < "18:00";
 // 아침: 어제 파일의 '오늘 주도 테마'가 아직 잠정이거나 종목 외인·기관이 없으면(18:40 장애·네이버가 늦게 올림) 어제 값으로 다시 확정해 채운다 (요청 43회, 평소엔 안 돎)
@@ -171,7 +191,7 @@ let part = when === "intraday"
   : when === "themes"
   ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: todayMorning })
   : when === "morning"
-  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null }), listings: () => fetchListings(fetch, { today: date }) })
+  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null }), listings: () => fetchListings(fetch, { today: date }), adr: { krClose: () => fetchKrClose(fetch, "000660", date), hist: skhyHist() } })
   : await collectClose({ adapters: { naver }, now, leaders: async (market) => collectLeaders({ now, date, kospi: market.kospi || null, kosdaq: market.kosdaq || null, us: todayMorning && todayMorning.us, history: await loadHistory(date), provisional, shadow: shadowOpts(await prevLive()) }), listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
 // 같은 날 앞선 close run 과 합친다: 잠정 → 확정이면 잠정은 leadersProvisional 로 보관, 확정 뒤 잠정이 늦게 오면 확정 유지 (server/auto.js mergeCloseLeaders)
 if (when === "close" && prev.json && prev.json.date === date && prev.json.close) mergeCloseLeaders(prev.json.close, part);
@@ -205,6 +225,34 @@ if (when === "close" && !provisional && LD && !LD.provisional) {
   } catch (e) { sc = null; console.log("성적표 실패:", e.message || e); }
 }
 
+// 관심 후보 (9.29-97 범위 확장 원장 [1802]): 확정 close run · 오늘 종목 수급이 들어왔을 때(flowReady) — 사이클 테마 안 종목 수급·차트 판정 → close.watch (실패해도 날짜 파일 저장은 그대로 · 앞선 값은 mergeCloseLeaders 가 유지)
+if (when === "close" && !provisional && LD && !LD.provisional && LD.flowReady) {
+  try {
+    const nvGet = async (u) => { const r = await fetch(u, { headers: { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": NV_UA }, signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+    const oldW = prev.json && prev.json.date === date && prev.json.close ? prev.json.close.watch : null; // 같은 날 앞선 확정 run 의 후보 (19:45 → 20:20)
+    part.watch = mergeWatch(oldW, await collectWatch({ get: nvGet, date, leaders: LD, history: await loadHistory(date), now, prev: oldW }), date);
+    console.log(watchText(part.watch));
+  } catch (e) { console.log("관심 후보 실패:", e.message || e); }
+}
+// 아침 브리핑 (9.29-97): 아침 run 은 07:00 뒤(또는 --brief) 4묶음 · 장중 run 은 10:20 전 시작이면 ② 공시만 · 실패해도 날짜 파일 저장은 그대로
+let brief = null;
+{
+  const hm = kstTime(now).slice(0, 5), oldBrief = prev.json && prev.json.date === date ? prev.json.brief : null;
+  const only = when === "morning" && (hm >= "07:00" || has("brief")) ? BRIEF_SECTIONS : when === "intraday" && (hm < "10:20" || has("brief")) ? ["disc"] : null;
+  if (only) {
+    try {
+      const members = JSON.parse(readFileSync(new URL("../shared/index_members.json", import.meta.url), "utf8"));
+      const leadNames = when === "morning" ? [...new Set([...((prevClose.leaders && prevClose.leaders.themes) || []).flatMap((t) => (t.slots || []).slice(0, 5).map((x) => x && x.name)), ...((part.prev || []).flatMap((t) => (t.stocks || []).map((x) => x && x.name)))].filter(Boolean))] : (oldBrief && oldBrief.lead) || [];
+      const getJ = async (u) => { const r = await fetch(u, { headers: { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": NV_UA }, signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+      const postT = async (u, body) => { const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "text/html", "User-Agent": NV_UA }, body, signal: AbortSignal.timeout(15000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
+      const fresh = await collectBrief({ get: getJ, post: postT, date, prevKr: prevDay, nextDays: nextBusinessDays(date, cfg.holidays, 2), now, hm, members, leadNames, themes: cfg.themes, budget: oldBrief && oldBrief.budget, only, expectedUs: part.expectedUs || null, watch: when === "morning" ? (prevFile.json && prevFile.json.close && prevFile.json.close.watch) || null : null });
+      brief = mergeBrief(oldBrief, fresh, date);
+      console.log(`브리핑 ${only.join("·")} · 이번 요청 ${fresh.requests}회`);
+      console.log(briefText(brief));
+    } catch (e) { brief = null; console.log("브리핑 실패:", e.message || e); }
+  }
+}
+
 if (!save) {
   if (part.shadow) console.log(shadowText(part.shadow));
   if (part.candles) console.log(`일봉 ${Object.keys(part.candles).length}개 (저장 안 함): ${Object.values(part.candles).map((c) => c.code + " " + c.bars.length + "봉").join(" · ")}`);
@@ -223,6 +271,7 @@ if (part.candles) {
   console.log(`일봉 저장: ${n}/${Object.keys(part.candles).length}개 → ${AUTO_DIR}/candles/`);
 }
 const rec = mergeAuto(prev.json, date, saveAs, part);
+if (brief) rec.brief = brief; // 최상위 brief (morning 블록 밖 — mergeAuto 가 morning 을 통째로 덮어도 그대로 · 이번에 못 만들면 앞선 brief 유지)
 const msg = `자동 연동 ${date} ${when === "morning" ? "아침" : when === "themes" ? "아침(테마 보충)" : when === "intraday" ? "장중" : "오후"} ${part.at}`;
 await writeFile(autoFile(date), rec, msg);
 await writeFile(AUTO_DIR + "/latest.json", rec, msg);

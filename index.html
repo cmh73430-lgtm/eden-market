@@ -488,6 +488,32 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .trhist .chip .tg { margin-left: 4px; } .tr .top b .tg { margin-left: 6px; }
 .pg-pickbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 14px 0 0; } .pg-pickbar small { color: var(--muted); font-size: 12px; }
 .pg-pick { margin-top: 8px; min-width: 0; } .pg-pick .pg-box p.muted { color: var(--muted); } .pg-pick .pg-pickat { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+/* 9.29-97 원장 [1775][1780] t일정뉴스: 아침 브리핑 4묶음 (묶음마다 3줄 + 더 보기 · 줄 = 원문 링크 · 390px 한 줄 두 줄까지) */
+.explain .brief .bgrps { display: grid; gap: 8px; margin-top: 8px; }
+.explain .brief .bgrp { padding: 6px 9px 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.explain .brief .bgh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-bottom: 3px; } .explain .brief .bgh b { font-size: 13.5px; } .explain .brief .bgh small { font-size: 11.5px; color: var(--muted); }
+.explain .brief .bgst { margin-left: auto; font-size: 11.5px; color: var(--muted); white-space: nowrap; } .explain .brief .bgst.err { color: var(--a); font-weight: 700; white-space: normal; } .explain .brief .bgst.none { font-style: italic; }
+.explain .brief .bgl { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.explain .brief .bgl li { font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.explain .brief .bga { color: var(--ink); text-decoration: none; } .explain .brief a.bga:hover b, .explain .brief a.bga:focus b { text-decoration: underline; }
+.explain .brief .bgl small, .explain .brief .bgmkt small { color: var(--muted); font-size: 11.5px; }
+.explain .brief .bgl b.up { color: var(--up); } .explain .brief .bgl b.dn { color: var(--down); }
+.explain .brief .bgk { font-style: normal; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 4px; background: var(--note); color: var(--muted); white-space: nowrap; } .explain .brief .bgk.ern { background: var(--a-bg); color: var(--a); } .explain .brief .bgk.fix { background: var(--line); color: var(--ink); }
+.explain .brief .bgth { font-style: normal; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.explain .brief .bgmkt { font-size: 12.5px; margin-bottom: 3px; padding-bottom: 3px; border-bottom: 1px dashed var(--line); }
+.explain .brief .bgmore summary { font-size: 12px; color: var(--muted); cursor: pointer; margin-top: 3px; } .explain .brief .bgmore .bgl { margin-top: 3px; }
+.explain .brief .bgempty { font-size: 12.5px; color: var(--muted); }
+/* 9.29-97 범위 확장 원장 [1802][1803]: 일정·공시 = 모두 펼침(줄 자르지 않음 · 긴 줄은 접어서 다음 줄) · 관심 후보 꼬리표 */
+.explain .brief .bgl.bgall li { display: block; -webkit-line-clamp: unset; overflow: visible; } .explain .brief .bgall .nw, .explain .nxline b.lst { white-space: nowrap; } /* 게이트 권고 ⑦: 「BNK금융지주 실적IR」 이 「실적 / IR」 로 갈리지 않게 */ .explain .brief .bgl.bgall b.a { color: var(--a); }
+.explain .brief .bgk.etc { background: transparent; border: 1px solid var(--line); } .explain .brief .bgk.wt { background: var(--g-bg); color: var(--g); } .explain .brief .bgk.wt0 { background: var(--ink); color: var(--surface); } .explain .brief .bgwhy { font-size: 11.5px; color: var(--muted); line-height: 1.45; margin: 0 0 4px; } /* 재판정 권고 ⑥: 관심 후보 숫자 기준 그대로 */
+/* 9.29-97 원장 [1784] t미국종목지표: 마이크론 경고 꼬리표(SK하이닉스·삼성전자) · 참고 칸 아래 자동 줄 */
+.mutag { display: inline-block; font-size: 11px; font-weight: 700; line-height: 1.3; padding: 0 5px; margin-left: 6px; border-radius: 4px; white-space: nowrap; vertical-align: 1px; background: var(--a-bg); color: var(--a); } .mutag.r { background: var(--r-bg); color: var(--r); }
+.refcard .rsub { font-size: 12px; color: var(--muted); padding: 0 0 5px; margin-top: -2px; overflow-wrap: anywhere; } .refcard .rsub.a { color: var(--a); font-weight: 700; } .refcard .rsub.r { color: var(--r); font-weight: 700; }
+/* 9.29-97 원장 [1805][1806] t거래대금표시: 매매수칙 「관심종목 고르는 법」 아래 접는 칸 · 표는 세로(칸 2~3개 · 칸 안 줄바꿈 0 · 390px 가로 밀기 0) */
+.rulecard .tvguide { margin: 2px 0 4px; padding: 6px 10px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 13px; }
+.rulecard .tvguide summary { cursor: pointer; font-weight: 800; font-size: 13.5px; } .rulecard .tvguide summary small { font-weight: 500; color: var(--muted); }
+.rulecard .tvx { margin: 6px 0 2px; line-height: 1.5; } .rulecard .tvx small { color: var(--muted); font-size: 12px; } .rulecard .tvnote { color: var(--muted); font-size: 12px; margin-top: 8px; }
+.rulecard .tvt { border-collapse: collapse; font-variant-numeric: tabular-nums; margin: 2px 0 4px; } .rulecard .tvt th, .rulecard .tvt td { border: 1px solid var(--line); padding: 2px 10px; white-space: nowrap; text-align: right; } .rulecard .tvt th { background: var(--note); color: var(--muted); font-weight: 700; font-size: 12px; text-align: center; } .rulecard .tvt td:first-child { text-align: left; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -859,6 +885,24 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <li>호가창이 두꺼운 종목</li>
       <li>끼가 있는 종목</li>
     </ol>
+    <!-- 9.29-97 원장 [1805][1806] t거래대금표시: 위 메모 9줄은 글자 그대로 · 아래 접는 칸 = 거래대금 적정 기준 (전문가 자료 · E:\에덴_cockpit\work\lead_audit\거래대금기준_전문가조사.md 요약) · 표는 모두 세로(휴대폰 가로 밀기 0) -->
+    <details class="tvguide" id="tvGuide" open>
+      <summary>💰 거래대금 적정 기준 <small>(전문가 자료 · 2026-10-08 조사)</small></summary>
+      <p class="tvx"><b>전문가 숫자</b> <small>책·글에 나온 숫자 그대로</small></p>
+      <p class="tvx">· 서희파더(『빅 트레이더의 주도주 매매법』): 주도주 1,000억↑ · 상승장 2,000~3,000억↑</p>
+      <p class="tvx">· 홍인기(『주식투자 단타전략』): 9:30 이후 거래대금 상위 · 500억 / 1,000억</p>
+      <p class="tvx">· HisStock(브런치): 최소 200억 · 1,000억이면 최고</p>
+      <p class="tvx"><b>코스피 종목 · 권장안(조사 의견)</b> <small>삼성전자·SK하이닉스 몫(약 44%)을 뺀 돈 기준</small></p>
+      <table class="tvt" id="tvKospi"><tr><th>코스피 하루</th><th>권장 기준</th></tr>
+        <tr><td>10조</td><td>500억</td></tr><tr><td>15조</td><td>600억</td></tr><tr><td>20조</td><td>750억</td></tr><tr><td>25조</td><td>800억</td></tr><tr><td>30조</td><td>900억</td></tr><tr><td>40조</td><td>1,100억</td></tr></table>
+      <p class="tvx"><b>코스닥 종목 · 권장안(조사 의견)</b></p>
+      <table class="tvt" id="tvKosdaq"><tr><th>코스닥 하루</th><th>권장 기준</th></tr>
+        <tr><td>5조</td><td>500억</td></tr><tr><td>7조</td><td>500억</td></tr><tr><td>8조</td><td>550억</td></tr><tr><td>9조</td><td>650억</td></tr><tr><td>10조</td><td>700억</td></tr><tr><td>12조</td><td>750억</td></tr></table>
+      <p class="tvx"><b>장중에 보는 법</b> <small>그날 기준 × 지금까지 찬 비율 · 9:30부터 · 확정은 15:30 값</small></p>
+      <table class="tvt" id="tvIntra"><tr><th>시각</th><th>코스피</th><th>코스닥</th></tr>
+        <tr><td>10시</td><td>27%</td><td>38%</td></tr><tr><td>11시</td><td>40%</td><td>49%</td></tr><tr><td>12시</td><td>51%</td><td>60%</td></tr><tr><td>14시</td><td>70%</td><td>78%</td></tr><tr><td>15시</td><td>82%</td><td>88%</td></tr></table>
+      <p class="tvx tvnote">참고용 — 실시간 주도 테마 판정은 아직 지금 규칙(코스피 전체 기준) · 비교 2주 뒤 디렉터 결정</p>
+    </details>
     <h3>종가배팅</h3>
     <ol id="closeRules">
       <li>재료파악 : 이슈의 중요성, 지속성, 새로운 이슈가 나올 가능성</li>
@@ -2757,7 +2801,7 @@ const TOP10 = {
   }
  ]
 };
-const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09","2027-01-27","2027-03-17","2027-04-28","2027-06-09","2027-07-28","2027-09-15","2027-10-27","2027-12-08"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"2027":[{"date":"2027-01-01","name":"신정"},{"date":"2027-02-08","name":"설날 연휴"},{"date":"2027-02-09","name":"설날 대체"},{"date":"2027-03-01","name":"삼일절"},{"date":"2027-05-05","name":"어린이날"},{"date":"2027-05-13","name":"부처님오신날"},{"date":"2027-07-19","name":"제헌절 대체"},{"date":"2027-08-16","name":"광복절 대체"},{"date":"2027-09-14","name":"추석 연휴"},{"date":"2027-09-15","name":"추석"},{"date":"2027-09-16","name":"추석 연휴"},{"date":"2027-10-04","name":"개천절 대체"},{"date":"2027-10-11","name":"한글날 대체"},{"date":"2027-12-27","name":"성탄절 대체"},{"date":"2027-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). eden-market 의 calendar.yml 이 매달 1일 올해·내년을 자동으로 채운다(규칙 + 음력 날짜). KRX 공지와 다르면 손으로 고치면 그 값이 유지된다."}};
+const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한국 세션 날짜(YYYY-MM-DD). fomc는 연준 공식 일정의 발표일(미국 날짜) 그대로 — 그날 한국 장이 밤을 넘기면 새벽에 발표된다. cpi·jobs는 미국 발표일(그날 밤 KST 21:30/22:30). bok는 금통위 통화정책방향 결정일. msci는 리밸런싱 반영일. 옵션만기·동시만기는 날짜로 자동 계산하므로 넣지 않는다.","fomc":["2026-01-28","2026-03-18","2026-04-29","2026-06-17","2026-07-29","2026-09-16","2026-10-28","2026-12-09","2027-01-27","2027-03-17","2027-04-28","2027-06-09","2027-07-28","2027-09-15","2027-10-27","2027-12-08"],"cpi":["2026-01-13","2026-02-13","2026-03-11","2026-04-10","2026-05-12","2026-06-10","2026-07-14","2026-08-12","2026-09-11","2026-10-14","2026-11-10","2026-12-10"],"jobs":["2026-01-09","2026-02-11","2026-03-06","2026-04-03","2026-05-08","2026-06-05","2026-07-02","2026-08-07","2026-09-04","2026-10-02","2026-11-06","2026-12-04"],"bok":["2026-01-15","2026-02-26","2026-04-10","2026-05-28","2026-07-16","2026-08-27","2026-10-22","2026-11-26"],"msci":["2026-02-27","2026-05-29","2026-08-31","2026-11-30"],"csat":["2026-11-19"],"_csat_note":"수능일 = 한국 장 개장 10:00(1시간 늦게) · 마감 16:30 — 9.29-97 원장 [1802] 손입력 (2027 이후는 해마다 교육부 발표 뒤 손으로) · k200rebal(코스피200 정기변경) · exdiv(연말 배당락) · pce(미 PCE 발표일) 칸도 같은 방식으로 손입력하면 앱 「한국시장 일정」에 나옴 (없으면 「손입력 필요」)","_sources":"FOMC: federalreserve.gov/monetarypolicy/fomccalendars.htm · CPI/고용: bls.gov/schedule (미국 사정으로 바뀔 수 있음) · 금통위: 한국은행 2026 통화정책방향 결정회의 일정 · MSCI: 분기 리뷰 '종가 반영일'(msci.com ir_dates) · 2026-09 확인"},"holidays":{"2026":[{"date":"2026-01-01","name":"신정"},{"date":"2026-02-16","name":"설날 연휴"},{"date":"2026-02-17","name":"설날"},{"date":"2026-02-18","name":"설날 연휴"},{"date":"2026-03-02","name":"삼일절 대체"},{"date":"2026-05-01","name":"근로자의 날"},{"date":"2026-05-05","name":"어린이날"},{"date":"2026-05-25","name":"부처님오신날 대체"},{"date":"2026-06-03","name":"전국동시지방선거"},{"date":"2026-07-17","name":"제헌절"},{"date":"2026-08-17","name":"광복절 대체"},{"date":"2026-09-24","name":"추석 연휴"},{"date":"2026-09-25","name":"추석"},{"date":"2026-10-05","name":"개천절 대체"},{"date":"2026-10-09","name":"한글날"},{"date":"2026-12-25","name":"성탄절"},{"date":"2026-12-31","name":"연말 휴장"}],"2027":[{"date":"2027-01-01","name":"신정"},{"date":"2027-02-08","name":"설날 연휴"},{"date":"2027-02-09","name":"설날 대체"},{"date":"2027-03-01","name":"삼일절"},{"date":"2027-05-05","name":"어린이날"},{"date":"2027-05-13","name":"부처님오신날"},{"date":"2027-07-19","name":"제헌절 대체"},{"date":"2027-08-16","name":"광복절 대체"},{"date":"2027-09-14","name":"추석 연휴"},{"date":"2027-09-15","name":"추석"},{"date":"2027-09-16","name":"추석 연휴"},{"date":"2027-10-04","name":"개천절 대체"},{"date":"2027-10-11","name":"한글날 대체"},{"date":"2027-12-27","name":"성탄절 대체"},{"date":"2027-12-31","name":"연말 휴장"}],"_note":"KRX 휴장일(주말 제외). eden-market 의 calendar.yml 이 매달 1일 올해·내년을 자동으로 채운다(규칙 + 음력 날짜). KRX 공지와 다르면 손으로 고치면 그 값이 유지된다."}};
 // Eden Cockpit (구 장전 콕핏) — 손 입력 + 공부용 단일 파일 버전의 화면 코드.
 // 판정 규칙(shared/rules.js)과 달력(shared/calendar.js)은 빌드 때 이 파일 앞에 그대로 붙는다.
 (function () {
@@ -2865,6 +2909,26 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         ["왜 보나요?", "기름값이 오르면 물건값과 회사 비용이 올라요. 보통 정유 회사(갖고 있던 기름 재고의 값이 올라서)와 조선 회사(유전·가스 설비 주문 기대)에는 좋고, 비행기 회사와 화학 회사에는 비용이 늘어 나빠요. 다만 정유 회사는 기름값 자체보다 정제 마진이 더 중요해요."],
         ["이렇게 읽어요", "하루에 3% 넘게 오르면 큰 움직임이에요. 중동 전쟁 같은 이유가 있는지 뉴스도 같이 봐요. 기름값은 혼자서는 판정에 넣지 않고 참고로만 봐요. 환율도 같은 날 10원 넘게 오를 때만 '주의 1개'로 넣어요."],
         ["실제 데이터 (2012~2026년 코스피 3,614일, 야후 일별 종가로 계산)", "주의: 유가가 3% 넘게 오른 다음 날 코스피는 오히려 평균 +0.21%, 하락 마감 33%였어요(연 18일). 유가 급등만으로는 코스피가 약하다는 근거가 약해요. 이유(전쟁·공급 차질)를 같이 보세요."],
+      ] },
+    // 9.29-97 원장 [1777][1778][1783][1784] t미국종목지표: 마이크론(MU)·SK하이닉스 ADR(SKHY) — 참고 칸 전용(판정 점수 영향 0 · shared/rules.js 무변경 · 상태는 usStkStatus 로 따로)
+    { k: "mu", ref: true, usStk: true, valid: "2021~ 처음 보는 기간: 주의(-3%↓) 다음 날 코스피 하락 71% · 나쁨(-5%↓) 87%, 평균 -2.04% (평소 46%) [A·A] · SOX와 겹쳐 판정에는 안 넣음", name: "마이크론 (MU)", core: "메모리 · 참고", unit: "%", ph: "0.0",
+      links: [["네이버", NV + "/worldstock/stock/MU.O/total", "nv"], ["인베스팅", IV + "/equities/micron-tech", "iv"]],
+      what: "마이크론 주가가 어제보다 몇 % 올랐는지·내렸는지. 예: 3.2% 내렸으면 -3.2 (자동으로 들어와요)",
+      rule: { g: "-3%보다 덜 빠짐 → 참고", a: "-3% ~ -5% 빠짐 → 주의 (판정에는 안 넣음 · SK하이닉스·삼성전자 볼 때 조심)", r: "-5% 넘게 빠짐 → 나쁨 (판정에는 안 넣음 · SK하이닉스·삼성전자 볼 때 조심)" },
+      learn: [
+        ["한 줄 요약", "미국 메모리 반도체 회사예요. SK하이닉스·삼성전자와 같은 일을 해서 주가가 같이 움직이기 쉬워요."],
+        ["왜 판정에 안 넣나요?", "혼자 보면 잘 맞지만(아래 검증), SOX 반도체지수와 거의 같이 움직여요(상관 0.79). SOX가 이미 판정에 들어가 있어서 마이크론까지 넣으면 같은 반도체 소식을 두 번 세게 돼요. 그래서 참고로만 봐요."],
+        ["실제 데이터 (2012~2020 학습 → 2021~ 처음 보는 기간, 야후 일별 종가)", "마이크론이 -3% 넘게 빠진 다음 날 코스피 하락 71%(193일, 평균 -1.02%), -5% 넘게 빠지면 87%(62일, 평균 -2.04%)였어요. SK하이닉스는 -5% 때 하락 81%(평균 -3.72%), 삼성전자 84%(평균 -2.47%)로 SOX보다 더 잘 맞았어요."],
+        ["이렇게 써요", "마이크론이 주의(-3%↓)·나쁨(-5%↓)이면 SK하이닉스·삼성전자 이름 옆에 ⚠ 꼬리표가 붙어요. 그 두 종목은 아침에 서둘러 사지 않아요."],
+      ] },
+    { k: "skhy", ref: true, usStk: true, valid: "2026-07-10 나스닥 상장 · 표본이 1년 안 돼 검증 불가(최소 1년 쌓여야) · 판정에는 안 넣음", name: "SK하이닉스 ADR (SKHY)", core: "참고 · 검증 불가", unit: "%", ph: "0.0",
+      links: [["네이버", NV + "/worldstock/stock/SKHY.O/total", "nv"], ["인베스팅", IV + "/equities/sk-hynix-adr", "iv"]],
+      what: "미국 나스닥에 상장된 SK하이닉스 주식(ADR)이 어제보다 몇 % 올랐는지·내렸는지 (자동으로 들어와요)",
+      rule: { g: "참고용이에요 (판정에 안 넣어요)", a: "(주의 기준 없음 · 검증 불가)", r: "(나쁨 기준 없음 · 검증 불가)" },
+      learn: [
+        ["한 줄 요약", "SK하이닉스가 2026년 7월 10일 미국 나스닥에 올린 주식이에요. ADR 10주가 한국 보통주 1주예요."],
+        ["환산가", "ADR 가격 × 10 × 원달러 환율 = 한국 주식 1주 값으로 바꾼 가격이에요. 한국 종가보다 얼마나 비싼지(괴리)를 같이 보여 줘요. 상장 뒤 줄곧 한국보다 비쌌어요(+15~63%). 왜 그런지는 아직 확인 못 했어요."],
+        ["왜 판정에 안 넣나요?", "상장한 지 얼마 안 돼서 자료가 63일뿐이에요. 다른 지표처럼 9년 학습 + 5년 시험으로 검증할 수 없어서 참고로만 봐요."],
       ] },
     { k: "ust", valid: "2021~ 처음 보는 기간: 주의(10bp↑) 하락 61%, -1%↓ 32% (79일 · 해마다 들쭉날쭉) [B]", name: "미국 10년 금리 (이자율)", core: "", unit: "bp", ph: "0",
       links: [["네이버", NV + "/marketindex/bond/US10YT=RR", "nv"], ["인베스팅", IV + "/rates-bonds/u.s.-10-year-bond-yield", "iv"]],
@@ -2979,7 +3043,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-96";
+  const APP_VER = "9.29-97";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3052,7 +3116,26 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 판정 지표(정상·절반·쉼을 정함)와 참고 지표(판정에 안 넣음)를 나눠 보여 준다
   const SIG_MAIN = SIGNALS.filter((s) => !s.ref && s.k !== "ustlvl"), SIG_REF = SIGNALS.filter((s) => s.ref), UST_LVL = SIGNALS.find((s) => s.k === "ustlvl");
   // 참고 지표 한 줄 요약 (칸 옆에 짧게)
-  const REF_SHORT = { es: "미국 전체 분위기", ym: "경기 민감주", rty: "코스닥 중소형주", fx: "외국인 돈 방향", oil: "기름값" };
+  const REF_SHORT = { es: "미국 전체 분위기", ym: "경기 민감주", rty: "코스닥 중소형주", fx: "외국인 돈 방향", oil: "기름값", mu: "SOX와 겹쳐 판정에는 안 넣음", skhy: "표본 짧아 검증 불가" };
+  // 게이트 권고 ⑤: 표본 일수 = 나스닥 상장일 2026-07-10 부터 그 날 기준 마지막 미국 거래일까지 미국 거래일 수 (10/8 화면 = 10/7 까지 63일)
+  const SKHY_LISTED = "2026-07-10";
+  const skhyDays = (d) => { const end = lastUsTradingDayBefore(d || DATE); let n = 0; for (let x = SKHY_LISTED; x <= end; x = addDays(x, 1)) if (isUsTradingDay(x)) n++; return n; };
+  // 9.29-97 원장 [1784]: 미국 종목 참고 칸 (판정 0) — 마이크론 주의 -3%↓ · 나쁨 -5%↓ · SKHY 는 상태 없음(참고)
+  const US_STK = ["mu", "skhy"];
+  const usStkStatus = (k, v) => (v === null || v === undefined ? null : k === "mu" ? (v <= -5 ? "r" : v <= -3 ? "a" : "") : "");
+  const usStale = (k, st) => ((st || S).auto || {})["stale." + k] || ""; // 연휴 뒤 묵은 값(수집기 staleCheck) — 주의·나쁨·꼬리표를 띄우지 않고 날짜 경고만
+  const muWarnOf = (st) => { const v = parseNum(((st || S).signals || {}).mu); const s = usStale("mu", st) ? "" : usStkStatus("mu", v); return s ? { st: s, v } : null; };
+  // SK하이닉스·삼성전자 이름 옆 꼬리표 (마이크론이 주의·나쁨일 때만 · 판정 무관)
+  const MU_CODES = ["000660", "005930"], MU_NAMES = ["SK하이닉스", "삼성전자"];
+  const muTagHtml = (code, name) => { const w = muWarnOf(); if (!w || !(MU_CODES.includes(String(code || "")) || MU_NAMES.includes(String(name || "").trim()))) return ""; return `<span class="mutag ${w.st}" title="마이크론 ${w.v}% · ${w.st === "r" ? "나쁨(-5%↓) 다음 날 SK하이닉스 하락 81%" : "주의(-3%↓) 다음 날 SK하이닉스 하락 72%"} (2021~ 검증 · 판정 무관)">⚠ 마이크론 ${w.v > 0 ? "+" : ""}${w.v}%</span>`; };
+  // SKHY 환산·괴리 한 줄: 「178.25 ▼4.31 (-2.36%) · 환산 약 2,388,000원 · 한국 종가 대비 +38.6% (최근 20일 평균 +40.3%)」 · 값 없으면 있는 만큼만 (지어내기 0)
+  function skhyLine(st) {
+    st = st || S; const q = sigQuoteOf(st, "skhy"), v = parseNum((st.signals || {}).skhy); let a = null; try { a = JSON.parse(((st.auto || {})["skhy.adr"]) || "null"); } catch (e) {}
+    const parts = [q || (v === null ? "" : (v > 0 ? "+" : "") + v + "%")];
+    if (a && typeof a.krw === "number") parts.push("환산 약 " + (Math.round(a.krw / 1000) * 1000).toLocaleString("ko-KR") + "원");
+    if (a && typeof a.prem === "number") parts.push("한국 종가 대비 " + (a.prem > 0 ? "+" : "") + a.prem.toFixed(1) + "%" + (typeof a.avg === "number" && a.n > 1 ? " (최근 " + a.n + "일 평균 " + (a.avg > 0 ? "+" : "") + a.avg.toFixed(1) + "%)" : ""));
+    return parts.filter(Boolean).join(" · ");
+  }
   const sigHtml = (s) => `
     <div class="sig" data-k="${s.k}">
       <div class="name">${esc(s.name)} ${s.core ? `<span class="core">${esc(s.core)}</span>` : ""}</div>
@@ -3074,7 +3157,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const refHtml = () => `
     <div class="refcard">
       <div class="rhead"><b>👀 참고 지표</b><span>판정 개수에 안 들어가요 · 흐름만 봐요 (환율+유가가 같은 날 함께 급등하면 주의 1개)</span></div>
-      ${SIG_REF.map((s) => `<div class="rrow"><span class="rn">${esc(s.name.replace(/^미국 선물 \((.*)\)$/, "$1 선물").replace(/ \(.*\)$/, ""))}<small>${esc(REF_SHORT[s.k] || "")}</small></span><div class="in"><button class="pm" type="button" data-for="${s.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="in-${s.k}" placeholder="${esc(s.ph)}" autocomplete="off"><span class="unit">${esc(s.unit)}</span><span class="status" id="st-${s.k}">—</span></div></div><div class="warn" id="warn-${s.k}" hidden></div>`).join("")}
+      ${SIG_REF.map((s) => `<div class="rrow"><span class="rn">${esc(s.name.replace(/^미국 선물 \((.*)\)$/, "$1 선물").replace(/ \(.*\)$/, ""))}<small>${esc(REF_SHORT[s.k] || "")}</small></span><div class="in"><button class="pm" type="button" data-for="${s.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="in-${s.k}" placeholder="${esc(s.ph)}" autocomplete="off"><span class="unit">${esc(s.unit)}</span><span class="status" id="st-${s.k}">—</span></div></div>${s.usStk ? `<div class="rsub" id="rsub-${s.k}" hidden></div>` : ""}<div class="warn" id="warn-${s.k}" hidden></div>`).join("")}
       <details class="more"><summary>✍️ 기준 · 직접 넣는 법 · 사이트 링크</summary>
       ${SIG_REF.map((s) => `<div class="rdet"><b>${esc(s.name)}</b><div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div><div class="links">열어서 보기 ${linkHtml(s.links)}</div><div class="what">${esc(s.what)}</div>${s.valid ? `<div class="valid">🔬 검증 ${esc(s.valid)}</div>` : ""}${learnHtml(s.name, s.learn)}</div>`).join("")}
       </details>
@@ -3082,7 +3165,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 간단 보기: 검증 A·B 등급(야간선물·미 선물·반도체·VIX·금리)만 펼쳐 두고, C 등급 환율과 참고 지표는 접어 둔다 (전체 보기면 펼쳐짐)
   const SIG_CORE = SIG_MAIN.filter((s) => s.k !== "fx"), SIG_FOLD = SIG_MAIN.filter((s) => s.k === "fx");
   $("sigList").innerHTML = `<div class="siggroup"><b>🎯 판정 지표</b><span>이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 2021~ 처음 보는 기간에서도 확인)</span></div>` + SIG_CORE.map(sigHtml).join("")
-    + `<details class="refmore" id="refMore"><summary>👀 참고 지표 — 환율 · 유가 · S&P · 다우 · 러셀 <small>(혼자서는 판정에 거의 안 들어가요 · 환율+유가가 같은 날 급등할 때만 주의 1)</small></summary>` + SIG_FOLD.map(sigHtml).join("") + refHtml() + `</details>`;
+    + `<details class="refmore" id="refMore"><summary>👀 참고 지표 — 환율 · 유가 · S&P · 다우 · 러셀 · 마이크론 · SK하이닉스 ADR <small>(혼자서는 판정에 거의 안 들어가요 · 환율+유가가 같은 날 급등할 때만 주의 1)</small></summary>` + SIG_FOLD.map(sigHtml).join("") + refHtml() + `</details>`;
 
   // 미국장 테마: 한 칸에 한 줄씩 (이름·기준 | ± 입력 | 우선 관심·후순위), 링크·설명은 맨 아래 접기 하나로
   // 비슷한 업종끼리 묶고, 묶음 안은 많이 오른 순으로 (paintUsOrder)
@@ -3341,7 +3424,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   (function () {
     const btn = $("pgPick"), box = $("pgPickBox"); if (!btn || !box) return;
     const quote = (x) => esc(`${x.name} ${closeQuote(x.price, x.prev) || (typeof x.rate === "number" ? (x.rate > 0 ? "+" : "") + x.rate + "%" : "")}`.trim());
-    const col = (cls, title, rows, sub) => `<div class="pg-box"><b class="${cls}">${title}</b>${sub ? ` <small>${esc(sub)}</small>` : ""}${rows.length ? rows.map((x) => `<p>${quote(x)}</p>`).join("") : `<p class="muted">자료 없음</p>`}</div>`;
+    const col = (cls, title, rows, sub) => `<div class="pg-box"><b class="${cls}">${title}</b>${sub ? ` <small>${esc(sub)}</small>` : ""}${rows.length ? rows.map((x) => `<p>${quote(x)}${muTagHtml(x.code, x.name)}</p>`).join("") : `<p class="muted">자료 없음</p>`}</div>`;
     const md = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(String(d || "")) ? Number(d.slice(5, 7)) + "/" + Number(d.slice(8, 10)) : "");
     btn.addEventListener("click", async () => {
       if (location.protocol === "file:") { box.hidden = false; box.innerHTML = `<small class="pg-pickat">설치판에서는 못 받아요 · 홈페이지(cmh73430-lgtm.github.io/eden-market)에서 눌러 주세요</small>`; return; }
@@ -3380,6 +3463,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       }
       el.className = "status " + (r.statuses[k] || ""); el.textContent = r.statuses[k] ? LABEL[r.statuses[k]] : "—";
     });
+    paintUsStk(); // 9.29-97 마이크론·SKHY 참고 칸 (판정 0)
     // 지표 카드 왼쪽 띠 색: 칸 옆 판정(좋음·주의·나쁨)과 같게
     document.querySelectorAll("#sigList .sig").forEach((card) => { const b = card.querySelector(".status"); card.dataset.st = ["g", "a", "r"].find((c) => b.classList.contains(c)) || ""; });
     const refN = Object.keys(r.excluded).filter((k) => r.excluded[k] && r.statuses[k]).length;
@@ -3428,6 +3512,18 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       + (R.sup.length ? `<div class="pcsup">${R.sup.map((x) => `<div><b>${esc(x.mk)}</b> ${[["외국인", x.f], ["기관", x.i], ["개인", x.p], ["프로그램", x.g]].map(([l, v]) => `<span class="nw">${l} <span class="${c(v)}">${eo(v, true)}</span></span>`).join(" · ")}${x.amt !== null ? ` · <span class="nw">거래대금 ${eo(x.amt)}</span>` : ""}</div>`).join("")}</div>` : `<div class="muted">수급 값 없음</div>`);
   }
 
+  // 9.29-97 원장 [1784]: 마이크론·SKHY 참고 칸 — 칸 옆 상태(마이크론 주의·나쁨 · 그 밖 참고) + 칸 아래 자동 줄(마이크론 경고 · SKHY 환산·괴리 · 표본 꼬리표)
+  function paintUsStk() {
+    US_STK.forEach((k) => {
+      const el = $("st-" + k), sub = $("rsub-" + k); if (!el) return;
+      const v = parseNum(S.signals[k]), sk = v === null ? "" : usStale(k), st = sk ? "" : usStkStatus(k, v);
+      el.className = "status " + (st || ""); el.textContent = v === null ? "—" : st ? LABEL[st] : "참고";
+      if (!sub) return;
+      const t = sk ? sk : k === "mu" ? (st ? `⚠ ${st === "r" ? "나쁨(-5%↓)" : "주의(-3%↓)"} · SK하이닉스·삼성전자 볼 때 조심 · SOX와 겹쳐 판정에는 안 넣음` : "")
+        : v === null ? "" : skhyLine() + " · 표본 " + skhyDays() + "일 · 검증 불가";
+      sub.hidden = !t; sub.textContent = t; sub.className = "rsub" + (st ? " " + st : "");
+    });
+  }
   // 헷갈리기 쉬운 단위 확인: 원달러에 %를 넣었거나, 10년 금리에 ×100을 안 한 값을 넣은 것 같을 때
   function paintUnitWarnings() {
     const show = (k, msg) => { const el = $("warn-" + k); if (!el) return; el.hidden = !msg; el.textContent = msg || ""; };
@@ -3462,6 +3558,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       main.push(sigRow(st, s.name, val, LABEL[st], s.rule[st].split(" → ")[0]));
     });
     if (r.combo) main.push(sigRow("a", "환율 10원↑ + 기름값 3%↑", "동반 급등", "주의 1개", "둘이 함께 튈 때만 판정에 넣어요 · 14년간 23일뿐, 다음 날 평균 -0.23%"));
+    US_STK.forEach((k) => { const v = parseNum(S.signals[k]); if (v === null) return; const s = SIGNALS.find((x) => x.k === k), sk = usStale(k), st = sk ? "" : usStkStatus(k, v); // 9.29-97 참고 줄 (판정 개수 0 · 묵은 값이면 날짜 경고만)
+      refs.push(sigRow((st ? st + " " : "") + "ref", s.name, k === "skhy" ? skhyLine() : sigQuoteOf(S, k) || (v > 0 ? "+" : "") + v + "%", st ? LABEL[st] : "참고", sk ? sk : k === "mu" ? (st ? "SK하이닉스·삼성전자 볼 때 조심 · SOX와 겹쳐 판정에는 안 넣음" : "SOX와 겹쳐 판정에는 안 넣음") : "표본 " + skhyDays() + "일 · 검증 불가 · 판정에는 안 넣음")); });
     const evs = [...AUTO.filter((e) => e.lv).map((e) => e.k), ...S.events];
     main.push(sigRow(r.statuses.ev, "주요 일정", evs.length ? `${evs.length}건` : "없음", LABEL[r.statuses.ev], evs.length ? evs.join(", ") : "특별한 일 없음"));
     const lines = [`<div class="sgrp">🎯 판정에 들어가는 지표</div>`, ...main];
@@ -3485,9 +3583,15 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     return on.length ? mdw(day) + " 신규상장: " + on.map((x) => x.name + (x.market ? "(" + x.market + ")" : "")).join(", ") : "";
   }
   const listingsOf = (st) => { try { const L = JSON.parse(((st || {}).auto || {}).listings || "[]"); return Array.isArray(L) ? L : []; } catch (e) { return []; } };
+  // 9.29-97 원장 [1779]: 청약(청약중·청약예정) · KIND IR 실적 일정 — 수집기 auto.subs · auto.brief.sched (없으면 빈 목록 · 지어내기 0)
+  const subsOf = (st) => { try { const L = JSON.parse(((st || S).auto || {}).subs || "[]"); return Array.isArray(L) ? L.filter((x) => x && x.name && x.from && x.to) : []; } catch (e) { return []; } };
+  const BRIEF_MEM = {}; // 날짜 → brief 압축 문자열 (메모리만 · 재판정 권고 ④)
+  const briefOf = (st) => { try { const b = JSON.parse(BRIEF_MEM[DATE] || "null"); return b && typeof b === "object" ? b : null; } catch (e) { return null; } };
+  const subOn = (d, st) => subsOf(st).filter((x) => x.from <= d && d <= x.to);
+  const irOn = (d, st) => { const b = briefOf(st); return b && b.sched && Array.isArray(b.sched.items) ? b.sched.items.filter((x) => x && x.d === d) : []; };
   function upcomingHtml() {
     return upcoming().map(({ d, evs }) => { const nl = listingLine(listingsOf(S), d).replace(/^\S+ /, ""); // "신규상장: 멜콘(코스닥)"
-      const bits = [...evs.map((e) => `<b class="${e.lv}">${esc(e.k)}</b>`), ...(nl ? [`<b class="lst">${esc(nl)}</b>`] : [])];
+      const bits = [...evs.map((e) => `<b class="${e.lv}">${esc(e.k)}</b>`), ...(nl ? [`<b class="lst">${esc(nl)}</b>`] : []), ...subOn(d).map((x) => `<b class="lst">${esc(x.name)} 청약</b>`), ...irOn(d).map((x) => `<b class="lst">${esc(x.co)} 실적IR</b>`)];
       return `<span class="nx">${esc(mdw(d))} ${bits.length ? bits.join(" ") : "없음"}</span>`; }).join("");
   }
   // 장중 재판정 입력: 자동(09:30·10:30 수집) + 손으로 넣는 프로그램 순매수(억)
@@ -3511,9 +3615,87 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     el.hidden = !off;
     if (off) { const p = prevBusinessDay(DATE, CAL.holidays), n = nextBusinessDays(DATE, CAL.holidays, 1)[0]; el.innerHTML = `📅 오늘(${esc(mdw(DATE))})은 휴장일이에요. 매매·시황 기록은 실제 거래한 날에 적어요 → <button class="datebtn" type="button" data-go="${p}">${esc(mdw(p))} (직전 거래일)</button> <button class="datebtn" type="button" data-go="${n}">${esc(mdw(n))} (다음 거래일)</button>`; }
   }
+  // ---------- 9.29-97 원장 [1775][1779][1780] t일정뉴스: 아침 브리핑 4묶음 (묶음마다 3줄 + 더 보기 · 줄 누르면 원문 · 못 받으면 「⚠ 못 받음 (시각) · 지난 값 시각」 · 없으면 「아직 없음」) ----------
+  const BG_KIND = "https://kind.krx.co.kr/common/disclsviewer.do?method=search&acptno=", BG_IR = "https://kind.krx.co.kr/corpgeneral/irschedule.do?method=searchIRScheduleMain&gubun=iRSchedule", BG_IPO = NV + "/ipo";
+  const bgMd = (x) => { const t = String(x || ""); return t.length >= 8 ? Number(t.slice(4, 6)) + "/" + Number(t.slice(6, 8)) : ""; };
+  const bgHm = (x) => { const t = String(x || ""); return t.length >= 12 ? t.slice(8, 10) + ":" + t.slice(10, 12) : ""; };
+  const bgDay = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(String(d || "")) ? mdw(d) : "");
+  const bgA = (url, inner) => (url ? `<a class="bga" href="${esc(url)}" target="_blank" rel="noopener">${inner}</a>` : `<span class="bga">${inner}</span>`);
+  function bgStat(sec) {
+    if (!sec) return `<span class="bgst none">아직 없음</span>`;
+    if (sec.err) return `<span class="bgst err">⚠ 못 받음 (${esc(sec.tryAt || "")}) · ${sec.at ? "지난 값 " + esc(sec.at) : "지난 값 없음"}</span>`;
+    return `<span class="bgst">🤖 ${esc(sec.at || "")}${sec.warn ? " · 일부 못 받음" : ""}</span>`;
+  }
+  function bgList(lines, empty) {
+    if (!lines.length) return `<div class="bgempty">${esc(empty)}</div>`;
+    const li = (h) => `<li>${h}</li>`;
+    return `<ul class="bgl">${lines.slice(0, 3).map(li).join("")}</ul>` + (lines.length > 3 ? `<details class="bgmore"><summary>더 보기 ${lines.length - 3}</summary><ul class="bgl">${lines.slice(3).map(li).join("")}</ul></details>` : "");
+  }
+  const bgAll = (lines, empty) => (lines.length ? `<ul class="bgl bgall">${lines.map((h) => `<li>${h}</li>`).join("")}</ul>` : `<div class="bgempty">${esc(empty)}</div>`); // 9.29-97 원장 [1803] 일정·공시 = 모두 펼침(접힘 0)
+  // 9.29-97 원장 [1802]: 「봐야 할 일정 전부」 — 달력 자동(옵션만기 · 선물·옵션 동시만기 · FOMC · CPI · 고용 · 금통위 · MSCI · 연휴 뒤 첫날) + data/events.json 손입력(수능 · 코스피200 정기변경 · 연말 배당락 · 미 PCE) + 규칙(수출입동향 매월 1일) + 청약·상장·실적 IR + 휴장
+  const KR_MANUAL = [["csat", "수능 · 개장 10:00(1시간 늦게) · 장 마감 16:30", "a"], ["k200rebal", "코스피200 정기변경", "a"], ["exdiv", "연말 배당락", "a"], ["pce", "미 PCE (21:30 KST)", "a"]];
+  const KR_MANUAL_NEED = { pce: () => true, k200rebal: (m) => [5, 6, 11, 12].includes(m), exdiv: (m) => [11, 12].includes(m) }; // 그 해 날짜가 없으면 「손입력 필요」 (정기변경·배당락은 그 철에만)
+  function krSchedule(st, day) {
+    st = st || S; const nd = nextBusinessDays(day, CAL.holidays, 2), last = nd[nd.length - 1] || day, wd = weekday(day), fri = wd >= 1 && wd <= 5 ? addDays(day, 5 - wd) : last, end = fri > last ? fri : last;
+    const ev = CAL.events || {}, B = briefOf(st), lists = listingsOf(st), lines = [];
+    for (let d = day; d <= end; d = addDays(d, 1)) {
+      const w = weekday(d); if (w === 0 || w === 6) continue;
+      const big = d > last; // 이번 주 남은 날 = 큰 일정만
+      if (!isBusinessDay(d, CAL.holidays)) { lines.push(`<b>${esc(mdw(d))}</b> 휴장 · ${esc((CAL.holidayNames || {})[d] || "휴장일")}`); continue; }
+      const it = [];
+      autoEvents(d, CAL).filter((e) => !big || e.lv === "a").forEach((e) => { const k = e.k.replace(/^동시만기/, "선물·옵션 동시만기"); it.push(e.lv === "a" ? `<b class="a">${esc(k)}</b>` : esc(k)); });
+      KR_MANUAL.forEach(([key, label]) => { if ((ev[key] || []).includes(d)) it.push(`<b class="a">${esc(label)}</b>`); });
+      const first = d.slice(0, 8) + "01"; if (d.slice(8) === "01") it.push("수출입동향 09:00 (매월 1일)"); else if (!big && !isBusinessDay(first, CAL.holidays) && nextBusinessDays(first, CAL.holidays, 1)[0] === d) it.push("수출입동향 (1일 휴일 발표분)");
+      if (!big) {
+        subOn(d, st).forEach((x) => it.push(bgA(BG_IPO, `<span class="nw">${esc(x.name)} 청약${d === x.from ? " 시작" : d === x.to ? " 끝" : ""}</span> <small>(${esc(bgDay(x.from))}~${esc(bgDay(x.to))}${x.market ? " · " + esc(x.market) : ""}${typeof x.price === "number" ? " · 공모가 " + x.price.toLocaleString("ko-KR") + "원" : ""})</small>`)));
+        lists.filter((x) => x && x.name && x.date === d).forEach((x) => it.push(`${esc(x.name)} 신규상장${x.market ? " <small>(" + esc(x.market) + ")</small>" : ""}`));
+        irOn(d, st).forEach((x) => it.push(bgA(BG_IR, `<span class="nw">${esc(x.co)} 실적IR${x.tm ? " " + esc(x.tm) : ""}</span> <small>${esc(x.t)}</small>`)));
+      }
+      if (it.length || !big) lines.push(`<b>${esc(mdw(d))}${d === day ? " 오늘" : ""}</b> ${it.length ? it.join(" · ") : `<span class="muted">특별 일정 없음</span>`}`);
+    }
+    const y = day.slice(0, 4), mo = Number(day.slice(5, 7)), need = KR_MANUAL.filter(([key]) => KR_MANUAL_NEED[key] && KR_MANUAL_NEED[key](mo) && !(ev[key] || []).some((x) => String(x).startsWith(y))).map(([, label]) => label.split(" (")[0].split(" · ")[0]);
+    if (need.length) lines.push(`<span class="muted">손입력 필요: ${esc(need.join(" · "))} (data/events.json · ${esc(y)}년 날짜 없음)</span>`);
+    return { lines, end };
+  }
+  // 9.29-97 원장 [1802][1803]: 공시 = 종목별 묶음 · 시간순(오래된 것 먼저) · 모두 펼침 · 묶음 순서 = 그 종목 마지막 공시 시각 최근 먼저
+  function discGroups(items) {
+    const by = new Map(); (items || []).forEach((x) => { if (!by.has(x.co)) by.set(x.co, []); by.get(x.co).push(x); });
+    return [...by.entries()].map(([co, xs]) => [co, xs.sort((a, b) => (a.dt < b.dt ? -1 : 1))]).sort((a, b) => (a[1][a[1].length - 1].dt < b[1][b[1].length - 1].dt ? 1 : -1))
+      .map(([co, xs]) => `<b>${esc(co)}</b>${muTagHtml(null, co)} ` + xs.map((x) => bgA(BG_KIND + encodeURIComponent(x.id || ""), `${esc(x.t)} <i class="bgk${x.k === "실적" ? " ern" : x.k === "기타" || x.k === "거래소" ? " etc" : ""}">${esc(x.k)}</i>${x.fix ? ` <i class="bgk fix">정정</i>` : ""} <small>${esc(bgMd(x.dt))} ${esc(bgHm(x.dt))}</small>`)).join(" · "));
+  }
+  const bgGrp = (cls, icon, title, sub, stat, body) => `<div class="bgrp ${cls}"><div class="bgh"><b>${icon} ${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}${stat}</div>${body}</div>`;
+  function briefGroupsHtml(st) {
+    st = st || S; const B = briefOf(st), day = (B && B.date) || DATE, nd = nextBusinessDays(day, CAL.holidays, 2), last = nd[nd.length - 1] || day;
+    // ① 한국시장 일정: 날짜별 전부 · 모두 펼침 (원장 [1802][1803]) — 실적 IR 상태만 수집 시각 표시(나머지는 달력·청약 자료)
+    const ks = krSchedule(st, day);
+    const g1 = bgGrp("bg1", "📅", "한국시장 일정", "오늘 ~ " + mdw(ks.end) + " · 만기·지표·청약·실적 IR·휴장", bgStat(B && B.sched), bgAll(ks.lines, "일정 없음"));
+    // ② 실적·주요 공시
+    const D = B && B.disc, dl = D && Array.isArray(D.items) ? discGroups(D.items) : [];
+    const g2 = bgGrp("bg2", "📢", "실적·주요 공시", D && D.from ? bgMd(D.from) + " " + bgHm(D.from) + " ~ " + bgMd(D.to) + " " + bgHm(D.to) + " · 종목별" : "전날 15:30 ~ 오늘 08:30", bgStat(D), bgAll(dl, D && !D.err ? "코스피200·코스닥150·주도 테마 종목 공시 없음" : "아직 없음"));
+    // ③ 미국 큰 폭 (상승·하락 번갈아)
+    const U = B && B.us, up = U && Array.isArray(U.up) ? U.up : [], dn = U && Array.isArray(U.dn) ? U.dn : [], mix = [];
+    for (let i = 0; i < Math.max(up.length, dn.length); i++) { if (up[i]) mix.push(up[i]); if (dn[i]) mix.push(dn[i]); }
+    const ul = mix.map((x) => { const c = x.r > 0 ? "up" : "dn", w = x.why;
+      const url = w && w.oid && w.aid ? NV + "/investment/news/worldnews/" + encodeURIComponent(w.oid) + "/" + encodeURIComponent(w.aid) : NV + "/worldstock/stock/" + encodeURIComponent(x.rc || "") + "/total";
+      return bgA(url, `<b class="${c}">${x.r > 0 ? "▲" : "▼"} ${esc(x.n)} ${x.r > 0 ? "+" : ""}${esc(x.r)}%</b>${x.th ? ` <i class="bgth">🇰🇷 ${esc(x.th)}</i>` : ""} <small>${w ? esc(w.t) + (w.o ? " (" + esc(w.o) + ")" : "") : x.nerr ? "이유 기사 못 받음" : "이유 기사 못 찾음"}</small>`); });
+    const g3 = bgGrp("bg3", "🇺🇸", "미국 큰 폭", "시총 상위 200 · ±3%↑" + (U && U.ses ? " · 미국 " + bgMd(U.ses.replace(/-/g, "")) : ""), bgStat(U), bgList(ul, U && !U.err ? "±3% 넘게 움직인 종목 없음" : "아직 없음"));
+    // ④ 아침 국내 종목 뉴스 + 시황 1줄
+    const nUrl = (x) => (x.oid && x.aid ? "https://n.news.naver.com/mnews/article/" + encodeURIComponent(x.oid) + "/" + encodeURIComponent(x.aid) : ""), wTag = (tags) => (tags && tags.length ? ` <i class="bgk wt" title="관심 후보: 주도 테마 사이클 안 · 최근 20일 외국인+기관 순매수 · 정배열(종가>5일>20일>60일선) 또는 눌림바닥 또는 상승전환">${esc(tags.join(" · "))}</i>` : "");
+    // 재판정 필수 ① (원장 [1809]): 기사 있는 관심 후보 줄 + 일반 뉴스를 점수순으로 섞음(같은 잣대 · 같은 점수면 관심 후보 먼저 → 최근) · 기사 없는(못 받은) 후보는 맨 끝 한 줄
+    const N = B && B.news, cand = N && Array.isArray(N.cand) ? N.cand : [];
+    const rows = [...cand.flatMap((c) => (c.items || []).map((x) => ({ sc: typeof x.sc === "number" ? x.sc : (x.on || 1) * 2 + 1, w: 1, dt: x.dt || "", h: bgA(nUrl(x), `<i class="bgk wt0">관심</i> <b>${esc(c.n)}</b>${wTag(c.tags)}${muTagHtml(null, c.n)} ${esc(x.t)} <small>${esc(x.o || "")}${x.on > 1 ? " 외 " + (x.on - 1) : ""} · ${esc(bgHm(x.dt))}</small>`) }))),
+      ...(N && Array.isArray(N.items) ? N.items.map((x) => ({ sc: x.sc || 0, w: 0, dt: x.dt || "", h: bgA(nUrl(x), `<b>${esc(x.n)}</b>${wTag(x.tags)}${muTagHtml(null, x.n)} ${esc(x.t)} <small>${esc(x.o || "")}${x.on > 1 ? " 외 " + (x.on - 1) : ""} · ${esc(bgHm(x.dt))}</small>`) })) : [])]
+      .sort((a, b) => b.sc - a.sc || b.w - a.w || (a.dt < b.dt ? 1 : a.dt > b.dt ? -1 : 0));
+    const none = cand.filter((c) => !(c.items && c.items.length)), noneL = none.length ? [`<span class="bga"><i class="bgk wt0">관심</i> <small>후보 밤사이 기사 없음: ${none.map((c) => esc(c.n) + (c.nerr ? "(못 받음)" : "")).join(" · ")}</small></span>`] : [];
+    const nl = [...rows.map((x) => x.h), ...noneL];
+    const why = cand.length ? `<div class="bgwhy">관심 후보(${esc(bgMd((N.wdate || "").replace(/-/g, "")))} 저녁 계산) = 주도 테마 사이클(오늘 1~3위 + 최근 20거래일 1~3위 3번↑) 안 · 수급20일+ = 최근 20일 외국인+기관 순매수 합 0원 초과 · 정배열 = 종가>5일선>20일선>60일선 · 눌림바닥 = 20일 최고가 대비 -5~-15% · 종가 ≥ 20일선×0.97 · 5일 저점 안 깨짐 · 상승전환 = 5일선 회복 · 후보 = 수급20일+ 이고 셋 중 하나</div>` : "";
+    const mk = N && N.mkt ? `<div class="bgmkt">${bgA(N.mkt.oid && N.mkt.aid ? "https://n.news.naver.com/mnews/article/" + encodeURIComponent(N.mkt.oid) + "/" + encodeURIComponent(N.mkt.aid) : "", `<i class="bgk">시황</i> ${esc(N.mkt.t)} <small>${esc(N.mkt.o || "")} · ${esc(bgHm(N.mkt.dt))}</small>`)}</div>` : "";
+    const g4 = bgGrp("bg4", "📰", "아침 국내 종목 뉴스", N && N.from ? bgMd(N.from) + " " + bgHm(N.from) + " ~ " + bgMd(N.to) + " " + bgHm(N.to) : "전날 18:00 ~ 오늘 08:30", bgStat(N), mk + why + bgList(nl, N && !N.err ? "코스피200·코스닥150·주도 테마 종목 기사 없음" : "아직 없음"));
+    return `<div class="bgrps">${g1}${g2}${g3}${g4}</div>`;
+  }
   function briefHtml(r) {
     const row = (icon, title, body) => `<div class="brief"><b>${icon} ${title}</b><div>${body}</div></div>`;
-    const evAll = [...AUTO.map((e) => e.k + (e.lv ? "" : " (참고)")), ...S.events];
+    const evAll = [...AUTO.map((e) => e.k + (e.lv || /\(참고\)\s*$/.test(e.k) ? "" : " (참고)")), ...S.events]; // 9.29-97 원장 [1775]: 「옵션만기 (참고) (참고)」 — 달력이 이미 붙인 (참고) 는 다시 안 붙임
     const evHtml = (evAll.length ? evAll.map((e) => `<span class="bchip">${esc(e)}</span>`).join("") : `<span class="muted">특별한 일정 없음</span>`)
       + `<div class="nxline"><span class="muted">다음 거래일 예정</span> ${upcomingHtml()}</div>`
       + (calWarn() ? `<div class="nxline"><b class="upc">📅 ${esc(calWarn())}</b> <span class="muted">· 휴장일·FOMC 는 매달 1일 자동 갱신, CPI·고용·금통위·MSCI 는 연 1회 손으로 (data/events.json)</span></div>` : "");
@@ -3536,7 +3718,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 9.29-96 보강 원장 [1781] "이거 구분하고 더 잘보이게": 지수 묶음 = 테두리 칸(.usixb · 연한 바탕) + 위 작은 제목 · 이름·종가 크고 진하게 · 변동·등락률 상승 빨강(up)·하락 파랑(dn) — 방향은 ▲▼(없으면 등락률 부호)
     const uxDir = (c) => (/▲/.test(c[2]) ? "up" : /▼/.test(c[2]) ? "dn" : /^\(?\+/.test(c[3]) ? "up" : /^\(?-/.test(c[3]) ? "dn" : "");
     const idxLine = !(S.auto || {}).usidx ? "" : idxRows.length && idxRows.every(Boolean) ? `<div class="usixb"><div class="usixh">어젯밤 미국 지수 마감</div><div class="usix">${idxRows.map((c) => c.map((t, i) => `<span class="ux${i}${i >= 2 && uxDir(c) ? " " + uxDir(c) : ""}">${esc(t)}</span>`).join("")).join("")}</div></div>` : `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>`;
-    return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml)}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🇰🇷", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
+    return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml + briefGroupsHtml(S))}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🇰🇷", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
   }
 
   // ---------- 매매 일지 ----------
@@ -3681,7 +3863,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const slots = (t.slots || []).slice(0, 3), flows = slots.filter((x) => x.flow); // 주요 종목 3개 (9.29-83 원장 [1580] · 고르는 기준은 수집기 그대로 = 거래대금 순) · RVOL(평소 대비 배수) 가 있으면 「×2.8」 병기 (9.29-84)
       // 종목마다 한 줄 「• 삼성SDI 575,000 ▲46,000 (+8.70%) · 3,516억 · 거래대금 평소의 ×1.96 · 📈돌파」 (9.29-90 원장 [1692]) · 숫자·단위 덩어리(.nw)는 줄 중간에서 안 잘림(줄바꿈은 「·」 자리에서만) · 「/」 없음 · 값은 그대로(RVOL 라벨 「거래대금 평소의 ×」 쉬운 말 병기)
       const nw = (s) => `<span class="nw">${s}</span>`;
-      const stockLine = (x) => { const parts = [nw(`• ${esc(x.name)} ${esc(closeQuote(x.price, x.prev) || pc(x.rate))}`)]; if (typeof x.value === "number") parts.push(nw(eok(x.value))); if (typeof x.rvol === "number") parts.push(nw("거래대금 평소의 ×" + x.rvol)); if (x.chart && x.chart.tag) parts.push(nw("📈" + esc(x.chart.tag))); if (x.flow) parts.push(nw("외인 " + sg(x.flow.foreign)) + " " + nw("기관 " + sg(x.flow.inst))); return `<span class="tls">${parts.join(" · ")}${tagHtml(x.code)}</span>`; }; // 줄 끝 꼬리표 「지수주·개별주·헷지」 (9.29-91 · 자료 없으면 빈 span → 숨김)
+      const stockLine = (x) => { const parts = [nw(`• ${esc(x.name)} ${esc(closeQuote(x.price, x.prev) || pc(x.rate))}`)]; parts[0] += muTagHtml(x.code, x.name); if (typeof x.value === "number") parts.push(nw(eok(x.value))); if (typeof x.rvol === "number") parts.push(nw("거래대금 평소의 ×" + x.rvol)); if (x.chart && x.chart.tag) parts.push(nw("📈" + esc(x.chart.tag))); if (x.flow) parts.push(nw("외인 " + sg(x.flow.foreign)) + " " + nw("기관 " + sg(x.flow.inst))); return `<span class="tls">${parts.join(" · ")}${tagHtml(x.code)}</span>`; }; // 줄 끝 꼬리표 「지수주·개별주·헷지」 (9.29-91 · 자료 없으면 빈 span → 숨김) // 9.29-97 마이크론 경고 꼬리표 muTagHtml (SK하이닉스·삼성전자 · 주의·나쁨일 때만)
       const stocks = slots.map(stockLine).join("") + (flows.length ? "" : `<span class="tls tlnote">종목별 외인·기관은 장 마감 뒤</span>`);
       return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}</span>${newsHtml(t)}</li>`;
     }).join("");
@@ -3963,7 +4145,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function morningSummary(r, st, auto) {
     st = st || S; auto = auto || AUTO;
     // [이름, 값, 판정, 뺀 이유, 키, 원래 값] — 일지·블로그 복사와 같은 모양 (예: 원달러 환율: 1,342.5원 ▼17원 (-1.25%) → 참고 (혼자서는 판정 제외)) · 값 = 「종가 ▲전일대비 (+%)」(9.29-87 · 수준값 없으면 예전 「+1원」)
-    const vals = SIGNALS.map((s) => { const v = parseNum(st.signals[s.k]); if (v === null || s.k === "ustlvl" || REF_KEYS.includes(s.k)) return null; const ex = r.excluded[s.k]; /* 판정 7개만 (es·ym·rty · 금리 수준은 넣지 않음) */ const raw = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit; return [s.name, sigQuoteOf(st, s.k) || raw, ex ? "참고" : LABEL[r.statuses[s.k]] || "", ex && s.k === "fx" ? "혼자서는 판정 제외" : "", s.k, raw]; }).filter(Boolean); // 5번째 = 지표 키 (블로그 시간대 묶음 · 9.29-76) · 6번째 = 등락률만(색·예전 모양)
+    const vals = SIGNALS.map((s) => { const v = parseNum(st.signals[s.k]); if (v === null || s.k === "ustlvl" || REF_KEYS.includes(s.k) || US_STK.includes(s.k)) return null; const ex = r.excluded[s.k]; /* 판정 7개만 (es·ym·rty · 금리 수준은 넣지 않음) */ const raw = (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit; return [s.name, sigQuoteOf(st, s.k) || raw, ex ? "참고" : LABEL[r.statuses[s.k]] || "", ex && s.k === "fx" ? "혼자서는 판정 제외" : "", s.k, raw]; }).filter(Boolean); // 5번째 = 지표 키 (블로그 시간대 묶음 · 9.29-76) · 6번째 = 등락률만(색·예전 모양)
     const evs = [...auto.filter((e) => e.lv).map((e) => e.k), ...(st.events || [])];
     const first = r.themeFirst.map((t) => t[0]), back = r.themeBack.map((t) => t[0]);
     // 어젯밤 미국 지수 마감 4줄 (9.29-87 원장 [1661] ▶"①로 옮기고"◀: ② 장 마감에서 ① 장전 판단으로) — [이름, 「종가 ▲전일대비 (+%)」] (fillAuto usidx · 수준값 없으면 「+0.18%」)
@@ -4968,6 +5150,17 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     { // 신규 상장 예정 (9.29-76 원장 [1500]): 마감 수집 값(더 최신)이 있으면 그것, 없으면 아침 값
       const L = (a.close && a.close.listings) || m.listings, js = L && Array.isArray(L.items) ? JSON.stringify(L.items) : undefined;
       if (js !== undefined && st.auto.listings !== js) { st.auto.listings = js; changed.push(["auto.listings", L === m.listings ? m.ts : a.close.ts]); } }
+    { // 9.29-97 원장 [1784] SKHY 환산·괴리 (수집기 morning.signals.skhy.detail · 없으면 안 넣음)
+      const d = m.signals && m.signals.skhy && m.signals.skhy.detail, js = d && typeof d.prem === "number" ? JSON.stringify({ krw: d.krw, kr: d.kr, prem: d.prem, avg: d.avg, n: d.n, fx: d.fx }) : undefined;
+      if (js !== undefined && st.auto["skhy.adr"] !== js) { st.auto["skhy.adr"] = js; changed.push(["auto.skhy.adr", m.ts]); } }
+    { // 9.29-97 원장 [1779] 청약 일정 (청약중·청약예정 · 마감 수집 값이 더 최신) — 받은 적 없으면(subs 없음) 지난 값 유지
+      const L = (a.close && a.close.listings && Array.isArray(a.close.listings.subs) ? a.close.listings : null) || (m.listings && Array.isArray(m.listings.subs) ? m.listings : null), js = L ? JSON.stringify(L.subs) : undefined;
+      if (js !== undefined && st.auto.subs !== js) { st.auto.subs = js; changed.push(["auto.subs", L === m.listings ? m.ts : a.close.ts]); } }
+    { // 9.29-97 원장 [1775][1780] 아침 브리핑 4묶음 (날짜 파일 최상위 brief · 그 날 것만 · 요청 상한·주도 종목 목록은 빼고 압축 문자열)
+      const B = a.brief, ok = B && typeof B === "object" && (!a.date || !B.date || B.date === a.date);
+      const js = ok ? JSON.stringify({ v: B.v, date: B.date, sched: B.sched, disc: B.disc, us: B.us, news: B.news }) : undefined;
+      if (js !== undefined && BRIEF_MEM[B.date || a.date] !== js) { BRIEF_MEM[B.date || a.date] = js; if ((B.date || a.date) === DATE) changed.push(["mem.brief", B.updatedAt || m.ts]); } // 재판정 권고 ④: 하루 기록(localStorage·동기화)에 안 넣고 메모리만 — 매매 일지 저장 한도 보호
+      if (st.auto.brief !== undefined) { delete st.auto.brief; changed.push(["auto.brief", m.ts]); } } // 예전 판이 넣은 brief 는 기록에서 뺌 (다시 받으면 되는 자료 · 사용자 기록 손실 0)
     (Array.isArray(m.prev) ? m.prev : []).slice(0, 2).forEach((t, i) => {
       if (!t || !t.name) return;
       st.prev = st.prev || []; st.prev[i] = st.prev[i] || { name: "", state: "", pre: "" }; const p = st.prev[i];
