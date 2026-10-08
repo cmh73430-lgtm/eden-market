@@ -183,6 +183,13 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .linknotice .btn { justify-self: start; font-weight: 800; }
 .linknotice .muted { font-size: 12px; color: var(--muted); }
 .nxline { margin-top: 6px; font-size: 12.5px; line-height: 1.7; }
+/* 어젯밤 미국 지수 마감 칸 정렬 (9.29-96 원장 [1772]): 지수마다 한 줄 · 이름 | 종가 | 변동 | 등락률 4칸 격자 · 숫자 칸 오른쪽 맞춤 · 같은 너비 숫자 · 칸 안 줄바꿈 0 */
+.explain .brief .usix { display: grid; grid-template-columns: repeat(4, max-content); column-gap: 7px; justify-content: start; font-variant-numeric: tabular-nums; line-height: 1.6; } .explain .brief .usix > span { white-space: nowrap; } .explain .brief .usix .ux1, .explain .brief .usix .ux2, .explain .brief .usix .ux3 { text-align: right; }
+/* 9.29-96 보강 원장 [1781] 「구분하고 더 잘보이게」: 테두리 칸 + 연한 바탕 + 위 작은 제목 · 이름·종가 14px 굵게(칩 12.5px 보다 큼) · 변동·등락률 상승 빨강·하락 파랑 */
+.explain .brief .usixb { margin: 2px 0 8px; padding: 6px 10px 7px; border: 1px solid color-mix(in srgb, var(--ink) 22%, var(--line)); border-radius: 8px; background: var(--paper); }
+.explain .brief .usixh { font-size: 11.5px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+.explain .brief .usix { font-size: 14px; } .explain .brief .usix .ux0, .explain .brief .usix .ux1 { font-weight: 800; color: var(--ink); } .explain .brief .usix .ux2, .explain .brief .usix .ux3 { font-weight: 700; }
+.explain .brief .usix .up { color: var(--up); } .explain .brief .usix .dn { color: var(--down); }
 .evnext { flex-basis: 100%; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .nx { display: inline-block; margin: 0 8px 2px 4px; color: var(--ink); } .nx b { font-weight: 700; } .nx b.a { color: var(--a); } .nx b.r { color: var(--r); }
 .siggroup { display: grid; gap: 2px; margin: 14px 0 4px; padding: 8px 10px; border-radius: 8px; background: var(--note); }
@@ -276,6 +283,13 @@ textarea.jin { resize: vertical; }
 .topld.live.stale { border-left-color: var(--line); } .topld.live.stale .tlh b { color: var(--ink); }
 .topld .tlh .lvq { display: block; margin-top: 3px; font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.45; } .topld .tlh .lvq .lvi { white-space: nowrap; }
 .topld .tlh .lvq .lvn { font-weight: 800; } .topld .tlh .lvq .lvn.p { color: var(--up); } .topld .tlh .lvq .lvn.n { color: var(--down); }
+/* 코스피·코스닥 두 줄 칸 정렬 (9.29-96 원장 [1773]): .lvg 4칸 격자 · 두 지수의 같은 칸이 같은 x · 숫자 칸 오른쪽 맞춤 · 휴대폰 = 이름표|숫자 칸 나눔(세 단) · 600px↑ = 이름+숫자 한 칸(두 단) · 「 · 」 는 글자로만(화면 숨김) */
+.topld.live .tlh #topLeadSub { flex-basis: 100%; } /* 9.29-96 게이트 [1786]: 실시간(LIVE·stale) 상태에서만 시각 줄·격자를 제목 아래 한 줄 전체로 — 넓은 카드에서 격자(max-content)가 제목 옆 기둥으로 붙고 배지가 내려가던 것 방지 · 다른 상태(마감·어제 카드) 영향 0 */
+.topld .tlh .lvg { display: grid; grid-template-columns: repeat(4, max-content); column-gap: 10px; row-gap: 1px; margin-top: 3px; font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.45; font-variant-numeric: tabular-nums; }
+.topld .tlh .lvg .lvq, .topld .tlh .lvg .lvi, .topld .tlh .lvg .lvx > .lvn { display: contents; } .topld .tlh .lvg .lvs { display: none; }
+.topld .tlh .lvg .lvl, .topld .tlh .lvg .lvc, .topld .tlh .lvg .lvl + span { white-space: nowrap; } .topld .tlh .lvg .lvc, .topld .tlh .lvg .lvi:not(.lvx) > .lvl + span { text-align: right; }
+.topld .tlh .lvg .lvq + .lvq .lvt { padding-top: 6px; }
+@media (min-width: 600px) { .topld .tlh .lvg .lvi:not(.lvx) { display: block; white-space: nowrap; } .topld .tlh .lvg .lvi:not(.lvx) > .lvl + span { text-align: left; } }
 /* 💾 저장 버튼 (9.29-83 원장 [1584]) — 자동 저장은 그대로, 누르면 지금 저장 + 연동 저장 */
 .savebar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: -4px; }
 .savebar .savemsg { font-size: 12.5px; color: var(--muted); min-width: 0; }
@@ -419,6 +433,14 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .docbtn { margin-top: 6px; font-size: 13.5px; padding: 6px 12px; border-color: var(--up); color: var(--up); }
 .chiplbl { font-size: 12px; color: var(--muted); font-weight: 700; margin-right: 2px; }
 .prev .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+/* 오늘 아침 프리마켓 강조 (9.29-96 원장 [1774]): 줄 = 연한 색 칸 + 왼쪽 굵은 띠 · 머리 「오늘 프리: 약세 -0.86%」 15px 굵게 · 고른 칩 = 진한 바탕(상승 --up · 하락 --down · 보합 --ink)+바탕색 글자 · 안 고른 칩 흐리게 · 애프터 줄은 그대로(덜 돋보임) */
+.prev .chips.pre { padding: 7px 9px 8px; border-radius: 8px; border-left: 4px solid var(--line); background: var(--note); }
+.prev .chips.pre[data-st="up"] { border-left-color: var(--up); background: var(--up-bg); } .prev .chips.pre[data-st="down"] { border-left-color: var(--down); background: var(--down-bg); } .prev .chips.pre[data-st="flat"] { border-left-color: var(--ink); }
+.prev .chips.pre .prres { flex-basis: 100%; font-size: 15px; font-weight: 800; color: var(--muted); }
+.prev .chips.pre[data-st="up"] .prres { color: var(--up); } .prev .chips.pre[data-st="down"] .prres { color: var(--down); } .prev .chips.pre[data-st="flat"] .prres { color: var(--ink); }
+.prev .chips.pre .chip[aria-pressed="true"] { font-size: 14px; font-weight: 800; color: var(--surface); background: var(--ink); border-color: transparent; }
+.prev .chips.pre .chip.up[aria-pressed="true"] { background: var(--up); } .prev .chips.pre .chip.dn[aria-pressed="true"] { background: var(--down); }
+.prev .chips.pre.has .chip[aria-pressed="false"] { opacity: .45; }
 .how { font-size: 13px; line-height: 1.7; } .how ol { margin: 4px 0; padding-left: 20px; }
 /* 9.29-94 원장 [1712][1713][1714]: 묶음(①전날 · ②장전 확인 · ③장중 확인 · ④장 마감 · 기타)마다 구분 색 — 머리말 띠 배경 · 카드 왼쪽 5px 테두리 · 묶음 옅은 바탕
    상승 빨강(--up)·하락 파랑(--down)과 다른 색조(회갈 · 초록 · 주황 · 보라 · 회색) · 띠 글자 대비 밝음 6.0~7.4 / 다크 8.0~9.9 (4.5 이상) */
@@ -2957,7 +2979,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-94";
+  const APP_VER = "9.29-96";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3081,7 +3103,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         <button class="chip" type="button" data-pv="${i}" data-s="flat">보합</button>
         <button class="chip dn" type="button" data-pv="${i}" data-s="down">약세</button>
       </div>
-      <div class="chips"><span class="chiplbl">오늘 아침 NXT 프리마켓 (8:00~8:50)</span>
+      <div class="chips pre" id="prw-${i}"><b class="prres" id="prs-${i}"></b><span class="chiplbl">오늘 아침 NXT 프리마켓 (8:00~8:50)</span>
         <button class="chip up" type="button" data-pre="${i}" data-s="up">강세</button>
         <button class="chip" type="button" data-pre="${i}" data-s="flat">보합</button>
         <button class="chip dn" type="button" data-pre="${i}" data-s="down">약세</button>
@@ -3235,9 +3257,20 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   // 자동으로 받아온 값 그대로인 칸은 연하게 표시한다 (고치면 표시가 사라진다)
   function markAuto(el, key) { el.classList.toggle("autov", !!el.value && !!(S.auto && S.auto[key]) && S.auto[key] === el.value); }
+  // 9.29-96 원장 [1774] "오늘 아침 프리마켓 어땠는지 강조 해줘 잘보이게": 프리마켓 줄 머리에 「오늘 프리: 약세 -0.86%」(크게·진하게·색) · 고른 칩 = 진한 바탕+흰 글자 · 안 고른 칩 흐리게 · 줄 전체 연한 색 칸
+  //  등락률 = 자동 입력 문구(detail.prev.i 「· 프리 -0.86%」)와 같은 값 — 자동으로 고른 상태 그대로일 때만 붙임(손으로 바꾸면 「손으로 고름」) · 상승 빨강 · 하락 파랑 · 보합 기본색
+  const PRE_WORD = { up: "강세", flat: "보합", down: "약세" };
+  function prePctOf(i) { const m = String((S.auto || {})["detail.prev." + i] || "").match(/ · 프리 ([+-]?\d+(?:\.\d+)?%)/); return m ? m[1] : ""; }
+  function paintPre(i) {
+    const row = $("prw-" + i), badge = $("prs-" + i); if (!row || !badge) return;
+    const p = S.prev[i] || {}, s = p.pre || "", auto = (S.auto || {})["prev." + i + ".pre"] || "", pct = s && s === auto ? prePctOf(i) : "";
+    row.classList.toggle("has", !!s); row.dataset.st = s;
+    badge.textContent = s ? "오늘 프리: " + PRE_WORD[s] + (pct ? " " + pct : auto && s !== auto ? " (손으로 고름)" : "") : "오늘 프리: 아직 안 고름 (8:05 자동)";
+  }
   function paintChips() {
     document.querySelectorAll(".chip[data-pv]").forEach((b) => b.setAttribute("aria-pressed", S.prev[+b.dataset.pv].state === b.dataset.s ? "true" : "false"));
     document.querySelectorAll(".chip[data-pre]").forEach((b) => b.setAttribute("aria-pressed", (S.prev[+b.dataset.pre].pre || "") === b.dataset.s ? "true" : "false"));
+    [0, 1].forEach(paintPre);
     document.querySelectorAll("#evChips .chip").forEach((b) => b.setAttribute("aria-pressed", S.events.includes(b.dataset.ev) ? "true" : "false"));
     document.querySelectorAll("#resultChips .chip").forEach((b) => b.setAttribute("aria-pressed", S.journal.result === b.dataset.r ? "true" : "false"));
     document.querySelectorAll("#verdictChips .chip").forEach((b) => b.setAttribute("aria-pressed", S.journal.verdict === b.dataset.v ? "true" : "false"));
@@ -3466,7 +3499,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function paintIntra(r) {
     const el = $("intraInfo"); if (!el) return;
     const a = S.auto || {}, it = r.intraday, n = (v) => (v === null || v === undefined || v === "" ? "—" : (Number(v) > 0 ? "+" : "") + Number(v).toLocaleString("ko-KR"));
-    const kq = (() => { try { const x = JSON.parse(a["intra.kospiLv"] || "null"); return Array.isArray(x) ? closeQuote(x[0], x[1]) : null; } catch (e) { return null; } })(); // 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만
+    const kq = (() => { try { const x = JSON.parse(a["intra.kospiLv"] || "null"); return Array.isArray(x) ? idxQuote(x[0], x[1]) : null; } catch (e) { return null; } })(); // 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만 · 늘 2자리(idxQuote · 9.29-96 꼬리 방어)
     const vals = a["intra.at"] ? `🤖 ${esc(a["intra.at"])} 확인 · 코스피 ${kq ? esc(kq) : esc(n(a["intra.kospi"])) + "%"} · 외인 선물 ${esc(n(a["intra.fut"]))} · 현물 외인 ${esc(n(a["intra.spotF"]))}억 · 기관 ${esc(n(a["intra.spotI"]))}억${a["intra.prog"] !== undefined && a["intra.prog"] !== "" ? ` · 프로그램 ${esc(n(a["intra.prog"]))}억` : ""}` : "🤖 평일 09:30·10:30쯤 자동으로 확인해요 (GitHub가 10~20분 늦을 수 있음)";
     const res = !it ? "" : it.down ? `<div class="r"><b>→ 한 단계 낮춤</b> · 외인 선물 매도 + ${esc(it.by)} 매도가 함께 나왔어요</div>` : `<div class="g">→ 그대로 · ${it.futSell ? "외인 선물은 매도지만 " + esc(it.by) + " 매도가 기준보다 작아요" : "외인 선물 매도가 기준보다 작아요"}</div>`;
     el.innerHTML = `<div>${vals}</div>${res}`;
@@ -3484,8 +3517,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const evHtml = (evAll.length ? evAll.map((e) => `<span class="bchip">${esc(e)}</span>`).join("") : `<span class="muted">특별한 일정 없음</span>`)
       + `<div class="nxline"><span class="muted">다음 거래일 예정</span> ${upcomingHtml()}</div>`
       + (calWarn() ? `<div class="nxline"><b class="upc">📅 ${esc(calWarn())}</b> <span class="muted">· 휴장일·FOMC 는 매달 1일 자동 갱신, CPI·고용·금통위·MSCI 는 연 1회 손으로 (data/events.json)</span></div>` : "");
+    // 9.29-96 원장 [1772] "종목은 많이 오른 순으로": 칩 = 등락률 높은 순(많이 오른 것 앞 · 내린 것 뒤) · 우선 관심·후순위 글자·색은 그대로 · 등락률 없는 칩은 맨 뒤(지금은 안 보임)
     const usRows = US.map((u) => ({ u, v: themeValue(S.us[u.k]), st: r.themeStatus[u.k] })).filter((x) => x.v !== null)
-      .sort((a, b) => ({ first: 0, back: 1, flat: 2 }[a.st] ?? 3) - ({ first: 0, back: 1, flat: 2 }[b.st] ?? 3) || Math.abs(b.v) - Math.abs(a.v));
+      .sort((a, b) => (b.v ?? -Infinity) - (a.v ?? -Infinity));
     const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" || v >= 1 ? "up" : st === "back" || v <= -1 ? "dn" : v > 0 ? "up2" : v < 0 ? "dn2" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
       : `<span class="muted">아직 없음 (아침 7시쯤 자동으로 들어와요)</span>`;
     const prevs = (S.prev || []).filter((p) => p && (p.name || "").trim());
@@ -3497,7 +3531,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       : `<span class="muted">아직 안 넣음 (아래 '전일 주도 테마' 칸)</span>`;
     const secs = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]);
     const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
-    const idxLine = (S.auto || {}).usidx ? `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>` : "";
+    // 9.29-96 원장 [1772] "어젯밤 지수 다우나스닥 칸 별로 정렬": 지수마다 한 줄 · 이름 | 종가 | ▲▼변동 | (등락률%) 칸을 세로로 맞춤(.usix 격자) · 숫자 글자는 usidx 그대로 · 수준값 없는 옛 값(「다우 +0.18%」)은 등락률 칸에만 · 못 읽는 모양이면 예전 한 줄
+    const idxRows = String((S.auto || {}).usidx || "").split(" · ").map((x) => { const m2 = x.match(/^(다우|나스닥|S&P500|러셀2000) (.+)$/); if (!m2) return null; const q = m2[2].match(/^(\S+) ([▲▼]?\S+) (\(.+\))$/); return q ? [m2[1], q[1], q[2], q[3]] : [m2[1], "", "", m2[2]]; });
+    // 9.29-96 보강 원장 [1781] "이거 구분하고 더 잘보이게": 지수 묶음 = 테두리 칸(.usixb · 연한 바탕) + 위 작은 제목 · 이름·종가 크고 진하게 · 변동·등락률 상승 빨강(up)·하락 파랑(dn) — 방향은 ▲▼(없으면 등락률 부호)
+    const uxDir = (c) => (/▲/.test(c[2]) ? "up" : /▼/.test(c[2]) ? "dn" : /^\(?\+/.test(c[3]) ? "up" : /^\(?-/.test(c[3]) ? "dn" : "");
+    const idxLine = !(S.auto || {}).usidx ? "" : idxRows.length && idxRows.every(Boolean) ? `<div class="usixb"><div class="usixh">어젯밤 미국 지수 마감</div><div class="usix">${idxRows.map((c) => c.map((t, i) => `<span class="ux${i}${i >= 2 && uxDir(c) ? " " + uxDir(c) : ""}">${esc(t)}</span>`).join("")).join("")}</div></div>` : `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>`;
     return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml)}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🇰🇷", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
   }
 
@@ -3602,23 +3640,32 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     liveBadge(stale ? "stale" : "live", stale ? (asOf !== L.date || (L.at || "") >= "15:30" ? "장 마감" : "마지막 값") : "LIVE 실시간");
     // 코스피·코스닥 한 줄씩 (9.29-69) · 등락률·외인·기관·프로그램 숫자만 + 빨강 / − 파랑 / 0 기본색 (9.29-83 원장 [1577]) · 거래대금은 색 없음 · 글자는 예전과 같은 한 줄 · DOM 으로 만들어 바깥 값은 글자로만 들어감
     const cls = (v) => (typeof v !== "number" ? "" : v > 0 ? "p" : v < 0 ? "n" : "z");
+    // 9.29-96 원장 [1773] "이거도 정렬되게": 코스피·코스닥 두 줄을 칸별 세로 정렬 — 칸 = 이름 | 지수 | 변동 | 등락률 | 거래대금 | 외인 | 기관 | 프로그램 (.lvg 4칸 격자 · 두 지수의 같은 칸이 같은 x)
+    //  넓은 화면(600px↑) = 지수마다 두 단(이름·지수·변동·등락률 / 거래대금·외인·기관·프로그램) · 휴대폰 = 이름표와 숫자를 칸으로 나눠 세 단(거래대금·외인 / 기관·프로그램) · 없는 값은 빈 칸(자리 유지 · 지어내기 0)
+    //  글자(textContent)·숫자 형식·색(lvn p/n)은 예전 한 줄과 같음 — 「 · 」 구분자는 글자로 남기고 화면에서만 숨김(.lvs)
     const mk = (nm, k, inv, pg) => {
       if (!k) return null;
       const line = document.createElement("span"); line.className = "lvq";
-      // 「외인 -5,070억」 처럼 이름+숫자 한 덩어리는 휴대폰에서 줄이 바뀌어도 안 쪼개지게 (lvi · 글자는 그대로)
-      const item = (label, txt, v, colored) => { const it = document.createElement("span"); it.className = "lvi"; it.append(label + " ");
-        if (colored) { const s = document.createElement("span"); s.className = "lvn" + (cls(v) ? " " + cls(v) : ""); s.textContent = txt; it.append(s); } else it.append(txt);
-        if (line.childNodes.length) line.append(" · "); line.append(it); };
-      item(nm, closeQuote(k.close, k.prev, k.change) || pc(k.value), k.value, true); // 「코스피 6,941.39 ▼62.35 (-0.89%)」 — prev(전일 종가)는 장중에 close 가 바뀌어도 그대로 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만
-      if (k.amount) item("거래대금", eok(k.amount));
-      if (inv) { item("외인", sg(inv.foreign), inv.foreign, true); item("기관", sg(inv.institution), inv.institution, true); }
-      if (pg && typeof pg.total === "number") item("프로그램", sg(pg.total), pg.total, true);
+      const el = (tag, c, t) => { const x = document.createElement(tag); if (c) x.className = c; if (t !== undefined) x.textContent = t; return x; };
+      const sep = () => { if (line.childNodes.length) line.append(el("span", "lvs", " · ")); };
+      // 이름 | 지수 | 변동 | 등락률 4칸 (idxQuote 「6,803.90 ▼137.49 (-1.98%)」 를 칸으로 나눔 · 등락률만 있으면 등락률 칸에만)
+      const idxItem = (label, txt, v) => { const it = el("span", "lvi lvx"), q = el("span", "lvn" + (cls(v) ? " " + cls(v) : "")), m3 = String(txt).match(/^(\S+) (\S+) (\(.+\))$/);
+        if (m3) q.append(el("span", "lvc lvt", m3[1]), " ", el("span", "lvc lvt", m3[2]), " ", el("span", "lvc lvt", m3[3])); else q.append(el("span", "lvc lvt", ""), el("span", "lvc lvt", ""), el("span", "lvc lvt", txt));
+        it.append(el("span", "lvl lvt", label), " ", q); sep(); line.append(it); };
+      // 「외인 -5,070억」 처럼 이름+숫자 한 덩어리 (lvi · 휴대폰에선 이름표 칸 | 숫자 칸)
+      const item = (label, txt, v, colored) => { const it = el("span", "lvi"); it.append(el("span", "lvl", label), " ", el("span", colored ? "lvn" + (cls(v) ? " " + cls(v) : "") : "lvv", txt)); sep(); line.append(it); };
+      const blank = () => { const it = el("span", "lvi lve"); it.append(el("span", "lvl", ""), el("span", "lvv", "")); line.append(it); }; // 없는 값 = 빈 칸 (휴대폰 2칸 · 넓은 화면 1칸 · 글자 0)
+      idxItem(nm, idxQuote(k.close, k.prev, k.change) || pc(k.value), k.value); // 9.29-96 원장 [1769]: 늘 2자리(idxQuote · 저장된 10/7 live.json prev 6941.389999999999 꼬리 방어) · 「코스피 6,941.39 ▼62.35 (-0.89%)」 — prev(전일 종가)는 장중에 close 가 바뀌어도 그대로 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만
+      if (k.amount) item("거래대금", eok(k.amount)); else blank();
+      if (inv) { item("외인", sg(inv.foreign), inv.foreign, true); item("기관", sg(inv.institution), inv.institution, true); } else { blank(); blank(); }
+      if (pg && typeof pg.total === "number") item("프로그램", sg(pg.total), pg.total, true); else blank();
       return line;
     };
     const chk = liveChecked ? ` · 앱 확인 ${liveChecked}` : "";
     const sub = $("topLeadSub"), rf = document.createElement("button");
     rf.type = "button"; rf.className = "lvr"; rf.dataset.liveRefresh = ""; rf.textContent = "↻ 새로고침";
-    sub.replaceChildren(when + chk + " ", rf, ...[mk("코스피", L.kospi, L.invest, L.program), mk("코스닥", L.kosdaq, L.investQ, L.programQ)].filter(Boolean));
+    const lvg = document.createElement("div"); lvg.className = "lvg"; lvg.append(...[mk("코스피", L.kospi, L.invest, L.program), mk("코스닥", L.kosdaq, L.investQ, L.programQ)].filter(Boolean)); // 9.29-96 [1773] 두 줄 칸 정렬 격자
+    sub.replaceChildren(when + chk + " ", rf, ...(lvg.childNodes.length ? [lvg] : []));
     // 뉴스 줄 (9.29-84 원장 [1597] 「강한 근거만」): news2 가 있으면 검증 뉴스 3건(접기 · 출처·시각·링크 · 같은 사건은 「외 N곳」) · 3건 미만 「검증 뉴스 N개 · 이유 확인 중」 · 테마어 0 「테마명 불일치 — 주요 종목 이유」(9.29-85 [1602] 업종어 · 없으면 「종목명 · 핵심 20자…」 · 라벨은 수집기 문구 그대로) · news2 없으면 예전 1줄
     const oneNews = (nw) => `📰 ${nw.url ? `<a href="${esc(nw.url)}" target="_blank" rel="noopener">${esc(nw.title)}</a>` : esc(nw.title)}${nw.office || nw.at ? ` <small>${esc([nw.office, nw.at ? nw.at.slice(11) : ""].filter(Boolean).join(" "))}</small>` : ""}`;
     const newsHtml = (t) => {
@@ -3907,6 +3954,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   // 종가 + 전일 종가(prev) 또는 종가 + 전일 대비(chg) — 코스피·코스닥 마감·장중·실시간 · 종목 현재가 → 토막 · 없으면 null
   function closeQuote(close, prev, chg) { return typeof close === "number" && typeof prev === "number" ? blogQuote(close, prev, "") : typeof close === "number" && typeof chg === "number" ? blogQuote(close, Number((close - chg).toFixed(2)), "") : null; }
+  // 지수 줄 전용 (9.29-96 원장 [1769] 「코스피 6,803.900000000000 ▼137.490000000000」): 종가·전일 종가를 2자리로 반올림하고 늘 소수 2자리 + 천 단위 쉼표 → 「6,803.90 ▼137.49 (-1.98%)」 · 실시간 카드·장중 재판정 줄만 (마감 카드·복사 글은 closeQuote 그대로)
+  function idxQuote(close, prev, chg) { const ok = (x) => typeof x === "number" && isFinite(x), r2 = (x) => Number(x.toFixed(2)); if (!ok(close)) return null; const p = ok(prev) ? prev : ok(chg) ? close - chg : null; return p === null ? null : blogQuote(r2(close), r2(p), "", 2); }
   // 토막의 방향 (색용): ▲ = 1 · ▼ = -1 · 없으면 raw 값의 부호
   function quoteSign(q, raw) { return /▲/.test(String(q || "")) ? 1 : /▼/.test(String(q || "")) ? -1 : /^\s*[-−]/.test(String(raw ?? "")) ? -1 : 1; }
 
@@ -4031,11 +4080,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   // 시세 한 토막 「값 ▲변동폭 (+변동률%)」 (9.29-86 원장 [1624]·[1625]·[1626] 디렉터 캡처 「$238.90 | ▲4.95 (+2.12%)」 「7,764.64 | ▼0.06 | 0.00%」)
   //  값·변동폭 = 원 데이터 자릿수 그대로(천단위 콤마 · 변동폭은 값의 자릿수 · 원화는 자연 자릿수) · 변동률 = 소수 2자리 · 0.00% 는 부호 없음 · 수준값이 없으면 null (지어내지 않음 → 부르는 쪽이 예전 글 그대로)
-  function blogQuote(price, prev, unit) {
+  function blogQuote(price, prev, unit, fix) {
     const ok = (x) => typeof x === "number" && isFinite(x);
     if (!ok(price) || !ok(prev) || prev === 0) return null;
     const dec = (x) => { const s = String(x), i = s.indexOf("."); return i < 0 ? 0 : s.length - i - 1; };
-    const n = Math.max(dec(price), dec(prev)), u = unit || "", d = Number((price - prev).toFixed(n)); // 지수는 2자리(849.8 이 와도 전일 846.58 과 맞춰 849.80) · 원 데이터가 정수면 정수
+    const n = typeof fix === "number" ? fix : Math.max(dec(price), dec(prev)), u = unit || "", d = Number((price - prev).toFixed(n)); // fix = 자릿수 고정(지수 줄 idxQuote 만 2 · 9.29-96) · 지수는 2자리(849.8 이 와도 전일 846.58 과 맞춰 849.80) · 원 데이터가 정수면 정수
     const f = (x, k) => x.toLocaleString("ko-KR", { minimumFractionDigits: k, maximumFractionDigits: k });
     const pc = (price / prev - 1) * 100, pcs = pc.toFixed(2), pct = Number(pcs) === 0 ? "0.00%" : (pc > 0 ? "+" : "") + pcs + "%";
     const arrow = d > 0 ? "▲" : d < 0 ? "▼" : "";
