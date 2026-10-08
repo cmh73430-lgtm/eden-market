@@ -3043,7 +3043,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-97";
+  const APP_VER = "9.29-98";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3714,7 +3714,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const secs = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]);
     const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
     // 9.29-96 원장 [1772] "어젯밤 지수 다우나스닥 칸 별로 정렬": 지수마다 한 줄 · 이름 | 종가 | ▲▼변동 | (등락률%) 칸을 세로로 맞춤(.usix 격자) · 숫자 글자는 usidx 그대로 · 수준값 없는 옛 값(「다우 +0.18%」)은 등락률 칸에만 · 못 읽는 모양이면 예전 한 줄
-    const idxRows = String((S.auto || {}).usidx || "").split(" · ").map((x) => { const m2 = x.match(/^(다우|나스닥|S&P500|러셀2000) (.+)$/); if (!m2) return null; const q = m2[2].match(/^(\S+) ([▲▼]?\S+) (\(.+\))$/); return q ? [m2[1], q[1], q[2], q[3]] : [m2[1], "", "", m2[2]]; });
+    // 9.29-98 원장 [1815] "칸 깨짐": 이 칸 표시에서만 종가·변동을 소수 2자리로 통일(러셀 「2,793.2 ▼37.1」 → 「2,793.20 ▼37.10」 · 오른쪽 맞춤 소수점 세로 맞춤) · usidx 글자(블로그·장전 판단 카드)는 그대로
+    const ux2 = (t) => { const m = String(t).match(/^([▲▼]?)(\d[\d,]*(?:\.\d+)?)$/); return m ? m[1] + Number(m[2].replace(/,/g, "")).toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : t; };
+    const idxRows = String((S.auto || {}).usidx || "").split(" · ").map((x) => { const m2 = x.match(/^(다우|나스닥|S&P500|러셀2000) (.+)$/); if (!m2) return null; const q = m2[2].match(/^(\S+) ([▲▼]?\S+) (\(.+\))$/); return q ? [m2[1], ux2(q[1]), ux2(q[2]), q[3]] : [m2[1], "", "", m2[2]]; });
     // 9.29-96 보강 원장 [1781] "이거 구분하고 더 잘보이게": 지수 묶음 = 테두리 칸(.usixb · 연한 바탕) + 위 작은 제목 · 이름·종가 크고 진하게 · 변동·등락률 상승 빨강(up)·하락 파랑(dn) — 방향은 ▲▼(없으면 등락률 부호)
     const uxDir = (c) => (/▲/.test(c[2]) ? "up" : /▼/.test(c[2]) ? "dn" : /^\(?\+/.test(c[3]) ? "up" : /^\(?-/.test(c[3]) ? "dn" : "");
     const idxLine = !(S.auto || {}).usidx ? "" : idxRows.length && idxRows.every(Boolean) ? `<div class="usixb"><div class="usixh">어젯밤 미국 지수 마감</div><div class="usix">${idxRows.map((c) => c.map((t, i) => `<span class="ux${i}${i >= 2 && uxDir(c) ? " " + uxDir(c) : ""}">${esc(t)}</span>`).join("")).join("")}</div></div>` : `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>`;
@@ -3773,6 +3775,19 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 맨 위 요약: 오늘 주도 테마 상위 3개 (마감 뒤). 아직 없으면 어제 주도 테마(아침 수집 prev) 를 '어제' 로 표시. 둘 다 없으면 카드 숨김
   // 장중 실시간 (eden-market auto/live.json · 09:05~15:40 20분마다): 오늘 것이고 장중 창(09:00~16:25)이며 마감 주도 테마가 아직 없을 때 맨 위 카드가 실시간으로 바뀐다
   let LIVE = null, liveChecked = "";
+  // 9.29-98 원장 [1815] "칸 깨짐": 중계 /live-themes 덮기는 지수를 {value, close, amount, time} 로만 줌(전일 종가 없음) → 같은 날 수집기 live.json 의 kospi/kosdaq.prev(2자리)를 기억해 합친다 · 날짜가 다르면 안 씀
+  let LIVE_PREV = null, livePrevTried = "";
+  function livePrevMemo(l) { if (!l || !l.date || (l.fresh && l.fresh.overlay)) return; const p = { date: l.date }; let any = false; ["kospi", "kosdaq"].forEach((k) => { if (l[k] && typeof l[k].prev === "number") { p[k] = l[k].prev; any = true; } }); if (any) LIVE_PREV = p; }
+  function livePrevFill(l, memo) { if (!l || !memo || memo.date !== l.date) return l; ["kospi", "kosdaq"].forEach((k) => { const x = l[k]; if (x && typeof x.close === "number" && typeof x.prev !== "number" && typeof x.change !== "number" && typeof memo[k] === "number") l[k] = Object.assign({}, x, { prev: memo[k] }); }); return l; }
+  // 실시간 카드 지수 칸 글자 「종가 ▲▼변동 (등락률%)」: 등락률은 받은 값(value · 중계/수집기) 우선 · 전일 종가로 계산한 등락률과 0.05%p 넘게 다르면 전일 종가를 믿지 않고 변동 칸은 「—」 · 전일 종가 없으면 「종가 — (등락률%)」 · 종가도 없으면 「— — (등락률%)」
+  function liveIdxText(k) {
+    const ok = (x) => typeof x === "number" && isFinite(x); if (!k) return "";
+    const v = ok(k.value) ? k.value : null, vs = v === null ? null : "(" + (Number(v.toFixed(2)) === 0 ? "0.00" : (v > 0 ? "+" : "") + v.toFixed(2)) + "%)";
+    const q = idxQuote(k.close, k.prev, k.change), m = q && q.match(/^(\S+) (\S+) \(([+-]?[\d.]+)%\)$/);
+    if (m) return vs === null ? q : Math.abs(Number(m[3]) - v) <= 0.05 ? m[1] + " " + m[2] + " " + vs : m[1] + " — " + vs;
+    const c = ok(k.close) ? k.close.toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
+    return vs === null ? (c === "—" ? "" : c + " — —") : c + " — " + vs;
+  }
   const kstHM = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
   const liveWindow = () => DATE === kstDate() && isBusinessDay(DATE, CAL.holidays) && kstHM() >= "09:00" && kstHM() <= "16:25";
   // 실시간 값이 실제로 어느 장(날짜)의 값인지: 장 전에 손으로 돌리면 date 는 오늘이어도 값은 어제 장 것
@@ -3837,7 +3852,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       // 「외인 -5,070억」 처럼 이름+숫자 한 덩어리 (lvi · 휴대폰에선 이름표 칸 | 숫자 칸)
       const item = (label, txt, v, colored) => { const it = el("span", "lvi"); it.append(el("span", "lvl", label), " ", el("span", colored ? "lvn" + (cls(v) ? " " + cls(v) : "") : "lvv", txt)); sep(); line.append(it); };
       const blank = () => { const it = el("span", "lvi lve"); it.append(el("span", "lvl", ""), el("span", "lvv", "")); line.append(it); }; // 없는 값 = 빈 칸 (휴대폰 2칸 · 넓은 화면 1칸 · 글자 0)
-      idxItem(nm, idxQuote(k.close, k.prev, k.change) || pc(k.value), k.value); // 9.29-96 원장 [1769]: 늘 2자리(idxQuote · 저장된 10/7 live.json prev 6941.389999999999 꼬리 방어) · 「코스피 6,941.39 ▼62.35 (-0.89%)」 — prev(전일 종가)는 장중에 close 가 바뀌어도 그대로 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만
+      idxItem(nm, liveIdxText(k), k.value); // 9.29-98 원장 [1815]: 중계 덮기(전일 종가 없음)도 같은 날 live.json 전일 종가로 「6,672.59 ▼131.31 (-1.93%)」 · 없으면 「6,672.59 — (-1.93%)」 (칸 비지 않게) // 9.29-96 원장 [1769]: 늘 2자리(idxQuote · 저장된 10/7 live.json prev 6941.389999999999 꼬리 방어) · 「코스피 6,941.39 ▼62.35 (-0.89%)」 — prev(전일 종가)는 장중에 close 가 바뀌어도 그대로 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만
       if (k.amount) item("거래대금", eok(k.amount)); else blank();
       if (inv) { item("외인", sg(inv.foreign), inv.foreign, true); item("기관", sg(inv.institution), inv.institution, true); } else { blank(); blank(); }
       if (pg && typeof pg.total === "number") item("프로그램", sg(pg.total), pg.total, true); else blank();
@@ -5339,7 +5354,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const liveKey = (l) => l.ts + "/" + (l.fresh && l.fresh.overlay ? l.fresh.ts : "");
   async function livePull(first) {
     if (liveBusy || (!first && !liveWindow())) return; liveBusy = true; // 처음 열 때는 장 밖에서도 한 번 (마지막 값 보여 주기), 그 뒤엔 장중에만
-    try { const l = (liveWindow() ? await liveRelay() : null) || await pubGet(PUB_RAW + "live.json"); liveChecked = kstHM(); if (l && l.date <= kstDate() && (!LIVE || liveKey(l) !== liveKey(LIVE))) LIVE = l; if (LIVE) paintTopLead(); }
+    try { let l = liveWindow() ? await liveRelay() : null;
+      if (l && l.fresh && l.fresh.overlay && (!LIVE_PREV || LIVE_PREV.date !== l.date) && livePrevTried !== l.date) { livePrevTried = l.date; try { livePrevMemo(await pubGet(PUB_RAW + "live.json")); } catch (e) {} } // 9.29-98 [1815]: 중계 덮기면 그날 live.json 전일 종가 1회 받아 기억
+      l = l || await pubGet(PUB_RAW + "live.json"); livePrevMemo(l); livePrevFill(l, LIVE_PREV);
+      liveChecked = kstHM(); if (l && l.date <= kstDate() && (!LIVE || liveKey(l) !== liveKey(LIVE))) LIVE = l; if (LIVE) paintTopLead(); }
     catch (e) {} finally { liveBusy = false; }
   }
   // 주도 테마 적중 성적표 (9.29-84 원장 [1597] · [1585]): 수집기 마감 run 이 쌓는 auto/observe/leaders-scorecard.json 을 한 번 받아 📊 성적표 카드에 「주도 테마 적중」 절로 — 방식별 누적(기준율 대비 차이) · 최근 선정 D1~D4 ○×- · 20거래일 전 「참고용」 고정
