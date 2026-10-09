@@ -266,6 +266,14 @@ textarea.jin { resize: vertical; }
 .topld .tll .tlw { grid-column: 2 / -1; font-size: 12.5px; color: var(--muted); }
 /* 실시간 주요 종목 줄 정렬 (9.29-90 원장 [1692]): 종목·신호마다 한 줄(.tls) · 숫자·단위 덩어리(.nw)는 줄 중간에서 안 잘림(줄바꿈은 「·」 자리에서만) · 강세 신호 = 라벨 줄 + 신호 줄(들여쓰기) · 접힌 검증 뉴스의 첫 제목은 라벨 다음 줄 */
 .topld .tll .tls { display: block; } .topld .tll .tlw .nw { white-space: nowrap; } .topld .tll .n2sig .tls + .tls { padding-left: 16px; }
+/* 종목 줄 칸 정렬 (9.29-99 원장 [1821]): 1줄 = 이름(카드 안 최대 이름 폭 · 모자라면 줄어들며 말줄임) | 가격 | 변동 | 등락률 | 경고 · 2줄 = 거래대금 | 평소 대비 | 차트 | 꼬리표(남는 폭) · 칸 너비 = 카드 안 최댓값(JS 변수) · 숫자 오른쪽 맞춤 · 칸 안 줄바꿈 0 · 「 · 」 는 글자로만 */
+.topld .tll .tsg { margin-top: 2px; } .topld .tll .tsg .lvs { display: none; }
+.topld .tll .tsg .tsr1, .topld .tll .tsg .tsr2 { display: grid; column-gap: 7px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.topld .tll .tsg .tsr1 { grid-template-columns: minmax(0, var(--s0, max-content)) var(--s1, max-content) var(--s2, max-content) var(--s3, max-content) var(--s4, max-content); }
+.topld .tll .tsg .tsr2 { grid-template-columns: var(--b0, max-content) var(--b1, max-content) var(--b2, max-content) minmax(0, 1fr); padding-left: 10px; }
+.topld .tll .tsg .sc { white-space: nowrap; min-width: 0; } .topld .tll .tsg .s0, .topld .tll .tsg .b3 { overflow: hidden; text-overflow: ellipsis; }
+.topld .tll .tsg .s1, .topld .tll .tsg .s2, .topld .tll .tsg .s3, .topld .tll .tsg .b0, .topld .tll .tsg .b1 { text-align: right; }
+.topld .tll .tsg .bf { grid-row: 2; grid-column: 1 / -1; } .topld .tll .tsg.tgwrap .b3 { grid-column: 1 / -1; overflow: visible; } /* 9.29-99 [1826] 꼬리표가 칸에 안 들어가면 한 줄 전체 */ .topld .tll .tsg .b3 .tg { margin-left: 0; } .topld .tll .tsg .s4:empty { display: none; }
 .topld .tll details.tln .n2first { display: block; } .topld .tll details.tln[open] .n2first { display: none; }
 .topld .tll details.tln.n2 summary::after { content: none; } .topld .tll details.tln.n2 .n2lab::after { content: " ▾"; font-weight: 400; color: var(--muted); } .topld .tll details.tln.n2[open] .n2lab::after { content: " ▴"; }
 .topld .tlf { margin-top: 8px; } .topld .tlf .btn { font-size: 12.5px; padding: 4px 10px; }
@@ -307,7 +315,20 @@ textarea.jin { resize: vertical; }
 .ldscore { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; } .ldscore h3 { margin: 0 0 6px; font-size: 15px; } .ldscore h3 small { color: var(--muted); font-weight: 400; font-size: 12px; }
 .ldscore .ldstbl { width: 100%; border-collapse: collapse; font-size: 12.5px; } .ldscore .ldstbl th, .ldscore .ldstbl td { padding: 4px 4px; border-bottom: 1px solid var(--line); text-align: center; } .ldscore .ldstbl td:first-child, .ldscore .ldstbl th:first-child { text-align: left; white-space: nowrap; }
 .ldscore .ldstbl small { display: block; color: var(--muted); font-size: 11px; } .ldscore .ldsrecent { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 12.5px; } .ldscore .ldsrecent .mk { font-weight: 800; letter-spacing: 2px; margin-left: 6px; }
-.ldscore .ldsrecent-h { margin: 8px 0 0; font-size: 12.5px; } .ldscore .ldsrecent .mk .o { color: var(--up); } .ldscore .ldsrecent .mk .x { color: var(--down); } .ldscore .ldsnote { display: block; color: var(--muted); margin-top: 6px; line-height: 1.45; font-size: 12px; }
+/* 9.29-99 원장 [1822][1823] 성적표 쉬운 말: 소개 · 한 줄 요약 · 방식마다 세로 목록(가로 표 없음 · 390 가로 밀기 0) · 「아직 채점 전」 흐린 글자 */
+.ldscore .ldsintro { margin: 0 0 6px; font-size: 12.5px; color: var(--muted); line-height: 1.45; } .ldscore .ldssum { margin: 0; font-size: 14px; line-height: 1.45; } .ldscore .ldssum small { color: var(--muted); font-weight: 400; }
+.ldscore .ldslegend { margin: 2px 0 6px; font-size: 11.5px; color: var(--muted); }
+.ldscore .ldsu { border-top: 1px solid var(--line); padding: 6px 0 2px; } .ldscore .ldsu-h { margin: 0 0 2px; font-size: 13px; } .ldscore .ldsu-h small { color: var(--muted); font-weight: 400; }
+.ldscore .ldsk { margin: 0; padding: 0; list-style: none; display: grid; gap: 1px; font-size: 12.5px; } .ldscore .ldsk .lh { display: inline-block; min-width: 4.2em; color: var(--muted); } .ldscore .ldsk small { color: var(--muted); }
+.ldscore .pend { color: var(--muted); font-size: 11.5px; } .ldscore .ldsrecent li { overflow-wrap: anywhere; }
+.ldscore .ldsrecent-h { margin: 8px 0 0; font-size: 12.5px; }
+/* 9.29-99 원장 [1833] 읽는 법 · [1834] 중복 글자 하나로: 방식마다 4칸 격자(언제 | 오름 | 평균 | 평균과 차이 · 머리 한 번) · 채점 전 날은 한 줄 · 고른 종목은 테마별 묶음 */
+.ldscore .ldshow { margin: 6px 0 4px; padding: 4px 8px 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font-size: 12.5px; } .ldscore .ldshow summary { cursor: pointer; font-weight: 800; }
+.ldscore .ldshow ul { margin: 4px 0 0; padding-left: 16px; display: grid; gap: 2px; line-height: 1.45; color: var(--ink); }
+.ldscore .ldsg { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content max-content; column-gap: 10px; row-gap: 1px; font-size: 12.5px; font-variant-numeric: tabular-nums; align-items: baseline; }
+.ldscore .ldsg .hd { font-size: 11px; color: var(--muted); } .ldscore .ldsg .lh { color: var(--muted); } .ldscore .ldsg > span:nth-child(4n+3), .ldscore .ldsg > span:nth-child(4n) { text-align: right; } .ldscore .ldsg .hd:nth-child(n+3) { text-align: right; }
+.ldscore .ldsg .up { color: var(--up); } .ldscore .ldsg .dn { color: var(--down); } .ldscore .ldsg > span.pendrow { grid-column: 1 / -1; color: var(--muted); font-size: 11.5px; text-align: left; }
+.ldscore .ldsrecent li { display: block; } .ldscore .ldsrecent .tg-h { margin: 4px 0 0; } .ldscore .ldsrecent .tg-s { margin: 1px 0 0 14px; color: var(--ink); } .ldscore .ldsrecent .sep { color: var(--muted); } .ldscore .ldsrecent .mk { margin-left: 2px; letter-spacing: 1px; } .ldscore .ldsrecent .mk .o { color: var(--up); } .ldscore .ldsrecent .mk .x { color: var(--down); } .ldscore .ldsnote { display: block; color: var(--muted); margin-top: 6px; line-height: 1.45; font-size: 12px; }
 /* 간단 보기: 판정에 쓰는 것만 보이고 나머지는 접힘 (전체 보기 버튼으로 전환) */
 body.simple [data-simple="hide"] { display: none; }
 body.simple #sigList .sig .valid { display: none; }
@@ -514,6 +535,10 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .rulecard .tvguide summary { cursor: pointer; font-weight: 800; font-size: 13.5px; } .rulecard .tvguide summary small { font-weight: 500; color: var(--muted); }
 .rulecard .tvx { margin: 6px 0 2px; line-height: 1.5; } .rulecard .tvx small { color: var(--muted); font-size: 12px; } .rulecard .tvnote { color: var(--muted); font-size: 12px; margin-top: 8px; }
 .rulecard .tvt { border-collapse: collapse; font-variant-numeric: tabular-nums; margin: 2px 0 4px; } .rulecard .tvt th, .rulecard .tvt td { border: 1px solid var(--line); padding: 2px 10px; white-space: nowrap; text-align: right; } .rulecard .tvt th { background: var(--note); color: var(--muted); font-weight: 700; font-size: 12px; text-align: center; } .rulecard .tvt td:first-child { text-align: left; font-weight: 700; }
+/* 9.29-99 원장 [1832] 표 3개 공백 없이: 휴대폰 = 2칸(코스피·코스닥) + 장중 표 아래 전체 폭 · 600px↑ = 3칸 고르게 · 표는 칸 폭 100% · 표 제목은 표 위(줄바꿈 허용) */
+.rulecard .tvgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; align-items: start; } .rulecard .tvcol { min-width: 0; display: grid; grid-row: span 2; grid-template-rows: subgrid; align-content: start; } /* 제목 줄·표 줄을 칸끼리 맞춤(subgrid) → 표 윗선 같음 */ .rulecard .tvcol.tvwide { grid-column: 1 / -1; }
+.rulecard .tvcol .tvx { margin: 6px 0 3px; } .rulecard .tvcol .tvt { width: 100%; } .rulecard .tvcol .tvt th, .rulecard .tvcol .tvt td { padding: 2px 6px; }
+@media (min-width: 600px) { .rulecard .tvgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .rulecard .tvcol.tvwide { grid-column: auto; } }
 </style>
 </head>
 <body>
@@ -888,19 +913,19 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <!-- 9.29-97 원장 [1805][1806] t거래대금표시: 위 메모 9줄은 글자 그대로 · 아래 접는 칸 = 거래대금 적정 기준 (전문가 자료 · E:\에덴_cockpit\work\lead_audit\거래대금기준_전문가조사.md 요약) · 표는 모두 세로(휴대폰 가로 밀기 0) -->
     <details class="tvguide" id="tvGuide" open>
       <summary>💰 거래대금 적정 기준 <small>(전문가 자료 · 2026-10-08 조사)</small></summary>
-      <p class="tvx"><b>전문가 숫자</b> <small>책·글에 나온 숫자 그대로</small></p>
-      <p class="tvx">· 서희파더(『빅 트레이더의 주도주 매매법』): 주도주 1,000억↑ · 상승장 2,000~3,000억↑</p>
-      <p class="tvx">· 홍인기(『주식투자 단타전략』): 9:30 이후 거래대금 상위 · 500억 / 1,000억</p>
-      <p class="tvx">· HisStock(브런치): 최소 200억 · 1,000억이면 최고</p>
-      <p class="tvx"><b>코스피 종목 · 권장안(조사 의견)</b> <small>삼성전자·SK하이닉스 몫(약 44%)을 뺀 돈 기준</small></p>
+      <!-- 9.29-99 원장 [1831] "이거 빼": 인용 출처 3줄 묶음(제목 포함) 삭제 -->
+      <!-- 9.29-99 원장 [1832] "공백없이 정렬": 표 3개 = 넓은 화면(600px↑) 한 줄에 셋 · 휴대폰 = 코스피·코스닥 나란히 + 장중 표 아래 전체 폭 · 표 제목은 표 위 · 표는 칸 폭 채움 -->
+      <div class="tvgrid">
+      <div class="tvcol"><p class="tvx"><b>코스피 종목 · 권장안(조사 의견)</b> <small>삼성전자·SK하이닉스 몫(약 44%)을 뺀 돈 기준</small></p>
       <table class="tvt" id="tvKospi"><tr><th>코스피 하루</th><th>권장 기준</th></tr>
-        <tr><td>10조</td><td>500억</td></tr><tr><td>15조</td><td>600억</td></tr><tr><td>20조</td><td>750억</td></tr><tr><td>25조</td><td>800억</td></tr><tr><td>30조</td><td>900억</td></tr><tr><td>40조</td><td>1,100억</td></tr></table>
-      <p class="tvx"><b>코스닥 종목 · 권장안(조사 의견)</b></p>
+        <tr><td>10조</td><td>500억</td></tr><tr><td>15조</td><td>600억</td></tr><tr><td>20조</td><td>750억</td></tr><tr><td>25조</td><td>800억</td></tr><tr><td>30조</td><td>900억</td></tr><tr><td>40조</td><td>1,100억</td></tr></table></div>
+      <div class="tvcol"><p class="tvx"><b>코스닥 종목 · 권장안(조사 의견)</b></p>
       <table class="tvt" id="tvKosdaq"><tr><th>코스닥 하루</th><th>권장 기준</th></tr>
-        <tr><td>5조</td><td>500억</td></tr><tr><td>7조</td><td>500억</td></tr><tr><td>8조</td><td>550억</td></tr><tr><td>9조</td><td>650억</td></tr><tr><td>10조</td><td>700억</td></tr><tr><td>12조</td><td>750억</td></tr></table>
-      <p class="tvx"><b>장중에 보는 법</b> <small>그날 기준 × 지금까지 찬 비율 · 9:30부터 · 확정은 15:30 값</small></p>
+        <tr><td>5조</td><td>500억</td></tr><tr><td>7조</td><td>500억</td></tr><tr><td>8조</td><td>550억</td></tr><tr><td>9조</td><td>650억</td></tr><tr><td>10조</td><td>700억</td></tr><tr><td>12조</td><td>750억</td></tr></table></div>
+      <div class="tvcol tvwide"><p class="tvx"><b>장중에 보는 법</b> <small>그날 기준 × 지금까지 찬 비율 · 9:30부터 · 확정은 15:30 값</small></p>
       <table class="tvt" id="tvIntra"><tr><th>시각</th><th>코스피</th><th>코스닥</th></tr>
-        <tr><td>10시</td><td>27%</td><td>38%</td></tr><tr><td>11시</td><td>40%</td><td>49%</td></tr><tr><td>12시</td><td>51%</td><td>60%</td></tr><tr><td>14시</td><td>70%</td><td>78%</td></tr><tr><td>15시</td><td>82%</td><td>88%</td></tr></table>
+        <tr><td>10시</td><td>27%</td><td>38%</td></tr><tr><td>11시</td><td>40%</td><td>49%</td></tr><tr><td>12시</td><td>51%</td><td>60%</td></tr><tr><td>14시</td><td>70%</td><td>78%</td></tr><tr><td>15시</td><td>82%</td><td>88%</td></tr></table></div>
+      </div>
       <p class="tvx tvnote">참고용 — 실시간 주도 테마 판정은 아직 지금 규칙(코스피 전체 기준) · 비교 2주 뒤 디렉터 결정</p>
     </details>
     <h3>종가배팅</h3>
@@ -1861,9 +1886,35 @@ function analyze(days) {
 // 입력 = auto/observe/leaders-scorecard.json (server/scorecard.js 가 쌓음). 적중률 = 선정 슬롯 D+k 상승비율 − 그 평가일 전체 테마 종목 상승비율(기준율) 평균
 const LDS_UNITS = { a: "마감 확정", b: "장후 잠정", c: "장중 마지막", s: "그림자" };
 const LDS_REF_DAYS = 20; // 표본 20거래일(선정일 수) 전에는 「참고용」 고정 — 연구 R5 §5
+const LDS_UNIT_DESC = { a: "저녁 확정", b: "오후 4:20", c: "실시간 마지막", s: "시험 중 새 방식" }; // 9.29-99 원장 [1823] 방식 이름 옆 짧은 설명
 const r1 = (x) => Math.round(x * 10) / 10;
+// ---- 같은 날 마감 확정 여러 번 → 그날 마지막 확정만 (9.29-99 원장 [1822][1823] · 라운드 5 ②) ----
+// 마지막 확정 선정 = [{ name, codes:[슬롯 1~5 코드 | null] }] (날짜 파일 close.market.leaders.themes 또는 수집기 days[].a)
+function ldsLatestA(themes) {
+  return (Array.isArray(themes) ? themes : []).slice(0, 3).map((t) => ({ name: String((t && t.name) || ""), codes: (t && Array.isArray(t.slots) ? t.slots : []).slice(0, 5).map((s) => (s && /^\d{6}$/.test(String(s.code || "")) ? String(s.code) : null)) }));
+}
+// 그 날 a 행 중 마지막 확정의 (순위·슬롯·코드) 에 맞는 것만 남기고 테마 이름도 그 선정 것으로 · 맞는 행이 하나도 없으면 손대지 않음(지어내기·통째 삭제 0)
+function ldsKeepA(rows, date, a) {
+  const xs = Array.isArray(rows) ? rows : []; if (!Array.isArray(a) || !a.length) return xs;
+  const want = new Map(); a.forEach((t, i) => (t && Array.isArray(t.codes) ? t.codes : []).forEach((c, j) => { if (c) want.set(i + 1 + "|" + (j + 1) + "|" + c, t.name); }));
+  const isA = (r) => r && r.date === date && r.unit === "a", key = (r) => r.rank + "|" + r.slot + "|" + r.code;
+  if (!xs.some((r) => isA(r) && want.has(key(r)))) return xs; // 같은 배열 그대로 돌려줌 = 「안 고침」 표시(scFixDays 가 씀)
+  return xs.filter((r) => !isA(r) || want.has(key(r))).map((r) => (isA(r) ? Object.assign({}, r, { theme: want.get(key(r)) || r.theme }) : r));
+}
+// a 행이 같은 순위·슬롯에 두 개 이상인 날 (같은 날 확정이 두 번 돌아 섞인 날)
+function ldsDupDays(file) {
+  const seen = new Set(), dup = new Set();
+  for (const r of file && Array.isArray(file.rows) ? file.rows : []) { if (!r || r.unit !== "a") continue; const k = r.date + "|" + r.rank + "|" + r.slot; if (seen.has(k)) dup.add(r.date); else seen.add(k); }
+  return [...dup].sort();
+}
+// days[].a 가 있는 날은 그날 마지막 확정만
+function ldsClean(file) {
+  let rows = file && Array.isArray(file.rows) ? file.rows : [];
+  for (const d of file && Array.isArray(file.days) ? file.days : []) if (d && Array.isArray(d.a)) rows = ldsKeepA(rows, d.date, d.a);
+  return rows;
+}
 function ldsSummary(file, today = null) {
-  const rows = file && Array.isArray(file.rows) ? file.rows.filter((r) => r && (!today || r.date <= today)) : [];
+  const rows = ldsClean(file).filter((r) => r && (!today || r.date <= today)); // 9.29-99: 같은 날 확정 두 벌 → 그날 마지막 확정만
   const dates = [...new Set(rows.map((r) => r.date))].sort();
   const units = {};
   for (const u of Object.keys(LDS_UNITS)) {
@@ -3043,7 +3094,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-98";
+  const APP_VER = "9.29-99";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3396,6 +3447,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const tagWant = new Set(); let tagTimer = null, tagBusy = false;
   function paintTags() {
     document.querySelectorAll(".tg[data-tag]").forEach((el) => { const c = el.dataset.tag, t = TAGS[c]; tagFill(el, t); if (t === undefined) tagWant.add(c); });
+    if (typeof fitTags === "function") fitTags(); // 9.29-99 [1826] 꼬리표 글자가 채워진 뒤 칸에 들어가는지 다시 봄
     if (tagWant.size && !tagTimer) tagTimer = setTimeout(() => { tagTimer = null; tagFetch(); }, 50);
   }
   async function tagIdxLoad() {
@@ -3825,6 +3877,21 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     }
     box.hidden = true; done();
   }
+  // 9.29-99 원장 [1821]: 실시간 카드 종목 줄 칸(.sc) 너비 = 카드 안 모든 종목 중 그 칸 글자 폭의 최댓값 → #topLeadList 의 CSS 변수(--s0~s4 · --b0~b2) · 이름 칸은 최대 이름 폭까지(모자라면 줄어듦 · 말줄임) · 꼬리표 칸은 남는 폭
+  //  글꼴이 늦게 오면 한 번 더 (fonts.ready) · 글자 폭은 화면 폭과 무관해 다시 잴 필요 없음
+  function alignStocks() {
+    const ul = $("topLeadList"); if (!ul) return;
+    const w = (el) => { const r = document.createRange(); r.selectNodeContents(el); return Math.ceil(r.getBoundingClientRect().width); };
+    ["s0", "s1", "s2", "s3", "s4", "b0", "b1", "b2"].forEach((k) => { const xs = [...ul.querySelectorAll(".tsg .sc." + k)].map(w); ul.style.setProperty("--" + k, (xs.length ? Math.max(0, ...xs) : 0) + "px"); });
+    if (!alignStocks.f && document.fonts && document.fonts.ready) { alignStocks.f = 1; document.fonts.ready.then(() => alignStocks()).catch(() => {}); }
+    fitTags();
+  }
+  // 9.29-99 게이트 [1826]: 꼬리표(「개별주 · 코스피200 편입」 등)가 둘째 줄 넷째 칸에 다 안 들어가면(휴대폰) 그 종목만 꼬리표를 둘째 줄 아래 한 줄 전체로(.tgwrap) — 다른 칸 x 그대로 · 글자 잘림 0 · 넓은 화면은 그대로
+  function fitTags() {
+    const ul = $("topLeadList"); if (!ul) return;
+    ul.querySelectorAll(".tsg").forEach((g) => { const c = g.querySelector(".sc.b3"); if (!c) return; g.classList.remove("tgwrap"); if (c.scrollWidth > c.clientWidth + 1) g.classList.add("tgwrap"); });
+    if (!fitTags.h) { fitTags.h = 1; let t = null; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(fitTags, 120); }); }
+  }
   function paintTopLive(box, stale) {
     const L = LIVE, eok = (v) => (typeof v !== "number" ? "—" : Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억"), sg = (v) => (typeof v !== "number" ? "—" : (v > 0 ? "+" : "") + eok(v)), pc = (v) => (typeof v !== "number" ? "" : (v > 0 ? "+" : "") + v + "%");
     const wasHidden = box.hidden; box.hidden = false; box.classList.toggle("prev", !!stale); box.classList.add("live"); box.classList.toggle("stale", !!stale);
@@ -3878,10 +3945,18 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const slots = (t.slots || []).slice(0, 3), flows = slots.filter((x) => x.flow); // 주요 종목 3개 (9.29-83 원장 [1580] · 고르는 기준은 수집기 그대로 = 거래대금 순) · RVOL(평소 대비 배수) 가 있으면 「×2.8」 병기 (9.29-84)
       // 종목마다 한 줄 「• 삼성SDI 575,000 ▲46,000 (+8.70%) · 3,516억 · 거래대금 평소의 ×1.96 · 📈돌파」 (9.29-90 원장 [1692]) · 숫자·단위 덩어리(.nw)는 줄 중간에서 안 잘림(줄바꿈은 「·」 자리에서만) · 「/」 없음 · 값은 그대로(RVOL 라벨 「거래대금 평소의 ×」 쉬운 말 병기)
       const nw = (s) => `<span class="nw">${s}</span>`;
-      const stockLine = (x) => { const parts = [nw(`• ${esc(x.name)} ${esc(closeQuote(x.price, x.prev) || pc(x.rate))}`)]; parts[0] += muTagHtml(x.code, x.name); if (typeof x.value === "number") parts.push(nw(eok(x.value))); if (typeof x.rvol === "number") parts.push(nw("거래대금 평소의 ×" + x.rvol)); if (x.chart && x.chart.tag) parts.push(nw("📈" + esc(x.chart.tag))); if (x.flow) parts.push(nw("외인 " + sg(x.flow.foreign)) + " " + nw("기관 " + sg(x.flow.inst))); return `<span class="tls">${parts.join(" · ")}${tagHtml(x.code)}</span>`; }; // 줄 끝 꼬리표 「지수주·개별주·헷지」 (9.29-91 · 자료 없으면 빈 span → 숨김) // 9.29-97 마이크론 경고 꼬리표 muTagHtml (SK하이닉스·삼성전자 · 주의·나쁨일 때만)
+      // 9.29-99 원장 [1821] "이거 정렬": 종목 줄 = 칸 격자 — 1줄 = 종목명 | 가격 | 변동 | 등락률 (+마이크론 경고) · 2줄 = 거래대금 | 평소 대비 ×n | 차트 | 꼬리표 · 장 마감 뒤 외인·기관은 2줄 아래 한 줄 · 칸 너비는 카드 안 모든 종목에서 같게(alignStocks · CSS 변수) · 이름 길면 말줄임 + 툴팁
+      //  글자(textContent)는 예전 한 줄과 같음 — 「 · 」 구분자는 글자로 남기고 화면만 숨김(.lvs) · 없는 값은 빈 칸(자리 유지) · 꼬리표는 DOM 끝(예전 순서) 이지만 2줄 넷째 칸에 놓임
+      const sc = (k, t, at = "") => `<span class="sc ${k}"${at}>${t}</span>`, sp = `<span class="lvs"> · </span>`;
+      const stockLine = (x) => { const q = closeQuote(x.price, x.prev), m3 = q && q.match(/^(\S+) (\S+) (\(.+\))$/);
+        const r1 = sc("s0", `• ${esc(x.name)}`, ` title="${esc(x.name)}"`) + " " + (m3 ? sc("s1", esc(m3[1])) + " " + sc("s2", esc(m3[2])) + " " + sc("s3", esc(m3[3])) : sc("s1", "") + sc("s2", "") + sc("s3", esc(q || pc(x.rate)))) + sc("s4", muTagHtml(x.code, x.name));
+        const r2 = (typeof x.value === "number" ? sp + sc("b0", eok(x.value)) : sc("b0", "")) + (typeof x.rvol === "number" ? sp + sc("b1", "거래대금 평소의 ×" + x.rvol) : sc("b1", "")) + (x.chart && x.chart.tag ? sp + sc("b2", "📈" + esc(x.chart.tag)) : sc("b2", ""))
+          + (x.flow ? sp + sc("bf", "외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst)) : "") + sc("b3", tagHtml(x.code));
+        return `<span class="tls tsg"><span class="tsr1">${r1}</span><span class="tsr2">${r2}</span></span>`; };
       const stocks = slots.map(stockLine).join("") + (flows.length ? "" : `<span class="tls tlnote">종목별 외인·기관은 장 마감 뒤</span>`);
       return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}</span>${newsHtml(t)}</li>`;
     }).join("");
+    alignStocks(); // 9.29-99 [1821] 종목 줄 칸 너비 맞춤
     paintShadow(L, { eok, pc });
     paintTags(); // 9.29-91 꼬리표 (주요 종목 · 그림자 표)
     if (wasHidden && typeof buildNav === "function") buildNav();
@@ -4275,6 +4350,41 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     }
     return out;
   }
+  // ---------- 블로그 표 (9.29-99 원장 [1827][1829] "블로그 표로 붙여넣기") ----------
+  //  서식 복사(text/html · 네이버 블로그 붙여넣기)에서만 표 · 글자 복사(text/plain)는 예전 줄 그대로 · 칸 4개 이하 · 얇은 테두리 · 첫 칸 왼쪽 · 나머지 오른쪽(숫자) · 상승 빨강 #ff0010 · 하락 파랑 #0000ff (블로그 기존 색)
+  //  칸 = 글자 { t } 또는 이미 이스케이프한 html { h } · 줄 = 칸 배열 · head = 머리 칸 글자(없으면 머리 줄 없음)
+  function blogTableHtml(head, rows) {
+    const bd = "border:1px solid #d9d9d9;padding:3px 6px;";
+    // 휴대폰 폭에서도 표가 화면 안: 표 너비 100% · 칸은 띄어쓰기 자리에서만 줄바꿈(word-break:keep-all · 이름·숫자는 안 쪼개짐)
+    const td = (c, i) => { const x = typeof c === "string" ? { t: c } : c || { t: "" }; return `<td style="${bd}text-align:${i ? "right" : "left"};word-break:keep-all;overflow-wrap:anywhere;">${x.h !== undefined ? x.h : esc(x.t)}</td>`; };
+    return `<table style="border-collapse:collapse;margin:2px 0 6px;font-size:15px;width:100%"><tbody>`
+      + (head ? `<tr>${head.map((t, i) => `<th style="${bd}background:#f4f4f4;color:#555;font-size:13px;font-weight:700;word-break:keep-all;text-align:${i ? "right" : "left"}">${esc(t)}</th>`).join("")}</tr>` : "")
+      + rows.map((r) => `<tr>${r.map(td).join("")}</tr>`).join("") + `</tbody></table>`;
+  }
+  // 글자 한 토막의 색: ▲·+·순매수 = 빨강 · ▼·-·순매도 = 파랑 · 그 밖 = 색 없음
+  function blogTint(t) { const s = String(t || ""), c = /▲|^\+|순매수/.test(s) ? "#ff0010" : /▼|^[-−]|순매도/.test(s) ? "#0000ff" : ""; return c ? `<span style="color:${c}">${esc(s)}</span>` : esc(s); }
+  // ② 주요 테마(한국) 종목 칸: 종목 | 종가·변동 | 대금·차트 | 외인·기관 — blogLeaderRows 와 같은 종목·같은 값(줄 수 같음)
+  function blogLeaderCells(ct, lt) {
+    const num = (v) => typeof v === "number" && isFinite(v), eok = (v, s) => blogEok(Math.round(v), s), lslots = lt && Array.isArray(lt.slots) ? lt.slots : [];
+    return ((ct && Array.isArray(ct.slots) ? ct.slots : []).slice(0, 3)).filter((x) => x && x.name).map((x) => {
+      const q = closeQuote(x.price, x.prev) || (num(x.rate) ? (x.rate > 0 ? "+" : "") + x.rate + "%" : ""), rv = (lslots.find((y) => y && x.code && y.code === x.code) || {}).rvol;
+      const vc = [num(x.value) ? eok(x.value) : "", num(rv) ? "평소의 ×" + rv : "", x.chart && x.chart.tag ? "📈" + x.chart.tag : ""].filter(Boolean).join(" · ");
+      const fl = x.flow && (num(x.flow.foreign) || num(x.flow.inst)) ? `외인 ${num(x.flow.foreign) ? blogTint(eok(x.flow.foreign, true)) : "—"} 기관 ${num(x.flow.inst) ? blogTint(eok(x.flow.inst, true)) : "—"}` : "";
+      return [{ t: x.name }, { h: blogTint(q) }, { t: vc }, { h: fl }];
+    });
+  }
+  // ③ 특징주·이슈 줄 「화장품 +2.06% (에이피알·한국화장품제조) · 외국인 순매수 255억 · 기관 순매수 371억」 → 테마 | 등락률·대표 종목 | 외국인 | 기관 · 못 읽는 줄은 null(그 묶음은 예전 줄 그대로)
+  function blogIssueCells(row) {
+    const m = String(row || "").match(/^(.+?) ([+\-−]?\d[\d,.]*%)(?: \(([^)]*)\))?((?: · (?:외국인|기관) [^·]+)*)$/); if (!m) return null;
+    const f = (m[4].match(/ · 외국인 ([^·]+)/) || [])[1], i = (m[4].match(/ · 기관 ([^·]+)/) || [])[1];
+    return [{ t: m[1] }, { h: blogTint(m[2]) + (m[3] ? " · " + esc(m[3]) : "") }, { h: f ? blogTint(f.trim()) : "—" }, { h: i ? blogTint(i.trim()) : "—" }];
+  }
+  // ③ 한 줄 시황 줄 「코스피 6,718.04 ▼85.86 (-1.26%) (외국인 순매도 1.3조 · 기관 순매도 1.2조)」 → 지수 | 종가·변동 | 외국인 | 기관 · 「주도 …」·손 글은 null
+  function blogNoteCells(row) {
+    const m = String(row || "").match(/^(코스피|코스닥) (\S+ \S+ \([+\-−]?[\d.]+%\)|[+\-−]?[\d.]+%)(?: \(((?:외국인|기관) [^()]+)\))?$/); if (!m) return null;
+    const f = ((m[3] || "").match(/외국인 ([^·]+)/) || [])[1], i = ((m[3] || "").match(/기관 ([^·]+)/) || [])[1];
+    return [{ t: m[1] }, { h: blogTint(/[▲▼]/.test(m[2]) ? m[2] : m[2]) }, { h: f ? blogTint(f.trim()) : "—" }, { h: i ? blogTint(i.trim()) : "—" }];
+  }
   // 시세 한 토막 「값 ▲변동폭 (+변동률%)」 (9.29-86 원장 [1624]·[1625]·[1626] 디렉터 캡처 「$238.90 | ▲4.95 (+2.12%)」 「7,764.64 | ▼0.06 | 0.00%」)
   //  값·변동폭 = 원 데이터 자릿수 그대로(천단위 콤마 · 변동폭은 값의 자릿수 · 원화는 자연 자릿수) · 변동률 = 소수 2자리 · 0.00% 는 부호 없음 · 수준값이 없으면 null (지어내지 않음 → 부르는 쪽이 예전 글 그대로)
   function blogQuote(price, prev, unit, fix) {
@@ -4294,7 +4404,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const md = (x) => Number(x.slice(5, 7)) + "/" + Number(x.slice(8, 10));
     const kr = md(prevBusinessDay(d, holidays)), us = md(lastUsTradingDayBefore(d)), today = md(d);
     return { morning: `① 장전 판단 (${today} 아침)`, krTheme: `한국 전일 강세 테마 (${kr} 한국장):`, usTheme: `미국 전일 강세 테마 (${us} 밤 미국장):`,
-      usClose: `[전날 밤 미국장 마감 (${us} 밤) · ${isUsDst(d) ? "새벽 5~6시" : "새벽 6~7시"}]`, early: `[새벽·아침 시세 (${today}) · 새벽 6시~아침 8시]`,
+      usClose: "[전날 밤 미국장 마감]", early: "[새벽·아침 시세]", // 9.29-99 원장 [1827] "이 날짜랑 시간은 빼줘": 「(10/6 밤) · 새벽 5~6시」·「(10/7) · 새벽 6시~아침 8시」 꼬리 뺌
       events: `주요 일정 (${today}):`, usLead: `주요 테마 (미국 · ${us} 밤):`,
       usMkt: `미국장 (${us} 밤 마감):`, krMkt: `한국장 (${today} 오후 3:30 마감):` };
   }
@@ -4313,9 +4423,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const m = morningSummary(r, st, auto), j = fixJournal(st.journal), T = dayTotals(j);
     const dd = dd0.replace(/-/g, ".") + " (" + WEEKDAYS[weekday(dd0)] + ")";
     const trades = (j.trades || []).filter((t) => t.name || t.buy);
-    // 매매나 돌아보기를 적은 날은 [매매일지], 장전 판단·시황만 있는 날은 [시황일지]
-    let isJournal = trades.length > 0 || (j.result && j.result !== "none") || j.kept || ["good", "bad", "tomorrow", "mood", "memo"].some((k) => (j[k] || "").trim());
-    if (only === "시황일지") isJournal = false; // 당일 시황 칸의 버튼: 매매 내역 없이 시황만
+    // 9.29-99 원장 [1830][1832] "버튼 이름대로 늘 [매매일지]": 종류 = 누른 버튼 — 「시황일지 복사」(mktBlogCopy · only "시황일지") = 늘 [시황일지] · 「매매일지 복사」(blogCopy)·지난 날 보관함 「블로그용 복사」(data-blog) = 늘 [매매일지] (매매 입력이 없어도 · 예전 자동 바꿈 제거)
+    //  매매 입력 없는 날 매매일지 = 「④ 매매 내역 : 매매 기록 없음」(또는 「오늘은 매매하지 않았다.」) · 「⑤ 돌아보기」 = 「돌아보기를 적지 않았다.」 — 빈 칸 0 · 지어내기 0 (아래 그대로)
+    const isJournal = only !== "시황일지";
     const kind = isJournal ? "매매일지" : "시황일지";
     const title = `[${kind}] ${dd} · ${r.mode === "—" ? "판정 전" : r.mode}`; // 손익·승패는 제목에서 뺌 (9.29-74 사용자 블로그 글 그대로)
     // 해시태그: 종목·주도 테마 이름 (띄어쓰기·기호 제거)
@@ -4405,7 +4515,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (kv !== null || qv !== null) { gap(); P(`• <b>${esc(BT.krMkt)}</b>${krTone ? " " + esc(krTone) : ""}`, "• " + BT.krMkt + (krTone ? " " + krTone : "")); if (kv !== null) krRow("코스피", "kospi", kv); if (qv !== null) krRow("코스닥", "kosdaq", qv); }
     // 「• 오후 4시 기준」 묶음 (9.29-87 원장 [1662]~[1666]): 미국 선물 4종 · 코스피200 선물 · 원달러 환율 · WTI · 비트코인 「이름 값 ▲전일대비 (+%)」 · 자료 없으면 「(4시 자료 없음)」 (지어내기 0)
     { const sn = snapRows(st); gap();
-      if (sn) { P(`• <b>${esc(sn.label)}</b>`, "• " + sn.label); sn.rows.forEach(([n, q]) => (q ? P(`· ${esc(n)} ${paint(esc(q), quoteSign(q, q))}`, `· ${n} ${q}`) : say(`· ${n} 없음`))); }
+      // 9.29-99 원장 [1827] 블로그에서 「(16:20 값)」 뺌 · 앱 화면 칸 라벨은 그대로
+      if (sn) { const lb = sn.label.replace(/ \(\d{1,2}:\d{2} 값\)$/, ""); P(`• <b>${esc(lb)}</b>`, "• " + lb); sn.rows.forEach(([n, q]) => (q ? P(`· ${esc(n)} ${paint(esc(q), quoteSign(q, q))}`, `· ${n} ${q}`) : say(`· ${n} 없음`))); }
       else P(`• <b>오후 4시 기준</b> (4시 자료 없음)`, "• 오후 4시 기준 (4시 자료 없음)"); }
     // 수급은 시장마다 한 줄, 주요 테마는 번호마다 한 줄
     // 수급 (사용자 블로그 글 그대로 9.29-76 · 9.29-87 원장 [1653]: 한국장 묶음과 빈 줄 1): "수급:" → "• 코스피" → "- 외국인 … / 기관 … / 프로그램 … / 거래대금 …" (시장 사이 빈 줄 없음)
@@ -4414,13 +4525,17 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       inv.forEach((x) => { say("• " + x.mk);
         say(blogSupply(x, progOf(x.mk))); }); } // 프로그램 값이 없으면 "프로그램 —" (9.29-75)
     // kids = 테마마다 아래 줄(blogLeaderRows · 9.29-93 원장 [1710]) · 아래 줄이 하나라도 있으면 테마 묶음 사이 빈 줄 1 (원장 [1653]) · 앞 공백은 &nbsp; 로 (붙여넣어도 들여쓰기 유지)
-    const blueList = (label, rows, kids) => { P(tint(`<b>${esc(label)}</b>`, BLUE2), label); rows.forEach((x, n) => { if (kids && n) blank(); P(tint(esc("· " + x), BLUE2), "· " + x); ((kids && kids[n]) || []).forEach((y) => P(tint(esc(y).replace(/^ +/, (s) => "&nbsp;".repeat(s.length)), BLUE2), y)); }); };
+    // 9.29-99 원장 [1829]: 서식 복사에서 테마 아래 종목 줄 = 표(종목 | 종가·변동 | 대금·차트 | 외인·기관 · cells[n] 줄 수만큼) · 뉴스·신호 줄은 예전 그대로 · 글자 복사는 예전 줄 그대로
+    const blueList = (label, rows, kids, cells) => { P(tint(`<b>${esc(label)}</b>`, BLUE2), label); rows.forEach((x, n) => { if (kids && n) blank(); P(tint(esc("· " + x), BLUE2), "· " + x);
+      const ks = (kids && kids[n]) || [], cs = (cells && cells[n]) || [];
+      if (cs.length) { h += blogTableHtml(["종목", "종가·변동", "대금·차트", "외인·기관"], cs); ks.slice(0, cs.length).forEach((y) => txt.push(y)); }
+      ks.slice(cs.length).forEach((y) => P(tint(esc(y).replace(/^ +/, (s) => "&nbsp;".repeat(s.length)), BLUE2), y)); }); };
     // 같은 날 실시간 테마(LIVE · 값이 그 날 장 것일 때만) 중 같은 이름 → 종목·검증 뉴스·강세 신호 줄 · 없으면 예전 한 줄(괄호 종목) 그대로 (지어내지 않음)
     const same = (x, t) => x && String(x.name || "").trim() === String(t.name).trim();
     const liveOf = (t) => (LIVE && LIVE.date === dd0 && liveAsOf(LIVE) === dd0 && Array.isArray(LIVE.themes) ? LIVE.themes.find((x) => same(x, t)) || null : null);
     const closeTh = (() => { try { const v = JSON.parse((st.auto || {})["leaders.slots"] || "null"); return v && v.text === mk.leaders && Array.isArray(v.themes) ? v.themes : []; } catch (e) { return []; } })(); // 마감 수집 글(mk.leaders)과 같은 run 의 종목만 (손으로 고친 글이면 안 붙임)
-    if (krLead.length) { gap(); const kids = krLead.slice(0, 3).map((t) => blogLeaderRows(closeTh.find((x) => same(x, t)) || null, liveOf(t))), any = kids.some((k) => k.length);
-      blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t, n) => `${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks && !kids[n].length ? " (" + t.stocks + ")" : ""} · ${blogFlow(t.f, t.i)}`), any ? kids : null); } // 한국 주요 테마: 외인·기관 매매 현황 (없으면 —) (9.29-75) · 종목 줄이 있으면 괄호 종목은 뺌(중복 0)
+    if (krLead.length) { gap(); const kids = krLead.slice(0, 3).map((t) => blogLeaderRows(closeTh.find((x) => same(x, t)) || null, liveOf(t))), any = kids.some((k) => k.length), cells = krLead.slice(0, 3).map((t) => blogLeaderCells(closeTh.find((x) => same(x, t)) || null, liveOf(t)));
+      blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t, n) => `${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks && !kids[n].length ? " (" + t.stocks + ")" : ""} · ${blogFlow(t.f, t.i)}`), any ? kids : null, any ? cells : null); } // 한국 주요 테마: 외인·기관 매매 현황 (없으면 —) (9.29-75) · 종목 줄이 있으면 괄호 종목은 뺌(중복 0)
     // 「주요 테마 (미국)」 은 ① 「미국 전일 강세 테마」 로 합침 (9.29-87 원장 [1661] · 중복 0)
     // 왜 주요 테마인지: 맨 밑에 참고 줄 하나 (얇게)
     // grades(새 모양: 대금 기준 종목 수·수급·미장·차트)가 있으면 그 근거를, 옛 모양이면 강세 종목 수·거래대금을 적는다
@@ -4440,10 +4555,15 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 라벨만 한 줄(굵게) → "· " 줄마다 사이에 빈 줄 한 칸 (9.29-78 원장 [1524]·[1525]) · 빈 줄로 나누므로 줄 끝 " /" 는 뺌
     const dotRows = (label, rows, c) => { const cl = (x) => (c ? tint(x, c) : x); P(cl(`<b>${esc(label)}</b>`), label); rows.forEach((x, i) => { if (i) blank(); P(cl(esc("· " + x)), "· " + x); }); };
     // 특징주·이슈: 테마마다 외국인·기관 (값이 없는 테마는 그대로) (9.29-78 원장 [1524])
-    if (mk.issues) { gap(); dotRows("특징주·이슈:", blogIssueRows(split(mk.issues, " / "), parseLeaders(mk.leaders)), BLUE2); }
+    // 9.29-99 원장 [1829] 「이거도 이렇게 정렬」: 서식 복사에서 특징주·이슈 = 표(테마 | 등락률·대표 종목 | 외국인 | 기관) · 한 줄 시황 = 표(지수 | 종가·변동 | 외국인 | 기관) + 표 아래 「주도 …」 줄 · 못 읽는 손 글이면 예전 줄 · 글자 복사는 예전 줄 그대로(라벨 → 「· 줄」 사이 빈 줄)
+    const dotTable = (label, rows, cellsOf, head, c, tailKeep) => { const cl = (x) => (c ? tint(x, c) : x), cs = rows.map(cellsOf), k = cs.findIndex((x) => !x), nT = k < 0 ? rows.length : k;
+      if (nT < 1 || (k >= 0 && !(tailKeep && rows.slice(k).every((x, i) => !cs[k + i])))) return dotRows(label, rows, c);
+      h += `<p>${cl(`<b>${esc(label)}</b>`)}</p>`; txt.push(label); rows.forEach((x, i) => { if (i) txt.push(""); txt.push("· " + x); });
+      h += blogTableHtml(head, cs.slice(0, nT)); rows.slice(nT).forEach((x) => { h += `<p>${cl(esc("· " + x))}</p>`; }); };
+    if (mk.issues) { gap(); dotTable("특징주·이슈:", blogIssueRows(split(mk.issues, " / "), parseLeaders(mk.leaders)), blogIssueCells, ["테마", "등락률·대표 종목", "외국인", "기관"], BLUE2, false); }
     // 한 줄 시황: 시황일지 복사에만 넣고 매매일지 복사에서는 뺌 (9.29-75 · 원장 [1494]) · 내일 볼 것 앞은 빈 줄 한 칸 (9.29-76 사용자 블로그 글 그대로)
     //  코스피 / 코스닥 / 주도 를 줄마다 · 사이 빈 줄 한 칸 (9.29-78 원장 [1525]) · 나눌 곳이 없는 손 글은 예전처럼 라벨 옆 한 줄
-    if (mk.note && !isJournal) { gap(); const nr = blogNoteRows(mk.note); if (nr.length > 1) dotRows("한 줄 시황:", nr); else line("한 줄 시황:", mk.note); }
+    if (mk.note && !isJournal) { gap(); const nr = blogNoteRows(mk.note); if (nr.length > 1) dotTable("한 줄 시황:", nr, blogNoteCells, ["지수", "종가·변동", "외국인", "기관"], "", true); else line("한 줄 시황:", mk.note); }
     if (mk.next) { gap(); const RED2 = "#e00000"; const nx = String(mk.next).trim(), dm = nx.match(/^(\d{1,2}\/\d{1,2}\([^)]+\))\s+(.*)$/);
       const red = (html, text) => P(tint(html, RED2), text);
       if (!dm) red(`<b>내일 볼 것:</b> ${esc(nx)}`, "내일 볼 것: " + nx);
@@ -4502,7 +4622,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   async function copyBlog(d, msgEl, only) {
     const post = blogPost(d, only);
-    $("blogPreview").innerHTML = post.html;
+    $("blogPreview").innerHTML = post.html; $("blogPreview").dataset.text = post.text; // 9.29-99: 글자 복사(text/plain) 본문 — 표 바뀜 확인용(화면엔 안 보임)
     const msg = (t) => ((msgEl || $("blogMsg")).textContent = t);
     const done = () => msg("복사했어요 ✅ (버전 " + APP_VER + ") " + post.title + " · 이제 '네이버 블로그 글쓰기 열기'를 누르고 본문에 붙여넣기 하세요.");
     try {
@@ -4534,7 +4654,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         <div class="ab"><button class="btn" type="button" data-go="${d}">열기</button><button class="btn" type="button" data-blog="${d}">블로그용 복사</button></div></div>`;
     }).join("") : `<div class="hint">아직 저장된 날이 없어요. 숫자나 일지를 넣으면 그날 날짜로 저장돼요.</div>`;
   }
-  $("archive").addEventListener("click", (e) => { const b = e.target.closest("[data-blog]"); if (b) copyBlog(b.dataset.blog, $("archiveMsg")); });
+  $("archive").addEventListener("click", (e) => { const b = e.target.closest("[data-blog]"); if (b) copyBlog(b.dataset.blog, $("archiveMsg"), "매매일지"); }); // 9.29-99 [1832]: 보관함 「블로그용 복사」 = 매매일지 (예전과 같은 길 · 이제 늘 [매매일지])
 
   // ---------- 지표 기록표: 지난 며칠 지표 비교 · 엑셀로 ----------
   const CORE_SIG = ["k200", "fut", "fx", "sox", "vix"];
@@ -4800,11 +4920,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   $("trades").addEventListener("focusout", () => setTimeout(() => { if (!delAsk && !$("trades").contains(document.activeElement)) renderTrades(); }, 0));
   $("feePct").value = feePct();
   $("feePct").addEventListener("input", () => { try { localStorage.setItem(FEE_KEY, $("feePct").value); } catch (e) {} paintTradeNumbers(); renderStats(); });
-  $("blogCopy").addEventListener("click", () => copyBlog(DATE));
+  $("blogCopy").addEventListener("click", () => copyBlog(DATE, undefined, "매매일지")); // 9.29-99 [1832] 늘 [매매일지]
   $("in-prog").addEventListener("input", (e) => { S.signals.prog = e.target.value; save(); render(); });
   $("mktBlogCopy").addEventListener("click", () => copyBlog(DATE, $("mktBlogMsg"), "시황일지"));
   // 미리 보기: 열 때마다 최신 내용으로, 아래 '닫기' 버튼으로도 접기
-  $("blogPrevBox").addEventListener("toggle", (e) => { if (e.target.open) $("blogPreview").innerHTML = blogPost(DATE).html; });
+  $("blogPrevBox").addEventListener("toggle", (e) => { if (e.target.open) { const post = blogPost(DATE, "매매일지"); $("blogPreview").innerHTML = post.html; $("blogPreview").dataset.text = post.text; } }); // 매매일지 칸의 미리 보기 = [매매일지] (9.29-99 [1832])
   $("blogPrevClose").addEventListener("click", () => { $("blogPrevBox").open = false; $("blogPrevBox").scrollIntoView({ block: "nearest" }); });
 
   // 내 블로그 아이디: 이 기기에만 저장 (네이버 아이디는 영문 소문자·숫자·-·_ 5~20자)
@@ -5362,19 +5482,42 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   // 주도 테마 적중 성적표 (9.29-84 원장 [1597] · [1585]): 수집기 마감 run 이 쌓는 auto/observe/leaders-scorecard.json 을 한 번 받아 📊 성적표 카드에 「주도 테마 적중」 절로 — 방식별 누적(기준율 대비 차이) · 최근 선정 D1~D4 ○×- · 20거래일 전 「참고용」 고정
   let LDS = null;
-  async function ldsPull() { try { LDS = await pubGet(PUB_RAW + "observe/leaders-scorecard.json"); } catch (e) {} paintLdScore(); }
+  async function ldsPull() {
+    try { LDS = await pubGet(PUB_RAW + "observe/leaders-scorecard.json"); } catch (e) {}
+    // 9.29-99 원장 [1822][1823]: 같은 날 마감 확정이 두 번 돌아 고른 목록이 두 벌 섞인 지난 날(예전 기록) → 그 날짜 파일의 마지막 확정 주도 테마로 걸러 보여 줌(파일 고치기는 다음 저녁 수집이 함)
+    if (LDS && Array.isArray(LDS.days)) for (const d of ldsDupDays(LDS)) { const day = LDS.days.find((x) => x.date === d); if (!day || Array.isArray(day.a)) continue;
+      try { const j = await pubGet(PUB_RAW + d + ".json"), L = j && j.close && j.close.market && j.close.market.leaders; if (L && !L.provisional && Array.isArray(L.themes) && L.themes.length) day.a = ldsLatestA(L.themes); } catch (e) {} }
+    paintLdScore();
+  }
+  // 성적표 카드 (9.29-99 원장 [1822][1823] "쉬운 말로" · [1833] 「📖 읽는 법」 · [1834] "중복되는글자 하나로"): 맨 위 한 줄 요약 · 읽는 법(접는 칸 · 처음엔 펼침) · 방식마다 칸(언제 | 오름 | 평균 | 평균과 차이 — 머리 한 번 + 숫자만 · 채점 전 날은 한 줄로 묶음)
+  //  고른 종목 = 테마별 묶음(「1 반도체 장비」 한 번 + 종목들 · 묶음이 모두 채점 전이면 「아직 채점 전」 한 번) · 휴대폰 390 가로 밀기 0 · 숫자는 모두 기록에서(고정 숫자 0)
   function paintLdScore() {
     const box = $("ldScore"); if (!box) return;
-    const sm = ldsSummary(LDS, kstDate()), U = LDS_UNITS, fx1 = (v) => (typeof v === "number" ? (v > 0 ? "+" : "") + v.toFixed(1) : "—");
+    const sm = ldsSummary(LDS, kstDate()), U = LDS_UNITS, UD = LDS_UNIT_DESC, fx1 = (v) => (typeof v === "number" ? (v > 0 ? "+" : "") + v.toFixed(1) : "—"), r0 = (v) => Math.round(v);
+    const HN = { 1: "다음 날", 2: "2일 뒤", 3: "3일 뒤", 4: "4일 뒤" };
     box.hidden = false;
-    if (!sm.days) { box.innerHTML = `<h3>🎯 주도 테마 적중 <small>참고용</small></h3><div class="empty">마감 확정 수집이 쌓이면 테마 주도 종목의 D+1~D+4 상승(○)·하락(×)이 날마다 채워져요.</div>`; return; }
-    const cell = (k) => (!k || !k.n ? "<td>—</td>" : `<td><b>${k.hitPct}%</b> <small>${k.hit}/${k.n} · 기준 ${k.blAvg === null ? "—" : k.blAvg + "%"} · 차이 ${fx1(k.diff)}</small></td>`);
-    const rows = Object.keys(U).filter((u) => sm.units[u]).map((u) => `<tr><td><b>${esc(U[u])}</b><small>${sm.units[u].days}일 · ${sm.units[u].n}슬롯</small></td>${[1, 2, 3, 4].map((h) => cell(sm.units[u].k[h])).join("")}</tr>`).join("");
+    const units = Object.keys(U).filter((u) => sm.units[u]), su = units.includes("a") ? "a" : units[0], k1 = su ? sm.units[su].k[1] : null;
+    const howTo = (ex) => `<details class="ldshow" open><summary>📖 읽는 법</summary><ul>`
+      + `<li>에덴이 고른 주도 테마 종목이 고른 뒤 며칠 동안 실제로 올랐는지 매기는 성적표예요.</li>`
+      + `<li>방식 = 고른 시점: ${Object.keys(U).map((u) => esc(U[u]) + "(" + esc(UD[u]) + ")").join(" · ")}.</li>`
+      + `<li>다음 날 · 2일 뒤 · 3일 뒤 · 4일 뒤 = 고른 날 종가와 비교해 1·2·3·4거래일 뒤 종가가 올랐는지(○ 오름 · × 내림).</li>`
+      + (ex ? `<li>「${ex.n}개 중 ${ex.hit}개 오름(${r0(ex.hitPct)}%)」 = 고른 ${ex.n}개 중 ${ex.hit}개만 올랐다는 뜻(같은 종목도 날마다 따로 셈).</li>` : `<li>「N개 중 K개 오름」 = 고른 N개 중 K개가 올랐다는 뜻(같은 종목도 날마다 따로 셈).</li>`)
+      + `<li>평균 = 그날 네이버 테마 목록 첫 100개(등락률 높은 순)에 든 종목 중 오른 비율(한 종목이 여러 테마에 있으면 여러 번 셈) · 평균과 차이가 +면 평균보다 잘 고른 것, −면 못 고른 것.</li>`
+      + `<li>「아직 채점 전」 = 그 날짜가 아직 안 와서 비어 있음 · ${LDS_REF_DAYS}거래일 쌓이기 전엔 참고용 · 매매 권유 아님.</li></ul></details>`;
+    if (!sm.days) { box.innerHTML = `<h3>🎯 주도 테마 적중 <small>참고용</small></h3><div class="empty">저녁 확정 수집이 쌓이면 고른 종목이 다음 날~4일 뒤 올랐는지(○)·내렸는지(×) 날마다 채워져요.</div>${howTo(null)}`; return; }
+    const sum = k1 && k1.n ? `다음 날: 고른 ${k1.n}개 중 ${k1.hit}개 오름(${r0(k1.hitPct)}%)` + (k1.blAvg !== null ? ` · 같은 날 평균 ${r0(k1.blAvg)}% → ${k1.diff > 0 ? "평균보다 잘 고름" : k1.diff < 0 ? "평균보다 못 고름" : "평균과 같음"}` : "") : "다음 날 채점 전 — 고른 다음 거래일 저녁에 채워져요";
+    const grid = (u) => { const K = sm.units[u].k, done = [1, 2, 3, 4].filter((h) => K[h] && K[h].n), pend = [1, 2, 3, 4].filter((h) => !(K[h] && K[h].n));
+      return `<div class="ldsg">${done.length ? `<span class="hd">언제</span><span class="hd">오름</span><span class="hd">평균</span><span class="hd">평균과 차이</span>` : ""}`
+        + done.map((h) => `<span class="lh">${HN[h]}</span><b>${K[h].n}개 중 ${K[h].hit}개 · ${K[h].hitPct}%</b><span>${K[h].blAvg === null ? "—" : K[h].blAvg + "%"}</span><span class="${K[h].diff > 0 ? "up" : K[h].diff < 0 ? "dn" : ""}">${fx1(K[h].diff)}</span>`).join("")
+        + (pend.length ? `<span class="pendrow">${pend.map((h) => HN[h]).join(" · ")}: 아직 채점 전</span>` : "") + `</div>`; };
+    const blocks = units.map((u) => `<div class="ldsu"><p class="ldsu-h"><b>${esc(U[u])}</b> <small>${esc(UD[u] || "")} · ${sm.units[u].days}일 · ${sm.units[u].n}개 자리(같은 종목 여러 번 셈)</small></p>${grid(u)}</div>`).join("");
     const rc = sm.recent, mark = (m) => `<span class="${m === "○" ? "o" : m === "×" ? "x" : ""}">${m}</span>`;
-    const recent = rc.date ? `<p class="ldsrecent-h"><b>${mdw(rc.date)} 선정</b> <small>(${esc(U[rc.unit] || rc.unit)} · D+1 → D+4 · - = 아직)</small></p><ul class="ldsrecent">${rc.rows.map((r) => `<li>${r.rank} ${esc(r.theme)} · ${esc(r.name)}<span class="mk">${r.marks.map(mark).join("")}</span></li>`).join("")}</ul>` : "";
-    box.innerHTML = `<h3>🎯 주도 테마 적중 <small>표본 ${sm.days}거래일${sm.ref ? " · 20거래일 전 「참고용」" : ""}</small></h3>`
-      + `<table class="ldstbl"><tr><th>방식</th><th>D+1</th><th>D+2</th><th>D+3</th><th>D+4</th></tr>${rows}</table>${recent}`
-      + `<small class="ldsnote">○ = 선정일 종가 → D+k 종가 상승 · 기준 = 그 평가일 전체 테마 종목 상승비율 · 차이 = 선정 종목 상승비율 − 기준 (양수면 전체보다 잘 고름) · 마감 봉만 · 매매 권유 아님</small>`;
+    const groups = []; for (const r of rc.rows || []) { const g = groups[groups.length - 1]; if (g && g.rank === r.rank && g.theme === r.theme) g.rows.push(r); else groups.push({ rank: r.rank, theme: r.theme, rows: [r] }); }
+    const stockTxt = (r, allPend) => { const done = r.marks.filter((m) => m !== "-"); return `<span class="st">${esc(r.name)}${allPend ? "" : done.length ? ` <span class="mk">${done.map(mark).join("")}</span>` : ` <small class="pend">아직</small>`}</span>`; };
+    const recent = rc.date ? `<p class="ldsrecent-h"><b>${mdw(rc.date)} 고른 종목</b> <small>(${esc(U[rc.unit] || rc.unit)} · ○ 오름 × 내림 · 다음 날부터 차례로)</small></p><ul class="ldsrecent">${groups.map((g) => { const allPend = g.rows.every((r) => r.marks.every((m) => m === "-"));
+      return `<li><p class="tg-h"><b>${g.rank} ${esc(g.theme)}</b>${allPend ? ` <small class="pend">아직 채점 전</small>` : ""}</p><p class="tg-s">${g.rows.map((r) => stockTxt(r, allPend)).join(`<span class="sep"> · </span>`)}</p></li>`; }).join("")}</ul>` : "";
+    box.innerHTML = `<h3>🎯 주도 테마 적중 <small>표본 ${sm.days}거래일${sm.ref ? " · " + LDS_REF_DAYS + "거래일 전 「참고용」" : ""}</small></h3>`
+      + `<p class="ldssum"><b>${esc(sum)}</b>${su ? ` <small>(${esc(U[su])})</small>` : ""}</p>${howTo(k1 && k1.n ? k1 : null)}${blocks}${recent}`;
   }
   function pubStart() {
     livePull(true); ldsPull(); clearInterval(liveTimer);

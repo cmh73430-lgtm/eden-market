@@ -22,6 +22,7 @@ import { collectWatch, watchText, mergeWatch } from "../server/watch.js"; // 관
 import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist } from "../server/auto.js";
 import { RVOL_BAR_COUNT } from "../server/shadow.js";
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
+import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -220,7 +221,11 @@ if (when === "close" && !provisional && LD && !LD.provisional) {
     scOld = await rd(SC_FILE);
     const pl = await prevLive(), pc = prev.json && prev.json.date === date && prev.json.close ? prev.json.close : null;
     const b = part.market.leadersProvisional || (pc && pc.market && pc.market.leadersProvisional) || null;
-    sc = await collectScorecard({ date, closeAt: part.at, file: scOld, units: { a: LD.themes, b: b && b.themes, c: pl && pl.themes, s: part.shadow && part.shadow.themes }, allThemes: part.themes });
+    // 9.29-99 원장 [1822][1823]: 예전에 같은 날 확정이 두 번 돌아 a 행이 두 벌 섞인 지난 날 → 그 날짜 파일의 마지막 확정 주도 테마로 정리(days[].a 가 생기면 다음부터 안 읽음)
+    const fixA = {};
+    for (const d of ldsDupDays(scOld)) { if (d === date || ((scOld && scOld.days) || []).some((x) => x.date === d && Array.isArray(x.a))) continue;
+      try { const j = save ? (await readFile(autoFile(d))).json : await readPublic(autoFile(d)); const L = j && j.close && j.close.market && j.close.market.leaders; if (L && !L.provisional && Array.isArray(L.themes) && L.themes.length) fixA[d] = ldsLatestA(L.themes); } catch (e) {} }
+    sc = await collectScorecard({ date, closeAt: part.at, file: scOld, units: { a: LD.themes, b: b && b.themes, c: pl && pl.themes, s: part.shadow && part.shadow.themes }, allThemes: part.themes, fixA });
     console.log(scText(sc));
   } catch (e) { sc = null; console.log("성적표 실패:", e.message || e); }
 }

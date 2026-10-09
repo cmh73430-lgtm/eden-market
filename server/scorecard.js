@@ -6,6 +6,7 @@
 //  크기 상한: 행 SC_MAX_ROWS · 날 SC_MAX_DAYS (오래된 것부터 버림) · 30일 지나도 봉이 없으면 done+miss (계속 요청 안 함)
 import { trendRows, obsTrendUrl, paced, AUTO_DIR } from "./auto.js";
 import { addDays } from "../shared/calendar.js";
+import { ldsLatestA, ldsKeepA } from "../shared/leaders-score.js";
 
 export const SC_FILE = AUTO_DIR + "/observe/leaders-scorecard.json";
 export const SC_V = 1, SC_UNITS = { a: "마감 확정", b: "장후 잠정(16:20)", c: "장중 마지막(live)", s: "그림자(shadow)" }, SC_HORIZONS = [1, 2, 3, 4];
@@ -35,13 +36,25 @@ export function scRowsFrom(date, unit, themes) {
   }));
   return out;
 }
-// 기록에 합치기: rows 는 열쇠로 하나만(이미 있는 행은 그대로 — 채운 칸 보존) · day = { date, closeAt, baseline, n:{a,b,c,s} } 는 같은 날이면 덮음(기준율은 있는 값 유지)
-export function scMerge(file, rows = [], day = null) {
-  const f = scNorm(file), have = new Set(f.rows.map(scKey)); let added = 0;
-  for (const r of rows) { const k = scKey(r); if (have.has(k)) continue; have.add(k); f.rows.push(Object.assign({}, r)); added++; }
+// 기록에 합치기: rows 는 열쇠로 하나만(이미 있는 행은 그대로 — 채운 칸 보존) · day = { date, closeAt, baseline, n:{a,b,c,s}, a } 는 같은 날이면 합침
+//  9.29-99 원장 [1822][1823] (라운드 5 ②③): replace 에 든 방식(수집기는 a)은 같은 날 다시 돌면 그날 그 방식 행을 이번 결과로 통째 교체 — 같은 종목(코드)이면 이미 채운 칸(base·d1~d4·done·miss)은 이어 씀 · b·c·s 는 예전 그대로(열쇠 합치기)
+//  기준율 = 그날 첫 확정 값 유지(이미 있으면 덮지 않음) · day.a = 그날 마지막 확정 선정(테마 이름·슬롯 코드) — 앱·다음 run 이 섞인 날을 정리하는 기준
+const SC_CARRY = ["base", "d1", "d2", "d3", "d4", "done", "miss"];
+const scFilled = (r) => SC_CARRY.filter((k) => r && r[k] !== null && r[k] !== undefined && r[k] !== false).length;
+export function scMerge(file, rows = [], day = null, { replace = [] } = {}) {
+  const f = scNorm(file), have = new Set(f.rows.map(scKey)), rep = new Set(replace); let added = 0;
+  for (const u of rep) {
+    const nu = rows.filter((r) => r && r.unit === u); if (!nu.length) continue;
+    const D = nu[0].date, old = f.rows.filter((r) => r.date === D && r.unit === u), byCode = new Map();
+    for (const o of old) { const p = byCode.get(o.code); if (!p || scFilled(o) > scFilled(p)) byCode.set(o.code, o); }
+    f.rows = f.rows.filter((r) => !(r.date === D && r.unit === u));
+    for (const r of nu) { const o = byCode.get(r.code), x = Object.assign({}, r); if (o) for (const k of SC_CARRY) if (k in o) x[k] = o[k]; if (!have.has(scKey(r))) added++; f.rows.push(x); }
+  }
+  for (const r of rows) { if (rep.has(r.unit)) continue; const k = scKey(r); if (have.has(k)) continue; have.add(k); f.rows.push(Object.assign({}, r)); added++; }
   if (day && day.date) {
     const i = f.days.findIndex((d) => d.date === day.date), cur = i >= 0 ? f.days[i] : null;
-    const nd = Object.assign({}, cur || {}, { date: day.date, closeAt: day.closeAt ?? (cur && cur.closeAt) ?? null, baseline: typeof day.baseline === "number" ? day.baseline : (cur ? cur.baseline : null), n: Object.assign({}, (cur && cur.n) || {}, day.n || {}) });
+    const nd = Object.assign({}, cur || {}, { date: day.date, closeAt: day.closeAt ?? (cur && cur.closeAt) ?? null, baseline: cur && typeof cur.baseline === "number" ? cur.baseline : typeof day.baseline === "number" ? day.baseline : null, n: Object.assign({}, (cur && cur.n) || {}, day.n || {}) });
+    if (Array.isArray(day.a)) nd.a = day.a;
     if (cur) f.days[i] = nd; else f.days.push(nd);
   }
   f.days = f.days.sort(byDate).slice(-SC_MAX_DAYS);
@@ -74,14 +87,25 @@ export function scFill(row, rows, days, baselines = {}, today, closeAt = null) {
 }
 // 마감 확정 run 한 번: ① 오늘 행 추가(a·b·c·s) + 오늘 기준율 ② 덜 찬 지난 행 채우기(KODEX 1회 + 종목마다 1회 · 시간 예산 안)
 //  units = { a: themes, b: themes, c: themes, s: themes } (없는 방식은 건너뜀) · allThemes = 오늘 close.themes compact(기준율)
-export async function collectScorecard({ fetchImpl = fetch, timeoutMs = 10000, get = null, date, closeAt, file = null, units = {}, allThemes = null, budgetMs = SC_BUDGET_MS, conc = SC_CONC, gapMs = SC_GAP_MS, clock = () => Date.now(), sleep = (ms) => new Promise((ok) => setTimeout(ok, ms)) } = {}) {
+//  fixA = { 날짜: 그날 마지막 확정 선정(ldsLatestA) } — 예전에 같은 날 확정 두 벌이 섞인 지난 날을 정리(그 날짜 파일 close.market.leaders 로 · 9.29-99) · days[].a 에도 적어 둠
+export function scFixDays(file, fixA = {}) {
+  const f = scNorm(file); let fixed = 0;
+  for (const [d, a] of Object.entries(fixA || {})) {
+    if (!Array.isArray(a) || !a.length) continue; const i = f.days.findIndex((x) => x.date === d); if (i < 0 || Array.isArray(f.days[i].a)) continue;
+    const before = f.rows.length, kept = ldsKeepA(f.rows, d, a); if (kept === f.rows) continue; // 맞는 행 0(또는 기준 없음) → 손대지 않고 days[].a 도 안 적음 → 다음 run 이 다시 정리 (게이트 [1826] 권고 ①)
+    f.rows = kept; f.days[i] = Object.assign({}, f.days[i], { a }); fixed += before - f.rows.length;
+  }
+  return { file: f, fixed };
+}
+export async function collectScorecard({ fetchImpl = fetch, timeoutMs = 10000, get = null, date, closeAt, file = null, units = {}, allThemes = null, fixA = null, budgetMs = SC_BUDGET_MS, conc = SC_CONC, gapMs = SC_GAP_MS, clock = () => Date.now(), sleep = (ms) => new Promise((ok) => setTimeout(ok, ms)) } = {}) {
   const NV_HEAD = { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" };
   const g = get || (async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
   const t0 = clock(), deadline = t0 + budgetMs, errors = []; let requests = 0;
   if (!(typeof closeAt === "string" && closeAt >= SC_CLOSE_MIN)) return { file: scNorm(file), skipped: "close.at " + closeAt + " < " + SC_CLOSE_MIN + " — 마감 봉 규칙", added: 0, filled: 0, requests: 0, errors, ms: 0 };
   const rows = []; const n = {};
   for (const u of Object.keys(SC_UNITS)) if (units[u]) { const rs = scRowsFrom(date, u, units[u]); n[u] = rs.length; rows.push(...rs); }
-  const { file: f, added } = scMerge(file, rows, { date, closeAt, baseline: baselineOf(allThemes), n });
+  const fx = fixA ? scFixDays(file, fixA) : { file, fixed: 0 };
+  const { file: f, added } = scMerge(fx.file, rows, Object.assign({ date, closeAt, baseline: baselineOf(allThemes), n }, units.a ? { a: ldsLatestA(units.a) } : {}), { replace: ["a"] });
   const pending = scPending(f, date); let filled = 0;
   if (pending.length) {
     let kodex = null;
@@ -94,10 +118,10 @@ export async function collectScorecard({ fetchImpl = fetch, timeoutMs = 10000, g
       f.rows = f.rows.map((r) => { if (r.done || r.date > date || !bars[r.code]) return r; const x = scFill(r, bars[r.code], days, baselines, date, closeAt); if (JSON.stringify(x) !== JSON.stringify(r)) filled++; return x; });
     }
   }
-  return { file: f, added, filled, pending: pending.length, requests, errors, ms: clock() - t0, n };
+  return { file: f, added, filled, pending: pending.length, requests, errors, ms: clock() - t0, n, fixed: fx.fixed };
 }
 export function scText(res) {
   if (res.skipped) return "성적표 건너뜀: " + res.skipped;
   const n = res.n || {};
-  return `성적표 ${Object.keys(n).map((u) => u + " " + n[u]).join(" · ") || "행 없음"} · 새 행 ${res.added} · 채움 ${res.filled}/${res.pending || 0} · 요청 ${res.requests}회${typeof res.ms === "number" ? " " + (res.ms / 1000).toFixed(1) + "초" : ""}${res.errors && res.errors.length ? " · 실패 " + res.errors.slice(0, 5).join(" / ") : ""}`;
+  return `성적표 ${Object.keys(n).map((u) => u + " " + n[u]).join(" · ") || "행 없음"} · 새 행 ${res.added}${res.fixed ? " · 지난 날 중복 정리 " + res.fixed + "행" : ""} · 채움 ${res.filled}/${res.pending || 0} · 요청 ${res.requests}회${typeof res.ms === "number" ? " " + (res.ms / 1000).toFixed(1) + "초" : ""}${res.errors && res.errors.length ? " · 실패 " + res.errors.slice(0, 5).join(" / ") : ""}`;
 }
