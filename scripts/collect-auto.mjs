@@ -14,13 +14,17 @@
 // 아침 브리핑 (9.29-97 원장 [1775][1779][1780] t일정뉴스 · server/brief.js): 07:00 뒤 아침 run(07:05·08:05) 이 ① IR 실적 ② 공시 ③ 미국 큰 폭 ④ 국내 종목 뉴스를 받아 날짜 파일 최상위 brief 에 둔다 (morning 블록 밖)
 //   09:25 장중 run(10:20 전 시작)은 ② 공시만 한 번 더 · 섹션마다 받은 것만 덮고 실패하면 지난 값 유지 · 하루 요청 상한 BRIEF_DAILY_MAX · --brief 면 시각과 관계없이 4묶음
 //   SK하이닉스 ADR(SKHY) 환산 (원장 [1784]): 아침 run 이 한국 SK하이닉스 전일 종가 1회 + 지난 파일의 괴리 이력(요청 0)
-import { readFileSync } from "node:fs";
+// 9.29-100 (원장 [1845]~[1850]): 주도 테마 = 급등 묶음(server/surge.js) — 테마 구성표 auto/observe/theme-map.json(아침 run 이 7일마다 다시 만듦 · 없으면 아무 run 이나 만듦 · 실패면 옛 표)
+//   장중 live = 09:30 부터 급등 묶음 · 마감: 오늘 확정이 없는 첫 close run(16:20) 이 정규장 값(15:30 봉)으로 한 번 고름 · 19:45·20:20 은 다시 고르지 않고 확정 수급만 채움
+//   옛 방식(T·L)은 close.shadow(kind old-TL) 에 비교용으로 계속 계산(성적표 s) · 그림자 V2 는 끔 · --map=파일 (--dry 에서 구성표를 로컬 파일로) · --mapout=파일 (--dry 에서 새로 만든 표 저장)
+import { readFileSync, writeFileSync } from "node:fs";
 import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay, kstTime, nextBusinessDays } from "../shared/calendar.js";
 import { collectBrief, mergeBrief, briefText, BRIEF_SECTIONS } from "../server/brief.js";
 import { collectWatch, watchText, mergeWatch } from "../server/watch.js"; // 관심 후보 (9.29-97 범위 확장 · 확정 close run → close.watch → 다음 아침 brief ④)
-import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist } from "../server/auto.js";
-import { RVOL_BAR_COUNT } from "../server/shadow.js";
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist, regimeOf as regimeOfAmt } from "../server/auto.js";
+import { memoGet, TOP10_CODES } from "../server/shadow.js";
+import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
 import naver from "../server/sources/naver.js";
@@ -98,15 +102,23 @@ const save = !has("dry") && token && repo;
 // ---- 그림자 V2 · 뉴스 v2 입력 (9.29-84) ----
 // RVOL 20일 평균용 일봉: 중계 /day(종가×거래량 근사 · 앱과 같은 길) → 못 받으면 네이버 일봉(C 등급 계산과 같은 주소). server/shadow.js barRows 가 두 모양 다 읽는다
 const RELAY = "https://eden-chart.cmh-eden.workers.dev", NV_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
-async function rvolBars(code) {
-  try { const r = await fetch(`${RELAY}/day?code=${code}&count=${RVOL_BAR_COUNT}`, { signal: AbortSignal.timeout(10000) }); if (r.ok) return await r.json(); } catch (e) {}
-  const r = await fetch(chartUrl(code, date), { headers: { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": NV_UA }, signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json();
+const nvGet = async (u) => { const r = await fetch(u, { headers: { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": NV_UA }, signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+// 테마 구성표 (9.29-100): 저장소(또는 --map 로컬 · --dry 면 공개 저장소) 에서 읽고 · rebuild=true(아침) 면 7일 지났을 때, 아니면 아예 없을 때만 다시 만든다(약 270회 · 0.2초 간격 · 2분 30초 예산) · 실패면 옛 표
+async function loadThemeMap({ rebuild = false } = {}) {
+  let m = null;
+  try { m = arg("map") ? JSON.parse(readFileSync(arg("map"), "utf8")) : save ? (await readFile(MAP_FILE)).json : await readPublic(MAP_FILE); } catch (e) {}
+  if (m && !(rebuild && mapStale(m, date))) return { map: m, built: false };
+  const b = await buildThemeMap({ get: nvGet, date, sleep: (ms) => new Promise((ok) => setTimeout(ok, ms)), gapMs: 200, deadline: Date.now() + 150000 });
+  console.log(`테마 구성표 ${b.map ? "새로 만듦 " + b.map.themes.length + "개 · 종목 " + b.map.codes : "만들기 실패(" + (m ? "옛 표 " + m.builtAt + " 그대로" : "표 없음") + ")"} · 요청 ${b.requests}회${b.errors.length ? " · 참고 " + b.errors.slice(0, 3).join(" / ") : ""}`);
+  if (!b.map) return { map: m, built: false, requests: b.requests };
+  if (save) { try { await writeFile(MAP_FILE, b.map, `테마 구성표 ${date} ${b.map.themes.length}개`); } catch (e) { console.log("테마 구성표 저장 실패:", e.message || e); } }
+  else if (arg("mapout")) writeFileSync(arg("mapout"), JSON.stringify(b.map));
+  return { map: b.map, built: true, requests: b.requests };
 }
 // 직전 live.json(오늘 것) = RVOL 캐시 · 이름 안정화 · 뉴스 캐시·하루 상한의 원천. 저장 모드면 저장소, --dry 면 공개 저장소를 읽기만 한다 (없으면 null → 캐시 없이)
 async function prevLive() { try { const j = save ? (await readFile(AUTO_DIR + "/live.json")).json : await readPublic(AUTO_DIR + "/live.json"); return j && j.date === date ? j : null; } catch (e) { return null; } }
-const shadowOpts = (pl) => ({ bars: rvolBars, rvolCache: pl && pl.shadow ? pl.shadow.rvolCache : null, prevNames: pl && pl.shadow && Array.isArray(pl.shadow.names) ? pl.shadow.names : [] });
 const news2Opts = (pl) => ({ prevDate: prevBusinessDay(date, cfg.holidays), cache: pl && pl.news2 ? pl.news2.cache : null, budget: pl && pl.news2 ? pl.news2.budget : null });
-const shadowText = (sh) => !sh ? "그림자 없음" : sh.error ? "그림자 실패: " + sh.error : `그림자 V2 T 코스피 ${sh.T.KS}·코스닥 ${sh.T.KQ} · 게이트 ${sh.gatePassed} → 상세 ${sh.scanned} → 자격(L≥${sh.minL}) ${sh.qualified} · 요청 네이버 +${(sh.requests || {}).naver ?? "?"} · 일봉 ${(sh.requests || {}).rvol ?? 0} · ${sh.ms}ms: `
+const shadowText = (sh) => !sh ? "그림자 없음" : sh.error ? "그림자 실패: " + sh.error : sh.kind === "old-TL" ? `옛 방식(T·L · 비교용) T=${sh.T}억: ${sh.text || "없음"}` : `그림자 V2 T 코스피 ${sh.T.KS}·코스닥 ${sh.T.KQ} · 게이트 ${sh.gatePassed} → 상세 ${sh.scanned} → 자격(L≥${sh.minL}) ${sh.qualified} · 요청 네이버 +${(sh.requests || {}).naver ?? "?"} · 일봉 ${(sh.requests || {}).rvol ?? 0} · ${sh.ms}ms: `
   + (sh.themes || []).map((t, i) => `${i + 1}.${t.name}${t.nameKept ? "(이름 유지)" : ""} ${t.score} L${t.L} RVOL ${t.rvolMed ?? "—"} 대금 ${t.valueExTop10}억(TOP10 제외${t.top10Share ? " · TOP10 " + t.top10Share + "%" : ""})`).join(" / ") + (sh.errors && sh.errors.length ? ` · 참고 ${sh.errors.length}건` : "");
 const news2Text = (live) => (live.themes || []).map((t) => t.news2 ? `${t.name}: ${t.news2.label}${t.news2.items.length ? " — " + t.news2.items.slice(0, 3).map((x) => `[${x.grade}] ${x.title.slice(0, 40)} (${x.office}${x.srcN > 1 ? " 외 " + (x.srcN - 1) : ""})`).join(" · ") : ""}${(t.news2.signals || []).length ? " · ⚡강세 신호: " + t.news2.signals.map((x) => `${x.title.slice(0, 36)} (${x.office} ${x.at ? x.at.slice(11) : ""})`).join(" / ") : ""}` : `${t.name}: 뉴스 v2 없음`).join("\n") + (live.news2 ? `\n뉴스 v2 요청 +${live.news2.requests} · 오늘 누적 ${live.news2.budget ? live.news2.budget.used : "?"}${live.news2.errors.length ? " · 참고 " + live.news2.errors.slice(0, 3).join(" / ") : ""}` : "");
 // ---- 장중 실시간 (live): 09:05~15:30 + 마감 뒤 늦게 도착한 실행은 16:00 까지 「15:30 장 마감 값」(server/auto.js liveSlot), auto/live.json 하나에 덮어쓰고 끝 (날짜 파일·latest 는 손대지 않음) ----
@@ -114,15 +126,17 @@ if (when === "live") {
   const hm = kstTime(now).slice(0, 5), slot = liveSlot(hm);
   if (!has("force") && !slot) { console.log(`${hm} 장중 아님 — 건너뜀`); process.exit(0); }
   const tm = save ? (await readFile(autoFile(date)).catch(() => ({ json: null }))).json : null;
-  const pl = await prevLive(); // 그림자 캐시·이름 안정화·뉴스 캐시 (오늘 것만)
-  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), shadow: shadowOpts(pl), news2: news2Opts(pl) });
+  const pl = await prevLive(); // 뉴스 캐시 (오늘 것만)
+  const tmap = await loadThemeMap(); // 9.29-100 테마 구성표 (없을 때만 새로 만듦)
+  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force") } }); // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
   if (slot && slot.closed) { live.at = slot.at; live.closed = true; console.log(`${hm} 도착 — 장 마감(15:30) 뒤 늦게 시작한 실시간 실행이라 「15:30 장 마감 값」으로 받음`); }
   if (save && !liveOverwrite((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, live)) { console.log("오늘 장 마감 값이 이미 있어 장중 값으로 덮지 않음 — 건너뜀"); process.exit(0); }
-  console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${(live.themes || []).map((t) => `${t.name} ${t.rate > 0 ? "+" : ""}${t.rate}% (대금 ${Math.round(t.value || 0).toLocaleString("ko-KR")}억 · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
+  console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${live.wait ? live.wait + " 부터 고름(아직)" : (live.themes || []).map((t) => `${t.name}${t.relax ? "[선정완화 " + t.relax.text + "]" : ""} ${t.rate > 0 ? "+" : ""}${t.rate}% (강한 ${t.strongN} · +10% ${t.n10} · 대장 ${t.lead ? t.lead.name : "-"} · ${t.flowState === "pending" ? "수급 확인 전" : t.flowState} · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
+  if (live.universe) console.log(`대상 상위 10% ${live.universe.n}종목(받은 ${live.universe.have}) · 기준선 ${live.universe.cut}억 · 쪽 ${JSON.stringify(live.universe.pages)} · 사다리 ${(live.ladder.used || []).map((u) => u.step + ":" + u.passed).join(" ")} · 선정 요청 ${JSON.stringify(live.surgeReq)}${live.ref ? " · 참고 " + live.ref.name + " " + live.ref.money + "억" : ""}${live.short ? " · " + live.short : ""}`);
   if (live.errors.length) console.log("일부 실패:", live.errors.join(" / "));
-  console.log("후보:", (live.candidates || []).map((c) => `${c.name}${c.alias.length ? "=" + c.alias.join("=") : ""} ${c.score} [${c.stocks.join(",")}]`).join(" / "));
-  console.log(shadowText(live.shadow)); console.log(news2Text(live));
-  if (!live.themes || !live.themes.length) { console.error("주도 테마를 못 골랐음"); process.exit(1); }
+  console.log("후보:", (live.candidates || []).map((c) => `${c.name}${c.alias.length ? "=" + c.alias.join("=") : ""} 단계${c.step} [${c.stocks.join(",")}]`).join(" / "));
+  console.log(news2Text(live));
+  if (!live.wait && (!live.themes || !live.themes.length) && !live.short) { console.error("주도 테마를 못 골랐음 — live.json 은 지난 값 그대로"); process.exit(1); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
@@ -179,7 +193,11 @@ const provisional = when === "close" && !has("final") && date === kstDate(now) &
 if (when === "morning" && save) {
   try {
     const pf = prevFile, L = pf.json && pf.json.close && pf.json.close.market && pf.json.close.market.leaders;
-    if (L && (!L.flowReady || L.provisional)) {
+    if (L && L.v === SURGE_V && L.method === "surge") { // 9.29-100: 급등 묶음은 다시 고르지 않고 어제 확정 수급만 채움(종목 3×5 = 최대 15회)
+      if (!L.flowReady) { const r = await fillFinalFlows(L, { get: nvGet, bizdate: prevDay.replace(/-/g, "") });
+        if (r.got) { pf.json.close.market.leaders = r.leaders; pf.json.updatedAt = Date.now(); await writeFile(autoFile(prevDay), pf.json, `자동 연동 ${prevDay} 주도 테마 확정 수급 채움`); console.log(`어제(${prevDay}) 주도 테마 확정 수급 채움 ${r.got}종목 · 요청 ${r.requests}회`); }
+        else console.log(`어제(${prevDay}) 종목 수급 아직 없음 — 그대로 이어 씀`); }
+    } else if (L && (!L.flowReady || L.provisional)) {
       const m = pf.json.close.market, nl = await collectLeaders({ now, date: prevDay, bizdate: prevDay.replace(/-/g, ""), kospi: m.kospi || null, us: pf.json.morning && pf.json.morning.us, history: await loadHistory(prevDay), provisional: false });
       if (nl.all) { if (!pf.json.close.themes) pf.json.close.themes = nl.all; delete nl.all; }
       if (nl.flowReady) { if (L.provisional) m.leadersProvisional = L; m.leaders = nl; pf.json.updatedAt = Date.now(); await writeFile(autoFile(prevDay), pf.json, `자동 연동 ${prevDay} 주도 테마 확정(수급 채움)`); console.log(`어제(${prevDay}) 주도 테마 확정: ${nl.text}`); }
@@ -187,13 +205,35 @@ if (when === "morning" && save) {
     }
   } catch (e) { console.log("어제 주도 테마 수급 채우기 실패:", e.message || e); }
 }
+// 9.29-100 테마 구성표 주 1회: 아침 run 이 7일 지났으면 다시 만든다(약 270회 · 실패하면 옛 표) — --dry 는 --map/--mapout 을 줄 때만
+if (when === "morning" && (save || has("map") || has("mapout"))) { try { await loadThemeMap({ rebuild: true }); } catch (e) { console.log("테마 구성표 확인 실패:", e.message || e); } }
+// 9.29-100 마감 주도 테마: 급등 묶음(오늘 확정 없으면 정규장 값으로 한 번 · 있으면 확정 수급만) + 옛 방식(T·L) 비교용 → close.shadow · 실패하면 leaders 없음(앞선 값 유지 · mergeCloseLeaders)
+async function closeLeaders(market) {
+  const hm = kstTime(now).slice(0, 5), get = memoGet(nvGet), history = await loadHistory(date), us = todayMorning && todayMorning.us;
+  const prevL = prev.json && prev.json.date === date && prev.json.close && prev.json.close.market ? prev.json.close.market.leaders : null;
+  let res = {};
+  try {
+    const tmap = prevL && prevL.v === SURGE_V ? { map: null } : await loadThemeMap();
+    res = await collectSurgeLeaders({ get, map: tmap.map, date, hm, us, history, kospi: market.kospi || null, kosdaq: market.kosdaq || null, top10: TOP10_CODES, prev: prevL, final: hm >= "18:00" || date !== kstDate(now), regimeOf: (a, h) => regimeOfAmt(a, h) });
+    console.log(`급등 묶음 ${res.kept ? "(다시 안 고름 · " + (res.flowReq !== undefined ? "확정 수급 채움 " + res.flowReq + "회" : "그대로") + ")" : "새로 고름(" + res.basis + ")"}: ${res.text || "없음"}`);
+    if (!res.kept && Array.isArray(res.themes)) { const pl2 = (await prevLive()) || {}; const ht = await attachHeat(res.themes, { get, date, cache: pl2.heat }); console.log(`과열 꼬리표 요청 ${ht.requests}회`); const al = await attachAlerts(res.themes, { get, date, cache: pl2.alerts }); console.log(`시장경보 확인 ${Object.keys(al.codes).length}종목 · 요청 ${al.requests}회`); } // K7 · 네이버 basic(장중 live 가 받은 것은 재사용)
+    if (!res.kept && res.universe) console.log(`대상 ${res.universe.n}종목 기준선 ${res.universe.cut}억 · 사다리 ${(res.ladder.used || []).map((u) => u.step + ":" + u.passed).join(" ")} · 요청 ${JSON.stringify(res.requests)}${res.ref ? " · 참고 " + res.ref.name : ""}${res.short ? " · " + res.short : ""}`);
+  } catch (e) { console.log("급등 묶음 선정 실패:", e.message || e); res = {}; }
+  try { // 옛 방식(T·L) — 비교용 그림자 (성적표 s) · close.themes(테마 100개 목록)도 여기서
+    const o = await collectLeaders({ get, now, date, kospi: market.kospi || null, kosdaq: market.kosdaq || null, us, history, provisional });
+    if (o.all) { res.all = o.all; delete o.all; }
+    res.shadow = Object.assign({ kind: "old-TL", label: "옛 방식(T·L) 비교용" }, o);
+  } catch (e) { res.shadow = { kind: "old-TL", error: String((e && e.message) || e) }; }
+  console.log(`마감 주도 테마 요청 ${get.count()}회`);
+  return res;
+}
 let part = when === "intraday"
   ? await collectIntraday({ adapters: { naver }, now })
   : when === "themes"
   ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: todayMorning })
   : when === "morning"
   ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null }), listings: () => fetchListings(fetch, { today: date }), adr: { krClose: () => fetchKrClose(fetch, "000660", date), hist: skhyHist() } })
-  : await collectClose({ adapters: { naver }, now, leaders: async (market) => collectLeaders({ now, date, kospi: market.kospi || null, kosdaq: market.kosdaq || null, us: todayMorning && todayMorning.us, history: await loadHistory(date), provisional, shadow: shadowOpts(await prevLive()) }), listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
+  : await collectClose({ adapters: { naver }, now, leaders: closeLeaders, listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
 // 같은 날 앞선 close run 과 합친다: 잠정 → 확정이면 잠정은 leadersProvisional 로 보관, 확정 뒤 잠정이 늦게 오면 확정 유지 (server/auto.js mergeCloseLeaders)
 if (when === "close" && prev.json && prev.json.date === date && prev.json.close) mergeCloseLeaders(prev.json.close, part);
 const saveAs = when === "themes" ? "morning" : when; // 테마만 받은 것도 아침 기록에 들어간다

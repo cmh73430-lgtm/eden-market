@@ -7,6 +7,8 @@ import { collectAll, normalizeYield } from "./collect.js";
 // 9.29-84 원장 [1597]: 그림자(shadow) 선정 V2 · 뉴스 v2 — 현행 선정·화면은 그대로, 옵션(shadow·news2)을 넘긴 run 만 같이 계산해 블록을 더한다 (server/shadow.js · server/news2.js)
 import { selectThemesV2, memoGet, attachRvol } from "./shadow.js";
 import { fetchNews2 } from "./news2.js";
+import { tvThreshold } from "../shared/trade-value.js";
+import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat } from "./surge.js"; // 9.29-100 급등 묶음 선정
 export { selectThemesV2, memoGet, attachRvol, fetchNews2 };
 
 export const AUTO_DIR = "auto";
@@ -186,17 +188,14 @@ export async function collectIntraday({ adapters, fetchImpl = fetch, now = new D
 //  16:20 잠정(provisional): 게이트·L·U·B 만 (F=1·C=1 중립) = 요청 1+12. 18:40 확정: + 수급 6테마×3종목 + 일봉 6테마×2종목 = 43.
 const NV_HEAD = { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" };
 export const PREV_MIN_STOCKS = 5, PREV_FLAT = 0.5, LEAD_MIN_RATE = 1, LEAD_MIN_RISE = 0.6, LEAD_MIN_EXCESS = 1, LEAD_POOL = 40, HOT_RATE = 5, HOT_MIN = 2;
+export const PRE_MAX = 20; // 아침 전일 주도주 프리마켓: 한 번에 받을 종목 상한 (테마 3 × 슬롯 5 = 15 · 9.29-100 원장 [1846])
 export const SLOT_N = 5, FLOW_TOP = 6, FLOW_STOCKS = 3, CHART_TOP = 6, CHART_STOCKS = 2, WEAK_AMOUNT = 70000, PERSIST_RANK = 20, PERSIST_MAX = 6;
 const round2 = (x) => Number(x.toFixed(2));
 
 // 거래대금 기준 T(억): 코스피 당일 거래대금 A(조 = amount억/10000)에 연동. 사용자 표(10조 미만 500 / 10조↑ 700 / 20조↑ 1000)의 세 점을 지나는 구간별 직선,
 // 바닥 500 · 천장 1500, 50억 단위 반올림. amount 를 모르면 가장 느슨한 500 (아침 run 은 전날 close 의 amount 를 넘긴다)
-export function thresholdFor(amountEok) {
-  const A = typeof amountEok === "number" && amountEok > 0 ? amountEok / 10000 : null;
-  if (A === null) return 500;
-  const t = A <= 7 ? 500 : A < 10 ? 500 + ((A - 7) / 3) * 200 : A < 20 ? 700 + ((A - 10) / 10) * 300 : A < 30 ? 1000 + ((A - 20) / 10) * 500 : 1500;
-  return Math.round(t / 50) * 50;
-}
+//  9.29-100 원장 [1880]: 계산은 shared/trade-value.js tvThreshold 하나(앱 매매수칙 표 · 종가배팅 칸과 같은 함수 · 어긋남 0)
+export function thresholdFor(amountEok) { return tvThreshold(amountEok); }
 
 const themeRow = (g) => ({ no: g.no, name: String(g.name || "").trim(), count: num(g.totalCount), rate: num(g.changeRate), rise: num(g.totalCount) ? (num(g.riseCount) || 0) / num(g.totalCount) : 0 });
 export function pickThemes(groups, n = 2) {
@@ -469,7 +468,8 @@ export function nxtMove(d) {
   // 8시 전(프리마켓 시작 전)에는 세션 이름이 비고 상태가 PREOPEN → NXT 마지막 가격 = 어제 저녁 애프터마켓 마지막 값
   const session = /AFTER/i.test(type) ? "after" : /PRE/i.test(type) && /^OPEN$/i.test(status) ? "pre" : /PREOPEN/i.test(status) && !/REGULAR/i.test(type) ? "after" : null;
   const pct = session && price && close ? Number(((price / close - 1) * 100).toFixed(2)) : null;
-  return { session: pct === null ? null : session, pct, raw: type + "/" + status };
+  const v = num(o.accumulatedTradingValueRaw); // NXT 누적 거래대금(원 → 억) — 프리마켓 세션이면 그날 프리 누적 (9.29-100 원장 [1846] 주도주 프리 거래대금 · 있으면)
+  return { session: pct === null ? null : session, pct, raw: type + "/" + status, value: v === null ? null : round2(v / 1e8) };
 }
 export const moveState = (pct) => (pct === null || pct === undefined ? "" : pct >= PREV_FLAT ? "up" : pct <= -PREV_FLAT ? "down" : "flat");
 const avg = (a) => (a.length ? Number((a.reduce((x, y) => x + y, 0) / a.length).toFixed(2)) : null);
@@ -494,15 +494,21 @@ export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, 
     themes = sel.themes.map((t) => fromLeader(t, sel.T));
   }
   const raws = [];
+  // 9.29-100 원장 [1846] 「그 주도주가 프리마켓에서 어땠는지」: 종목마다 s.pre = { pct, state, value? } · 프리 시작 전이면 s.preNote = "아직" · 못 받으면 "못 받음" (판정 문턱 = 테마 단위와 같은 moveState ±0.5%)
+  //  요청: 지금처럼 종목마다 polling 1회 (테마 3 × 슬롯 최대 5 = 15 · 상한 PRE_MAX — 넘는 종목은 「못 받음」)
+  let asked = 0;
   for (const t of themes) {
     const moves = { after: [], pre: [] }; let leadPre = null;
     for (const s of t.stocks) {
-      try {
-        const j = await get("https://polling.finance.naver.com/api/realtime/domestic/stock/" + s.code);
-        const m = nxtMove(j && j.datas && j.datas[0]);
-        raws.push(s.code + " " + m.raw);
-        if (m.session) { moves[m.session].push(m.pct); if (m.session === "pre" && s === t.stocks[0]) leadPre = m.pct; }
-      } catch (e) { raws.push(s.code + " " + (e.message || e)); }
+      let d = null;
+      if (asked >= PRE_MAX) { s.preNote = "못 받음"; continue; }
+      try { asked++; const j = await get("https://polling.finance.naver.com/api/realtime/domestic/stock/" + s.code); d = j && j.datas && j.datas[0]; } catch (e) { raws.push(s.code + " " + (e.message || e)); }
+      if (!d) { s.preNote = "못 받음"; continue; }
+      const m = nxtMove(d);
+      raws.push(s.code + " " + m.raw);
+      if (m.session) { moves[m.session].push(m.pct); if (m.session === "pre" && s === t.stocks[0]) leadPre = m.pct; }
+      if (m.session === "pre") { s.pre = Object.assign({ pct: m.pct, state: moveState(m.pct) }, typeof m.value === "number" ? { value: m.value } : {}); delete s.preNote; }
+      else { if (m.session === "after") s.after = { pct: m.pct, state: moveState(m.pct) }; if (!s.pre) s.preNote = "아직"; }
     }
     const a = avg(moves.after), p = avg(moves.pre);
     if (a !== null) t.after = { pct: a, state: moveState(a), n: moves.after.length };
@@ -592,10 +598,10 @@ export async function fetchNews(fetchImpl, code, { n = 2, timeoutMs = 10000, wor
 // 장중 한 번: 코스피(등락·거래대금) · 코스피 외인/기관(장중 누적) · 프로그램 · 잠정 규칙으로 고른 주도 테마 3개(테마 거래대금·대장주 등락·거래대금) + 대장주 뉴스 2개 + 종목별 외인/기관(그 날 값이 이미 있을 때만 — 보통 장 마감 뒤)
 // 결과는 auto/live.json 하나에 덮어쓴다 (날짜 파일에는 안 넣음). 실패한 조각은 errors 에 적고 나머지는 남긴다
 // shadow · news2 (9.29-84 원장 [1597]): shadow = { bars, rvolCache, prevNames } → out.shadow(그림자 순위·RVOL·TOP10 제외) + 현행 3테마 슬롯에 rvol · news2 = { prevDate, cache, budget } → 테마마다 row.news2(검증 뉴스) + out.news2(캐시·상한). 둘 다 없으면 예전과 같다
-export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, us = null, history = [], date = null, n = 3, shadow = null, news2 = null } = {}) {
+export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, us = null, history = [], date = null, n = 3, news2 = null, surge = null } = {}) {
   const day = date || kstDate(now), out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), date: day, errors: [] };
   const get0 = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
-  const get = shadow || news2 ? memoGet(get0) : get0;
+  const get = memoGet(get0); // 같은 주소 한 번 (테마 상세·종목 뉴스를 선정·뉴스 v2 가 나눠 씀) · get.count() = 실제 요청 수
   const getText = async (u) => { const r = await fetchImpl(u, { headers: { Accept: "application/rss+xml, text/xml, text/html", "User-Agent": NV_HEAD["User-Agent"] }, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
   const post = async (u, body) => { const r = await fetchImpl(u, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "text/html", "User-Agent": NV_HEAD["User-Agent"] }, body, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
   try { const q = await adapters.naver.quote("domestic:KOSPI"); out.kospi = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: round2(q.price), prev: round2(q.prevClose), amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스피: " + (e.message || e)); } // prev = 전일 종가 (장중에 close 가 바뀌어도 그대로) → 앱 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1652]) · close·prev 2자리 반올림(9.29-96 원장 [1769] 「6,803.900000000000」 꼬리)
@@ -606,14 +612,19 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSDAQ/trend")); out.investQ = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("코스닥 수급: " + (e.message || e)); }
   try { out.programQ = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); }
   try {
-    const L = await collectLeaders({ fetchImpl, timeoutMs, now, date: day, kospi: out.kospi || null, kosdaq: out.kosdaq || null, us, history, provisional: true, chart: true, n, get, shadow: shadow ? Object.assign({ hm: out.at }, shadow) : null }); // 장중: 수급(F)만 빼고 C 차트 자리까지 사용자 규칙대로
-    out.chartReady = !!L.chartReady; out.T = L.T; out.regime = L.regime; out.relaxed = L.relaxed; out.text = L.text; out.candidates = (L.candidates || []).map((t) => ({ name: t.name, score: t.score, alias: t.alias || [], stocks: (t.slots || []).map((s) => s.code) }));
-    if (L.shadow) out.shadow = L.shadow;
+    // 9.29-100 원장 [1845][1847]~[1850]: 장중 주도 테마 = 급등 묶음(server/surge.js) · 09:30 부터 · 옛 방식(T·L)·그림자 V2 는 장중에 계산 안 함(마감 run 이 비교용 옛 방식만) · surge = { map, flowsFor, regular, top10 }
+    if (!surge || !surge.map) throw new Error("테마 구성표 없음 — 급등 묶음 선정 못 함");
+    const hmReal = kstTime(now).slice(0, 5);
+    if (hmReal < SURGE_START && !surge.force) { out.wait = SURGE_START; out.themes = []; out.text = ""; return out; } // 09:30 전 = 아직 (지어내기 0)
     const bizdate = day.replace(/-/g, "");
+    const L = await selectSurge({ get, map: surge.map, date: day, hm: hmReal, kosdaqAmount: out.kosdaq && out.kosdaq.amount, regular: !!surge.regular, flowsFor: surge.flowsFor === false ? null : surge.flowsFor || makeFlowsFor(get, bizdate, { hm: hmReal }), us, history, kospiAmount: out.kospi && out.kospi.amount, top10: surge.top10 || new Set(), n });
+    out.method = "surge"; out.v = L.v; out.basis = L.basis; if (L.closing) out.closing = L.closing; out.text = surgeText(L.themes); out.universe = L.universe; out.ladder = L.ladder; out.surgeReq = L.requests; if (L.ref) out.ref = L.ref; if (L.short) out.short = L.short; if (L.errors.length) out.errors.push(...L.errors.slice(0, 6).map((e) => "선정: " + e));
+    out.candidates = L.themes.map((t) => ({ name: t.name, step: t.step, alias: t.alias || [], stocks: (t.slots || []).map((s) => s.code) }));
     const n2 = news2 ? { cache: news2.cache || null, budget: news2.budget || null, shared: {}, requests: 0, errors: [] } : null;
     out.themes = [];
     for (const t of L.themes.slice(0, n)) {
-      const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, excess: t.excess, value: t.value, hot: t.hot, hotN: t.hotN, grades: t.grades, score: t.score, us: t.us, breadth: t.breadth, stocks: t.stocks, slots: (t.slots || []).slice(0, 3).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, ...(typeof s.prev === "number" ? { prev: s.prev } : {}), ...(s.chart ? { chart: s.chart } : {}) })), news: [] }; // prev = 종목 전일 종가 (9.29-87 원장 [1656])
+      const row = { no: t.no, name: t.name, alias: t.alias || [], rate: t.rate, rise: t.rise, value: t.value, hot: t.hot, hotN: t.hotN, strongN: t.strongN, strongAvg: t.strongAvg, n10: t.n10, limitN: t.limitN, money: t.money, lead: t.lead, flow: t.flow, flowState: t.flowState, step: t.step, relax: t.relax, us: t.us, tags: t.tags, chart: t.chart, stocks: t.stocks,
+        slots: (t.slots || []).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, ...(typeof s.prev === "number" ? { prev: s.prev } : {}), ...(s.limit ? { limit: true } : {}), ...(s.chart ? { chart: s.chart } : {}) })), news: [] }; // prev = 종목 전일 종가 (9.29-87 원장 [1656]) · 슬롯 = 강한 종목 거래대금 순 최대 5 (앱은 앞 3개)
       for (const s of row.slots.slice(0, 2)) { // 종목별 외인·기관: 오늘 bizdate 가 있을 때만 (장중엔 보통 없음)
         try { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) s.flow = { foreign: f.foreign, inst: f.inst }; } catch (e) {}
       }
@@ -635,7 +646,8 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
       }
       out.themes.push(row);
     }
-    if (out.shadow) attachRvol(out.themes, out.shadow); // 현행 3테마 주요 종목에도 RVOL(평소 대비 배수) 병기 — 원장 [1596] 권장안 ⑧
+    try { const ht = await attachHeat(out.themes, { get, date: day, cache: surge.heatCache || null, hm: surge.regular ? null : hmReal }); out.heat = { date: ht.date, codes: ht.codes, open: ht.open, a20: ht.a20 }; /* 게이트 [1894] B: 슬롯 rvol(거래대금 평소의 ×n) 되살림 · 장 마감 뒤(regular)는 경과율 1 */ if (ht.errors.length) out.errors.push(...ht.errors.map((e) => "과열: " + e)); } catch (e) { out.errors.push("과열: " + (e.message || e)); } // 과열 꼬리표 3종(표시만 · 일봉 하루 1회 · 시가 1회)
+    try { const al = await attachAlerts(out.themes, { get, date: day, cache: surge.alertCache || null }); out.alerts = { date: al.date, codes: al.codes }; if (al.errors.length) out.errors.push(...al.errors.map((e) => "경보: " + e)); } catch (e) { out.errors.push("경보: " + (e.message || e)); } // 시장경보 꼬리표(K7 · 네이버 basic · 하루 캐시 → 다음 run 재사용)
     if (n2) out.news2 = { v: 1, cache: n2.cache, budget: n2.budget, requests: n2.requests, errors: n2.errors.slice(0, 12) };
   } catch (e) { out.errors.push("주도 테마: " + (e.message || e)); }
   return out;

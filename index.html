@@ -465,6 +465,27 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .how { font-size: 13px; line-height: 1.7; } .how ol { margin: 4px 0; padding-left: 20px; }
 /* 9.29-94 원장 [1712][1713][1714]: 묶음(①전날 · ②장전 확인 · ③장중 확인 · ④장 마감 · 기타)마다 구분 색 — 머리말 띠 배경 · 카드 왼쪽 5px 테두리 · 묶음 옅은 바탕
    상승 빨강(--up)·하락 파랑(--down)과 다른 색조(회갈 · 초록 · 주황 · 보라 · 회색) · 띠 글자 대비 밝음 6.0~7.4 / 다크 8.0~9.9 (4.5 이상) */
+:root { --rlx: #5b34a8; --rlx-bg: #efe8fb; --sbw: #b3261e; --sbw-bg: #fdecea; --sbh: #8a4b00; --sbh-bg: #fff1dc; --sbp: #1f5f8b; --sbp-bg: #e6f1fa; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --rlx: #d3bdff; --rlx-bg: #33284a; --sbw: #ffb4ab; --sbw-bg: #4a2420; --sbh: #ffcf8f; --sbh-bg: #45321a; --sbp: #a9d4f5; --sbp-bg: #1d3446; } }
+:root[data-theme="dark"] { --rlx: #d3bdff; --rlx-bg: #33284a; --sbw: #ffb4ab; --sbw-bg: #4a2420; --sbh: #ffcf8f; --sbh-bg: #45321a; --sbp: #a9d4f5; --sbp-bg: #1d3446; }
+/* 9.29-100 원장 [1850] 선정완화 배지 · 종목 꼬리(짝꿍·경보·신규주·과열) · 참고 줄 · 주도주 프리 · 종가배팅 칸 — 휴대폰 390 가로 밀기 0(줄바꿈 허용) */
+.rlx { display: inline-block; font-size: 11px; font-weight: 800; line-height: 1.35; padding: 0 6px; margin-left: 5px; border-radius: 99px; background: var(--rlx-bg); color: var(--rlx); border: 1px solid var(--rlx); white-space: nowrap; vertical-align: 1px; }
+.rlxt { font-size: 11px; font-weight: 600; color: var(--rlx); margin-left: 4px; white-space: normal; }
+.lds .tn .rlx { margin-left: 4px; }
+/* 게이트 [1887] ①: 카드 이름 칸의 small 규칙(.topld .tll .tn small · .lds .tn small = 회색·보통 굵기)이 배지를 덮지 않게 선택자를 올림 — 보라·800 · 밝은 화면 대비 4.5↑(11px) */
+.topld .tll .tn small.rlx, .lds .tn small.rlx { color: var(--rlx); background: var(--rlx-bg); font-weight: 800; font-size: 11px; margin-left: 5px; }
+.topld .tll .tn small.rlxt, .lds .tn small.rlxt { color: var(--rlx); font-weight: 700; font-size: 11px; margin-left: 4px; }
+.topld .tll .rt .rtn { display: block; font-size: 10.5px; font-weight: 600; color: var(--muted); text-align: right; white-space: nowrap; } .topld .tll .tn small { word-break: keep-all; } /* 휴대폰: 「강한 종목」 같은 낱말이 줄 끝에서 쪼개지지 않게 */
+.sb { display: inline-block; font-size: 11px; font-weight: 700; line-height: 1.35; padding: 0 5px; margin: 1px 4px 1px 0; border-radius: 4px; white-space: nowrap; background: var(--note); color: var(--muted); }
+.sb.warn, .sb.new { background: var(--sbw-bg); color: var(--sbw); } .sb.heat { background: var(--sbh-bg); color: var(--sbh); } .sb.pair { background: var(--sbp-bg); color: var(--sbp); }
+.topld .tll .tsg .tsr3 { display: flex; flex-wrap: wrap; padding-left: 10px; margin-top: 1px; }
+.topld .tll .tlbad, .topld .tll .tlpre { display: block; }
+.tlref { margin: 6px 2px 0; font-size: 12.5px; line-height: 1.5; color: var(--ink); } .tlref small { color: var(--muted); }
+.prkw:empty { display: none; } .prk, .topld .tll .tlpre { display: grid; grid-template-columns: minmax(0, max-content) max-content max-content minmax(0, 1fr); column-gap: 8px; row-gap: 1px; margin-top: 4px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.prk .pkh, .tlpre .pkh { grid-column: 1 / -1; font-size: 11.5px; font-weight: 800; color: var(--muted); } .prk .pkr, .tlpre .pkr { display: contents; }
+.pkn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 9em; } .pkp, .pks { text-align: right; white-space: nowrap; font-weight: 700; } .pkp.p, .pks.p { color: var(--up); } .pkp.n, .pks.n { color: var(--down); } .pkv { color: var(--muted); min-width: 0; }
+.memoadd { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.cbguide { margin-top: 8px; font-size: 13px; } .cbguide ul { margin: 4px 0; padding-left: 18px; } .cbguide .cbh { margin: 6px 0 2px; font-weight: 700; } .cbguide .cbl { margin: 0; padding-left: 18px; } .cbguide .cbl .p { color: var(--up); font-weight: 700; } .cbguide .cbnone { margin: 4px 0; color: var(--muted); }
 :root { --s1: #6b5544; --s1-t: #f3ede7; --s2: #16704f; --s2-t: #e5f3ec; --s3: #9c4a06; --s3-t: #fcefe1; --s4: #6440aa; --s4-t: #f1ebfa; --s5: #56606b; --s5-t: #eef0f2; --s-on: #ffffff; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #cdb7a1; --s1-t: #272320; --s2: #72d3ae; --s2-t: #16261f; --s3: #f2a862; --s3-t: #2b2118; --s4: #bba0f2; --s4-t: #221e2d; --s5: #adb4be; --s5-t: #1f2228; --s-on: #15171c; } }
 :root[data-theme="dark"] { --s1: #cdb7a1; --s1-t: #272320; --s2: #72d3ae; --s2-t: #16261f; --s3: #f2a862; --s3-t: #2b2118; --s4: #bba0f2; --s4-t: #221e2d; --s5: #adb4be; --s5-t: #1f2228; --s-on: #15171c; }
@@ -740,7 +761,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
         <ul>
           <li>시총 상위 종목은 빼고, <b>외인·기관 순매수가 큰 종목</b>부터 본다. 기관 순매수는 외인과 <b>동급</b>으로 본다 (추종 성과는 기관이 더 좋았다)</li>
           <li>그중 <b>외인·기관·프로그램이 같이 사는</b> 종목 → 3박자가 맞아야 후보. 외인 혼자만 사는 종목은 뒤로</li>
-          <li>이미 너무 많이 오른 종목보다 <b>아직 덜 오른 종목</b>을 우선 (5일 누적 +35% 넘으면 제외)</li>
+          <li><b>등락률 높은 대장 · 신고가 대장</b>을 따라간다 (덜 오른 종목을 찾지 않는다) <small>(수급단타왕 강의 방식 · 2026-10-09)</small></li>
           <li>신용잔고율 높은 종목(대략 7~8% 이상)은 급락 시 반대매매가 겹쳐 <span class="tag down">제외</span>, 공매도 잔고 급증 종목도 뒤로</li>
         </ul>
         <div class="grid2">
@@ -819,7 +840,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
               <td data-l="방식">시초가 갭</td>
               <td data-l="시간">09:00~09:30</td>
               <td data-l="언제 쓰나">전일 주도테마 종목이 미 선물·SOX 호조로 갭상승 출발할 때</td>
-              <td data-l="진입 신호">09:00~09:05 첫 5분봉 고가를 거래량 실리며 돌파. 갭 +8% 넘는 출발은 추격 안 함</td>
+              <td data-l="진입 신호">09:00~09:05 첫 5분봉 고가를 거래량 실리며 돌파. 크게 뜬 출발은 뉴스(재료)에 확신이 있을 때만 상한가 따라잡기 — 보수적으로 <small>(수급단타왕 강의 방식 · 2026-10-09)</small></td>
               <td data-l="손절">첫 5분봉 저가 이탈, 또는 -2%</td>
               <td data-l="목표">+3~5%, 10:00 전 절반 정리</td>
             </tr>
@@ -845,7 +866,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
               <td data-l="언제 쓰나">정상 모드 + 미 선물 플러스 + 테마·수급·차트 다 맞을 때만</td>
               <td data-l="진입 신호">2~4단계 통과 + 종가 근처 매수세 유지(체결강도 100↑)</td>
               <td data-l="손절">종가 대비 -3% 또는 돌파 저항선 이탈</td>
-              <td data-l="목표">익일 시초 매도, 아니면 3일 안 정리</td>
+              <td data-l="목표">익일 시초 매도 · 일정이 있는 종목은 그 일정까지 시나리오 스윙 <small>(수급단타왕 강의 방식 · 2026-10-09)</small></td>
             </tr>
           </tbody>
         </table>
@@ -865,18 +886,18 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
           <dt>비중</dt><dd>한 종목 최대 <b>25%</b>, 동시 보유 <b>3~5종목</b>. 한 종목 올인 없음</dd>
           <dt>하루 한도</dt><dd>당일 누적 <b>-3%</b> 찍으면 그날 매매 종료. 연속 3일 손실이면 다음 날 쉼</dd>
           <dt>익절</dt><dd>종가베팅: 익일 시초 수익 → 즉시 매도. 장중 방식: 목표가 절반 정리 후 나머지는 손절선을 본전으로 올림</dd>
-          <dt>스윙</dt><dd>시초 수익 없고 손절도 안 맞으면 최대 <b>3일</b>. 3일째 종가 무조건 정리 (오버나잇 효과는 2~3일 뒤 반전)</dd>
+          <dt>스윙</dt><dd><b>일정 시나리오 스윙</b> — 행사·발표 같은 일정을 보고 들고 간다. 행사 시작 전에 급등하면 대부분 정리, 늦어도 <b>핵심일 전 전량 정리</b> <small>(수급단타왕 강의 방식 · 2026-10-09)</small></dd>
           <dt>중간 정리</dt><dd>보유 중 체결강도가 무너지면(100→50) 날짜와 상관없이 정리</dd>
           <dt>기록</dt><dd>매매마다 방식·매수가·손절가·매도가·이유 기록. 주 1회 방식별 승률·손익비 확인, 손익비 1 아래 방식은 한 달 중단</dd>
         </dl>
-        <div class="sub">이익은 시초에 자르고 손실은 며칠 끌고 가는 구조가 개인 손실의 1번 원인(처분효과). 손절가·1% 리스크·3일 규칙이 그걸 막는다.</div>
+        <div class="sub">이익은 시초에 자르고 손실은 며칠 끌고 가는 구조가 개인 손실의 1번 원인(처분효과). 손절가·1% 리스크·일정 전 정리 규칙이 그걸 막는다.</div>
       </div>
     </section>
 
   </div>
 
   <div class="dfoot">
-    <span><b>한 줄 요약</b> 장전 매크로로 오늘 모드 결정 → 시총 상위 빼고 진짜 대금 몰린 테마 ∩ 수익률 상위 테마 → 외인·기관·프로그램이 같이 사는 덜 오른 종목 → 저항·매물대 비고 끼 있는 것 → 모드·시간대에 맞는 방식으로 손절가 정하고 진입 → 목표가 절반, 3일 안 정리</span>
+    <span><b>한 줄 요약</b> 장전 매크로로 오늘 모드 결정 → 시총 상위 빼고 진짜 대금 몰린 테마 ∩ 수익률 상위 테마 → 외인·기관·프로그램이 같이 사는 등락률 높은 대장·신고가 대장 → 저항·매물대 비고 끼 있는 것 → 모드·시간대에 맞는 방식으로 손절가 정하고 진입 → 목표가 절반, 일정 스윙은 핵심일 전 정리 (수급단타왕 강의 방식 · 2026-10-09)</span>
     <span><b>상위권이 공통으로 하는 것</b> 후보 3~5종목으로 압축 · 매수 전 진입가·손절가·목표가·수량 확정 · 손절 -2% 즉시(슈퍼개미 인터뷰) · 기관·외인 매집 종목만 · 오전장 수급 보고 결정 · 수익금 인출·투자금 상한 고정 · 일일 손실 한도</span>
     <span><b>근거</b> 오버나잇 갭 종목은 2~3일 지속 후 반전(KOSPI 연구) · 기관 추종이 외인 추종보다 성과 우위(2004~10 일별) · 개인 손실의 핵심은 회전율·복권형 종목·처분효과(자본시장연구원) · 돌파 자체는 한국서 장기 엣지 없음 → 타이밍 도구로만 · SOX가 삼전·하닉 시초가를 끌고 감(글로벌 펀드의 ETF 연동 매매)</span>
   </div>
@@ -926,7 +947,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <table class="tvt" id="tvIntra"><tr><th>시각</th><th>코스피</th><th>코스닥</th></tr>
         <tr><td>10시</td><td>27%</td><td>38%</td></tr><tr><td>11시</td><td>40%</td><td>49%</td></tr><tr><td>12시</td><td>51%</td><td>60%</td></tr><tr><td>14시</td><td>70%</td><td>78%</td></tr><tr><td>15시</td><td>82%</td><td>88%</td></tr></table></div>
       </div>
-      <p class="tvx tvnote">참고용 — 실시간 주도 테마 판정은 아직 지금 규칙(코스피 전체 기준) · 비교 2주 뒤 디렉터 결정</p>
+      <p class="tvx tvnote">참고용 — 주도 테마 판정은 9.29-100부터 「급등 묶음」(거래대금 상위 10% 안 +5%↑ 강한 종목 3개↑ 같은 테마) · 이 표는 종목 고를 때 참고</p>
     </details>
     <h3>종가배팅</h3>
     <ol id="closeRules">
@@ -941,6 +962,18 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
       <li>비중조절 (현금비중 보유)</li>
       <li>섹터가 다른 두 종목 매매</li>
     </ol>
+    <!-- 9.29-100 원장 [1864] ①: 위 메모 9줄·10줄 글자는 그대로 · 아래 짧은 덧붙임 / ③ 종가배팅 숫자 기준(참고) 접는 칸 -->
+    <p class="memoadd">덧붙임 · 손절 −3% (홍인기·남석관)</p>
+    <details class="cbguide" id="cbGuide">
+      <summary>📐 종가배팅 숫자 기준 <small>(참고)</small></summary>
+      <ul>
+        <li>그날 <b>+10%↑</b> 오른 종목</li>
+        <li>거래대금 <b>기준 이상</b> — 위 「💰 거래대금 적정 기준」 권장안 표와 같은 계산 (코스피 종목 = 코스피 거래대금 − 삼성전자 − SK하이닉스 · 코스닥 종목 = 코스닥 거래대금 · 장 마감 값 기준)</li>
+        <li>외국인+기관 (추정) <b>순매수 &gt; 0</b></li>
+        <li>매도 = <b>다음 날 시가~장 초반</b> <small>(김수경·변영태 2011 · 전날 외인·기관 순매수 종목은 다음 날 시가까지 강했고 그 뒤는 약했음)</small></li>
+      </ul>
+      <div id="cbToday"></div>
+    </details>
   </section>
 
   <div class="card linknotice" id="linkNotice" hidden>
@@ -1145,6 +1178,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
   <section class="card topld" id="topLead" data-nav="🔥 오늘 주도 테마" hidden>
     <div class="tlh"><b id="topLeadTitle">🔥 오늘 주도 테마</b><span class="lvbadge" id="topLeadBadge" hidden></span><small id="topLeadSub"></small></div>
     <ol class="tll" id="topLeadList"></ol>
+    <p class="tlref" id="topLeadRef" hidden></p>
     <details class="shadowbox" id="topShadow" hidden><summary id="topShadowSum"></summary><div id="topShadowBody"></div></details>
     <div class="tlf"><button class="btn" type="button" id="topLeadGo">자세히 (② 장 마감 · 설명) ▼</button></div>
   </section>
@@ -1192,6 +1226,12 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
         <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small>
           <details class="learn" id="ldHelp"><summary>📘 설명 — 주요 테마는 어떻게 뽑나요? (누르면 펼쳐져요)</summary>
             <div id="ldHelpToday"></div>
+            <p><b>9.29-100부터 (급등 묶음):</b> 그 시각 두 시장 <b>거래대금 상위 약 10%</b> 종목 중 <b>+5%↑</b> 오른 종목 = 「강한 종목」. 같은 테마에 강한 종목이 <b>3개↑</b>, 그중 <b>+10%↑ 2개↑</b>, 강한 종목 외국인+기관 합이 <b>순매수</b>면 주도 테마예요(수급 자료가 아직 없으면 「수급 확인 전」으로 두고 빼지 않아요).</p>
+            <p><b>순위:</b> +10%↑ 종목 수 → 강한 종목 거래대금 합 → 구성 종목 적은 테마. 강한 종목이 절반↑ 겹치거나 대장이 같으면 한 테마로 합쳐요. 지주사·밸류업·대표주·신규상장 같은 넓은 이름은 대표 이름으로 안 써요.</p>
+            <p><b>선정완화:</b> 3개가 안 되면 조건을 하나씩 조금 풀어요(+10% 1종목 → 수급 안 봄 → 강한 종목 2개 → +4% → +3% → 거래대금 상위 15% → 20%). 그렇게 들어온 테마엔 <b>「선정완화」</b> 배지와 풀린 조건이 붙어요.</p>
+            <p><b>대장</b> = 강한 종목 중 거래대금 1위(상한가면 표시) · <b>짝꿍 후보</b> = 2위. 외인·기관·미장·차트·며칠째는 꼬리표예요(순위에 안 씀). 장중은 9:30부터 같은 규칙, 마감 확정은 15:40 뒤 첫 수집이 <b>정규장(15:30) 값</b>으로 한 번 고르고 저녁은 수급만 채워요.</p>
+            <p><b>참고 한 줄:</b> +5% 묶음엔 안 들었지만 큰돈(오른 종목 돈 5,000억↑ · 70%↑ 오름 · 평균 +2%↑)이 몰린 테마를 따로 한 줄로 보여 줘요.</p>
+            <p class="muted">아래는 9.29-99까지 쓰던 옛 방식(지금은 성적표 비교용으로만 계산) 설명이에요.</p>
             <p><b>한 줄로:</b> 오른 테마 중에서 <b>"큰돈이 들어온 테마"</b>를 먼저 고르고, 같은 점수면 수급·미국장·이유·차트 순으로 가려요. 등락률이 제일 큰 테마가 아니라 <b>돈이 몰린 테마</b>가 1등이에요.</p>
             <p><b>다섯 단계 (앞 단계가 크면 무조건 이겨요)</b></p>
             <p>① <b>거래대금(L)</b> — 테마 안에서 오른 종목 상위 5개 중, 종목당 거래대금이 기준(T)을 넘는 종목 수. T는 코스피 거래대금에 따라 바뀌어요 (10조 미만 500억 · 10조 700억 · 20조 1,000억 · 그 사이는 비례). 기준을 넘는 종목이 하나도 없으면 탈락 → 작은 종목만 오른 테마는 등락률이 커도 빠져요.</p>
@@ -1200,7 +1240,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
             <p>④ <b>상승 근거(B)</b> — 상한가·10%↑·5%↑ 종목 수(폭), 며칠째 이어지는지, 대장주 하나만 오른 건 아닌지.</p>
             <p>⑤ <b>차트 자리(C)</b> — 대장주 일봉. <b>신고가</b>(1년 고점 돌파) 3점 · <b>돌파</b>(60일 고점, 또는 20일 고점을 큰 거래대금으로) 2점 · <b>돌파직전</b>(20일 고점 3% 이내) 1점 · <b>눌림/추세아래</b> 0점.</p>
             <p><b>줄에 적힌 말 읽는 법:</b> "대금 1,000억↑ 2종목" = 기준 1,000억을 넘는 종목이 2개 · "외인 +155억 · 기관 -59억" = 대장주 3종목 합 · "미장 ✓ ✗ —" = 미국 짝이 올랐다·내렸다·없다 · "차트 눌림" = 대장주 자리 · 괄호 안은 대장주·2등주.</p>
-            <p><b>언제 나와요:</b> 16:20에 잠정(수급·차트 빠짐) → 19:45에 확정(수급·차트 포함, 안 오면 20:20 한 번 더). 아침 07:05 수집이 어제 것을 다시 채워요.</p>
+            <p><b>언제 나와요(옛 방식):</b> 16:20에 잠정(수급·차트 빠짐) → 19:45에 확정(수급·차트 포함, 안 오면 20:20 한 번 더). 아침 07:05 수집이 어제 것을 다시 채워요.</p>
             <p><b>10년치(2016~)로 검증해 보니:</b> 다음날까지 이어지는 힘은 <b>차트 자리</b>가 제일 뚜렷했어요 (신고가 자리 다음날 종가 오름 52%, 눌림 43%). 거래대금 기준은 다음날 <b>아침 갭</b>에만 조금 유리하고 종가까지는 차이가 거의 없었어요. 같은 테마에 2종목 이상 돈이 몰린 날이 한 종목만인 날보다 조금 나았어요. 그래서 눌림은 추세아래와 같은 0점으로 내렸어요.</p>
             <p class="muted">주의: 이 순서는 "오늘 시장이 어디에 돈을 넣었나"를 보는 도구예요. 내일 오른다는 뜻이 아니고, 추격 매수 근거로 쓰면 안 돼요.</p>
           </details></div>
@@ -1884,9 +1924,9 @@ function analyze(days) {
 
 // 주도 테마 적중 성적표 요약 — 앱 성적표 카드 「주도 테마 적중」 절과 시험이 같이 쓴다 (순수 모듈 · 브라우저·Node 공용 · 9.29-84 원장 [1597])
 // 입력 = auto/observe/leaders-scorecard.json (server/scorecard.js 가 쌓음). 적중률 = 선정 슬롯 D+k 상승비율 − 그 평가일 전체 테마 종목 상승비율(기준율) 평균
-const LDS_UNITS = { a: "마감 확정", b: "장후 잠정", c: "장중 마지막", s: "그림자" };
+const LDS_UNITS = { a: "마감 확정", b: "장후 잠정", c: "장중 마지막", s: "옛 방식" };
 const LDS_REF_DAYS = 20; // 표본 20거래일(선정일 수) 전에는 「참고용」 고정 — 연구 R5 §5
-const LDS_UNIT_DESC = { a: "저녁 확정", b: "오후 4:20", c: "실시간 마지막", s: "시험 중 새 방식" }; // 9.29-99 원장 [1823] 방식 이름 옆 짧은 설명
+const LDS_UNIT_DESC = { a: "급등 묶음 · 9.29-100 전 기록은 옛 방식", b: "오후 4:20 잠정 · 새 방식엔 없음", c: "실시간 마지막 · 9.29-100부터 급등 묶음", s: "옛 대금 기준(L) 비교용 · 9.29-100 전 기록은 시험 방식" }; // 9.29-99 원장 [1823] 방식 이름 옆 짧은 설명
 const r1 = (x) => Math.round(x * 10) / 10;
 // ---- 같은 날 마감 확정 여러 번 → 그날 마지막 확정만 (9.29-99 원장 [1822][1823] · 라운드 5 ②) ----
 // 마지막 확정 선정 = [{ name, codes:[슬롯 1~5 코드 | null] }] (날짜 파일 close.market.leaders.themes 또는 수집기 days[].a)
@@ -1933,6 +1973,29 @@ function ldsSummary(file, today = null) {
   const pick = last ? ["a", "s", "b", "c"].find((u) => rows.some((r) => r.date === last && r.unit === u)) : null;
   const recent = last ? rows.filter((r) => r.date === last && r.unit === pick).sort((a, b) => a.rank - b.rank || a.slot - b.slot).map((r) => ({ rank: r.rank, theme: r.theme, name: r.name, slot: r.slot, marks: [1, 2, 3, 4].map((h) => (r["d" + h] && typeof r["d" + h].ret === "number" ? (r["d" + h].up ? "○" : "×") : "-")), rets: [1, 2, 3, 4].map((h) => (r["d" + h] && typeof r["d" + h].ret === "number" ? r["d" + h].ret : null)) })) : [];
   return { days: dates.length, ref: dates.length < LDS_REF_DAYS, units, recent: { date: last, unit: pick, rows: recent } };
+}
+
+// 종목당 거래대금 기준 — 수집기(server/auto.js thresholdFor · server/surge.js 종가배팅 칸)와 앱(매매수칙 「💰 거래대금 적정 기준」 표 · 종가배팅 칸)이 같이 쓰는 계산 하나 (9.29-100 원장 [1880] 「두 곳 어긋남 0」)
+// 디렉터 표: 그 시장 하루 거래대금 A(조) 10조 미만 500억 · 10조 700억 · 20조 1,000억 · 30조↑ 1,500억 · 구간 사이 비례(7조 이하 500 · 7~10조 500→700) · 50억 단위 반올림
+// 코스피 종목 = (코스피 하루 거래대금 − 삼성전자 − SK하이닉스) 를 표에 · 코스닥 종목 = 코스닥 하루 거래대금 그대로 (거래대금기준_전문가조사.md 권장안 · 장 마감 판정이라 장중 보정 없음)
+const TV_BIG2 = ["005930", "000660"];   // 삼성전자 · SK하이닉스
+const TV_BIG2_SHARE = 0.44;              // 매매수칙 표의 코스피 칸만: 두 종목 몫 약 44%(조사 표본) 를 뺀 돈으로 계산 — 실제 종가배팅 칸은 그날 두 종목 거래대금을 그대로 뺌
+const TV_KOSPI_ROWS = [10, 15, 20, 25, 30, 40], TV_KOSDAQ_ROWS = [5, 7, 8, 9, 10, 12]; // 표 줄(조)
+function tvThreshold(amountEok) {
+  const A = typeof amountEok === "number" && amountEok > 0 ? amountEok / 10000 : null;
+  if (A === null) return 500;
+  const t = A <= 7 ? 500 : A < 10 ? 500 + ((A - 7) / 3) * 200 : A < 20 ? 700 + ((A - 10) / 10) * 300 : A < 30 ? 1000 + ((A - 20) / 10) * 500 : 1500;
+  return Math.round(t / 50) * 50;
+}
+// 그날 종목 기준: kospi·kosdaq = 하루 거래대금(억) · big2 = 삼성전자+SK하이닉스 그날 거래대금(억 · 모르면 null → 코스피 전체로) → { KS, KQ, base:{ KS, KQ } }
+function tvStockThresholds({ kospi = null, kosdaq = null, big2 = null } = {}) {
+  const ks = typeof kospi === "number" && kospi > 0 ? (typeof big2 === "number" && big2 > 0 && big2 < kospi ? kospi - big2 : kospi) : null;
+  return { KS: tvThreshold(ks), KQ: tvThreshold(typeof kosdaq === "number" && kosdaq > 0 ? kosdaq : null), base: { KS: ks, KQ: typeof kosdaq === "number" && kosdaq > 0 ? kosdaq : null, big2: typeof big2 === "number" ? big2 : null } };
+}
+// 매매수칙 표 줄: [["10조","500억"], …] (코스피 = 두 종목 몫 44% 뺀 돈 · 코스닥 = 그대로)
+function tvTableRows(market) {
+  const k = market === "KQ", rows = k ? TV_KOSDAQ_ROWS : TV_KOSPI_ROWS;
+  return rows.map((jo) => [jo + "조", tvThreshold(jo * 10000 * (k ? 1 : 1 - TV_BIG2_SHARE)).toLocaleString("ko-KR") + "억"]);
 }
 
 // 종목 꼬리표 「지수주 · 개별주 · 헷지」 + 「대표 종목 보기」 고르기 — 순수 모듈 · 브라우저·Node 공용 (9.29-91 원장 [1694][1695][1699] · 인계서 §4-1 판별표 · 규칙 안B)
@@ -3094,7 +3157,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-99";
+  const APP_VER = "9.29-100";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3242,6 +3305,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         <button class="chip" type="button" data-pre="${i}" data-s="flat">보합</button>
         <button class="chip dn" type="button" data-pre="${i}" data-s="down">약세</button>
       </div>
+      <div class="prkw" id="prk-${i}"></div>
     </div>`).join("");
 
   $("evChips").innerHTML = [["FOMC", "FOMC"], ["CPI", "미 CPI"], ["고용", "미 고용"], ["금통위", "금통위"], ["옵션만기", "옵션만기 (참고)"], ["동시만기", "선물옵션 동시만기"], ["MSCI", "MSCI 리밸런싱"]]
@@ -3400,6 +3464,57 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const p = S.prev[i] || {}, s = p.pre || "", auto = (S.auto || {})["prev." + i + ".pre"] || "", pct = s && s === auto ? prePctOf(i) : "";
     row.classList.toggle("has", !!s); row.dataset.st = s;
     badge.textContent = s ? "오늘 프리: " + PRE_WORD[s] + (pct ? " " + pct : auto && s !== auto ? " (손으로 고름)" : "") : "오늘 프리: 아직 안 고름 (8:05 자동)";
+    const box = $("prk-" + i); if (box) box.innerHTML = preStockHtml(i, "prk");
+  }
+  // 9.29-100 원장 [1846] 「그 주도주가 프리마켓에서 어땠는지」: 전날 주도 테마 주도주마다 「종목 | +3.0% | 강세 | 프리 15억」 (판정 문턱 = 테마 칸과 같은 ±0.5%) · 갭 과열(+6%↑ · 원장 [1864]) · 프리 전 「아직」 · 못 받으면 「못 받음」
+  function preStockHtml(i, cls) {
+    let ks = []; try { ks = JSON.parse((S.auto || {})["prev.stk." + i] || "[]"); } catch (e) {}
+    if (!Array.isArray(ks) || !ks.length) return "";
+    const row = (x) => { const has = typeof x.pct === "number", c = !has ? "" : x.pct > 0 ? "p" : x.pct < 0 ? "n" : "";
+      return `<span class="pkr"><span class="pkn" title="${esc(x.name)}">${esc(x.name)}</span><span class="pkp ${c}">${has ? (x.pct > 0 ? "+" : "") + x.pct.toFixed(2) + "%" : esc(x.note || "아직")}</span><span class="pks ${x.st === "up" ? "p" : x.st === "down" ? "n" : ""}">${has ? PRE_WORD[x.st] || "" : ""}</span><span class="pkv">${typeof x.v === "number" ? "프리 " + (x.v >= 1 ? Math.round(x.v).toLocaleString("ko-KR") + "억" : "1억 미만") : ""}${has && x.pct >= 6 ? ` <small class="sb heat" title="장 전 NXT 프리 등락률 +6%↑ — 갭 과열(불개미 · 오전 추격 조심)">갭 과열</small>` : ""}</span></span>`; };
+    return `<span class="${cls}"><span class="pkh">주도주 프리마켓</span>${ks.map(row).join("")}</span>`;
+  }
+  // 9.29-100 원장 [1850] 「선정완화」 배지: 조건을 조금 풀어 들어온 테마 · 옆에 풀린 조건(짧은 글 · 좁은 칸에선 툴팁만) · 엄격 통과는 배지 없음
+  function relaxBadge(text, tipOnly) {
+    if (!text) return "";
+    const t = String(text);
+    return ` <small class="rlx" title="${esc("선정완화 — 조건을 조금 풀어 고른 테마: " + t)}">선정완화</small>${tipOnly ? "" : `<small class="rlxt">${esc(t)}</small>`}`;
+  }
+  // 9.29-100 종목 꼬리: 짝꿍 후보([1860] 강한 종목 거래대금 2위) · 시장경보([1861] 네이버 표시 그대로) · 거래정지 · 신규주([1860] 네이버 신규 상장 표시) · 과열 3종([1864] 표시만 · 선정·순위 영향 0)
+  function stockBadges(x, i, wrap) {
+    if (!x) return "";
+    const b = [], h = x.heat || {};
+    if (i === 1) b.push(["짝꿍 후보", "pair", "대장 다음으로 돈이 많이 몰린 강한 종목 — 대장과 같이 가는지 보기"]);
+    if (x.alert) b.push([x.alert, "warn", "거래소 시장경보 지정(네이버 종목 정보 표시 그대로)"]);
+    if (x.stop) b.push(["거래정지", "warn", "거래가 멈춘 종목(네이버 종목 정보)"]);
+    if (x.mgmt) b.push(["관리종목", "warn", "관리종목 지정(네이버 종목 정보)"]);
+    if (x.newly) b.push(["신규주 · 칼손절 자신 없으면 제외", "new", "상장 초기 종목(네이버 「신규 상장」 표시) — 위아래 흔들림이 커요"]);
+    (Array.isArray(h.tags) ? h.tags : []).forEach((t) => b.push([t, "heat", t === "갭 과열" ? "시가가 전일 종가보다 " + h.gap + "% (기준 +6% · 불개미)" : t === "이격 과열" ? "20일선보다 " + h.disp + "% 위 (기준 +10% · 이 자리 종가 매수 조심)" : "5거래일 전보다 " + h.r5 + "% (기준 +45% · 투자경고 요건 5일 +60% 근처)"]));
+    if (!b.length) return "";
+    const s = b.map(([t, c, ti]) => `<small class="sb ${c}" title="${esc(ti)}">${esc(t)}</small>`).join("");
+    return wrap ? `<span class="${wrap}">${s}</span>` : s;
+  }
+  // 9.29-100 원장 [1845] ④ 「참고」 한 줄: +5% 묶음엔 안 들었지만 큰돈이 몰린 테마 · 완화 끝까지 모자란 날 이유(지어내기 0)
+  function paintRef(ref, short) {
+    const el = $("topLeadRef"); if (!el) return;
+    const ek = (v) => (Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억");
+    const parts = [];
+    if (ref && ref.name) parts.push(`<b>참고</b> ${esc(ref.name)} <small>큰돈 몰림 · 오른 종목 돈 ${ek(ref.money)} · ${Math.round((ref.up || 0) * 100)}% 오름 · 평균 ${(ref.avg > 0 ? "+" : "") + ref.avg}%${(ref.stocks || []).length ? " · " + esc(ref.stocks.map((x) => (typeof x === "string" ? x : x.name)).slice(0, 3).join("·")) : ""} — +5% 묶음엔 안 듦</small>`);
+    if (short) parts.push(`<small>⚠ ${esc(short)}</small>`);
+    el.hidden = !parts.length; el.innerHTML = parts.join("<br>");
+  }
+  // 9.29-100 원장 [1864] ③ 종가배팅 숫자 기준(참고): 오늘 조건 맞는 종목 이름 (실시간 = 수집기 live.json · 마감 = 그 날 마감 수집) · 수급 순매도는 뺌 · 수급 아직이면 「수급 확인 전」
+  // 9.29-100 원장 [1880] 「두 곳 어긋남 0」: 매매수칙 거래대금 표 숫자를 종가배팅 칸과 같은 계산(tvTableRows)으로 다시 채움
+  function paintTvTables() { [["tvKospi", "KS"], ["tvKosdaq", "KQ"]].forEach(([id, mk]) => { const t = $(id); if (!t) return; const trs = [...t.querySelectorAll("tr")].slice(1); tvTableRows(mk).forEach(([a, v], i) => { const tds = trs[i] ? trs[i].querySelectorAll("td") : []; if (tds.length === 2) { tds[0].textContent = a; tds[1].textContent = v; } }); }); }
+  function paintClosingBet() {
+    const el = $("cbToday"); if (!el) return;
+    let C = null, when = "";
+    if (typeof liveFresh === "function" && liveFresh() && LIVE && LIVE.closing) { C = LIVE.closing; when = "실시간 " + (LIVE.at || ""); }
+    else { try { C = JSON.parse((S.auto || {})["leaders.closing"] || "null"); when = C ? "마감" : ""; } catch (e) { C = null; } }
+    if (!C || !Array.isArray(C.items)) { el.innerHTML = `<p class="cbnone">오늘 자료 아직 없음 (장중 9:30부터 · 마감 15:40 뒤)</p>`; return; }
+    const ok = C.items.filter((x) => !x.flow || x.flow.foreign + x.flow.inst > 0), ek = (v) => (v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억");
+    const TT = C.T && typeof C.T === "object" ? C.T : { KS: Number(C.T || 0), KQ: Number(C.T || 0) }, f0 = (v) => Number(v || 0).toLocaleString("ko-KR"); // 원장 [1880] 시장별 기준(매매수칙 권장안 표와 같은 계산 · 장 마감 기준 · 장중 보정 없음)
+    el.innerHTML = `<p class="cbh">${esc(when)} 조건 맞는 종목 <small>(거래대금 코스피 종목 ${f0(TT.KS)}억 · 코스닥 종목 ${f0(TT.KQ)}억↑)</small></p>` + (ok.length ? `<ul class="cbl">${ok.map((x) => `<li>${esc(x.name)} <span class="p">+${x.rate}%</span> · ${ek(x.value)} · ${x.flow ? "외인+기관 " + (x.flow.foreign + x.flow.inst > 0 ? "+" : "") + Math.round(x.flow.foreign + x.flow.inst).toLocaleString("ko-KR") + "억" : "수급 확인 전"}</li>`).join("")}</ul>` : `<p class="cbnone">오늘 조건 맞는 종목 없음</p>`);
   }
   function paintChips() {
     document.querySelectorAll(".chip[data-pv]").forEach((b) => b.setAttribute("aria-pressed", S.prev[+b.dataset.pv].state === b.dataset.s ? "true" : "false"));
@@ -3794,12 +3909,19 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const m = part.trim().match(/^(.+?)\s([+-]?[\d.]+)%(.*)$/); if (!m) return null; // 등락률 0 은 부호 없이 "0%" 로 온다
       const rest = m[3], hot = rest.match(/강세\s*(\d+)종목\s*([\d,.]+)\s*(억|조)/), f = rest.match(/외인\s*([+-]?[\d,.]+)(억|조)/), i = rest.match(/기관\s*([+-]?[\d,.]+)(억|조)/), st = rest.match(/\(([^)]*)\)\s*$/);
       const L = rest.match(/대금\s*([\d,]+)억↑\s*(\d)종목/), us = rest.match(/미장\s*([✓✗—])/), ch = rest.match(/차트\s*(신고가|돌파직전|돌파|눌림|추세아래)/);
-      return { name: m[1], rate: Number(m[2]), hotN: hot && hot[1], hot: hot && numOf(hot[2]) * (hot[3] === "조" ? 10000 : 1), /* 억 */ f: eok(f), i: eok(i), stocks: st ? st[1] : "",
+      const n10 = rest.match(/ · \+10%\s*(\d+)종목/), ld = rest.match(/ · 대장\s([^·(]+?)(\(상한가\))?(?= ·| \(|$)/), rx = rest.match(/선정완화\(([^)]*)\)/); // 9.29-100 급등 묶음 한 줄 (server/surge.js surgeText)
+      const r = { name: m[1], rate: Number(m[2]), hotN: hot && hot[1], hot: hot && numOf(hot[2]) * (hot[3] === "조" ? 10000 : 1), /* 억 */ f: eok(f), i: eok(i), stocks: st ? st[1] : "",
         T: L ? numOf(L[1]) : null, L: L ? Number(L[2]) : null, us: us ? us[1] : null, chart: ch ? ch[1] : null };
+      if (n10) Object.assign(r, { n10: Number(n10[1]), lead: ld ? ld[1].trim() : null, leadLimit: !!(ld && ld[2]), relax: rx ? rx[1] : null, flowPend: / · 수급 확인 전/.test(rest) });
+      return r;
     }).filter(Boolean);
   }
   // 왜 주요 테마인지 (새 모양일 때): "대금 800억↑ 3종목 · 외인+기관 동시 순매수 · 미장 ✓ · 신고가"
   function leaderWhy(t) {
+    if (typeof t.n10 === "number") { // 9.29-100 급등 묶음: 「강한 종목 n개 · +10%↑ m개 · 대장 ○○」 + 수급 (순위에 안 쓰는 꼬리)
+      const fl = t.f !== null && t.i !== null ? (t.f > 0 && t.i > 0 ? "외인+기관 동시 순매수" : t.f + t.i > 0 ? (t.f > 0 ? "외인" : "기관") + " 순매수" : "외인·기관 순매도") : t.flowPend ? "수급 확인 전" : "";
+      return [`강한 종목 ${t.hotN}개 · +10%↑ ${t.n10}개`, t.lead ? "대장 " + t.lead + (t.leadLimit ? "(상한가)" : "") : "", fl].filter(Boolean).join(" · ");
+    }
     if (t.L === null || t.L === undefined) return "";
     const fl = t.f !== null && t.i !== null ? (t.f > 0 && t.i > 0 ? "외인+기관 동시 순매수" : t.f + t.i > 0 ? (t.f > 0 ? "외인" : "기관") + " 순매수" : "외인·기관 순매도") : "";
     return [`대금 ${t.T.toLocaleString("ko-KR")}억↑ ${t.L}종목`, fl, t.us === "✓" ? "미장 ✓" : t.us === "✗" ? "미장 ✗" : "", t.chart || ""].filter(Boolean).join(" · ");
@@ -3814,15 +3936,16 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     $("mv-leaders").classList.toggle("has", ld.length > 0);
     // 설명 줄: 새 규칙(대금 기준 종목 수 → 수급 → 미장 → 근거 → 차트)이면 그 요약 + 자동 값 배지(잠정/확정·T·관망·약함), 옛 파일(grades 없음)은 예전 문장 그대로
     { const sub = $("mv-leaders").querySelector(".mvsub"); const n = nextBusinessDays(DATE, CAL.holidays, 1)[0];
-      const graded = ld.some((t) => t.L !== null && t.L !== undefined), a = S.auto || {}, badge = graded && a["market.leaders"] && a["market.leaders"] === S.journal.market.leaders ? a["leaders.badge"] : "";
-      const base = graded ? "종목당 거래대금 기준 넘긴 종목 수 → 외인·기관 → 미장 → 상승 근거 → 차트 순 · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마"
+      const surge = ld.some((t) => typeof t.n10 === "number"), graded = surge || ld.some((t) => t.L !== null && t.L !== undefined), a = S.auto || {}, badge = graded && a["market.leaders"] && a["market.leaders"] === S.journal.market.leaders ? a["leaders.badge"] : "";
+      const base = surge ? "거래대금 상위 10% 안에서 +5%↑ 오른 「강한 종목」이 3개↑(그중 +10%↑ 2개↑) 같이 오른 테마 · +10% 수 → 강한 종목 돈 순 · 모자라면 조건을 조금씩 풀어 3개(선정완화) · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요"
+        : graded ? "종목당 거래대금 기준 넘긴 종목 수 → 외인·기관 → 미장 → 상승 근거 → 차트 순 · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마"
         : "+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관은 " + mdw(DATE) + " 19:45 또는 " + mdw(n) + " 07:05 수집 때 채워져요 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오른 테마";
       if (sub) sub.innerHTML = (badge ? `<b class="ldbadge">${esc(badge)}</b><br>` : "") + `<span class="subtxt">${esc(base)}</span>`; }
     // 설명 펼침 안 '오늘 테마별 왜 뽑혔나' 줄 (새 규칙 값이 있을 때만)
     { const el = $("ldHelpToday"); if (el) { const rows = ld.filter((t) => leaderWhy(t)); el.innerHTML = rows.length ? `<p><b>오늘 뽑힌 이유:</b></p><ul class="ldwhy">${rows.map((t, i) => `<li>${i + 1} ${esc(t.name)} — ${esc(leaderWhy(t))}</li>`).join("")}</ul>` : ""; } }
     // 한 줄: 순위 · 테마(대표 종목은 말풍선) · 외인 · 기관 · 등락률
-    paintTopLead();
-    $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li title="${esc([leaderWhy(t), t.hot ? `강세 ${t.hotN}종목 · ${t.hot >= 10000 ? (t.hot / 10000).toFixed(1) + "조" : t.hot.toLocaleString("ko-KR") + "억"}` : "", t.stocks || ""].filter(Boolean).join(" · "))}"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${(() => { const u = usLinkOf(t.name); return u && t.rate > 0 && usUp(u) ? `<small class="uslk up" title="한국·미국 둘 다 오름 · ${esc(usLinkText(u))}">🇰🇷🇺🇸</small>` : ""; })()}</span><span class="fi ${t.f === null ? "" : sgn(t.f)}">${t.f === null ? "" : "외 " + fmtEok(t.f).replace("억", "")}</span><span class="fi ${t.i === null ? "" : sgn(t.i)}">${t.i === null ? "" : "기 " + fmtEok(t.i).replace("억", "")}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span></li>`).join("")}</ol><small class="ldnote">외 = 외국인 · 기 = 기관 순매수(억) · 누르고 있으면 대표 종목</small>` : "";
+    paintTopLead(); paintClosingBet(); paintTvTables();
+    $("mvb-leaders").innerHTML = ld.length ? `<ol class="lds">${ld.map((t, n) => `<li title="${esc([leaderWhy(t), t.hot ? `강세 ${t.hotN}종목 · ${t.hot >= 10000 ? (t.hot / 10000).toFixed(1) + "조" : t.hot.toLocaleString("ko-KR") + "억"}` : "", t.stocks || ""].filter(Boolean).join(" · "))}"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${relaxBadge(t.relax, true)}${(() => { const u = usLinkOf(t.name); return u && t.rate > 0 && usUp(u) ? `<small class="uslk up" title="한국·미국 둘 다 오름 · ${esc(usLinkText(u))}">🇰🇷🇺🇸</small>` : ""; })()}</span><span class="fi ${t.f === null ? "" : sgn(t.f)}">${t.f === null ? "" : "외 " + fmtEok(t.f).replace("억", "")}</span><span class="fi ${t.i === null ? "" : sgn(t.i)}">${t.i === null ? "" : "기 " + fmtEok(t.i).replace("억", "")}</span><span class="trate ${sgn(t.rate)}">${t.rate > 0 ? "+" : ""}${t.rate}%</span></li>`).join("")}</ol><small class="ldnote">외 = 외국인 · 기 = 기관 순매수(억) · 누르고 있으면 대표 종목</small>` : "";
   }
   // 맨 위 요약: 오늘 주도 테마 상위 3개 (마감 뒤). 아직 없으면 어제 주도 테마(아침 수집 prev) 를 '어제' 로 표시. 둘 다 없으면 카드 숨김
   // 장중 실시간 (eden-market auto/live.json · 09:05~15:40 20분마다): 오늘 것이고 장중 창(09:00~16:25)이며 마감 주도 테마가 아직 없을 때 맨 위 카드가 실시간으로 바뀐다
@@ -3855,15 +3978,20 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     { const sb = $("topShadow"); if (sb) sb.hidden = true; } // 그림자 상자도 실시간 카드에서만 (9.29-84)
     const ld = parseLeaders(S.journal.market.leaders).slice(0, 3);
     const a = S.auto || {}, usOf = (name) => { const u = usLinkOf(name); const v = u ? themeValue((S.us || {})[u.k]) : null; return u && v !== null ? { u, v } : null; };
-    const row = (t, n, why) => { const us = usOf(t.name); const rt = typeof t.rate === "number" ? t.rate : null;
-      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${t.stocks ? ` <small>${esc(String(t.stocks).split("·").slice(0, 2).join("·"))}</small>` : ""}</span><span class="rt ${rt === null ? "" : rt > 0 ? "p" : rt < 0 ? "n" : ""}">${rt === null ? "" : (rt > 0 ? "+" : "") + rt + "%"}</span>${why || us ? `<span class="tlw">${esc([why, us ? "미국 " + us.u.name.split(" (")[0] + " " + (us.v > 0 ? "+" : "") + us.v + "%" : ""].filter(Boolean).join(" · "))}</span>` : ""}</li>`; };
+    const row = (t, n, why, extra) => { const us = usOf(t.name); const rt = typeof t.rate === "number" ? t.rate : null;
+      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${relaxBadge(t.relax)}${t.stocks ? ` <small>${esc(String(t.stocks).split("·").slice(0, 2).join("·"))}</small>` : ""}</span><span class="rt ${rt === null ? "" : rt > 0 ? "p" : rt < 0 ? "n" : ""}"${typeof t.n10 === "number" ? ' title="테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)"' : ""}>${rt === null ? "" : (rt > 0 ? "+" : "") + rt + "%"}${typeof t.n10 === "number" && rt !== null ? `<small class="rtn">테마 평균</small>` : ""}</span>${why || us ? `<span class="tlw">${esc([why, us ? "미국 " + us.u.name.split(" (")[0] + " " + (us.v > 0 ? "+" : "") + us.v + "%" : ""].filter(Boolean).join(" · "))}</span>` : ""}${extra || ""}</li>`; };
+    paintRef(null); // 참고 줄은 아래 가지에서 (9.29-100 [1845] ④)
     const wasHidden = box.hidden;
     const done = () => { if (wasHidden !== box.hidden && typeof buildNav === "function") buildNav(); };
     if (ld.length) {
       const badge = a["market.leaders"] && a["market.leaders"] === S.journal.market.leaders ? a["leaders.badge"] || "" : "";
       box.hidden = false; box.classList.remove("prev");
       $("topLeadTitle").textContent = "🔥 오늘 주도 테마"; $("topLeadSub").textContent = badge || (a["at.close"] ? a["at.close"] + " 자동" : "손으로 적음");
-      $("topLeadList").innerHTML = ld.map((t, n) => row(t, n, leaderWhy(t))).join("");
+      const cs = (() => { try { const v = JSON.parse(a["leaders.slots"] || "null"); return v && v.text === S.journal.market.leaders && Array.isArray(v.themes) ? v.themes : []; } catch (e) { return []; } })(); // 같은 run 의 종목 꼬리(짝꿍·경보·신규주·과열)
+      $("topLeadList").innerHTML = ld.map((t, n) => { const c = cs.find((x) => x && x.name === t.name), sl = c && Array.isArray(c.slots) ? c.slots.slice(0, 3) : [];
+        const tail = typeof t.n10 === "number" ? sl.map((x, i) => [x, stockBadges(x, i)]).filter(([, b]) => b).map(([x, b]) => `<span class="tls tlbad">• ${esc(x.name)} ${b}</span>`).join("") : "";
+        return row(t, n, leaderWhy(t), tail); }).join("");
+      if (a["market.leaders"] === S.journal.market.leaders) { try { paintRef(JSON.parse(a["leaders.ref"] || "null"), a["leaders.short"] || ""); } catch (e) {} }
       return done();
     }
     // 장 시작 전·휴장일: 마지막 실시간 값을 '장 시작 전' 표시로 보여 줌 (오늘 화면을 볼 때만)
@@ -3871,8 +3999,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const prev = (S.prev || []).filter((p) => p && p.name).slice(0, 2);
     if (prev.length) {
       box.hidden = false; box.classList.add("prev");
-      $("topLeadTitle").textContent = "🔥 어제 주도 테마"; $("topLeadSub").textContent = "오늘 주도 테마는 16:20 잠정 · 19:45 확정 수집 뒤에 여기로 바뀌어요";
-      $("topLeadList").innerHTML = prev.map((p, n) => { const d = a["detail.prev." + n] || ""; const m = d.match(/어제 ([+-]?[\d.]+)%/); const st = (d.match(/주도주 ([^·]+)/) || [])[1]; return row({ name: p.name, rate: m ? Number(m[1]) : null, stocks: st ? st.trim() : "" }, n, [p.state ? "애프터 " + p.state : "", p.pre ? "프리 " + p.pre : ""].filter(Boolean).join(" · ")); }).join("");
+      $("topLeadTitle").textContent = "🔥 어제 주도 테마"; $("topLeadSub").textContent = "오늘 주도 테마는 16:20 확정(정규장 값) 뒤 여기로 · 종목 수급은 19:45"; // 게이트 [1887] ② 9.29-100 새 규칙
+      $("topLeadList").innerHTML = prev.map((p, n) => { const d = a["detail.prev." + n] || ""; const m = d.match(/어제 ([+-]?[\d.]+)%/); const st = (d.match(/주도주 ([^·]+)/) || [])[1]; return row({ name: p.name, rate: m ? Number(m[1]) : null, stocks: st ? st.trim() : "" }, n, [p.state ? "애프터 " + p.state : "", p.pre ? "프리 " + p.pre : ""].filter(Boolean).join(" · "), preStockHtml(n, "tls tlpre")); }).join("");
       return done();
     }
     box.hidden = true; done();
@@ -3953,9 +4081,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         const r2 = (typeof x.value === "number" ? sp + sc("b0", eok(x.value)) : sc("b0", "")) + (typeof x.rvol === "number" ? sp + sc("b1", "거래대금 평소의 ×" + x.rvol) : sc("b1", "")) + (x.chart && x.chart.tag ? sp + sc("b2", "📈" + esc(x.chart.tag)) : sc("b2", ""))
           + (x.flow ? sp + sc("bf", "외인 " + sg(x.flow.foreign) + " 기관 " + sg(x.flow.inst)) : "") + sc("b3", tagHtml(x.code));
         return `<span class="tls tsg"><span class="tsr1">${r1}</span><span class="tsr2">${r2}</span></span>`; };
-      const stocks = slots.map(stockLine).join("") + (flows.length ? "" : `<span class="tls tlnote">종목별 외인·기관은 장 마감 뒤</span>`);
-      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)} <small>테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}">${pc(t.rate)}</span><span class="tlw">${stocks}</span>${newsHtml(t)}</li>`;
+      const stocks = slots.map((x, i) => stockLine(x).replace(/<\/span>$/, (typeof t.strongN === "number" ? stockBadges(x, i, "tsr3") : "") + "</span>")).join("") + (flows.length ? "" : `<span class="tls tlnote">종목별 외인·기관은 장 마감 뒤</span>`);
+      // 9.29-100 원장 [1845] 2단계: 테마 머리 = 「강한 종목 n개 · +10%↑ m개 · 대장 ○○」 (옛 「테마 거래대금 · 강세 n종목」은 옛 기록에만) · 선정완화 배지 · 수급 확인 전
+      const head = typeof t.strongN === "number" ? `강한 종목 ${t.strongN}개 · +10%↑ ${t.n10}개${t.lead ? " · 대장 " + esc(t.lead.name) + (t.lead.limit ? "(상한가)" : "") : ""}${t.flowState === "pending" ? " · 수급 확인 전" : ""}` : `테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}`;
+      return `<li><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${relaxBadge(t.relax && t.relax.text)} <small>${head}</small></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}"${typeof t.strongN === "number" ? ` title="${esc("테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)" + (typeof t.strongAvg === "number" ? " · 강한 종목 " + t.strongN + "개 평균 " + pc(t.strongAvg) : ""))}"` : ""}>${pc(t.rate)}${typeof t.strongN === "number" ? `<small class="rtn">테마 평균</small>` : ""}</span><span class="tlw">${stocks}</span>${newsHtml(t)}</li>`; // 게이트 [1887] 알 점: 뽑힌 테마 평균이 음수일 수 있음 → 「테마 평균」 표시
     }).join("");
+    paintRef(L.ref || null, L.short || ""); // 9.29-100 [1845] ④ 참고 한 줄 · 완화 끝까지 모자란 날 이유
+    paintClosingBet(); // 9.29-100 [1864] ③ 종가배팅 숫자 칸(실시간 후보)
     alignStocks(); // 9.29-99 [1821] 종목 줄 칸 너비 맞춤
     paintShadow(L, { eok, pc });
     paintTags(); // 9.29-91 꼬리표 (주요 종목 · 그림자 표)
@@ -4403,10 +4535,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function blogTimes(d, holidays) {
     const md = (x) => Number(x.slice(5, 7)) + "/" + Number(x.slice(8, 10));
     const kr = md(prevBusinessDay(d, holidays)), us = md(lastUsTradingDayBefore(d)), today = md(d);
-    return { morning: `① 장전 판단 (${today} 아침)`, krTheme: `한국 전일 강세 테마 (${kr} 한국장):`, usTheme: `미국 전일 강세 테마 (${us} 밤 미국장):`,
+    return { morning: "① 장전 판단", krTheme: "한국 전일 강세 테마:", usTheme: "미국 전일 강세 테마:", // 9.29-100 원장 [1876] "이것도 다 빼기": 머리줄 날짜 빼기(글 맨 위 제목 날짜는 그대로)
       usClose: "[전날 밤 미국장 마감]", early: "[새벽·아침 시세]", // 9.29-99 원장 [1827] "이 날짜랑 시간은 빼줘": 「(10/6 밤) · 새벽 5~6시」·「(10/7) · 새벽 6시~아침 8시」 꼬리 뺌
-      events: `주요 일정 (${today}):`, usLead: `주요 테마 (미국 · ${us} 밤):`,
-      usMkt: `미국장 (${us} 밤 마감):`, krMkt: `한국장 (${today} 오후 3:30 마감):` };
+      events: "주요 일정:", usLead: `주요 테마 (미국 · ${us} 밤):`,
+      usMkt: `미국장 (${us} 밤 마감):`, krMkt: "한국장:", _kr: kr, _today: today };
   }
   // 아침 지표를 시간대 묶음으로 (9.29-76 원장 [1499]): 미국 마감 = sox·vix·ust · 새벽·아침 = k200·fut·oil·fx — vals 는 morningSummary 의 [이름, 값, 판정, 이유, 키] · 값 없는 지표는 이미 빠져 있고 빈 묶음은 제목째 뺌
   function blogGroups(vals, t) {
@@ -4535,7 +4667,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const liveOf = (t) => (LIVE && LIVE.date === dd0 && liveAsOf(LIVE) === dd0 && Array.isArray(LIVE.themes) ? LIVE.themes.find((x) => same(x, t)) || null : null);
     const closeTh = (() => { try { const v = JSON.parse((st.auto || {})["leaders.slots"] || "null"); return v && v.text === mk.leaders && Array.isArray(v.themes) ? v.themes : []; } catch (e) { return []; } })(); // 마감 수집 글(mk.leaders)과 같은 run 의 종목만 (손으로 고친 글이면 안 붙임)
     if (krLead.length) { gap(); const kids = krLead.slice(0, 3).map((t) => blogLeaderRows(closeTh.find((x) => same(x, t)) || null, liveOf(t))), any = kids.some((k) => k.length), cells = krLead.slice(0, 3).map((t) => blogLeaderCells(closeTh.find((x) => same(x, t)) || null, liveOf(t)));
-      blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t, n) => `${t.name}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks && !kids[n].length ? " (" + t.stocks + ")" : ""} · ${blogFlow(t.f, t.i)}`), any ? kids : null, any ? cells : null); } // 한국 주요 테마: 외인·기관 매매 현황 (없으면 —) (9.29-75) · 종목 줄이 있으면 괄호 종목은 뺌(중복 0)
+      blueList("주요 테마 (한국):", krLead.slice(0, 3).map((t, n) => `${t.name}${t.relax ? " (선정완화)" : ""}${flagOf(t) ? " " + flagOf(t) : ""} ${pct(t.rate)}${t.stocks && !kids[n].length ? " (" + t.stocks + ")" : ""} · ${blogFlow(t.f, t.i)}`), any ? kids : null, any ? cells : null); } // 한국 주요 테마: 외인·기관 매매 현황 (없으면 —) (9.29-75) · 종목 줄이 있으면 괄호 종목은 뺌(중복 0)
     // 「주요 테마 (미국)」 은 ① 「미국 전일 강세 테마」 로 합침 (9.29-87 원장 [1661] · 중복 0)
     // 왜 주요 테마인지: 맨 밑에 참고 줄 하나 (얇게)
     // grades(새 모양: 대금 기준 종목 수·수급·미장·차트)가 있으면 그 근거를, 옛 모양이면 강세 종목 수·거래대금을 적는다
@@ -5223,6 +5355,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 오늘 주도 테마 카드 설명 줄 배지: close.market.leaders 의 provisional·T·flowReady·chartReady·regime·relaxed (9.29-56 새 파일에만, 옛 파일은 빈 문자열)
   //  "🤖 18:40 확정 · 기준 거래대금 800억↑ · 외인·기관 반영" / "⏳ 16:20 잠정(수급·차트 미반영, 18:40 확정)" / "⚠ 관망(코스피 거래대금 7조 미만)" / "주도 테마 약함"
   function leadersBadge(L, at) {
+    if (L && L.method === "surge") { // 9.29-100: 확정 = 그날 첫 마감 수집이 정규장(15:30) 값으로 한 번 · 저녁은 수급만 채움
+      return ["🤖 " + (L.decidedHm || at || "") + " 확정 · 정규장(15:30) 값" + (L.flowReady ? " · 외인·기관 반영" : " · 종목 외인·기관은 19:45 수집 때"), L.short ? "⚠ " + L.short : ""].filter(Boolean).join(" · ");
+    }
     if (!L || typeof L !== "object" || typeof L.provisional !== "boolean") return "";
     const T = typeof L.T === "number" ? " · 기준 거래대금 " + L.T.toLocaleString("ko-KR") + "억↑" : "";
     const out = [L.provisional ? "⏳ " + (at || "") + " 잠정(수급·차트 미반영, 18:40 확정)" + T
@@ -5305,6 +5440,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const pc = (x) => (x > 0 ? "+" : "") + x + "%";
       const d = "어제 " + pc(t.rate) + (t.stocks && t.stocks.length ? " · 주도주 " + t.stocks.slice(0, 3).map((x) => x.name).join("·") : "") + (t.flow ? " · 외인 " + (t.flow.foreign > 0 ? "+" : "") + t.flow.foreign.toLocaleString("ko-KR") + "억 · 기관 " + (t.flow.inst > 0 ? "+" : "") + t.flow.inst.toLocaleString("ko-KR") + "억" : "")+ " · 애프터 " + (t.after ? pc(t.after.pct) : "—") + " · 프리 " + (t.pre ? pc(t.pre.pct) : "8시 이후");
       if (st.auto["detail.prev." + i] !== d) { st.auto["detail.prev." + i] = d; changed.push(["auto.detail.prev." + i, m.ts]); }
+      { // 9.29-100 원장 [1846] 주도주별 프리마켓: 종목 | 프리 등락률 | 판정(±0.5%) | 프리 거래대금 · 「아직」·「못 받음」
+        const ks = (t.stocks || []).filter((x) => x && x.name).slice(0, 5).map((x) => ({ name: x.name, pct: x.pre ? x.pre.pct : undefined, st: x.pre ? x.pre.state : undefined, v: x.pre ? x.pre.value : undefined, note: x.pre ? undefined : x.preNote || undefined }));
+        const js = ks.some((x) => x.pct !== undefined || x.note) ? JSON.stringify(ks) : undefined;
+        if (js !== undefined && st.auto["prev.stk." + i] !== js) { st.auto["prev.stk." + i] = js; changed.push(["auto.prev.stk." + i, m.ts]); } }
     });
     ["kospi", "kosdaq"].forEach((k) => { if (c[k]) fillOne("market." + k, st.journal.market[k], (x) => (st.journal.market[k] = x), c[k].value, a.close.ts);
       if (c[k] && typeof c[k].close === "number" && st.auto["close." + k] !== c[k].close) { st.auto["close." + k] = c[k].close; changed.push(["auto.close." + k, a.close.ts]); }
@@ -5315,9 +5454,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (js !== undefined && st.auto["snap1600"] !== js) { st.auto["snap1600"] = js; changed.push(["auto.snap1600", sn.ts]); } }
     if (c.leaders && c.leaders.text) fillOne("market.leaders", st.journal.market.leaders, (x) => (st.journal.market.leaders = x), c.leaders.text, a.close.ts);
     { // 블로그 ② 주요 테마(한국) 종목 줄용 마감 종목 (9.29-93 원장 [1710]): 테마 3개 × 종목 3개의 종가·전일·등락률·거래대금·수급·차트 꼬리만 (글 text 와 같이 둬서 같은 run 인지 확인) · 판정·화면 무관
-      const th = c.leaders && c.leaders.text && Array.isArray(c.leaders.themes) ? c.leaders.themes.slice(0, 3).map((t) => ({ name: t.name, slots: (t.slots || []).slice(0, 3).map((x) => ({ code: x.code, name: x.name, price: x.price, prev: x.prev, rate: x.rate, value: x.value, flow: x.flow || undefined, chart: x.chart && x.chart.tag ? { tag: x.chart.tag } : undefined })) })) : null;
+      const th = c.leaders && c.leaders.text && Array.isArray(c.leaders.themes) ? c.leaders.themes.slice(0, 3).map((t) => ({ name: t.name, relax: t.relax ? t.relax.text : undefined, slots: (t.slots || []).slice(0, 3).map((x) => ({ code: x.code, name: x.name, price: x.price, prev: x.prev, rate: x.rate, value: x.value, flow: x.flow || undefined, chart: x.chart && x.chart.tag ? { tag: x.chart.tag } : undefined, alert: x.alert || undefined, stop: x.stop || undefined, mgmt: x.mgmt || undefined, newly: x.newly || undefined, heat: x.heat && x.heat.tags ? { tags: x.heat.tags, gap: x.heat.gap, disp: x.heat.disp, r5: x.heat.r5 } : undefined })) })) : null;
       const js = th ? JSON.stringify({ text: c.leaders.text, themes: th }) : undefined;
       if (js !== undefined && st.auto["leaders.slots"] !== js) { st.auto["leaders.slots"] = js; changed.push(["auto.leaders.slots", a.close.ts]); } }
+    { // 9.29-100: 참고 한 줄 · 완화 부족 이유 · 종가배팅 후보 (그 날 마감 수집 것만 · 없으면 지움)
+      const L = c.leaders && c.leaders.method === "surge" ? c.leaders : null;
+      [["leaders.ref", L && L.ref ? JSON.stringify({ name: L.ref.name, n: L.ref.n, up: L.ref.up, avg: L.ref.avg, money: L.ref.money, stocks: (L.ref.stocks || []).slice(0, 3).map((x) => x.name) }) : undefined], ["leaders.short", L && L.short ? L.short : undefined],
+        ["leaders.closing", L && L.closing ? JSON.stringify({ rule: L.closing.rule, T: L.closing.T /* { KS, KQ } 원장 [1880] */, fin: !!L.closing.flowFinal, items: (L.closing.items || []).slice(0, 10).map((x) => ({ name: x.name, rate: x.rate, value: x.value, flow: x.flow })) }) : undefined]].forEach(([k, v]) => { if (st.auto[k] !== v) { if (v === undefined) delete st.auto[k]; else st.auto[k] = v; changed.push(["auto." + k, (a.close || {}).ts]); } }); }
     { const b = leadersBadge(c.leaders, (a.close || {}).at) || undefined; if (st.auto["leaders.badge"] !== b) { if (b === undefined) delete st.auto["leaders.badge"]; else st.auto["leaders.badge"] = b; changed.push(["auto.leaders.badge", (a.close || {}).ts]); } }
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
     // ③ 오늘 시장 이야기도 자동으로 초안 (손으로 고치면 고친 글이 우선)

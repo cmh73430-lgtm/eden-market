@@ -9,7 +9,7 @@ import { addDays } from "../shared/calendar.js";
 import { ldsLatestA, ldsKeepA } from "../shared/leaders-score.js";
 
 export const SC_FILE = AUTO_DIR + "/observe/leaders-scorecard.json";
-export const SC_V = 1, SC_UNITS = { a: "마감 확정", b: "장후 잠정(16:20)", c: "장중 마지막(live)", s: "그림자(shadow)" }, SC_HORIZONS = [1, 2, 3, 4];
+export const SC_V = 1, SC_UNITS = { a: "마감 확정(급등 묶음)", b: "장후 잠정(16:20)", c: "장중 마지막(live)", s: "옛 방식(T·L)" }, SC_HORIZONS = [1, 2, 3, 4];
 export const SC_THEMES = 3, SC_SLOTS = 5, SC_MAX_ROWS = 2400, SC_MAX_DAYS = 260, SC_CLOSE_MIN = "16:20", SC_REF_DAYS = 20, SC_KODEX = "069500", SC_BAR_N = 20, SC_EXPIRE_DAYS = 30;
 export const SC_CONC = 2, SC_GAP_MS = 150, SC_BUDGET_MS = 120000; // 요청 간격은 관찰 기록과 같음 · 전체 2분
 export const SC_RULE = "○ = 선정일 종가 → D+k 종가 수익률 > 0 · 기준율 = 평가일 전체 테마 종목 상승비율(close.themes) · 마감 봉만(봉 날짜 < 오늘 또는 close.at ≥ 16:20) · 방식 a 마감 확정 · b 장후 잠정 · c live 마지막 · s shadow · 표본 20거래일 전 참고용 (원장 [1597] · 연구 R5)";
