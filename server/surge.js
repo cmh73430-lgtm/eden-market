@@ -10,10 +10,11 @@
 //  ⑥ 대장 = 강한 종목 거래대금 1위(상한가면 표시) · 외인·기관·미장·차트·며칠째 = 꼬리표(순위에 안 씀)
 //  ⑦ 등락률 = 정규장 기준: 15:40 뒤(넥스트레이드 애프터마켓·시간외 단일가가 현재가를 바꿈) 실행이면 네이버 분봉 15:30 봉 가격 ÷ 기준가(전일 정규장 종가)로 다시 잼
 //     (실측 2026-10-07: 15:30 봉 에이피알 379,000 · 삼성전자 268,500 = 다음 날 기준가 · 저녁 현재가 380,500 · 269,000 은 장 뒤 가격)
-import { thresholdFor, gradeC, withToday, chartUrl, stockFlow, usOf, gradeU, prevCloseOf, compactThemes } from "./auto.js"; // auto.js 도 이 파일을 불러서(순환) 맨 위 계산에는 auto.js 값을 쓰지 않는다
+import { thresholdFor, gradeC, withToday, chartUrl, stockFlow, usOf, gradeU, prevCloseOf, compactThemes, trendRows } from "./auto.js"; // auto.js 도 이 파일을 불러서(순환) 맨 위 계산에는 auto.js 값을 쓰지 않는다
 import { addDays } from "../shared/calendar.js";
 import { tvStockThresholds, TV_BIG2 } from "../shared/trade-value.js";
-import { avg20FromBars, rvolOf } from "./shadow.js"; /* RVOL(거래대금 평소의 ×n) — 9.29-84 계산 그대로(20일 평균 거래대금 · 장 경과율) · 게이트 [1894] B */
+import { avg20FromBars, rvolOf } from "./shadow.js";
+import { supplyTags } from "./caution.js"; /* 9.29-101 수급 꼬리 S1~S3 */ /* RVOL(거래대금 평소의 ×n) — 9.29-84 계산 그대로(20일 평균 거래대금 · 장 경과율) · 게이트 [1894] B */
 
 export const SURGE_V = 2;
 export const SURGE_RATE = 5, SURGE_N10 = 10, LIMIT_RATE = 29.5, SURGE_TOP = 0.10, SURGE_MIN_STRONG = 3, SURGE_MIN_N10 = 2, SURGE_N = 3, SURGE_SLOTS = 5;
@@ -302,17 +303,21 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
 }
 
 // 저녁(또는 다음 날 아침) 확정 수급: 이미 고른 테마는 그대로 · 슬롯 종목 그날 외인·기관(네이버 일별 · bizdate 맞을 때만)만 채움 · flow 를 확정값으로 바꿈 (재선정 0)
+/* 9.29-101 원장 [1884] 수급 꼬리 S1~S3: 그날 수급 1행 대신 최근 20행을 한 번에(같은 주소 · 요청 수 그대로) → s.sd = { lead, days, turn, exit } (그날 행이 있을 때만) */
+export const FLOW20_URL = (code) => "https://m.stock.naver.com/api/stock/" + code + "/trend?pageSize=20";
+export const FLOW1_URL = (code) => "https://m.stock.naver.com/api/stock/" + code + "/trend?pageSize=1";
 export async function fillFinalFlows(leaders, { get, bizdate }) {
   const L = JSON.parse(JSON.stringify(leaders || {})); let requests = 0, got = 0; const errors = [];
+  const day10 = String(bizdate).slice(0, 4) + "-" + String(bizdate).slice(4, 6) + "-" + String(bizdate).slice(6, 8);
   for (const t of L.themes || []) {
     const flows = [];
     for (const s of t.slots || []) {
-      try { requests++; const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + s.code + "/trend?pageSize=1"), bizdate); if (f) { s.flow = { foreign: f.foreign, inst: f.inst }; flows.push(f); got++; } } catch (e) { errors.push(s.code + ": " + (e.message || e)); }
+      try { requests++; const raw = await get(FLOW20_URL(s.code)), f = stockFlow(raw, bizdate); if (f) { s.flow = { foreign: f.foreign, inst: f.inst }; flows.push(f); got++; const sd = supplyTags(trendRows(raw), day10); if (sd) s.sd = sd; else delete s.sd; } } catch (e) { errors.push(s.code + ": " + (e.message || e)); }
     }
     if (flows.length) { t.flowFinal = { foreign: flows.reduce((a, f) => a + f.foreign, 0), inst: flows.reduce((a, f) => a + f.inst, 0), n: flows.length, of: (t.slots || []).length, bizdate }; t.flow = { foreign: t.flowFinal.foreign, inst: t.flowFinal.inst, n: flows.length, of: t.flowFinal.of }; }
   }
   if (L.closing && Array.isArray(L.closing.items)) { // 종가배팅 후보도 확정 수급으로 (최대 CLOSING_MAX)
-    for (const x of L.closing.items) { try { requests++; const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + x.code + "/trend?pageSize=1"), bizdate); if (f) x.flow = { foreign: f.foreign, inst: f.inst }; } catch (e) { errors.push(x.code + ": " + (e.message || e)); } }
+    for (const x of L.closing.items) { try { requests++; const raw = await get(FLOW20_URL(x.code)), f = stockFlow(raw, bizdate); if (f) { x.flow = { foreign: f.foreign, inst: f.inst }; const sd = supplyTags(trendRows(raw), day10); if (sd) x.sd = sd; else delete x.sd; } } catch (e) { errors.push(x.code + ": " + (e.message || e)); } }
     L.closing.flowFinal = true;
   }
   L.flowReady = got > 0; L.flowAt = Date.now();
@@ -324,10 +329,10 @@ export { compactThemes };
 // 수급(추정) 받기 (원장 [1848]): 키·로그인 없이 장중 종목별 외국인·기관 잠정값을 주는 곳은 아직 확인 못 함(조사 2026-10-09 · KRX 는 로그인 필요 · 네이버 PC 외국계 추정 화면 폐지)
 //  → 네이버 종목 일별 수급(trend)의 「오늘 날짜 행」 이 있을 때만 쓴다. 먼저 1종목만 물어보고(오늘 행 없음 = 아직 발표 전) 없으면 나머지 요청 0 → 모두 「수급 확인 전」(탈락 안 함)
 //  est = 저녁 확정 전(18:00 전) 값이면 true · 반환 { code: { foreign, inst, est, at } } 또는 null
-export function makeFlowsFor(get, bizdate, { hm = null, max = FLOW_MAX } = {}) {
+export function makeFlowsFor(get, bizdate, { hm = null, max = FLOW_MAX, url = FLOW1_URL } = {}) {
   return async (codes) => {
     const out = {}, xs = (codes || []).slice(0, max); if (!xs.length) return null;
-    const one = async (c) => { const f = stockFlow(await get("https://m.stock.naver.com/api/stock/" + c + "/trend?pageSize=1"), bizdate); if (f) out[c] = { foreign: f.foreign, inst: f.inst, est: !hm || hm < "18:00" ? true : undefined, at: hm || undefined }; return !!f; };
+    const one = async (c) => { const f = stockFlow(await get(url(c)), bizdate); if (f) out[c] = { foreign: f.foreign, inst: f.inst, est: !hm || hm < "18:00" ? true : undefined, at: hm || undefined }; return !!f; };
     try { if (!(await one(xs[0]))) return null; } catch (e) { return null; }
     for (const c of xs.slice(1)) { try { await one(c); } catch (e) {} }
     return Object.keys(out).length ? out : null;
@@ -342,7 +347,8 @@ export async function collectSurgeLeaders({ get, map, date, hm, us = null, histo
     const r = await fillFinalFlows(prev, { get, bizdate });
     return Object.assign(r.leaders, { kept: true, keptAt: hm, flowReq: r.requests });
   }
-  const sel = await selectSurge({ get, map, date, hm, regular: true, flowsFor: makeFlowsFor(get, bizdate, { hm }), us, history, kospiAmount: kospi && kospi.amount, kosdaqAmount: kosdaq && kosdaq.amount, top10, n });
+  /* 게이트 [1943] ③: 18:00 뒤 첫 마감·지난 날 백필(final)은 고를 때도 확정 수급과 같은 20행 주소로 물어 같은 종목을 두 번 받지 않음(memoGet · 값은 같은 날짜 행) */
+  const sel = await selectSurge({ get, map, date, hm, regular: true, flowsFor: makeFlowsFor(get, bizdate, { hm, url: final ? FLOW20_URL : FLOW1_URL }), us, history, kospiAmount: kospi && kospi.amount, kosdaqAmount: kosdaq && kosdaq.amount, top10, n });
   let L = { v: SURGE_V, method: "surge", provisional: false, confirmed: true, basis: sel.basis, text: surgeText(sel.themes), themes: sel.themes, candidates: sel.themes, ref: sel.ref, short: sel.short, closing: sel.closing, universe: sel.universe, ladder: sel.ladder,
     regime: regimeOf && kospi ? regimeOf(kospi.amount, history) : "", kospiRate: kospi && typeof kospi.value === "number" ? kospi.value : null, decidedAt: Date.now(), decidedHm: hm, flowReady: false, chartReady: sel.themes.some((t) => t.chart), requests: sel.requests, errors: sel.errors };
   if (final) { const r = await fillFinalFlows(L, { get, bizdate }); L = Object.assign(r.leaders, { flowReq: r.requests }); }
@@ -390,7 +396,8 @@ export function heatBase(bars, date) {
   const rows = (Array.isArray(bars) ? bars : []).map((b) => ({ d: String(b.localDate || ""), c: num(b.closePrice) })).filter((r) => r.c && r.d && r.d < d8).sort((a, b) => (a.d < b.d ? -1 : 1));
   if (rows.length < 19) return null;
   const last19 = rows.slice(-19);
-  return { s19: last19.reduce((a, r) => a + r.c, 0), c5: rows.length >= 5 ? rows[rows.length - 5].c : null, d: rows[rows.length - 1].d };
+  const y = rows[rows.length - 1], y2 = rows[rows.length - 2]; /* 9.29-101 원장 [1884] S6 전일 상한가: 바로 앞 거래일 종가가 그 전날보다 +29.5%↑ (일봉 종가 기준 · 장 뒤 거래로 상한가가 풀린 날은 안 잡힐 수 있음) */
+  return Object.assign({ s19: last19.reduce((a, r) => a + r.c, 0), c5: rows.length >= 5 ? rows[rows.length - 5].c : null, d: y.d }, y2 && y2.c > 0 && (y.c / y2.c - 1) * 100 >= LIMIT_RATE ? { lu: true } : {});
 }
 export function heatOf({ price, prev, open, base }) {
   const out = {}; const tags = [];
@@ -409,6 +416,6 @@ export async function attachHeat(themes, { get, date, cache = null, max = HEAT_M
   for (const s of slots) { if (s.code in c.codes && s.code in c.a20) continue; if (requests >= max) break; try { requests++; const raw = await get(chartUrl(s.code, date)); c.codes[s.code] = heatBase(raw, date); const a = avg20FromBars(raw, date); c.a20[s.code] = a && typeof a.avg20 === "number" ? a.avg20 : null; } catch (e) { errors.push(s.code + ": " + String((e && e.message) || e).slice(0, 30)); } }
   const needOpen = wantOpen ? [...new Set(slots.map((s) => s.code))].filter((k) => !(c.open[k] > 0)) : [];
   if (needOpen.length) { try { requests++; const j = await get("https://polling.finance.naver.com/api/realtime/domestic/stock/" + needOpen.slice(0, 20).join(",")); for (const d of (j && j.datas) || []) { const o = num(d && (d.openPriceRaw ?? d.openPrice)); if (d && d.itemCode && o > 0) c.open[String(d.itemCode)] = o; } } catch (e) { errors.push("시가: " + String((e && e.message) || e).slice(0, 30)); } }
-  for (const s of slots) { const h = heatOf({ price: s.price, prev: s.prev, open: c.open[s.code], base: c.codes[s.code] }); if (h) s.heat = h; if (hm !== undefined) { const x = rvolOf(s.value, c.a20[s.code], hm); if (x !== null) s.rvol = x; } }
+  for (const s of slots) { const h = heatOf({ price: s.price, prev: s.prev, open: c.open[s.code], base: c.codes[s.code] }); if (h) s.heat = h; if (c.codes[s.code] && c.codes[s.code].lu) s.lu1 = true; if (hm !== undefined) { const x = rvolOf(s.value, c.a20[s.code], hm); if (x !== null) s.rvol = x; } }
   return { date, codes: c.codes, open: c.open, a20: c.a20, requests, errors: errors.slice(0, 5) };
 }

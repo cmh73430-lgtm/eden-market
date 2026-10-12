@@ -20,3 +20,10 @@ export function tvTableRows(market) {
   const k = market === "KQ", rows = k ? TV_KOSDAQ_ROWS : TV_KOSPI_ROWS;
   return rows.map((jo) => [jo + "조", tvThreshold(jo * 10000 * (k ? 1 : 1 - TV_BIG2_SHARE)).toLocaleString("ko-KR") + "억"]);
 }
+// 장중에 보는 법 (9.29-101 [1920] 「금액으로 바꾸기」): 시각마다 그날 거래대금이 찬 비율(%) [시각, 코스피, 코스닥] — 거래대금기준_전문가조사.md 표 그대로
+export const TV_INTRA = [["10시", 27, 38], ["11시", 40, 49], ["12시", 51, 60], ["14시", 70, 78], ["15시", 82, 88]];
+// 기준 T = { KS, KQ }(억) 이면 금액 줄 [["10시","216억","209억"], …] (기준 × 비율 · 1억 단위 반올림) · 기준을 모르면(null) % 줄 [["10시","27%","38%"], …]
+export function tvIntraRows(T) {
+  const ok = T && typeof T.KS === "number" && T.KS > 0 && typeof T.KQ === "number" && T.KQ > 0;
+  return TV_INTRA.map(([h, ks, kq]) => (ok ? [h, Math.round((T.KS * ks) / 100).toLocaleString("ko-KR") + "억", Math.round((T.KQ * kq) / 100).toLocaleString("ko-KR") + "억"] : [h, ks + "%", kq + "%"]));
+}

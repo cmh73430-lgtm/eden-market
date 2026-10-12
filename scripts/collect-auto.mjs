@@ -27,6 +27,7 @@ import { memoGet, TOP10_CODES } from "../server/shadow.js";
 import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
+import { CAUTION_FILE, CAUTION_KEEP, loadCautions, tagAvoidAll, avoidText } from "../server/caution.js"; /* 9.29-101 원장 [1884] S4 종배 피함 (거래소 공시 지난 거래일 목록 · 하루 1번) */
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
@@ -103,6 +104,19 @@ const save = !has("dry") && token && repo;
 // RVOL 20일 평균용 일봉: 중계 /day(종가×거래량 근사 · 앱과 같은 길) → 못 받으면 네이버 일봉(C 등급 계산과 같은 주소). server/shadow.js barRows 가 두 모양 다 읽는다
 const RELAY = "https://eden-chart.cmh-eden.workers.dev", NV_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 const nvGet = async (u) => { const r = await fetch(u, { headers: { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": NV_UA }, signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
+/* 9.29-101 종배 피함(S4) 자료: 지난 10거래일 거래소 공시 목록에서 단기과열 예고·지정 · 투자주의(원장 [1937] ④ 전 종류 · 「[투자주의]」 머리표)만 뽑아 auto/observe/kind-cautions.json 에 보관 — 파일에 없는 날만 받음(한 run 최대 3일 · 평소 하루 1번 · 실패하면 그날은 표시 없음) */
+const kindPost = async (u, body) => { const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "text/html", "User-Agent": NV_UA }, body, signal: AbortSignal.timeout(15000) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); };
+function prevTradingDays(n = CAUTION_KEEP) { const out = []; let d = date; for (let i = 0; i < n; i++) { d = prevBusinessDay(d, cfg.holidays); out.push(d); } return out; }
+async function loadCautionFile() {
+  const prevDays = prevTradingDays();
+  try {
+    let old = null; try { old = arg("cautions") ? JSON.parse(readFileSync(arg("cautions"), "utf8")) : save ? (await readFile(CAUTION_FILE)).json : await readPublic(CAUTION_FILE); } catch (e) {}
+    const r = await loadCautions({ post: kindPost, file: old, prevDays });
+    console.log(`종배 피함 자료 ${r.have}/${r.want}일 · 새로 받음 ${r.requests}회${r.errors.length ? " · 참고 " + r.errors.slice(0, 2).join(" / ") : ""}`);
+    if (r.changed) { r.file.updatedAt = Date.now(); if (save) { try { await writeFile(CAUTION_FILE, r.file, `종배 피함 자료 ${date}`); } catch (e) { console.log("종배 피함 자료 저장 실패:", e.message || e); } } else if (arg("cautionsout")) writeFileSync(arg("cautionsout"), JSON.stringify(r.file)); }
+    return { file: r.file, prevDays };
+  } catch (e) { console.log("종배 피함 자료 실패:", e.message || e); return { file: null, prevDays }; }
+}
 // 테마 구성표 (9.29-100): 저장소(또는 --map 로컬 · --dry 면 공개 저장소) 에서 읽고 · rebuild=true(아침) 면 7일 지났을 때, 아니면 아예 없을 때만 다시 만든다(약 270회 · 0.2초 간격 · 2분 30초 예산) · 실패면 옛 표
 async function loadThemeMap({ rebuild = false } = {}) {
   let m = null;
@@ -121,6 +135,9 @@ const news2Opts = (pl) => ({ prevDate: prevBusinessDay(date, cfg.holidays), cach
 const shadowText = (sh) => !sh ? "그림자 없음" : sh.error ? "그림자 실패: " + sh.error : sh.kind === "old-TL" ? `옛 방식(T·L · 비교용) T=${sh.T}억: ${sh.text || "없음"}` : `그림자 V2 T 코스피 ${sh.T.KS}·코스닥 ${sh.T.KQ} · 게이트 ${sh.gatePassed} → 상세 ${sh.scanned} → 자격(L≥${sh.minL}) ${sh.qualified} · 요청 네이버 +${(sh.requests || {}).naver ?? "?"} · 일봉 ${(sh.requests || {}).rvol ?? 0} · ${sh.ms}ms: `
   + (sh.themes || []).map((t, i) => `${i + 1}.${t.name}${t.nameKept ? "(이름 유지)" : ""} ${t.score} L${t.L} RVOL ${t.rvolMed ?? "—"} 대금 ${t.valueExTop10}억(TOP10 제외${t.top10Share ? " · TOP10 " + t.top10Share + "%" : ""})`).join(" / ") + (sh.errors && sh.errors.length ? ` · 참고 ${sh.errors.length}건` : "");
 const news2Text = (live) => (live.themes || []).map((t) => t.news2 ? `${t.name}: ${t.news2.label}${t.news2.items.length ? " — " + t.news2.items.slice(0, 3).map((x) => `[${x.grade}] ${x.title.slice(0, 40)} (${x.office}${x.srcN > 1 ? " 외 " + (x.srcN - 1) : ""})`).join(" · ") : ""}${(t.news2.signals || []).length ? " · ⚡강세 신호: " + t.news2.signals.map((x) => `${x.title.slice(0, 36)} (${x.office} ${x.at ? x.at.slice(11) : ""})`).join(" / ") : ""}` : `${t.name}: 뉴스 v2 없음`).join("\n") + (live.news2 ? `\n뉴스 v2 요청 +${live.news2.requests} · 오늘 누적 ${live.news2.budget ? live.news2.budget.used : "?"}${live.news2.errors.length ? " · 참고 " + live.news2.errors.slice(0, 3).join(" / ") : ""}` : "");
+/* 게이트 [1947] 운영 결함(9.29-97~): 아래 장중(live)·오후 4시 묶음은 이 파일 중간에서 끝나는데(process.exit), 장중 묶음이 부르는 loadHistory 가 쓰는 histMemo 선언이 그 묶음 「뒤」에 있어
+   저장 모드에서 「Cannot access 'histMemo' before initialization」 으로 죽었음(--dry 는 loadHistory 가 먼저 돌아가 안 죽음) → 선언을 묶음 위로. 맨 위 const/let 은 그것을 쓰는 묶음보다 위에 둘 것 */
+const histMemo = new Map();
 // ---- 장중 실시간 (live): 09:05~15:30 + 마감 뒤 늦게 도착한 실행은 16:00 까지 「15:30 장 마감 값」(server/auto.js liveSlot), auto/live.json 하나에 덮어쓰고 끝 (날짜 파일·latest 는 손대지 않음) ----
 if (when === "live") {
   const hm = kstTime(now).slice(0, 5), slot = liveSlot(hm);
@@ -128,12 +145,14 @@ if (when === "live") {
   const tm = save ? (await readFile(autoFile(date)).catch(() => ({ json: null }))).json : null;
   const pl = await prevLive(); // 뉴스 캐시 (오늘 것만)
   const tmap = await loadThemeMap(); // 9.29-100 테마 구성표 (없을 때만 새로 만듦)
-  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force") } }); // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
+  const cautions = hm >= "09:30" || has("force") ? await loadCautionFile() : null; /* 9.29-101 S4 (09:30 전엔 후보가 없어 안 받음) */
+  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force") } }); // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
   if (slot && slot.closed) { live.at = slot.at; live.closed = true; console.log(`${hm} 도착 — 장 마감(15:30) 뒤 늦게 시작한 실시간 실행이라 「15:30 장 마감 값」으로 받음`); }
   if (save && !liveOverwrite((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, live)) { console.log("오늘 장 마감 값이 이미 있어 장중 값으로 덮지 않음 — 건너뜀"); process.exit(0); }
   console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${live.wait ? live.wait + " 부터 고름(아직)" : (live.themes || []).map((t) => `${t.name}${t.relax ? "[선정완화 " + t.relax.text + "]" : ""} ${t.rate > 0 ? "+" : ""}${t.rate}% (강한 ${t.strongN} · +10% ${t.n10} · 대장 ${t.lead ? t.lead.name : "-"} · ${t.flowState === "pending" ? "수급 확인 전" : t.flowState} · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
   if (live.universe) console.log(`대상 상위 10% ${live.universe.n}종목(받은 ${live.universe.have}) · 기준선 ${live.universe.cut}억 · 쪽 ${JSON.stringify(live.universe.pages)} · 사다리 ${(live.ladder.used || []).map((u) => u.step + ":" + u.passed).join(" ")} · 선정 요청 ${JSON.stringify(live.surgeReq)}${live.ref ? " · 참고 " + live.ref.name + " " + live.ref.money + "억" : ""}${live.short ? " · " + live.short : ""}`);
   if (live.errors.length) console.log("일부 실패:", live.errors.join(" / "));
+  if (!live.wait) console.log("종배 피함 표시 붙은 곳(실시간): " + avoidText({ themes: live.themes, closing: live.closing && live.closing.items }));
   console.log("후보:", (live.candidates || []).map((c) => `${c.name}${c.alias.length ? "=" + c.alias.join("=") : ""} 단계${c.step} [${c.stocks.join(",")}]`).join(" / "));
   console.log(news2Text(live));
   if (!live.wait && (!live.themes || !live.themes.length) && !live.short) { console.error("주도 테마를 못 골랐음 — live.json 은 지난 값 그대로"); process.exit(1); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
@@ -159,7 +178,6 @@ const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { j
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
 const todayMorning = prev.json && prev.json.date === date ? prev.json.morning : null;
 // 지난 거래일 파일들(최근 먼저, 최대 n개): 코스피 거래대금 20일 평균(관망) · 테마 목록(지속일수 D) · 전일 수급(2일 연속). 빈 날이 5번 이어지면 그만 (첫 수집 2026-09-28 이전)
-const histMemo = new Map();
 async function loadHistory(from, n = 20) {
   if (!save) return [];
   const mk = from + ":" + n; if (histMemo.has(mk)) return histMemo.get(mk);
@@ -216,7 +234,10 @@ async function closeLeaders(market) {
     const tmap = prevL && prevL.v === SURGE_V ? { map: null } : await loadThemeMap();
     res = await collectSurgeLeaders({ get, map: tmap.map, date, hm, us, history, kospi: market.kospi || null, kosdaq: market.kosdaq || null, top10: TOP10_CODES, prev: prevL, final: hm >= "18:00" || date !== kstDate(now), regimeOf: (a, h) => regimeOfAmt(a, h) });
     console.log(`급등 묶음 ${res.kept ? "(다시 안 고름 · " + (res.flowReq !== undefined ? "확정 수급 채움 " + res.flowReq + "회" : "그대로") + ")" : "새로 고름(" + res.basis + ")"}: ${res.text || "없음"}`);
-    if (!res.kept && Array.isArray(res.themes)) { const pl2 = (await prevLive()) || {}; const ht = await attachHeat(res.themes, { get, date, cache: pl2.heat }); console.log(`과열 꼬리표 요청 ${ht.requests}회`); const al = await attachAlerts(res.themes, { get, date, cache: pl2.alerts }); console.log(`시장경보 확인 ${Object.keys(al.codes).length}종목 · 요청 ${al.requests}회`); } // K7 · 네이버 basic(장중 live 가 받은 것은 재사용)
+    if (!res.kept && Array.isArray(res.themes)) { const pl2 = (await prevLive()) || {}; const ht = await attachHeat(res.themes, { get, date, cache: pl2.heat }); console.log(`과열 꼬리표 요청 ${ht.requests}회`); const al = await attachAlerts(res.themes, { get, date, cache: pl2.alerts });
+      { const cz = await loadCautionFile(); tagAvoidAll({ themes: res.themes, closing: res.closing && res.closing.items }, cz); console.log("종배 피함 표시 붙은 곳(마감): " + avoidText({ themes: res.themes, closing: res.closing && res.closing.items })); } /* 게이트 [1943] ②: S4 종배 피함 — 종가배팅 후보가 0개인 날에도 공시를 읽고 테마 종목에 붙임(장중과 같은 함수) */
+      if (res.closing && Array.isArray(res.closing.items) && res.closing.items.length) { /* 9.29-101 S6 전일 상한가(일봉 하루 캐시) — 마감 종가배팅 후보에도 */
+        const h2 = await attachHeat([{ slots: res.closing.items }], { get, date, cache: { date: ht.date, codes: ht.codes, open: ht.open, a20: ht.a20 }, wantOpen: false, max: 10 }); console.log(`종가배팅 후보 전일 상한가 확인 요청 ${h2.requests}회`); } console.log(`시장경보 확인 ${Object.keys(al.codes).length}종목 · 요청 ${al.requests}회`); } // K7 · 네이버 basic(장중 live 가 받은 것은 재사용)
     if (!res.kept && res.universe) console.log(`대상 ${res.universe.n}종목 기준선 ${res.universe.cut}억 · 사다리 ${(res.ladder.used || []).map((u) => u.step + ":" + u.passed).join(" ")} · 요청 ${JSON.stringify(res.requests)}${res.ref ? " · 참고 " + res.ref.name : ""}${res.short ? " · " + res.short : ""}`);
   } catch (e) { console.log("급등 묶음 선정 실패:", e.message || e); res = {}; }
   try { // 옛 방식(T·L) — 비교용 그림자 (성적표 s) · close.themes(테마 100개 목록)도 여기서

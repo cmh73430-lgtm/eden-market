@@ -8,6 +8,7 @@ import { collectAll, normalizeYield } from "./collect.js";
 import { selectThemesV2, memoGet, attachRvol } from "./shadow.js";
 import { fetchNews2 } from "./news2.js";
 import { tvThreshold } from "../shared/trade-value.js";
+import { tagAvoidAll } from "./caution.js"; /* 9.29-101 종배 피함(S4) · 게이트 [1943] ② 장중·마감 같은 함수 */
 import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat } from "./surge.js"; // 9.29-100 급등 묶음 선정
 export { selectThemesV2, memoGet, attachRvol, fetchNews2 };
 
@@ -188,6 +189,7 @@ export async function collectIntraday({ adapters, fetchImpl = fetch, now = new D
 //  16:20 잠정(provisional): 게이트·L·U·B 만 (F=1·C=1 중립) = 요청 1+12. 18:40 확정: + 수급 6테마×3종목 + 일봉 6테마×2종목 = 43.
 const NV_HEAD = { Accept: "application/json", Referer: "https://m.stock.naver.com/", "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" };
 export const PREV_MIN_STOCKS = 5, PREV_FLAT = 0.5, LEAD_MIN_RATE = 1, LEAD_MIN_RISE = 0.6, LEAD_MIN_EXCESS = 1, LEAD_POOL = 40, HOT_RATE = 5, HOT_MIN = 2;
+export const CLOSING_HEAT_MAX = 10; /* 9.29-101 종가배팅 후보 전일 상한가 확인용 일봉 상한 / run (하루 캐시) */
 export const PRE_MAX = 20; // 아침 전일 주도주 프리마켓: 한 번에 받을 종목 상한 (테마 3 × 슬롯 5 = 15 · 9.29-100 원장 [1846])
 export const SLOT_N = 5, FLOW_TOP = 6, FLOW_STOCKS = 3, CHART_TOP = 6, CHART_STOCKS = 2, WEAK_AMOUNT = 70000, PERSIST_RANK = 20, PERSIST_MAX = 6;
 const round2 = (x) => Number(x.toFixed(2));
@@ -475,7 +477,7 @@ export const moveState = (pct) => (pct === null || pct === undefined ? "" : pct 
 const avg = (a) => (a.length ? Number((a.reduce((x, y) => x + y, 0) / a.length).toFixed(2)) : null);
 
 // 저장된 주도 테마(확정 결과)를 아침 전일 테마 모양으로: 슬롯 5종목이 NXT 확인 대상
-const fromLeader = (t, T) => ({ no: t.no, name: t.name, rate: t.rate, value: t.value, flow: t.flow, grades: t.grades, score: t.score, us: t.us, T, stocks: (t.slots || t.stocks || []).filter((s) => s && s.code) });
+const fromLeader = (t, T) => ({ no: t.no, name: t.name, rate: t.rate, value: t.value, flow: t.flow, grades: t.grades, score: t.score, us: t.us, T, stocks: (t.slots || t.stocks || []).filter((s) => s && s.code), ...(t.lead && t.lead.name ? { lead: t.lead.name } : {}) }); /* 9.29-101 [1937] ③ lead = 급등 묶음 대장 이름(어제 카드 ★ · 옛 방식 확정 결과엔 없음 → 표시 없음) */
 // keep: 같은 날 앞선 아침 수집의 prev (8:05 수집은 7:05에 고른 테마와 애프터마켓 값을 그대로 이어 쓴다)
 // leaders: 전날 18:40 확정 결과(close.market.leaders) — 아침엔 다시 뽑지 않고 그 상위 3개를 이어 쓴다. 없으면(장애) 예전처럼 n=2 잠정 재선정
 //  슬롯(code 있는 종목)이 있는 테마가 하나도 없으면 — 옛 형식(9.29-55 이전: stocks 가 이름 문자열, slots 없음)이나 relaxed·L=0 으로 슬롯이 다 빈 확정 결과 — NXT 를 볼 종목이 없으니 이어 쓰지 않고 재선정
@@ -486,7 +488,7 @@ export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, 
     if (!r.ok) throw new Error("HTTP " + r.status);
     return r.json();
   };
-  let themes = Array.isArray(keep) && keep.length ? keep.map((t) => ({ no: t.no, name: t.name, rate: t.rate, value: t.value, flow: t.flow, grades: t.grades, score: t.score, us: t.us, T: t.T, stocks: t.stocks || [], after: t.after, gapWarn: t.gapWarn })) : null;
+  let themes = Array.isArray(keep) && keep.length ? keep.map((t) => ({ no: t.no, name: t.name, rate: t.rate, value: t.value, flow: t.flow, grades: t.grades, score: t.score, us: t.us, T: t.T, stocks: t.stocks || [], after: t.after, gapWarn: t.gapWarn, ...(t.lead ? { lead: t.lead } : {}) })) : null;
   const hasSlots = (t) => !!t && Array.isArray(t.slots) && t.slots.some((s) => s && s.code);
   if (!themes && leaders && Array.isArray(leaders.themes) && leaders.themes.some(hasSlots)) themes = leaders.themes.map((t) => fromLeader(t, leaders.T));
   if (!themes) {
@@ -647,6 +649,11 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
       out.themes.push(row);
     }
     try { const ht = await attachHeat(out.themes, { get, date: day, cache: surge.heatCache || null, hm: surge.regular ? null : hmReal }); out.heat = { date: ht.date, codes: ht.codes, open: ht.open, a20: ht.a20 }; /* 게이트 [1894] B: 슬롯 rvol(거래대금 평소의 ×n) 되살림 · 장 마감 뒤(regular)는 경과율 1 */ if (ht.errors.length) out.errors.push(...ht.errors.map((e) => "과열: " + e)); } catch (e) { out.errors.push("과열: " + (e.message || e)); } // 과열 꼬리표 3종(표시만 · 일봉 하루 1회 · 시가 1회)
+    /* 9.29-101 원장 [1884]: 종가배팅 후보에 S6 전일 상한가(일봉 · 과열 꼬리표와 같은 하루 캐시 · 슬롯에 없는 후보만 새 요청) · S4 종배 피함(거래소 공시 지난 거래일 목록 · surge.cautions = { file, prevDays }) — 표시만 */
+    if (out.closing && Array.isArray(out.closing.items) && out.closing.items.length) {
+      try { const h2 = await attachHeat([{ slots: out.closing.items }], { get, date: day, cache: out.heat || surge.heatCache || null, wantOpen: false, max: CLOSING_HEAT_MAX }); out.heat = { date: h2.date, codes: h2.codes, open: h2.open, a20: h2.a20 }; } catch (e) { out.errors.push("전일 상한가: " + (e.message || e)); }
+    }
+    tagAvoidAll({ themes: out.themes, closing: out.closing && out.closing.items }, surge.cautions); /* 종가배팅 후보 + 테마 종목(슬롯 · 접힌 줄 위험 표시용) · 요청 0 · 후보 0개여도 테마 종목에는 붙음 */
     try { const al = await attachAlerts(out.themes, { get, date: day, cache: surge.alertCache || null }); out.alerts = { date: al.date, codes: al.codes }; if (al.errors.length) out.errors.push(...al.errors.map((e) => "경보: " + e)); } catch (e) { out.errors.push("경보: " + (e.message || e)); } // 시장경보 꼬리표(K7 · 네이버 basic · 하루 캐시 → 다음 run 재사용)
     if (n2) out.news2 = { v: 1, cache: n2.cache, budget: n2.budget, requests: n2.requests, errors: n2.errors.slice(0, 12) };
   } catch (e) { out.errors.push("주도 테마: " + (e.message || e)); }
