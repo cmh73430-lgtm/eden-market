@@ -492,6 +492,9 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .topld .tll .tsg .tsr3 { display: flex; flex-wrap: wrap; padding-left: 10px; margin-top: 1px; }
 .topld .tll .tlbad, .topld .tll .tlpre { display: block; }
 .tlref { margin: 6px 2px 0; font-size: 12.5px; line-height: 1.5; color: var(--ink); } .tlref small { color: var(--muted); }
+/* 9.29-102 단골 칸: 세로 표(이름 | 횟수 · 칸 2개 · 휴대폰 가로 스크롤 0) */
+.tlfreq { margin: 6px 2px 0; font-size: 12.5px; line-height: 1.5; } .tlfreq > summary { cursor: pointer; list-style: none; color: var(--ink); } .tlfreq > summary::-webkit-details-marker { display: none; } .tlfreq > summary::before { content: "▸ "; } .tlfreq[open] > summary::before { content: "▾ "; } .tlfreq > summary small { color: var(--muted); }
+.tlfreq .fqg { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 10px; row-gap: 1px; margin: 4px 0 0 14px; font-variant-numeric: tabular-nums; } .tlfreq .fqh { grid-column: 1 / -1; font-size: 11.5px; font-weight: 800; color: var(--muted); margin-top: 3px; } .tlfreq .fqr { display: contents; } .tlfreq .fqn { min-width: 0; overflow-wrap: anywhere; } .tlfreq .fqc { text-align: right; color: var(--muted); } .tlfreq .fqnote { display: block; margin: 4px 0 0 14px; color: var(--muted); }
 .prkw:empty { display: none; } .prk, .topld .tll .tlpre { display: grid; grid-template-columns: minmax(0, max-content) max-content max-content minmax(0, 1fr); column-gap: 8px; row-gap: 1px; margin-top: 4px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .prk .pkh, .tlpre .pkh { grid-column: 1 / -1; font-size: 11.5px; font-weight: 800; color: var(--muted); } .prk .pkr, .tlpre .pkr { display: contents; }
 .pkn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 9em; } .pkp, .pks { text-align: right; white-space: nowrap; font-weight: 700; } .pkp.p, .pks.p { color: var(--up); } .pkp.n, .pks.n { color: var(--down); } .pkv { color: var(--muted); min-width: 0; }
@@ -1192,6 +1195,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
     <div class="tlh"><b id="topLeadTitle">🔥 오늘 주도 테마</b><span class="lvbadge" id="topLeadBadge" hidden></span><small id="topLeadSub"></small></div>
     <ol class="tll" id="topLeadList"></ol>
     <p class="tlref" id="topLeadRef" hidden></p>
+    <details class="tlfreq" id="topLeadFreq" hidden></details> <!-- 9.29-102 원장 [1905]: 참고 · 자주 나온 테마(단골 · 최근 20일) · 기본 접힘 · 마감 카드에서만 -->
     <details class="shadowbox" id="topShadow" hidden><summary id="topShadowSum"></summary><div id="topShadowBody"></div></details>
     <div class="tlf"><button class="btn" type="button" id="topLeadGo">자세히 (② 장 마감 · 설명) ▼</button></div>
   </section>
@@ -3177,7 +3181,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-101";
+  const APP_VER = "9.29-102";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3534,6 +3538,15 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (ref && ref.name) parts.push(`<b>참고</b> ${esc(ref.name)} <small>큰돈 몰림 · 오른 종목 돈 ${ek(ref.money)} · ${Math.round((ref.up || 0) * 100)}% 오름 · 평균 ${(ref.avg > 0 ? "+" : "") + ref.avg}%${(ref.stocks || []).length ? " · " + esc(ref.stocks.map((x) => (typeof x === "string" ? x : x.name)).slice(0, 3).join("·")) : ""} — +5% 묶음엔 안 듦</small>`);
     if (short) parts.push(`<small>⚠ ${esc(short)}</small>`);
     el.hidden = !parts.length; el.innerHTML = parts.join("<br>");
+  }
+  /* 9.29-102 원장 [1905][1951]: 「참고 · 자주 나온 테마」 접는 칸 — 마감 run 이 센 값(close.forecast) 표시만 · 낱말 꼴 · 기록 5일 미만이면 숨김 · 20일 미만이면 「기록 n일」 · 실시간·어제 카드에선 숨김 · 블로그 복사 글엔 안 넣음 */
+  function paintFreq(js) {
+    const el = $("topLeadFreq"); if (!el) return;
+    let f = null; try { f = js ? JSON.parse(js) : null; } catch (e) { f = null; }
+    const ok = f && typeof f.n === "number" && f.n >= 5 && Array.isArray(f.f3) && f.f3.length;
+    el.hidden = !ok; if (!ok) { el.innerHTML = ""; return; }
+    const rows = (xs) => xs.map((x) => `<span class="fqr"><span class="fqn">${esc(x.name)}</span><span class="fqc">${Number(x.n)}회</span></span>`).join("");
+    el.innerHTML = `<summary><b>참고</b> 자주 나온 테마 <small>최근 20일 주도 횟수${f.n < 20 ? " · 기록 " + f.n + "일" : ""}</small></summary><div class="fqg"><span class="fqh">자주 나온 테마</span>${rows(f.f3)}${f.f5 && f.f5.length ? `<span class="fqh">오늘은 쉬는 단골</span>${rows(f.f5)}` : ""}</div><small class="fqnote">매매 신호 아님 · 지난 1년 시험: 3개 중 1개도 못 맞힌 날이 절반쯤</small>`;
   }
   // 9.29-100 원장 [1864] ③ 종가배팅 숫자 기준(참고): 오늘 조건 맞는 종목 이름 (실시간 = 수집기 live.json · 마감 = 그 날 마감 수집) · 수급 순매도는 뺌 · 수급 아직이면 「수급 확인 전」
   // 9.29-100 원장 [1880] 「두 곳 어긋남 0」: 매매수칙 거래대금 표 숫자를 종가배팅 칸과 같은 계산(tvTableRows)으로 다시 채움
@@ -4052,6 +4065,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const card = (t, n, o) => { const rt = typeof t.rate === "number" ? t.rate : null;
       return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${o.head || t.relax ? `<span class="tsum">${o.head ? `<small>${esc(o.head)}</small>` : ""}${relaxBadge(t.relax)}</span>` : ""}</span><span class="rt ${rt === null ? "" : upDn(rt)}"${typeof t.n10 === "number" ? ' title="테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)"' : ""}>${rt === null ? "" : pcT(rt)}${typeof t.n10 === "number" && rt !== null ? `<small class="rtn">테마 평균</small>` : ""}</span>${o.rows ? `<span class="tq">${o.rows}</span>` : ""}${o.more ? tmoreHtml(o.key, o.label, o.more) : ""}</li>`; };
     paintRef(null); // 참고 줄은 아래 가지에서 (9.29-100 [1845] ④)
+    paintFreq(null); /* 9.29-102 단골 칸은 마감 카드 가지에서만 */
     const wasHidden = box.hidden;
     const done = () => { if (wasHidden !== box.hidden && typeof buildNav === "function") buildNav(); };
     if (ld.length) {
@@ -4067,7 +4081,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         const rest = [why.slice(hN).join(" · "), usTxt(t.name)].filter(Boolean).join(" · ");
         const tail = surge ? sl.map((x, i) => [x, stockBadges(x, i)]).filter(([, bd]) => bd).map(([x, bd]) => `<span class="tls tlbad">• ${esc(x.name)} ${bd}</span>`).join("") : "";
         return card(t, n, { head: why.slice(0, hN).join(" · "), rows, key: "c:" + t.name, label: "자세히 (" + [why.length > hN ? "수급" : "", usTxt(t.name) ? "미국장" : "", tail ? "꼬리표" : ""].filter(Boolean).join("·") + ")", more: (rest ? `<span class="tlw">${esc(rest)}</span>` : "") + tail }); }).join("");
-      if (a["market.leaders"] === S.journal.market.leaders) { try { paintRef(JSON.parse(a["leaders.ref"] || "null"), a["leaders.short"] || ""); } catch (e) {} }
+      if (a["market.leaders"] === S.journal.market.leaders) { try { paintRef(JSON.parse(a["leaders.ref"] || "null"), a["leaders.short"] || ""); } catch (e) {} paintFreq(a["leaders.forecast"] || null); }
       return done();
     }
     // 장 시작 전·휴장일: 마지막 실시간 값을 '장 시작 전' 표시로 보여 줌 (오늘 화면을 볼 때만)
@@ -4082,7 +4096,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         /* 종목 줄 = 주도주 프리마켓(이름 | 프리 등락률 | 프리 거래대금) 위 3종목 · 갭 과열(+6%↑)은 접힌 줄에도 · 프리 자료가 아직 없으면 이름만 · ★ 는 수집기가 대장 이름을 준 날만(ld) */
         const rows = ks.length ? ks.slice(0, 3).map((x) => { const has = typeof x.pct === "number"; return tqRow({ name: x.name, lead: !!x.ld, mark: has && x.pct >= 6 ? "갭 과열" : "", markCls: "heat", rate: has ? (x.pct > 0 ? "+" : "") + x.pct.toFixed(2) + "%" : x.note || "아직", rc: has ? upDn(x.pct) : "", value: typeof x.v === "number" ? "프리 " + (x.v >= 1 ? Math.round(x.v).toLocaleString("ko-KR") + "억" : "1억 미만") : has ? "프리" : "" }); }).join("") : names.map((nm) => tqRow({ name: nm })).join("");
         const us = usTxt(p.name), pre = preStockHtml(n, "tls tlpre");
-        return card({ name: p.name, rate: m ? Number(m[1]) : null }, n, { head: [p.state ? "애프터 " + p.state : "", p.pre ? "프리 " + p.pre : ""].filter(Boolean).join(" · "), rows, key: "p:" + p.name, label: "자세히 (" + [us ? "미국장" : "", pre ? "주도주 프리마켓" : ""].filter(Boolean).join("·") + ")", more: (us ? `<span class="tlw">${esc(us)}</span>` : "") + pre }); }).join("");
+        return card({ name: p.name, rate: m ? Number(m[1]) : null }, n, { head: [p.state ? "애프터 " + (PRE_WORD[p.state] || p.state) : "", p.pre ? "프리 " + (PRE_WORD[p.pre] || p.pre) : ""].filter(Boolean).join(" · ") /* 9.29-102 원장 [1956] 한글(강세·보합·약세) */, rows, key: "p:" + p.name, label: "자세히 (" + [us ? "미국장" : "", pre ? "주도주 프리마켓" : ""].filter(Boolean).join("·") + ")", more: (us ? `<span class="tlw">${esc(us)}</span>` : "") + pre }); }).join("");
       return done();
     }
     box.hidden = true; done();
@@ -4171,6 +4185,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}<span class="tsum"><small>${head}</small>${relaxBadge(t.relax && t.relax.text)}</span></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}"${typeof t.strongN === "number" ? ` title="${esc("테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)" + (typeof t.strongAvg === "number" ? " · 강한 종목 " + t.strongN + "개 평균 " + pc(t.strongAvg) : ""))}"` : ""}>${pc(t.rate)}${typeof t.strongN === "number" ? `<small class="rtn">테마 평균</small>` : ""}</span><span class="tq">${quick}</span><details class="tmore" data-tl="${esc(t.name)}"${TL_OPEN.has(t.name) ? " open" : ""}><summary>자세히 (가격·꼬리표·뉴스)</summary><span class="tlw">${stocks}</span>${newsHtml(t)}</details></li>`; /* 게이트 [1887] 「테마 평균」 · 9.29-101 [1921] 한 줄 요약(.tq) + 펼치기(.tmore — 예전 종목 줄·꼬리표·뉴스 전부) */
     }).join("");
     paintRef(L.ref || null, L.short || ""); // 9.29-100 [1845] ④ 참고 한 줄 · 완화 끝까지 모자란 날 이유
+    paintFreq(null); /* 9.29-102 단골 칸은 마감 카드에서만 */
     paintClosingBet(); // 9.29-100 [1864] ③ 종가배팅 숫자 칸(실시간 후보)
     tmoreBind(); /* 9.29-101 [1921][1937]: 펼친 테마 기억 · 펼칠 때 칸 너비 다시 (공용) */
     alignStocks(); // 9.29-99 [1821] 종목 줄 칸 너비 맞춤
@@ -5545,7 +5560,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     { // 9.29-100: 참고 한 줄 · 완화 부족 이유 · 종가배팅 후보 (그 날 마감 수집 것만 · 없으면 지움)
       const L = c.leaders && c.leaders.method === "surge" ? c.leaders : null;
       [["leaders.ref", L && L.ref ? JSON.stringify({ name: L.ref.name, n: L.ref.n, up: L.ref.up, avg: L.ref.avg, money: L.ref.money, stocks: (L.ref.stocks || []).slice(0, 3).map((x) => x.name) }) : undefined], ["leaders.short", L && L.short ? L.short : undefined],
-        ["leaders.closing", L && L.closing ? JSON.stringify({ rule: L.closing.rule, T: L.closing.T /* { KS, KQ } 원장 [1880] */, fin: !!L.closing.flowFinal, items: (L.closing.items || []).slice(0, 10).map((x) => ({ name: x.name, rate: x.rate, value: x.value, flow: x.flow, avoid: x.avoid, lu1: x.lu1 || undefined, sd: x.sd })) }) : undefined]].forEach(([k, v]) => { if (st.auto[k] !== v) { if (v === undefined) delete st.auto[k]; else st.auto[k] = v; changed.push(["auto." + k, (a.close || {}).ts]); } }); }
+        ["leaders.forecast", a.close && a.close.forecast && typeof a.close.forecast.n === "number" ? JSON.stringify({ n: a.close.forecast.n, f3: a.close.forecast.f3 || [], f5: a.close.forecast.f5 || [] }) : undefined] /* 9.29-102 단골 참고 줄(날짜 파일 close.forecast · c 는 close.market 이라 a.close 로 · 마감 run 이 센 값 · 앱 계산 0) */, ["leaders.closing", L && L.closing ? JSON.stringify({ rule: L.closing.rule, T: L.closing.T /* { KS, KQ } 원장 [1880] */, fin: !!L.closing.flowFinal, items: (L.closing.items || []).slice(0, 10).map((x) => ({ name: x.name, rate: x.rate, value: x.value, flow: x.flow, avoid: x.avoid, lu1: x.lu1 || undefined, sd: x.sd })) }) : undefined]].forEach(([k, v]) => { if (st.auto[k] !== v) { if (v === undefined) delete st.auto[k]; else st.auto[k] = v; changed.push(["auto." + k, (a.close || {}).ts]); } }); }
     { const b = leadersBadge(c.leaders, (a.close || {}).at) || undefined; if (st.auto["leaders.badge"] !== b) { if (b === undefined) delete st.auto["leaders.badge"]; else st.auto["leaders.badge"] = b; changed.push(["auto.leaders.badge", (a.close || {}).ts]); } }
     if (c.invest && c.invest.text) fillOne("market.invest", st.journal.market.invest, (x) => (st.journal.market.invest = x), c.invest.text, a.close.ts);
     // ③ 오늘 시장 이야기도 자동으로 초안 (손으로 고치면 고친 글이 우선)
