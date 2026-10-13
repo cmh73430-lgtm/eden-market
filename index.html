@@ -165,10 +165,13 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .explain .sub { padding-left: 0; text-indent: 0; font-weight: 800; font-size: 13px; margin-top: 4px; } .explain .brief > b { display: block; font-size: 13px; margin-bottom: 3px; }
 .explain .brief div { padding-left: 0; text-indent: 0; }
 .explain .sgrp { padding-left: 0; text-indent: 0; font-weight: 800; font-size: 12.5px; color: var(--muted, #777); margin-top: 6px; } .explain .sgrp small { font-weight: 600; }
-.explain .srow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; column-gap: 8px; row-gap: 1px; padding: 7px 10px; text-indent: 0; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.explain .srow { display: grid; grid-template-columns: minmax(min-content, 1fr) auto auto; align-items: center; column-gap: 8px; row-gap: 1px; padding: 7px 10px; text-indent: 0; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
 .explain .srow .sn { font-weight: 700; } .explain .srow .sv { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
-.explain .srow .sb { font-size: 12px; font-weight: 900; padding: 2px 9px; border-radius: 99px; min-width: 3.2em; text-align: center; background: var(--line); }
+.explain .srow .sb { font-size: 12px; font-weight: 900; padding: 2px 9px; border-radius: 99px; min-width: 3.2em; text-align: center; background: var(--line); margin: 0; /* 9.29-103 [2004] ①: 종목 꼬리표용 .sb 의 오른쪽 여백 4px 이 여기에도 먹어 배지가 값 글 오른쪽 끝보다 4px 안쪽에 있었음 → 0 (배지·값 오른쪽 끝 같음) */ }
 .explain .srow .sw { grid-column: 1 / -1; font-size: 12px; opacity: .75; }
+/* 9.29-103 원장 [2004] ①: 이름은 낱말 단위로만 줄바꿈(이름 칸은 가장 긴 낱말 폭 아래로 안 줄어듦 · 한 글자씩 깨짐 0) · 값이 길면(app.js fitSrows 가 .svdown) 값 글을 이름 아래 줄 전체 폭으로 내려 오른쪽 정렬 · 배지는 오른쪽 위 */
+.explain .srow .sn { word-break: keep-all; overflow-wrap: break-word; min-width: 0; } .explain .srow .sv { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
+.explain .srow.svdown .sn { grid-column: 1 / 3; grid-row: 1; } .explain .srow.svdown .sb { grid-column: 3; grid-row: 1; align-self: start; } .explain .srow.svdown .sv { grid-column: 1 / -1; grid-row: 2; text-align: right; }
 .explain .srow.g { border-left-color: var(--g); } .explain .srow.g .sb { background: var(--g); color: var(--surface); }
 .explain .srow.a { border-left-color: var(--a); } .explain .srow.a .sb { background: var(--a); color: var(--surface); }
 .explain .srow.r { border-left-color: var(--r); } .explain .srow.r .sb { background: var(--r); color: var(--surface); }
@@ -268,9 +271,9 @@ textarea.jin { resize: vertical; }
 .topld .tll li.tl2 { row-gap: 2px; } .topld .tll li.tl2 > .tn { font-size: 16px; } .topld .tll li.tl2 > .rt { font-size: 17px; text-align: right; }
 .topld .tll li.tl2 .tsum { display: block; font-size: 12.5px; font-weight: 400; line-height: 1.5; } .topld .tll li.tl2 .tsum > small:first-child { margin-left: 0; }
 .topld .tll .tq { grid-column: 2 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(4.6em, max-content) minmax(4.8em, max-content); column-gap: 8px; row-gap: 1px; font-size: 13.5px; font-variant-numeric: tabular-nums; margin-top: 2px; }
-.topld .tll .tq .tqr { display: contents; } .topld .tll .tq .qn { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 5px; padding-left: 1.1em; } .topld .tll .tq .qnm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* 9.29-101 [1937]: 이름만 말줄임 · 위험 표시(.tqk)는 자리가 없으면 아랫줄로(잘림 0) */ .topld .tll .tq .ld .qn { font-weight: 800; padding-left: 0; }
+.topld .tll .tq .tqr { display: contents; } .topld .tll .tq .qn { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; padding-left: 1.1em; } .topld .tll .tq .qs { flex: 0 0 1.1em; width: 1.1em; margin-left: -1.1em; } /* 9.29-103 [2004] ②: ★ 는 따로 좁은 칸(대장 아닌 줄은 빈 칸) · 이름은 모두 같은 x 에서 시작 */ .topld .tll .tq .qnm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* 9.29-101 [1937]: 이름만 말줄임 · 위험 표시(.tqk)는 자리가 없으면 아랫줄로(잘림 0) */ .topld .tll .tq .ld .qn { font-weight: 800; }
 .topld .tll .tq .qr, .topld .tll .tq .qv { text-align: right; white-space: nowrap; } .topld .tll .tq .qr { font-weight: 700; } .topld .tll .tq .qr.p { color: var(--up); } .topld .tll .tq .qr.n { color: var(--down); } .topld .tll .tq .qv { color: var(--muted); }
-.topld .tll .tq .tqk { margin: 0; flex: none; }
+.topld .tll .tq .tqk { margin: 0 0 0 5px; flex: none; }
 .topld .tll details.tmore { grid-column: 2 / -1; margin: 2px 0 0; } .topld .tll details.tmore > summary { cursor: pointer; list-style: none; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 3px 0; } .topld .tll details.tmore > summary::-webkit-details-marker { display: none; }
 .topld .tll details.tmore > summary::before { content: "▸ "; } .topld .tll details.tmore[open] > summary::before { content: "▾ "; }
 .topld .tll details.tmore > .tlw, .topld .tll details.tmore > .tln { display: block; } .topld .tll details.tmore > .tlbad { font-size: 12.5px; line-height: 1.6; } .topld .tll details.tmore > .tlpre { margin-top: 2px; } /* 9.29-101 [1937] ③ 마감·어제 카드의 자세히 안 */ .rulecard .tvmini { color: var(--muted); font-size: 11px; white-space: nowrap; }
@@ -451,7 +454,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .topfab { position: fixed; right: 12px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0,0,0,.2); cursor: pointer; }
 .backfab, .topfab, .navtab { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 /* 오른쪽 옆 세로 메뉴: 평소엔 가장자리에 얇은 '메뉴' 손잡이만, 누르면 세로 목록이 펼쳐짐 */
-.navtab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 46; writing-mode: vertical-rl; font: inherit; font-size: 13px; font-weight: 700; letter-spacing: 2px; color: #fff; background: var(--down); border: 0; border-radius: 10px 0 0 10px; padding: 14px 7px; opacity: .85; box-shadow: -1px 1px 6px rgba(0,0,0,.2); cursor: pointer; }
+.navtab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 46; writing-mode: vertical-rl; font: inherit; font-size: 13px; font-weight: 700; letter-spacing: 2px; color: #fff; background: var(--down); border: 0; border-radius: 10px 0 0 10px; padding: 14px 0; width: 26px; line-height: 26px; /* 9.29-103 [2004] ③: 손잡이 폭 26px = 화면 여백 16 + 카드 안 여백 안쪽 → 카드 숫자(등락률·거래대금)를 안 가림(예전 약 31px 은 2~3px 겹침) */ opacity: .85; box-shadow: -1px 1px 6px rgba(0,0,0,.2); cursor: pointer; }
 .navdim { position: fixed; inset: 0; z-index: 47; background: rgba(0,0,0,.18); }
 /* 메뉴: 폰 브라우저·Claude 앱의 위아래 막대에 가리지 않게 '보이는 화면' 안에 위아래 여백을 두고 붙인다 (넘치면 메뉴 안에서 스크롤) */
 .secnav { position: fixed; right: 0; top: calc(env(safe-area-inset-top, 0px) + 76px); bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); height: auto; max-height: none; z-index: 48; display: flex; flex-direction: column; gap: 4px; width: 172px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 8px 8px 12px; background: var(--paper); border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; box-shadow: -3px 0 14px rgba(0,0,0,.18); transform: translateX(105%); transition: transform .18s ease; visibility: hidden; }
@@ -482,6 +485,8 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 /* 9.29-100 원장 [1850] 선정완화 배지 · 종목 꼬리(짝꿍·경보·신규주·과열) · 참고 줄 · 주도주 프리 · 종가배팅 칸 — 휴대폰 390 가로 밀기 0(줄바꿈 허용) */
 .rlx { display: inline-block; font-size: 11px; font-weight: 800; line-height: 1.35; padding: 0 6px; margin-left: 5px; border-radius: 99px; background: var(--rlx-bg); color: var(--rlx); border: 1px solid var(--rlx); white-space: nowrap; vertical-align: 1px; }
 .rlxt { font-size: 11px; font-weight: 600; color: var(--rlx); margin-left: 4px; white-space: normal; }
+/* 9.29-103 원장 [2004] ④: 배지 + 풀린 조건 글 = 한 묶음 · 묶음째 다음 줄로 내려가고 · 글이 줄바꿈되면 다음 줄은 배지 글 시작 자리(배지 왼쪽 + 테두리 1 + 안 여백 6 = 7px)에서 시작 */
+.topld .tll li.tl2 .tsum .rlxg { display: inline-block; vertical-align: top; box-sizing: border-box; max-width: calc(100% - 5px); margin-left: 5px; padding-left: 7px; text-indent: -7px; } .topld .tll li.tl2 .tsum .rlxg > * { text-indent: 0; } .topld .tll li.tl2 .tsum .rlxg > small.rlx { margin-left: 0; }
 .lds .tn .rlx { margin-left: 4px; }
 /* 게이트 [1887] ①: 카드 이름 칸의 small 규칙(.topld .tll .tn small · .lds .tn small = 회색·보통 굵기)이 배지를 덮지 않게 선택자를 올림 — 보라·800 · 밝은 화면 대비 4.5↑(11px) */
 .topld .tll .tn small.rlx, .lds .tn small.rlx { color: var(--rlx); background: var(--rlx-bg); font-weight: 800; font-size: 11px; margin-left: 5px; }
@@ -3181,7 +3186,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-102";
+  const APP_VER = "9.29-103";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3499,6 +3504,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     return `<span class="${cls}"><span class="pkh">주도주 프리마켓</span>${ks.map(row).join("")}</span>`;
   }
   // 9.29-100 원장 [1850] 「선정완화」 배지: 조건을 조금 풀어 들어온 테마 · 옆에 풀린 조건(짧은 글 · 좁은 칸에선 툴팁만) · 엄격 통과는 배지 없음
+  /* 9.29-103 원장 [2004] ④: 한 줄 요약 카드의 「선정완화」 배지 + 풀린 조건 글을 한 묶음(.rlxg)으로 — 글이 줄바꿈되면 다음 줄이 배지 글 시작 자리에 맞음 */
+  function rlxGroup(text) { const h = relaxBadge(text); return h ? ` <span class="rlxg">${h.trim()}</span>` : ""; }
   function relaxBadge(text, tipOnly) {
     if (!text) return "";
     const t = String(text);
@@ -3719,7 +3726,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     paintUsOrder(); paintSimpleUs(); paintTopLead();
     const tagHtml = (a) => (a.length ? a.map(([t, s]) => `<span>${esc(t)}<small>${esc(s)}</small></span>`).join("") : `<span class="empty">아직 없음</span>`);
     $("tFirst").innerHTML = tagHtml(r.themeFirst); $("tBack").innerHTML = tagHtml(r.themeBack);
-    $("explain").innerHTML = explain(r);
+    $("explain").innerHTML = explain(r); fitSrows(); /* 9.29-103 [2004] ① 긴 값 글은 이름 아래 줄로 */
     lastEval = r;
     $("jMorning").innerHTML = $("jMorning2").innerHTML = morningSummary(r).html; // 당일 시황 · 매매 일지 둘 다
     paintPrevClose(); // 9.29-94 원장 [1718] ① 전날 장 마감 카드
@@ -4026,7 +4033,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const TL_OPEN = new Set(); /* 9.29-101 [1921] 실시간 카드에서 「자세히」를 펼쳐 둔 테마 이름 (화면을 다시 그려도 유지) */
   /* 9.29-101 [1937] ③ 「같이 맞추기」: 실시간·마감·어제 카드가 같이 쓰는 조각 — 종목 한 줄(이름 | 등락률 | 거래대금 · 대장 ★ 굵게 · 위험 표시 1개) · 「자세히」 접기(테마마다 따로 · 펼친 것 기억) */
   function riskOf(x) { const av = x && Array.isArray(x.avoid) ? x.avoid : []; return !x ? "" : x.stop ? "거래정지" : x.mgmt ? "관리종목" : x.alert ? String(x.alert) : av.find((r) => /단기과열/.test(r)) || (av.length ? "투자주의" : ""); } /* 거래정지 > 관리종목 > 시장경보 > 단기과열 > 투자주의(거래소 공시) */
-  function tqRow(o) { return `<span class="tqr${o.lead ? " ld" : ""}"><span class="qn"><span class="qnm" title="${esc(o.name)}">${o.lead ? "★" : ""}${esc(o.name)}</span>${o.mark ? `<small class="sb ${o.markCls || "warn"} tqk" title="자세히를 누르면 꼬리표가 다 보여요">${esc(o.mark)}</small>` : ""}</span><span class="qr ${o.rc || ""}">${esc(o.rate || "")}</span><span class="qv">${esc(o.value || "")}</span></span>`; }
+  function tqRow(o) { return `<span class="tqr${o.lead ? " ld" : ""}"><span class="qn"><span class="qs">${o.lead ? "★" : ""}</span><span class="qnm" title="${esc(o.name)}">${esc(o.name)}</span>${o.mark ? `<small class="sb ${o.markCls || "warn"} tqk" title="자세히를 누르면 꼬리표가 다 보여요">${esc(o.mark)}</small>` : ""}</span><span class="qr ${o.rc || ""}">${esc(o.rate || "")}</span><span class="qv">${esc(o.value || "")}</span></span>`; }
   function tmoreHtml(key, label, inner) { return `<details class="tmore" data-tl="${esc(key)}"${TL_OPEN.has(key) ? " open" : ""}><summary>${esc(label)}</summary>${inner}</details>`; }
   function tmoreBind() { if (tmoreBind.h) return; const ul = $("topLeadList"); if (!ul) return; tmoreBind.h = 1;
     ul.addEventListener("toggle", (e) => { const d = e.target; if (!d || !d.classList || !d.classList.contains("tmore")) return; const k = d.dataset.tl || ""; if (d.open) TL_OPEN.add(k); else TL_OPEN.delete(k); alignStocks(); }, true); } /* 펼친 테마 기억(1분 갱신에도 안 접힘) · 펼칠 때 칸 너비 다시 */
@@ -4063,7 +4070,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const usTxt = (name) => { const us = usOf(name); return us ? "미국 " + us.u.name.split(" (")[0] + " " + (us.v > 0 ? "+" : "") + us.v + "%" : ""; };
     const eokT = (v) => (Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억"), pcT = (v) => (v > 0 ? "+" : "") + v + "%", upDn = (v) => (v > 0 ? "p" : v < 0 ? "n" : "");
     const card = (t, n, o) => { const rt = typeof t.rate === "number" ? t.rate : null;
-      return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${o.head || t.relax ? `<span class="tsum">${o.head ? `<small>${esc(o.head)}</small>` : ""}${relaxBadge(t.relax)}</span>` : ""}</span><span class="rt ${rt === null ? "" : upDn(rt)}"${typeof t.n10 === "number" ? ' title="테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)"' : ""}>${rt === null ? "" : pcT(rt)}${typeof t.n10 === "number" && rt !== null ? `<small class="rtn">테마 평균</small>` : ""}</span>${o.rows ? `<span class="tq">${o.rows}</span>` : ""}${o.more ? tmoreHtml(o.key, o.label, o.more) : ""}</li>`; };
+      return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}${o.head || t.relax ? `<span class="tsum">${o.head ? `<small>${esc(o.head)}</small>` : ""}${rlxGroup(t.relax)}</span>` : ""}</span><span class="rt ${rt === null ? "" : upDn(rt)}"${typeof t.n10 === "number" ? ' title="테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)"' : ""}>${rt === null ? "" : pcT(rt)}${typeof t.n10 === "number" && rt !== null ? `<small class="rtn">테마 평균</small>` : ""}</span>${o.rows ? `<span class="tq">${o.rows}</span>` : ""}${o.more ? tmoreHtml(o.key, o.label, o.more) : ""}</li>`; };
     paintRef(null); // 참고 줄은 아래 가지에서 (9.29-100 [1845] ④)
     paintFreq(null); /* 9.29-102 단골 칸은 마감 카드 가지에서만 */
     const wasHidden = box.hidden;
@@ -4115,6 +4122,18 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const ul = $("topLeadList"); if (!ul) return;
     ul.querySelectorAll(".tsg").forEach((g) => { const c = g.querySelector(".sc.b3"); if (!c) return; g.classList.remove("tgwrap"); if (c.scrollWidth > c.clientWidth + 1) g.classList.add("tgwrap"); });
     if (!fitTags.h) { fitTags.h = 1; let t = null; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(fitTags, 120); }); }
+  }
+  /* 9.29-103 원장 [2004] ①: 판단 근거 줄(이름 | 값 | 배지) — 값 글이 길어 이름이나 값이 두 줄 넘게 접히면 그 줄만 「값을 이름 아래 줄로」(.svdown · 오른쪽 정렬 · 배지는 오른쪽 위 그대로) · 폭이 바뀌면 다시 잼
+     실제 값 글(SKHY): 「162.23 ▼6.80 (-4.02%) · 환산 약 2,167,000원 · 한국 종가 대비 +35.0% (최근 2일 평균 +35.1%)」 처럼 길다 — 9.29-102 까지는 이름 칸이 0 까지 줄어 「SK / 하 / 이 / 닉 / 스」 로 깨졌음 */
+  function fitSrows() {
+    const box = $("explain"); if (!box) return;
+    const one = (e) => { const cs = getComputedStyle(e), l = parseFloat(cs.lineHeight); return Number.isFinite(l) ? l : parseFloat(cs.fontSize) * 1.5; };
+    box.querySelectorAll(".srow").forEach((r) => { r.classList.remove("svdown"); const n = r.querySelector(".sn"), v = r.querySelector(".sv"); if (!n || !v) return;
+      if (n.getBoundingClientRect().height > one(n) * 1.5 || v.getBoundingClientRect().height > one(v) * 1.5) r.classList.add("svdown"); });
+    if (!fitSrows.h) { fitSrows.h = 1; let t = null, w = box.clientWidth; const again = () => { clearTimeout(t); t = setTimeout(fitSrows, 120); };
+      window.addEventListener("resize", again);
+      if (typeof ResizeObserver === "function") new ResizeObserver(() => { if (box.clientWidth !== w) { w = box.clientWidth; again(); } }).observe(box); /* 접혀 있다 펼쳐질 때(폭 0 → n)도 */
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(again).catch(() => {}); }
   }
   function paintTopLive(box, stale) {
     const L = LIVE, eok = (v) => (typeof v !== "number" ? "—" : Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억"), sg = (v) => (typeof v !== "number" ? "—" : (v > 0 ? "+" : "") + eok(v)), pc = (v) => (typeof v !== "number" ? "" : (v > 0 ? "+" : "") + v + "%");
@@ -4182,7 +4201,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const head = typeof t.strongN === "number" ? `강한 종목 ${t.strongN}개 · +10%↑ ${t.n10}개${t.lead ? " · 대장 " + esc(t.lead.name) + (t.lead.limit ? "(상한가)" : "") : ""}${t.flowState === "pending" ? " · 수급 확인 전" : ""}` : `테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}`;
       /* 9.29-101 [1921]: 종목마다 한 줄 = 이름 | 등락률 | 거래대금 (대장 ★ 굵게) · 위험 알림(거래정지 > 관리종목 > 시장경보 > 단기과열)은 접힌 줄에도 작은 표시 1개 */
       const quick = slots.map((x, i) => tqRow({ name: x.name, lead: i === 0, mark: riskOf(x), rate: typeof x.rate === "number" ? pc(x.rate) : "", rc: x.rate > 0 ? "p" : x.rate < 0 ? "n" : "", value: typeof x.value === "number" ? eok(x.value) : "" })).join("");
-      return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}<span class="tsum"><small>${head}</small>${relaxBadge(t.relax && t.relax.text)}</span></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}"${typeof t.strongN === "number" ? ` title="${esc("테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)" + (typeof t.strongAvg === "number" ? " · 강한 종목 " + t.strongN + "개 평균 " + pc(t.strongAvg) : ""))}"` : ""}>${pc(t.rate)}${typeof t.strongN === "number" ? `<small class="rtn">테마 평균</small>` : ""}</span><span class="tq">${quick}</span><details class="tmore" data-tl="${esc(t.name)}"${TL_OPEN.has(t.name) ? " open" : ""}><summary>자세히 (가격·꼬리표·뉴스)</summary><span class="tlw">${stocks}</span>${newsHtml(t)}</details></li>`; /* 게이트 [1887] 「테마 평균」 · 9.29-101 [1921] 한 줄 요약(.tq) + 펼치기(.tmore — 예전 종목 줄·꼬리표·뉴스 전부) */
+      return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}<span class="tsum"><small>${head}</small>${rlxGroup(t.relax && t.relax.text)}</span></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}"${typeof t.strongN === "number" ? ` title="${esc("테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)" + (typeof t.strongAvg === "number" ? " · 강한 종목 " + t.strongN + "개 평균 " + pc(t.strongAvg) : ""))}"` : ""}>${pc(t.rate)}${typeof t.strongN === "number" ? `<small class="rtn">테마 평균</small>` : ""}</span><span class="tq">${quick}</span><details class="tmore" data-tl="${esc(t.name)}"${TL_OPEN.has(t.name) ? " open" : ""}><summary>자세히 (가격·꼬리표·뉴스)</summary><span class="tlw">${stocks}</span>${newsHtml(t)}</details></li>`; /* 게이트 [1887] 「테마 평균」 · 9.29-101 [1921] 한 줄 요약(.tq) + 펼치기(.tmore — 예전 종목 줄·꼬리표·뉴스 전부) */
     }).join("");
     paintRef(L.ref || null, L.short || ""); // 9.29-100 [1845] ④ 참고 한 줄 · 완화 끝까지 모자란 날 이유
     paintFreq(null); /* 9.29-102 단골 칸은 마감 카드에서만 */

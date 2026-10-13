@@ -204,20 +204,6 @@ export async function ladderSelect({ stocks, map, n = SURGE_N, flowsFor = null, 
   return { picked, byCode, cuts, used, lastStep, flows, M };
 }
 // 참고 한 줄: 선정 안 된 테마 중 대상(상위 10%) 안 구성 4↑ · 오른 비율 ≥ 0.7 · 평균 +2%↑ · 오른 종목 돈(TOP10 제외) ≥ 5,000억 · 선정과 안 겹침 → 1위
-/* 9.29-102 원장 [1951] 그림자 기록용: 구성표 전 테마의 그날 값 — 이미 받은 상위 10% 종목으로 세기만(요청 0) · nd 봉 있는 구성 종목 수 · mc 평균 등락률 · rr 오른 비율 · amt 거래대금 합 · ns 강한 종목(+5%↑ & 기준선↑) · n10 · nl 상한가 · ms 강한 종목 돈 · ts 1위 몫 */
-export function themeStatsAll(stocks, map, cut) {
-  const by = new Map((stocks || []).map((s) => [s.code, s])), out = {};
-  if (!map || !Array.isArray(map.themes) || !Number.isFinite(cut)) return out;
-  for (const t of map.themes) {
-    if (GENERIC_RE.test(t.name)) continue;
-    const mem = (t.codes || []).map((c) => by.get(c)).filter((s) => s && typeof s.rate === "number");
-    if (!mem.length) continue;
-    const core = mem.filter((s) => s.rate >= SURGE_RATE && (s.value || 0) >= cut).sort((a, b) => (b.value || 0) - (a.value || 0)), ms = core.reduce((a, s) => a + (s.value || 0), 0);
-    out[t.name] = { nd: mem.length, mc: round2(mem.reduce((a, s) => a + s.rate, 0) / mem.length), rr: round2(mem.filter((s) => s.rate > 0).length / mem.length), amt: Math.round(mem.reduce((a, s) => a + (s.value || 0), 0)),
-      ns: core.length, n10: core.filter((s) => s.rate >= SURGE_N10).length, nl: core.filter((s) => s.rate >= LIMIT_RATE).length, ms: Math.round(ms), ts: core.length && ms > 0 ? round2((core[0].value || 0) / ms) : 0 };
-  }
-  return out;
-}
 export function refTheme({ byCode, cut, map, picked = [], top10 = new Set() }) {
   let best = null;
   for (const t of map.themes) {
@@ -309,7 +295,7 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
   const closing = closingPicks(L.byCode, { T: tvStockThresholds({ kospi: kospiAmount, kosdaq: kosdaqAmount, big2: big2v }), flows: L.flows });
   const short = themes.length < n ? (themes.length ? "완화 끝까지 가도 " + themes.length + "개뿐" : "완화 끝까지 가도 0개") + " — +10% 종목이 있는 테마 묶음 부족(시장 전체 약세 등)" : undefined;
   return {
-    v: SURGE_V, method: "surge", basis: regular ? "regular" : "live", hm, date, themes, ref: ref || undefined, short, closing, stats: themeStatsAll(stocks, map, c10.cut), /* 9.29-102 그림자 기록용(수집기가 떼어 씀 · 날짜 파일엔 안 넣음) */
+    v: SURGE_V, method: "surge", basis: regular ? "regular" : "live", hm, date, themes, ref: ref || undefined, short, closing,
     universe: { n: c10.N, have: c10.have, cut: Number.isFinite(c10.cut) ? Math.round(c10.cut) : null, complete: !!c10.complete, M: L.M, pages: U.pages, excluded: U.excluded, cuts: Object.fromEntries(Object.entries(L.cuts).map(([k, v]) => [k, Number.isFinite(v.cut) ? Math.round(v.cut) : null])) },
     ladder: { used: L.used, lastStep: L.lastStep, steps: LADDER.map((s) => ({ step: s.step, key: s.key, text: s.key ? RELAX_TEXT[s.key] : "엄격" })) },
     flowSrc: L.flows ? Object.keys(L.flows).length : 0, requests: req, ms: Date.now() - t0, errors: errors.slice(0, 20),
@@ -363,7 +349,7 @@ export async function collectSurgeLeaders({ get, map, date, hm, us = null, histo
   }
   /* 게이트 [1943] ③: 18:00 뒤 첫 마감·지난 날 백필(final)은 고를 때도 확정 수급과 같은 20행 주소로 물어 같은 종목을 두 번 받지 않음(memoGet · 값은 같은 날짜 행) */
   const sel = await selectSurge({ get, map, date, hm, regular: true, flowsFor: makeFlowsFor(get, bizdate, { hm, url: final ? FLOW20_URL : FLOW1_URL }), us, history, kospiAmount: kospi && kospi.amount, kosdaqAmount: kosdaq && kosdaq.amount, top10, n });
-  let L = { v: SURGE_V, method: "surge", provisional: false, confirmed: true, basis: sel.basis, text: surgeText(sel.themes), themes: sel.themes, candidates: sel.themes, ref: sel.ref, short: sel.short, closing: sel.closing, universe: sel.universe, ladder: sel.ladder, stats: sel.stats, /* 9.29-102 그림자용(수집기가 떼어 냄) */
+  let L = { v: SURGE_V, method: "surge", provisional: false, confirmed: true, basis: sel.basis, text: surgeText(sel.themes), themes: sel.themes, candidates: sel.themes, ref: sel.ref, short: sel.short, closing: sel.closing, universe: sel.universe, ladder: sel.ladder,
     regime: regimeOf && kospi ? regimeOf(kospi.amount, history) : "", kospiRate: kospi && typeof kospi.value === "number" ? kospi.value : null, decidedAt: Date.now(), decidedHm: hm, flowReady: false, chartReady: sel.themes.some((t) => t.chart), requests: sel.requests, errors: sel.errors };
   if (final) { const r = await fillFinalFlows(L, { get, bizdate }); L = Object.assign(r.leaders, { flowReq: r.requests }); }
   return L;
