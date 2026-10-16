@@ -517,14 +517,15 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .memoadd { margin: 4px 0 0; font-size: 12px; color: var(--muted); } .memoadd + .memoadd { margin-top: 1px; }
 .sb.sup { background: var(--g-bg); color: var(--g); } .cbguide .cbl .cbb { display: block; margin: 1px 0 3px; } /* 9.29-101 수급 꼬리(초록) · 종가배팅 칸 꼬리 줄(줄바꿈 허용 · 가로 넘침 0) */
 .cbguide { margin-top: 8px; font-size: 13px; } .cbguide ul { margin: 4px 0; padding-left: 18px; } .cbguide .cbh { margin: 6px 0 2px; font-weight: 700; } .cbguide .cbl { margin: 0; padding-left: 18px; } .cbguide .cbl .p { color: var(--up); font-weight: 700; } .cbguide .cbnone { margin: 4px 0; color: var(--muted); }
-:root { --s1: #0b6f86; --s1-t: #dff1f5; --s2: #1a7a43; --s2-t: #e1f3e7; --s3: #b4480a; --s3-t: #fde9da; --s4: #6d3cc0; --s4-t: #ece4fb; --s5: #4a5568; --s5-t: #e6e9ee; --s6: #a8326f; --s6-t: #f8e3ee; --s-on: #ffffff; } /* 9.29-104 [2120]: 묶음 색 = 청록·초록·주황·보라·회청(색상 차이 크게 · 바탕 틴트 진하게) · 띠 흰 글자 대비 5.37~7.53 */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s6: #f39ac4; --s6-t: #2f1724; --s-on: #15171c; } }
-:root[data-theme="dark"] { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s6: #f39ac4; --s6-t: #2f1724; --s-on: #15171c; }
-.grp1 { --sc: var(--s1); --st: var(--s1-t); } .grp2 { --sc: var(--s6); --st: var(--s6-t); } .grp3 { --sc: var(--s2); --st: var(--s2-t); } .grp4 { --sc: var(--s3); --st: var(--s3-t); } .grp5 { --sc: var(--s4); --st: var(--s4-t); } .grp6 { --sc: var(--s5); --st: var(--s5-t); } /* 9.29-105 [2134] 묶음 6개: ① 청록 · ② 뉴욕증시 장미(새 색 --s6 · 흰 글자 6.27 · 다크 8.73) · ③ 초록 · ④ 주황 · ⑤ 보라 · 기록 회청 */
+:root { --s1: #0b6f86; --s1-t: #dff1f5; --s2: #1a7a43; --s2-t: #e1f3e7; --s3: #b4480a; --s3-t: #fde9da; --s4: #6d3cc0; --s4-t: #ece4fb; --s5: #4a5568; --s5-t: #e6e9ee; --s6: #a8326f; --s6-t: #f8e3ee; --s7: #1e40af; --s7-t: #e2e8f9; --s8: #6b6b6b; --s8-t: #efefef; --s-on: #ffffff; } /* 9.29-104 [2120]: 묶음 색 = 청록·초록·주황·보라·회청(색상 차이 크게 · 바탕 틴트 진하게) · 띠 흰 글자 대비 5.37~7.53 */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s6: #f39ac4; --s6-t: #2f1724; --s7: #93a8f4; --s7-t: #181e33; --s8: #8c8c8c; --s8-t: #232323; --s-on: #15171c; } }
+:root[data-theme="dark"] { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s6: #f39ac4; --s6-t: #2f1724; --s7: #93a8f4; --s7-t: #181e33; --s8: #8c8c8c; --s8-t: #232323; --s-on: #15171c; }
+.grp1 { --sc: var(--s7); --st: var(--s7-t); } .grp2 { --sc: var(--s8); --st: var(--s8-t); } .grp3 { --sc: var(--s2); --st: var(--s2-t); } .grp4 { --sc: var(--s3); --st: var(--s3-t); } .grp5 { --sc: var(--s4); --st: var(--s4-t); } .grp6 { --sc: var(--s5); --st: var(--s5-t); } /* 9.29-105 [2134] 묶음 6개: ① 청록 · ② 뉴욕증시 장미(새 색 --s6 · 흰 글자 6.27 · 다크 8.73) · ③ 초록 · ④ 주황 · ⑤ 보라 · 기록 회청 */
+/* 9.29-106 원장 [2196] ① 전일 시황·수급 = 남색 --s7 #1e40af(다크 #93a8f4) · [2204] ② 뉴욕증시 마감 = 무채색 회색 --s8 #6b6b6b(다크 #8c8c8c · 제안 #52525b/#a1a1aa 는 ⑥ 푸른 회색과 밝기 차 0.7/6.1 로 비슷해 밝기 차 9.3/14.4 로 조정) · 바탕 틴트 짝 --s7-t·--s8-t · ③~⑥ 그대로 · --s1·--s6 값은 그대로 둠(이제 묶음에 안 씀) */
 .grp { display: grid; gap: 12px; margin: 0 -8px; padding: 0 8px 10px; border-radius: 10px; background: var(--st); } /* 바탕 띠는 화면 여백(16px) 안으로 8px 넓혀서 카드 폭은 전과 같게 */
 .grp > * { min-width: 0; }
 .grphead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 0 -8px; padding: 11px 14px; border-radius: 10px 10px 6px 6px; background: var(--sc); color: var(--s-on); box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); } /* 9.29-104 [2120]: 띠 두껍게(9 → 11px) + 아래 그늘 줄 */
-.grphead b { font-size: 17px; font-weight: 900; } .grphead small { font-size: 12px; font-weight: 700; color: var(--s-on); }
+.grphead b { font-size: 17px; font-weight: 600; } .grphead small { font-size: 12px; font-weight: 400; color: var(--s-on); } /* 9.29-106 원장 [2189] 「글씨 너무 진하다」: 굵기만 900→600 · 700→400 (크기·색 그대로) */
 /* 9.29-105 원장 [2134] C안: 묶음 머리말 = 누르는 단추(펼침/접힘 · 기기 기억) · 접힌 묶음은 머리말 한 줄만 */
 .grptog { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; width: 100%; min-height: 24px; cursor: pointer; color: var(--s-on); }
 .grptog:focus-visible { outline: 3px solid var(--s-on); outline-offset: 3px; border-radius: 4px; }
@@ -3301,7 +3302,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       learn: "미국 은행 묶음(KBE)과 JP모건이 움직이면 KB금융·신한지주 같은 한국 금융주도 따라가요." },
     { k: "steel", hit: [77, 79], g: "AB", kw: ["철강","강관"], grp: "heavy", name: "철강", th: 2.5, thDn: 3, label: "미국", links: [["뉴코어", nvStock("NUE")], ["스틸다이내믹스", nvStock("STLD.O")]],
       learn: "미국 철강 회사(뉴코어·스틸다이내믹스)가 크게 움직이면 POSCO홀딩스·현대제철도 따라가요. 중국 철강 값 영향도 커서 참고로 같이 봐요." },
-    { k: "h2", hit: [89, 67], g: "BC", kw: ["수소","연료전지"], grp: "energy", name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
+    { k: "h2", hit: [89, 67], g: "BC", noDown: true, kw: ["수소","연료전지"], grp: "energy", name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
       learn: "" },
     { k: "build", hit: [81, 81], g: "BB", kw: ["건설","인프라","시멘트","레미콘"], grp: "heavy", name: "건설 · 인프라", th: 1.5, thDn: 2, label: "미국", links: [["PAVE", nvStock("PAVE", true)], ["벌컨머티리얼즈", nvStock("VMC")]],
       learn: "PAVE(미국 인프라 회사 묶음)와 벌컨머티리얼즈(건설 자재 회사)가 움직이면 현대건설·DL이앤씨 같은 한국 건설주도 따라가요. 금리 인하·경기 부양 때마다 돌아오는 테마예요." },
@@ -3360,7 +3361,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-105";
+  const APP_VER = "9.29-106";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",

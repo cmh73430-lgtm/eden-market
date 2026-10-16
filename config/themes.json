@@ -20,7 +20,7 @@
     {"key": "ship", "name": "해운", "symbols": ["ZIM", "MATX"], "th": 2.5, "thDn": 6, "noDown": true, "grade": "BB"},
     {"key": "bank", "name": "은행 · 금융", "symbols": ["KBE", "JPM"], "th": 2, "grade": "AB"},
     {"key": "steel", "name": "철강", "symbols": ["NUE", "STLD"], "th": 2.5, "thDn": 3, "grade": "AB"},
-    {"key": "h2", "name": "수소", "symbols": ["PLUG", "BE"], "th": 5, "grade": "BC"},
+    {"key": "h2", "name": "수소", "symbols": ["PLUG", "BE"], "th": 5, "noDown": true, "grade": "BC"},
     {"key": "build", "name": "건설 · 인프라", "symbols": ["PAVE", "VMC"], "th": 1.5, "thDn": 2, "grade": "BB"},
     {"key": "fintech", "name": "스테이블코인", "symbols": ["COIN", "PYPL"], "th": 2, "thDn": 6, "grade": "BB"},
     {"key": "aisw", "name": "AI 소프트웨어", "symbols": ["IGV", "PLTR"], "th": 2, "thDn": 4, "grade": "BB"},
