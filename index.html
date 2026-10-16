@@ -193,12 +193,12 @@ details.learn p { margin: 6px 0; line-height: 1.6; } details.learn p b { color: 
 .linknotice .muted { font-size: 12px; color: var(--muted); }
 .nxline { margin-top: 6px; font-size: 13px; line-height: 1.7; }
 /* 어젯밤 미국 지수 마감 칸 정렬 (9.29-96 원장 [1772]): 지수마다 한 줄 · 이름 | 종가 | 변동 | 등락률 4칸 격자 · 숫자 칸 오른쪽 맞춤 · 같은 너비 숫자 · 칸 안 줄바꿈 0 */
-.explain .brief .usix { display: grid; grid-template-columns: repeat(4, max-content); column-gap: 7px; justify-content: start; font-variant-numeric: tabular-nums; line-height: 1.6; } .explain .brief .usix > span { white-space: nowrap; } .explain .brief .usix .ux1, .explain .brief .usix .ux2, .explain .brief .usix .ux3 { text-align: right; }
+#usIdx .usix { display: grid; grid-template-columns: repeat(4, max-content); column-gap: 7px; justify-content: start; font-variant-numeric: tabular-nums; line-height: 1.6; } #usIdx .usix > span { white-space: nowrap; } #usIdx .usix .ux1, #usIdx .usix .ux2, #usIdx .usix .ux3 { text-align: right; }
 /* 9.29-96 보강 원장 [1781] 「구분하고 더 잘보이게」: 테두리 칸 + 연한 바탕 + 위 작은 제목 · 이름·종가 14px 굵게(칩 12.5px 보다 큼) · 변동·등락률 상승 빨강·하락 파랑 */
-.explain .brief .usixb { margin: 2px 0 8px; padding: 6px 10px 7px; border: 1px solid color-mix(in srgb, var(--ink) 22%, var(--line)); border-radius: 8px; background: var(--paper); }
-.explain .brief .usixh { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
-.explain .brief .usix { font-size: 14px; } .explain .brief .usix .ux0, .explain .brief .usix .ux1 { font-weight: 900; color: var(--ink); } .explain .brief .usix .ux2, .explain .brief .usix .ux3 { font-weight: 700; }
-.explain .brief .usix .up { color: var(--up); } .explain .brief .usix .dn { color: var(--down); }
+#usIdx .usixb { margin: 2px 0 8px; padding: 6px 10px 7px; border: 1px solid color-mix(in srgb, var(--ink) 22%, var(--line)); border-radius: 8px; background: var(--paper); }
+#usIdx .usixh { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+#usIdx .usix { font-size: 14px; } #usIdx .usix .ux0, #usIdx .usix .ux1 { font-weight: 900; color: var(--ink); } #usIdx .usix .ux2, #usIdx .usix .ux3 { font-weight: 700; }
+#usIdx .usix .up { color: var(--up); } #usIdx .usix .dn { color: var(--down); }
 .evnext { flex-basis: 100%; font-size: 13px; color: var(--muted); margin-top: 2px; }
 .nx { display: inline-block; margin: 0 8px 2px 4px; color: var(--ink); } .nx b { font-weight: 700; } .nx b.a { color: var(--a); } .nx b.r { color: var(--r); }
 .siggroup { display: grid; gap: 2px; margin: 14px 0 4px; padding: 8px 10px; border-radius: 8px; background: var(--note); }
@@ -517,14 +517,25 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 .memoadd { margin: 4px 0 0; font-size: 12px; color: var(--muted); } .memoadd + .memoadd { margin-top: 1px; }
 .sb.sup { background: var(--g-bg); color: var(--g); } .cbguide .cbl .cbb { display: block; margin: 1px 0 3px; } /* 9.29-101 수급 꼬리(초록) · 종가배팅 칸 꼬리 줄(줄바꿈 허용 · 가로 넘침 0) */
 .cbguide { margin-top: 8px; font-size: 13px; } .cbguide ul { margin: 4px 0; padding-left: 18px; } .cbguide .cbh { margin: 6px 0 2px; font-weight: 700; } .cbguide .cbl { margin: 0; padding-left: 18px; } .cbguide .cbl .p { color: var(--up); font-weight: 700; } .cbguide .cbnone { margin: 4px 0; color: var(--muted); }
-:root { --s1: #0b6f86; --s1-t: #dff1f5; --s2: #1a7a43; --s2-t: #e1f3e7; --s3: #b4480a; --s3-t: #fde9da; --s4: #6d3cc0; --s4-t: #ece4fb; --s5: #4a5568; --s5-t: #e6e9ee; --s-on: #ffffff; } /* 9.29-104 [2120]: 묶음 색 = 청록·초록·주황·보라·회청(색상 차이 크게 · 바탕 틴트 진하게) · 띠 흰 글자 대비 5.37~7.53 */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s-on: #15171c; } }
-:root[data-theme="dark"] { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s-on: #15171c; }
-.grp1 { --sc: var(--s1); --st: var(--s1-t); } .grp2 { --sc: var(--s2); --st: var(--s2-t); } .grp3 { --sc: var(--s3); --st: var(--s3-t); } .grp4 { --sc: var(--s4); --st: var(--s4-t); } .grp5 { --sc: var(--s5); --st: var(--s5-t); }
+:root { --s1: #0b6f86; --s1-t: #dff1f5; --s2: #1a7a43; --s2-t: #e1f3e7; --s3: #b4480a; --s3-t: #fde9da; --s4: #6d3cc0; --s4-t: #ece4fb; --s5: #4a5568; --s5-t: #e6e9ee; --s6: #a8326f; --s6-t: #f8e3ee; --s-on: #ffffff; } /* 9.29-104 [2120]: 묶음 색 = 청록·초록·주황·보라·회청(색상 차이 크게 · 바탕 틴트 진하게) · 띠 흰 글자 대비 5.37~7.53 */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s6: #f39ac4; --s6-t: #2f1724; --s-on: #15171c; } }
+:root[data-theme="dark"] { --s1: #5fc4dc; --s1-t: #142a30; --s2: #6fd39a; --s2-t: #15281d; --s3: #ffa364; --s3-t: #2f1f14; --s4: #b99cf5; --s4-t: #231c33; --s5: #a9b3c2; --s5-t: #1d2128; --s6: #f39ac4; --s6-t: #2f1724; --s-on: #15171c; }
+.grp1 { --sc: var(--s1); --st: var(--s1-t); } .grp2 { --sc: var(--s6); --st: var(--s6-t); } .grp3 { --sc: var(--s2); --st: var(--s2-t); } .grp4 { --sc: var(--s3); --st: var(--s3-t); } .grp5 { --sc: var(--s4); --st: var(--s4-t); } .grp6 { --sc: var(--s5); --st: var(--s5-t); } /* 9.29-105 [2134] 묶음 6개: ① 청록 · ② 뉴욕증시 장미(새 색 --s6 · 흰 글자 6.27 · 다크 8.73) · ③ 초록 · ④ 주황 · ⑤ 보라 · 기록 회청 */
 .grp { display: grid; gap: 12px; margin: 0 -8px; padding: 0 8px 10px; border-radius: 10px; background: var(--st); } /* 바탕 띠는 화면 여백(16px) 안으로 8px 넓혀서 카드 폭은 전과 같게 */
 .grp > * { min-width: 0; }
 .grphead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin: 0 -8px; padding: 11px 14px; border-radius: 10px 10px 6px 6px; background: var(--sc); color: var(--s-on); box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); } /* 9.29-104 [2120]: 띠 두껍게(9 → 11px) + 아래 그늘 줄 */
 .grphead b { font-size: 17px; font-weight: 900; } .grphead small { font-size: 12px; font-weight: 700; color: var(--s-on); }
+/* 9.29-105 원장 [2134] C안: 묶음 머리말 = 누르는 단추(펼침/접힘 · 기기 기억) · 접힌 묶음은 머리말 한 줄만 */
+.grptog { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; width: 100%; min-height: 24px; cursor: pointer; color: var(--s-on); }
+.grptog:focus-visible { outline: 3px solid var(--s-on); outline-offset: 3px; border-radius: 4px; }
+.grp.shut { gap: 0; padding-bottom: 0; } .grp.shut > :not(.grphead) { display: none !important; } .grp.shut > .grphead { border-radius: 10px; box-shadow: none; }
+/* 9.29-105 중복 합침 ④ 어젯밤 미국 지수 마감(뉴욕증시 카드 맨 위) · [2132] ② 테마마다 「S&P 대비」 한 줄 · ⑤ 미국장도 같은 방향 줄 · ① 일지 장전 판단 접힘 · ③ 마감 목록 = 🔥 카드 */
+.usidx:empty { display: none; } .usidx { margin: 2px 0 8px; }
+.uslist .usx { grid-column: 1 / -1; font-size: 12px; color: var(--muted); line-height: 1.35; margin-top: -2px; } .uslist .usx:empty { display: none; }
+.prevboth { margin-top: 6px; font-size: 13px; }
+details.jfold > summary { cursor: pointer; } details.jfold > summary h3 { display: inline; }
+#mv-leaders .lddup { display: none; } #mv-leaders.dup .lds, #mv-leaders.dup .ldnote { display: none; } #mv-leaders.dup .lddup { display: block; font-size: 13px; color: var(--muted); }
+
 .grp > .card:not(.topld.live), .wrap .grp > .verdict { border-left: 7px solid var(--sc); } /* 실시간 주도 테마(LIVE)는 빨간 테두리(상태 표시) 그대로 · 9.29-104 [2120]: 5 → 7px */
 .grp { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--sc) 35%, transparent); } /* 9.29-104 [2120]: 묶음 바탕 테두리 = 묶음 색(안쪽 그림자 → 칸 폭 그대로) */
 .grp > .card:not(.topld.live), .wrap .grp > .verdict { margin-left: -2px; } /* 왼쪽 테두리 5 → 7px 늘린 2px 만큼 바깥으로 → 카드 안 글 폭 그대로(그림·표 폭 유지) */
@@ -638,7 +649,7 @@ details > summary { min-height: 24px; }
 /* ⑥ 판정 큰 글자(쉼·절반·정상)와 아래 이유 줄 사이 숨 쉴 자리 */
 .verdict .mode { line-height: 1.3; }
 /* ⑦ 「어젯밤 미국 지수 마감」 4칸: 360 폭(≤374)에서 글자 13px · 칸 사이 3px · 칸 양 끝 맞춤 → 이름·숫자 겹침 0 · 메뉴 손잡이 밑으로 안 들어감(전: 360 에서 「(-1.93%)」 가림) */
-@media (max-width: 374px) { .explain .brief .usix { font-size: 13px; column-gap: 3px; justify-content: space-between; } .explain .brief .usixb { padding-inline: 8px; } .explain .brief .bchip { font-size: 12px; } } /* 360 폭: 4칸(이름|종가|변동|등락률)이 한 줄에 겹침 없이 · 이름(13) > 칩(12) 유지([1781]) · 390↑ 는 9.29-96 그대로 14px */
+@media (max-width: 374px) { #usIdx .usix { font-size: 13px; column-gap: 3px; justify-content: space-between; } #usIdx .usixb { padding-inline: 8px; } .explain .brief .bchip { font-size: 12px; } } /* 360 폭: 4칸(이름|종가|변동|등락률)이 한 줄에 겹침 없이 · 이름(13) > 칩(12) 유지([1781]) · 390↑ 는 9.29-96 그대로 14px */
 /* ⑧ 원장 [2100] 「설명·사용 방법은 접어 두고 누르면 펴지게」: 접힘 칸 머리 한 줄(회색 · ▸) · 누르면 펼침(▾) · 키보드(Tab·Enter·Space)·터치 = 브라우저 details 기본 동작 */
 details.howto { grid-column: 1 / -1; margin: 2px 0; }
 details.howto > summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 4px; min-height: 24px; font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -1012,67 +1023,6 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
   </header>
   <div class="jumps"><button class="btn docbtn" id="docOpen" type="button">📘 내 매매기법</button><button class="btn docbtn" type="button" data-jump="marketCard">📰 시황일지</button><button class="btn docbtn" type="button" data-jump="journal">📓 매매일지</button></div>
 
-  <!-- 9.29-79 원장 [1537]·[1539]: 매매수칙 — 첫 화면 맨 위 · 메뉴 첫 항목 (디렉터 메모 「관심종목 고르는 법」 · 「종가배팅」 글자 그대로) -->
-  <section class="card rulecard" id="tradeRules" data-nav="📋 매매수칙">
-    <h2>📋 매매수칙</h2>
-    <h3>관심종목 고르는 법</h3>
-    <ol id="pickRules">
-      <li>거래량, 거래대금상위 (거래대금 우선)</li>
-      <li>거래대금 500억 이상</li>
-      <li>외국인, 기관, 개인수급</li>
-      <li>테마가 형성된 종목들</li>
-      <li>정배열 , 전고점 돌파 or 신고가</li>
-      <li>재료 모맨텀이 살아있는 종목 or 섹터</li>
-      <li>재무재표 좋은 종목 선호</li>
-      <li>호가창이 두꺼운 종목</li>
-      <li>끼가 있는 종목</li>
-    </ol>
-    <!-- 9.29-97 원장 [1805][1806] t거래대금표시: 위 메모 9줄은 글자 그대로 · 아래 접는 칸 = 거래대금 적정 기준 (전문가 자료 · E:\에덴_cockpit\work\lead_audit\거래대금기준_전문가조사.md 요약) · 표는 모두 세로(휴대폰 가로 밀기 0) -->
-    <details class="tvguide" id="tvGuide" open>
-      <summary>💰 거래대금 적정 기준 <small>(전문가 자료 · 2026-10-08 조사)</small></summary>
-      <!-- 9.29-99 원장 [1831] "이거 빼": 인용 출처 3줄 묶음(제목 포함) 삭제 -->
-      <!-- 9.29-99 원장 [1832] "공백없이 정렬": 표 3개 = 넓은 화면(600px↑) 한 줄에 셋 · 휴대폰 = 코스피·코스닥 나란히 + 장중 표 아래 전체 폭 · 표 제목은 표 위 · 표는 칸 폭 채움 -->
-      <div class="tvgrid">
-      <div class="tvcol"><p class="tvx"><b>코스피 종목 · 권장안(조사 의견)</b> <small>삼성전자·SK하이닉스 몫(약 44%)을 뺀 돈 기준</small></p>
-      <table class="tvt" id="tvKospi"><tr><th>코스피 하루</th><th>권장 기준</th></tr>
-        <tr><td>10조</td><td>500억</td></tr><tr><td>15조</td><td>600억</td></tr><tr><td>20조</td><td>750억</td></tr><tr><td>25조</td><td>800억</td></tr><tr><td>30조</td><td>900억</td></tr><tr><td>40조</td><td>1,100억</td></tr></table></div>
-      <div class="tvcol"><p class="tvx"><b>코스닥 종목 · 권장안(조사 의견)</b></p>
-      <table class="tvt" id="tvKosdaq"><tr><th>코스닥 하루</th><th>권장 기준</th></tr>
-        <tr><td>5조</td><td>500억</td></tr><tr><td>7조</td><td>500억</td></tr><tr><td>8조</td><td>550억</td></tr><tr><td>9조</td><td>650억</td></tr><tr><td>10조</td><td>700억</td></tr><tr><td>12조</td><td>750억</td></tr></table></div>
-      <div class="tvcol tvwide"><p class="tvx"><b>장중에 보는 법</b> <small id="tvIntraSub">기준 금액에 이 %를 곱한 값을 그 시각에 넘으면 합격 (예: 기준 1,000억이면 10시 코스피 270억)</small> <small class="tvmini">9:30부터 · 확정은 15:30 값</small></p>
-      <table class="tvt" id="tvIntra"><tr><th>시각</th><th>코스피</th><th>코스닥</th></tr>
-        <tr><td>10시</td><td>27%</td><td>38%</td></tr><tr><td>11시</td><td>40%</td><td>49%</td></tr><tr><td>12시</td><td>51%</td><td>60%</td></tr><tr><td>14시</td><td>70%</td><td>78%</td></tr><tr><td>15시</td><td>82%</td><td>88%</td></tr></table></div>
-      </div>
-      <p class="tvx tvnote">참고용 — 주도 테마 판정은 9.29-100부터 「급등 묶음」(거래대금 상위 10% 안 +5%↑ 강한 종목 3개↑ 같은 테마) · 이 표는 종목 고를 때 참고</p>
-    </details>
-    <h3>종가배팅</h3>
-    <ol id="closeRules">
-      <li>재료파악 : 이슈의 중요성, 지속성, 새로운 이슈가 나올 가능성</li>
-      <li>거래대금 상위종목</li>
-      <li>외국인 기관 수급</li>
-      <li>앞에 내용들을 충족하는 종목의 단일가</li>
-      <li>시황</li>
-      <li>테마가 엮인 종목</li>
-      <li>차트가 이쁜 종목</li>
-      <li>자신만의 매매 원칙 (손절원칙) 정립</li>
-      <li>비중조절 (현금비중 보유)</li>
-      <li>섹터가 다른 두 종목 매매</li>
-    </ol>
-    <!-- 9.29-100 원장 [1864] ①: 위 메모 9줄·10줄 글자는 그대로 · 아래 짧은 덧붙임 / ③ 종가배팅 숫자 기준(참고) 접는 칸 -->
-    <p class="memoadd">덧붙임 · 손절: 강의 기본 −2% · 늦어도 −3%</p>
-    <p class="memoadd">덧붙임 · 거래대금: 강의 최신(2025.10) 1,000억↑</p>
-    <details class="cbguide" id="cbGuide">
-      <summary>📐 종가배팅 숫자 기준 <small>(참고)</small></summary>
-      <ul>
-        <li>그날 <b>+10%↑</b> 오른 종목</li>
-        <li>거래대금 <b>기준 이상</b> — 위 「💰 거래대금 적정 기준」 권장안 표와 같은 계산 (코스피 종목 = 코스피 거래대금 − 삼성전자 − SK하이닉스 · 코스닥 종목 = 코스닥 거래대금 · 장 마감 값 기준)</li>
-        <li>외국인+기관 (추정) <b>순매수 &gt; 0</b></li>
-        <li>매도 = <b>다음 날 시가~장 초반</b> <small>(김수경·변영태 2011 · 전날 외인·기관 순매수 종목은 다음 날 시가까지 강했고 그 뒤는 약했음)</small></li>
-      </ul>
-      <div id="cbToday"></div>
-    </details>
-  </section>
-
   <div class="card linknotice" id="linkNotice" hidden>
     <b>📌 지금 보는 곳은 Claude 링크라 자동 입력이 안 돼요</b>
     <div>아침 지표·전일 주도 테마·마감 수급이 자동으로 들어오는 주소는 따로 있어요. 폰은 이 주소를 홈 화면에 추가해 두세요.</div>
@@ -1083,9 +1033,9 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 
   <nav class="secnav" id="secnav" aria-label="메뉴 바로 가기"></nav>
 
-  <!-- 9.29-94 원장 [1712][1713][1714]: 위→아래 = 매매수칙 → ① 전날 어땠나 → ② 오늘 아침 장전 확인 → ③ 장중 확인 → ④ 장 마감(시황 → 매매일지) → 기타 · 묶음마다 머리말 띠 + 구분 색(.grp1~5) · 카드 내용·id 그대로 · 메뉴(buildNav)도 같은 순서 + 묶음 소제목 -->
+  <!-- 9.29-105 원장 [2121][2134] C안 「지금 시간 펼침」: 하루 흐름 = ① 전일 시황 → ② 뉴욕증시 마감 → ③ 프리마켓·장전 → ④ 장중 → ⑤ 마감·매매일지 → 기록(+ 매매수칙 · 맨 아래) · 지금 시간대 묶음만 펼침(나머지 머리말 한 줄 · 누르면 펼침 · 기기 기억) · 카드 내용·id 그대로 -->
   <div class="grp grp1" id="grp1" data-grp="① 전일 시황·수급">
-  <div class="grphead"><b>① 전일 시황·수급</b><small>전일 마감 시황 · 투자자별 매매 · 전일 주도 테마 · 애프터·프리마켓</small></div>
+  <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>① 전일 시황·수급</b><small class="grpst"></small></button></div>
 
   <!-- 9.29-94 원장 [1718]①: 전날 장 마감 시황·수급 (직전 거래일 저장 기록 · 없으면 그 날 파일 한 번 · 지어내기 0) -->
   <section class="card" id="prevClose" data-nav="📉 전일 마감 시황·수급">
@@ -1097,6 +1047,7 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
     <h2>전일 주도 테마 <small>🤖 아침 7시쯤 어제 돈이 몰린 테마 + 외인·기관 + 어제 저녁 애프터마켓 · 8:05 오늘 아침 NXT 프리마켓(8:00~8:50) 자동 · 고치면 고친 값이 우선</small></h2>
     <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div id="prevList"></div>
+    <div class="nxline prevboth" id="prevBoth" hidden></div> <!-- 9.29-105 중복 합침 ⑤: 「✅ 미국장도 같은 방향」 = 판정 근거 「🇰🇷」 상자에서 여기로 -->
     <div class="links">열어서 보기 <a class="lk nv" href="https://finance.naver.com/sise/theme.naver" target="_blank" rel="noopener">네이버 테마별 시세 ↗</a><a class="lk nv" href="https://finance.naver.com/sise/sise_rise.naver" target="_blank" rel="noopener">네이버 상승 종목 (KRX·NXT 탭) ↗</a><a class="lk" href="https://nextrade.co.kr/menu/transactionStatusMain/menuList.do" target="_blank" rel="noopener">넥스트레이드 거래현황 ↗</a></div>
     <details class="howto" data-howto="prevnxt"><summary>NXT 가격 · 실제 기록 설명</summary>
     <div class="hint">네이버 종목 페이지 맨 위에 KRX 가격과 NXT 가격이 함께 나와요. 프리마켓·애프터마켓 값은 NXT 쪽이에요.</div>
@@ -1115,15 +1066,22 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 
   </div>
 
-  <div class="grp grp2" id="grp2" data-grp="② 장전 체크">
-  <div class="grphead"><b>② 장전 체크</b><small>뉴욕증시 마감 → 야간선물·환율·금리 → 지표 판정 → 매매 모드 → 종목 유형</small></div>
+  <div class="grp grp2" id="grp2" data-grp="② 뉴욕증시 마감">
+  <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>② 뉴욕증시 마감</b><small class="grpst"></small></button></div>
 
   <section class="card" data-nav="🇺🇸 뉴욕증시 테마 등락">
     <h2>🇺🇸 뉴욕증시 테마 등락 <small>미국장에서 오른 테마는 한국장에서도 같은 테마가 따라가요 · 몇 % 올랐는지 넣기</small></h2>
     <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
+    <div class="usidx" id="usIdx"></div>
     <div id="usList"></div>
     <details class="howto" data-howto="usleg"><summary>기호·기준 설명</summary><div class="hint">🇰🇷 = 한국 전일·오늘 주도 테마도 오름 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오름 (판단 근거·매매 일지 주도 테마와 서로 이어져요). 기준보다 많이 오르면 "우선 관심", 많이 내리면 "후순위"예요. 여러 종목이면 대충 평균을 넣어요. 비트코인·금·구리는 그 주식을 살 생각이 있는 날만 보면 돼요.</div></details>
+    <details class="howto" data-howto="usfwd"><summary>전진 기록 (매일 신호 → 한국 결과)</summary><div class="hint" id="usFwd">아직 기록 없음 · 매일 저녁 마감 확정 수집이 한 줄씩 쌓아요</div></details> <!-- 9.29-105 원장 [2132] ③ -->
   </section>
+
+  </div>
+
+  <div class="grp grp3" id="grp3" data-grp="③ 프리마켓·장전 체크">
+  <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>③ 프리마켓·장전 체크</b><small class="grpst"></small></button></div>
 
   <section class="card" data-nav="장전 지표 (야간선물·환율·금리)">
     <h2>장전 지표 (야간선물·환율·금리) <small>버튼(↗)을 눌러 숫자를 보고 → 칸에 넣기 · <b>±</b>는 마이너스 전환</small></h2>
@@ -1159,9 +1117,15 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
   </section>
 
   <section class="card" data-nav="장전 일정·공시·판정 근거">
-    <h2>🧭 장전 일정·공시·뉴스 + 매매 모드 판정 근거 <small>오늘 일정 · 미국장 테마 · 전일 주도 테마 · 수혜 업종 한눈에 + 지표별 판정</small></h2>
+    <h2>🧭 장전 일정·공시·뉴스 + 매매 모드 판정 근거 <small>오늘 일정 · 수혜 업종 + 지표별 판정</small></h2>
     <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div class="explain" id="explain"></div>
+    <details class="learn" id="sectorLearn"><summary>📘 공부하기 — 왜 이렇게 연결되나요?</summary>
+      <p><b>환율이 오르면</b> 외국에 물건을 파는 회사(자동차·배·반도체)는 같은 1달러를 벌어도 원화로 더 많이 받아서 좋아요. 반대로 외국에서 사 오는 회사(비행기 기름값, 식품 원료)는 비용이 늘어서 나빠요.</p>
+      <p><b>기름값이 오르면</b> 기름을 파는 정유 회사는 좋아요. 기름을 쓰는 비행기·화학 회사는 비용이 늘어서 나빠요.</p>
+      <p><b>이자율이 오르면</b> 은행·보험 회사는 이자로 버는 돈이 늘어서 좋아요. '나중에 크게 벌 거라'는 기대로 오른 회사(성장주·바이오)는 약해져요.</p>
+      <p><b>미국 반도체가 오르면</b> 한국 반도체 장비·재료 회사에도 사려는 사람이 몰려요.</p>
+    </details>
   </section>
 
   <section class="verdict" id="verdict" aria-live="polite">
@@ -1239,7 +1203,7 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
     </div>
   </section>
 
-  <section class="card" data-nav="지표별 수혜 업종" data-simple="hide">
+  <section class="card" data-nav="지표별 수혜 업종" data-simple="hide" hidden> <!-- 9.29-105 중복 합침 ⑥ (구성안 「수혜 업종 카드 → 판정 근거 안 상자로만」): 카드 숨김 · #sector 줄 켜짐 계산은 그대로 · 📘 공부하기는 판정 근거 카드로 -->
     <h2>지표별 수혜 업종 <small>환율·유가·금리·반도체지수가 오르면 좋아지는 업종 · 해당 줄이 켜져요</small></h2>
     <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div class="sector" id="sector">
@@ -1248,12 +1212,6 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
       <div class="row" data-s="ust"><div class="k">금리 ↑</div><div class="v">은행 · 보험<small>피할 쪽: 성장주 · 바이오</small></div></div>
       <div class="row" data-s="sox"><div class="k">SOX ↑</div><div class="v">반도체 장비 · 재료/부품<small>반도체지수가 -2%보다 더 빠지면 반도체 재료·장비 주식은 오늘 뒤로</small></div></div>
     </div>
-    <details class="learn"><summary>📘 공부하기 — 왜 이렇게 연결되나요?</summary>
-      <p><b>환율이 오르면</b> 외국에 물건을 파는 회사(자동차·배·반도체)는 같은 1달러를 벌어도 원화로 더 많이 받아서 좋아요. 반대로 외국에서 사 오는 회사(비행기 기름값, 식품 원료)는 비용이 늘어서 나빠요.</p>
-      <p><b>기름값이 오르면</b> 기름을 파는 정유 회사는 좋아요. 기름을 쓰는 비행기·화학 회사는 비용이 늘어서 나빠요.</p>
-      <p><b>이자율이 오르면</b> 은행·보험 회사는 이자로 버는 돈이 늘어서 좋아요. '나중에 크게 벌 거라'는 기대로 오른 회사(성장주·바이오)는 약해져요.</p>
-      <p><b>미국 반도체가 오르면</b> 한국 반도체 장비·재료 회사에도 사려는 사람이 몰려요.</p>
-    </details>
   </section>
 
   <section class="card" data-nav="장전 체크리스트" data-simple="hide">
@@ -1271,8 +1229,8 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 
   </div>
 
-  <div class="grp grp3" id="grp3" data-grp="③ 장중 주도 테마·수급">
-  <div class="grphead"><b>③ 장중 주도 테마·수급</b><small>실시간 주도 테마 · 선물·프로그램 매매 재판정 · 오후 4시 해외 선물·환율</small></div>
+  <div class="grp grp4" id="grp4" data-grp="④ 장중 주도 테마·재판정">
+  <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>④ 장중 주도 테마·재판정</b><small class="grpst"></small></button></div>
 
   <section class="card topld" id="topLead" data-nav="🔥 장중 주도 테마" hidden>
     <div class="tlh"><b id="topLeadTitle">🔥 오늘 주도 테마</b><span class="lvbadge" id="topLeadBadge" hidden></span><small id="topLeadSub"></small></div>
@@ -1298,8 +1256,8 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 
   </div>
 
-  <div class="grp grp4" id="grp4" data-grp="④ 마감 시황·매매일지">
-  <div class="grphead"><b>④ 마감 시황·매매일지</b><small>마감 시황·수급 → 매매일지 → 블로그</small></div>
+  <div class="grp grp5" id="grp5" data-grp="⑤ 마감 시황·매매일지">
+  <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>⑤ 마감 시황·매매일지</b><small class="grpst"></small></button></div>
 
   <section class="card journal" id="marketCard" data-nav="📰 마감 시황·수급">
     <h2>📰 마감 시황·수급 <small>장 끝나고 3분 · 지수·수급·주도 테마는 오후 4:20 자동 (종목 외인·기관은 저녁~다음 날 아침) · 매매 안 한 날도 시황일지로 남겨요</small></h2>
@@ -1323,7 +1281,7 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
         <label>코스피 마감 (%)<input class="jin" id="j-kospi" inputmode="decimal" placeholder="예: -0.8"><small class="autoat" id="aa-market.kospi" hidden></small></label>
         <label>코스닥 마감 (%)<input class="jin" id="j-kosdaq" inputmode="decimal" placeholder="예: +1.2"><small class="autoat" id="aa-market.kosdaq" hidden></small></label>
         <div class="wide mv" id="mv-invest"><div class="mvh"><b>수급 · 거래대금 (억원)</b><button class="mved" type="button" data-for="invest">✏️ 고치기</button></div><div class="mvbody" id="mvb-invest"></div><label class="mvin"><input class="jin" id="j-invest" placeholder="예: 코스피 외국인 -4,942억 · 기관 +3,189억 · 거래대금 12조"></label><small class="autoat" id="aa-market.invest" hidden></small></div>
-        <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small>
+        <div class="wide mv" id="mv-leaders"><div class="mvh"><b>오늘 주도 테마</b><button class="mved" type="button" data-for="leaders">✏️ 고치기</button></div><small class="mvsub">+5% 넘게 오른 종목에 돈이 몰린 순 · 종목 외인/기관 수급은 저녁 6:40 또는 다음 날 아침에 채워져요</small><div class="mvbody" id="mvb-leaders"></div><small class="lddup">목록 = 위 🔥 오늘 주도 테마 카드 (같은 자료)</small><label class="mvin"><input class="jin" id="j-leaders" placeholder="예: 전력기기, 원전"></label><small class="autoat" id="aa-market.leaders" hidden></small>
           <details class="learn" id="ldHelp"><summary>📘 설명 — 주요 테마는 어떻게 뽑나요? (누르면 펼쳐져요)</summary>
             <div id="ldHelpToday"></div>
             <p><b>9.29-100부터 (급등 묶음):</b> 그 시각 두 시장 <b>거래대금 상위 약 10%</b> 종목 중 <b>+5%↑</b> 오른 종목 = 「강한 종목」. 같은 테마에 강한 종목이 <b>3개↑</b>, 그중 <b>+10%↑ 2개↑</b>, 강한 종목 외국인+기관 합이 <b>순매수</b>면 주도 테마예요(수급 자료가 아직 없으면 「수급 확인 전」으로 두고 빼지 않아요).</p>
@@ -1370,10 +1328,10 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
     <h2>📓 매매일지 <small>장 끝나고 5분 · 쌓이면 최고의 공부</small></h2>
     <div class="savebar"><button class="btn savebtn" type="button" id="jSave" data-save>💾 저장</button><small class="savemsg" id="jSaveMsg" aria-live="polite"></small></div>
 
-    <div class="jsec">
-      <h3>① 장전 판단 <small>아침에 정한 매매 모드와 이유 (자동)</small></h3>
+    <details class="jsec howto jfold" data-howto="jmorning2"> <!-- 9.29-105 중복 합침 ①: 위 📰 마감 시황 「① 장전 판단」과 같은 글 → 접힘(펼침 기기 기억) -->
+      <summary><h3>① 장전 판단 <small>위 📰 마감 시황 ①과 같은 글 · 눌러서 보기</small></h3></summary>
       <div class="mkt" id="jMorning2"></div>
-    </div>
+    </details>
 
     <div class="jsec">
       <h3>② 매매 내역 <small>한 번 매수·매도한 것마다 하나씩</small></h3>
@@ -1423,8 +1381,69 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 
   </div>
 
-  <div class="grp grp5" id="grp5" data-grp="매매 성과·기록">
-  <div class="grphead"><b>매매 성과·기록</b><small>승률·손익 · 지표 일별 동향 · 판정 기준 검증 · 날짜별 기록 · 용어 · 백업</small></div>
+  <div class="grp grp6" id="grp6" data-grp="매매 성과·기록 · 매매수칙">
+  <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>매매 성과·기록 · 매매수칙</b><small class="grpst"></small></button></div>
+
+  <!-- 9.29-79 원장 [1537]·[1539]: 매매수칙 — 첫 화면 맨 위 · 메뉴 첫 항목 (디렉터 메모 「관심종목 고르는 법」 · 「종가배팅」 글자 그대로) -->
+  <section class="card rulecard" id="tradeRules" data-nav="📋 매매수칙">
+    <h2>📋 매매수칙</h2>
+    <h3>관심종목 고르는 법</h3>
+    <ol id="pickRules">
+      <li>거래량, 거래대금상위 (거래대금 우선)</li>
+      <li>거래대금 500억 이상</li>
+      <li>외국인, 기관, 개인수급</li>
+      <li>테마가 형성된 종목들</li>
+      <li>정배열 , 전고점 돌파 or 신고가</li>
+      <li>재료 모맨텀이 살아있는 종목 or 섹터</li>
+      <li>재무재표 좋은 종목 선호</li>
+      <li>호가창이 두꺼운 종목</li>
+      <li>끼가 있는 종목</li>
+    </ol>
+    <!-- 9.29-97 원장 [1805][1806] t거래대금표시: 위 메모 9줄은 글자 그대로 · 아래 접는 칸 = 거래대금 적정 기준 (전문가 자료 · E:\에덴_cockpit\work\lead_audit\거래대금기준_전문가조사.md 요약) · 표는 모두 세로(휴대폰 가로 밀기 0) -->
+    <details class="tvguide" id="tvGuide" open>
+      <summary>💰 거래대금 적정 기준 <small>(전문가 자료 · 2026-10-08 조사)</small></summary>
+      <!-- 9.29-99 원장 [1831] "이거 빼": 인용 출처 3줄 묶음(제목 포함) 삭제 -->
+      <!-- 9.29-99 원장 [1832] "공백없이 정렬": 표 3개 = 넓은 화면(600px↑) 한 줄에 셋 · 휴대폰 = 코스피·코스닥 나란히 + 장중 표 아래 전체 폭 · 표 제목은 표 위 · 표는 칸 폭 채움 -->
+      <div class="tvgrid">
+      <div class="tvcol"><p class="tvx"><b>코스피 종목 · 권장안(조사 의견)</b> <small>삼성전자·SK하이닉스 몫(약 44%)을 뺀 돈 기준</small></p>
+      <table class="tvt" id="tvKospi"><tr><th>코스피 하루</th><th>권장 기준</th></tr>
+        <tr><td>10조</td><td>500억</td></tr><tr><td>15조</td><td>600억</td></tr><tr><td>20조</td><td>750억</td></tr><tr><td>25조</td><td>800억</td></tr><tr><td>30조</td><td>900억</td></tr><tr><td>40조</td><td>1,100억</td></tr></table></div>
+      <div class="tvcol"><p class="tvx"><b>코스닥 종목 · 권장안(조사 의견)</b></p>
+      <table class="tvt" id="tvKosdaq"><tr><th>코스닥 하루</th><th>권장 기준</th></tr>
+        <tr><td>5조</td><td>500억</td></tr><tr><td>7조</td><td>500억</td></tr><tr><td>8조</td><td>550억</td></tr><tr><td>9조</td><td>650억</td></tr><tr><td>10조</td><td>700억</td></tr><tr><td>12조</td><td>750억</td></tr></table></div>
+      <div class="tvcol tvwide"><p class="tvx"><b>장중에 보는 법</b> <small id="tvIntraSub">기준 금액에 이 %를 곱한 값을 그 시각에 넘으면 합격 (예: 기준 1,000억이면 10시 코스피 270억)</small> <small class="tvmini">9:30부터 · 확정은 15:30 값</small></p>
+      <table class="tvt" id="tvIntra"><tr><th>시각</th><th>코스피</th><th>코스닥</th></tr>
+        <tr><td>10시</td><td>27%</td><td>38%</td></tr><tr><td>11시</td><td>40%</td><td>49%</td></tr><tr><td>12시</td><td>51%</td><td>60%</td></tr><tr><td>14시</td><td>70%</td><td>78%</td></tr><tr><td>15시</td><td>82%</td><td>88%</td></tr></table></div>
+      </div>
+      <p class="tvx tvnote">참고용 — 주도 테마 판정은 9.29-100부터 「급등 묶음」(거래대금 상위 10% 안 +5%↑ 강한 종목 3개↑ 같은 테마) · 이 표는 종목 고를 때 참고</p>
+    </details>
+    <h3>종가배팅</h3>
+    <ol id="closeRules">
+      <li>재료파악 : 이슈의 중요성, 지속성, 새로운 이슈가 나올 가능성</li>
+      <li>거래대금 상위종목</li>
+      <li>외국인 기관 수급</li>
+      <li>앞에 내용들을 충족하는 종목의 단일가</li>
+      <li>시황</li>
+      <li>테마가 엮인 종목</li>
+      <li>차트가 이쁜 종목</li>
+      <li>자신만의 매매 원칙 (손절원칙) 정립</li>
+      <li>비중조절 (현금비중 보유)</li>
+      <li>섹터가 다른 두 종목 매매</li>
+    </ol>
+    <!-- 9.29-100 원장 [1864] ①: 위 메모 9줄·10줄 글자는 그대로 · 아래 짧은 덧붙임 / ③ 종가배팅 숫자 기준(참고) 접는 칸 -->
+    <p class="memoadd">덧붙임 · 손절: 강의 기본 −2% · 늦어도 −3%</p>
+    <p class="memoadd">덧붙임 · 거래대금: 강의 최신(2025.10) 1,000억↑</p>
+    <details class="cbguide" id="cbGuide">
+      <summary>📐 종가배팅 숫자 기준 <small>(참고)</small></summary>
+      <ul>
+        <li>그날 <b>+10%↑</b> 오른 종목</li>
+        <li>거래대금 <b>기준 이상</b> — 위 「💰 거래대금 적정 기준」 권장안 표와 같은 계산 (코스피 종목 = 코스피 거래대금 − 삼성전자 − SK하이닉스 · 코스닥 종목 = 코스닥 거래대금 · 장 마감 값 기준)</li>
+        <li>외국인+기관 (추정) <b>순매수 &gt; 0</b></li>
+        <li>매도 = <b>다음 날 시가~장 초반</b> <small>(김수경·변영태 2011 · 전날 외인·기관 순매수 종목은 다음 날 시가까지 강했고 그 뒤는 약했음)</small></li>
+      </ul>
+      <div id="cbToday"></div>
+    </details>
+  </section>
 
   <section class="card" data-nav="📊 매매 성과 (승률·손익)">
     <h2>📊 매매 성과 (승률·손익) <small>일지가 쌓이면 채워져요</small></h2>
@@ -2242,6 +2261,81 @@ function prevItems({ pick, codes } = {}) {
   const d = isoDay(pick.pd), want = new Set([...(codes && codes.hdg || []), ...(codes && codes.idx || [])]), out = [];
   for (const x of pick.items) { const c = String(x && x.code || ""); if (!d || !want.has(c) || x.td !== d || typeof x.rate !== "number" || typeof x.price !== "number") continue; want.delete(c); out.push({ code: c, name: x.name, price: x.price, prev: x.prev, change: x.change, rate: x.rate, value: null, kind: x.kind, mv: x.mv, td: x.td }); }
   return { d: out.length ? d : null, items: out };
+}
+
+// 미국장 테마 전진 기록(전진 검증) — 9.29-105 원장 [2132] ③ "매일 신호·다음 날 한국 결과 자동 누적" (순수 모듈 · 브라우저·Node 공용 · 빌드가 앱에 붙임)
+// 근거 = E:/에덴_cockpit/work/연구_미국테마/보고_20261016.md §5-1 「매일 신호·다음 날 시가 갭·시가→종가를 자동 누적 · 3~6개월 누적이 마지막 신뢰 단계」
+// 파일 = auto/observe/us-forward.json { v, updatedAt, rows: [{ date: 한국 거래일, us: 미국 날짜, at: 아침 수집 시각, spx: S&P500 %, themes: [{ k, v: 테마 평균 %, ex: v − spx, st: "up"|"dn"|"", g: 그 방향 등급, kr: { gap, o2c, n } | null }] }] }
+//   신호(st) = 앱 판정과 같은 기준(shared/rules.js 160~161행: v ≥ th → up · v ≤ −thDn → dn) · 한국 결과 = 연구 대표 종목(KR_CORE = validate-themes.mjs KR) 시가 갭(시가 ÷ 전일 종가)·시가→종가 평균
+//   적중 = 시가 갭 방향이 신호 방향과 같음(연구 「갭 적중」과 같은 셈) · 런타임 LLM 0
+const FWD_V = 1, FWD_KEEP = 400, FWD_DAYS = 20;
+// 한국 대표 종목 6자리 (연구_미국테마/universe.mjs 32~38행 KR_CORE · .KS/.KQ 꼬리만 뗌)
+const FWD_KR = {
+  semi: ["005930", "000660"], power: ["267260", "010120", "298040"], nuke: ["034020", "052690"], batt: ["373220", "006400", "247540"],
+  def: ["012450", "064350", "009540"], btc: ["041190"], gold: ["010130"], cu: ["001440", "006260"], bio: ["128940", "196170", "207940"],
+  robot: ["277810", "454910"], space: ["099320", "012450"], solar: ["009830", "010060"], equip: ["042700", "240810", "036930"],
+  auto: ["005380", "000270"], ship: ["011200", "028670"], bank: ["105560", "055550"], steel: ["005490", "004020"], h2: ["336260", "288620"],
+  build: ["000720", "375500"], fintech: ["377300", "064260"], aisw: ["402030", "304100", "041020"], cyber: ["053800", "263860", "042510", "356890"],
+  lng: ["036460"], vaccine: ["302440", "096530"],
+};
+const fwdR2 = (x) => Math.round(x * 100) / 100;
+const fwdNum = (x) => (typeof x === "number" && isFinite(x) ? x : typeof x === "string" && x.trim() !== "" && isFinite(Number(x)) ? Number(x) : null);
+// 아침 수집 블록(morning) + config/themes.json → 그 날 신호 한 줄 (S&P 값이나 테마 값이 하나도 없으면 null)
+function fwdSignals(date, morning, themesCfg) {
+  const m = morning || {}, sig = m.signals || {}, us = m.us || {};
+  const spx = fwdNum(sig.spx && sig.spx.value);
+  const list = Array.isArray(themesCfg) ? themesCfg : (themesCfg && themesCfg.themes) || [], dth = (themesCfg && themesCfg.defaultThreshold) || 3;
+  const themes = list.map((t) => { const v = fwdNum(us[t.key] && us[t.key].value); if (v === null) return null;
+    const th = t.th ?? dth, thDn = t.thDn ?? th, st = v >= th ? "up" : v <= -thDn ? "dn" : "", g = String(t.grade || "");
+    return { k: t.key, v: fwdR2(v), ex: spx === null ? null : fwdR2(v - spx), st, g: st === "up" ? g[0] || "" : st === "dn" ? g[1] || "" : "", kr: null };
+  }).filter(Boolean);
+  if (!themes.length) return null;
+  return { date, us: m.expectedUs || null, at: m.at || null, spx, themes };
+}
+// 네이버 일봉 줄([{ date, o, c }] 날짜 오름차순) → 그 날 시가 갭 · 시가→종가 (그 날 봉이나 전날 봉이 없으면 null)
+function fwdBar(rows, date) {
+  const xs = Array.isArray(rows) ? rows : [], i = xs.findIndex((r) => r && r.date === date);
+  if (i < 1) return null; const p = xs[i - 1], b = xs[i];
+  if (!(p.c > 0) || !(b.o > 0) || !(b.c > 0)) return null;
+  return { gap: fwdR2((b.o / p.c - 1) * 100), o2c: fwdR2((b.c / b.o - 1) * 100) };
+}
+// 한 테마의 한국 결과 = 대표 종목 평균 (bars: 코드 → fwdBar 결과 | null)
+function fwdKr(key, bars) {
+  const got = (FWD_KR[key] || []).map((c) => bars[c]).filter(Boolean);
+  if (!got.length) return null;
+  const avg = (f) => fwdR2(got.reduce((s, x) => s + x[f], 0) / got.length);
+  return { gap: avg("gap"), o2c: avg("o2c"), n: got.length };
+}
+// 파일에 오늘 신호 넣기(같은 날짜는 한 줄 · 이미 있으면 신호는 그대로 두고 한국 결과만 채움) → 새 파일 객체 (원본 무변경)
+function fwdAddRow(file, row) {
+  const f = file && Array.isArray(file.rows) ? { v: FWD_V, updatedAt: file.updatedAt || 0, rows: file.rows.slice() } : { v: FWD_V, updatedAt: 0, rows: [] };
+  if (!row) return { file: f, added: 0 };
+  if (f.rows.some((r) => r && r.date === row.date)) return { file: f, added: 0 };
+  f.rows.push(row); f.rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  if (f.rows.length > FWD_KEEP) f.rows = f.rows.slice(-FWD_KEEP);
+  return { file: f, added: 1 };
+}
+// 한국 결과가 아직 빈 신호 칸 (신호 있는 테마만 · 최근 maxRows 줄) → [{ date, k }]
+function fwdPending(file, maxRows = 5) {
+  const rows = (file && Array.isArray(file.rows) ? file.rows : []).slice(-maxRows);
+  return rows.flatMap((r) => (r.themes || []).filter((t) => t && t.st && !t.kr).map((t) => ({ date: r.date, k: t.k })));
+}
+// 최근 days 줄 적중 요약: 신호 있고 한국 결과가 채워진 칸만 · 적중 = 시가 갭이 신호 방향 · A등급만 따로
+function fwdSummary(file, days = FWD_DAYS) {
+  const rows = (file && Array.isArray(file.rows) ? file.rows : []).slice(-days);
+  const s = { days: rows.length, from: rows.length ? rows[0].date : null, to: rows.length ? rows[rows.length - 1].date : null, up: { n: 0, hit: 0 }, dn: { n: 0, hit: 0 }, a: { n: 0, hit: 0 }, wait: 0 };
+  for (const r of rows) for (const t of r.themes || []) {
+    if (!t || !t.st) continue; if (!t.kr || typeof t.kr.gap !== "number") { s.wait++; continue; }
+    const hit = t.st === "up" ? t.kr.gap > 0 : t.kr.gap < 0, b = s[t.st];
+    b.n++; if (hit) b.hit++; if (t.g === "A") { s.a.n++; if (hit) s.a.hit++; }
+  }
+  return s;
+}
+// 화면 한 줄 (기록 없으면 빈 글자)
+function fwdLine(s) {
+  if (!s || !s.days) return "";
+  const p = (b) => (b.n ? `${b.hit}/${b.n}` : "0");
+  return `최근 ${s.days}거래일 적중(시가 방향): 오를 때 ${p(s.up)} · 내릴 때 ${p(s.dn)} · A등급 ${p(s.a)}` + (s.wait ? ` · 결과 기다림 ${s.wait}` : "");
 }
 
 const MEMBERS = {
@@ -3179,53 +3273,53 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const nvStock = (code, etf) => NV + "/worldstock/" + (etf ? "etf/" : "stock/") + code + (etf ? "" : "/total");
   // kw(한국 테마 이름 키워드)는 shared/us-themes.js USTHEME_KW 와 같은 표를 따로 둔 것 (빌드 때 인라인하지 않음) — 둘 다 고쳐야 하고 test/auto.test.js 가 같은지 대조한다
   const US = [
-    { k: "semi", hit: [94, 95], g: "AA", kw: ["반도체","HBM","메모리","AI 반도체","시스템반도체","엔비디아"], grp: "it", name: "반도체 · AI", th: 3, thDn: 4, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
+    { k: "semi", hit: [95, 95], g: "AA", kw: ["반도체","HBM","메모리","AI 반도체","시스템반도체","엔비디아"], grp: "it", name: "반도체 · AI", th: 3, thDn: 4, label: "미국", links: [["엔비디아", nvStock("NVDA.O")], ["마이크론", nvStock("MU.O")], ["SMH", nvStock("SMH.O", true)]],
       learn: "엔비디아(AI 칩 회사), 마이크론(메모리 회사), SMH(반도체 회사 묶음)가 오르면 삼성전자·SK하이닉스 같은 한국 반도체 주식도 따라 오르기 쉬워요." },
-    { k: "power", hit: [89, 72], g: "AB", kw: ["전력","변압기","전선","전력설비","스마트그리드","초고압"], grp: "energy", name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
+    { k: "power", hit: [87, 78], g: "BB", kw: ["전력","변압기","전선","전력설비","스마트그리드","초고압"], grp: "energy", name: "전력기기 · 전선", th: 3, label: "미국", links: [["GE버노바", nvStock("GEV")], ["버티브", nvStock("VRT")]],
       learn: "AI 컴퓨터(데이터센터)는 전기를 엄청 많이 써요. 전기 설비를 만드는 미국 회사(GE버노바, 버티브)가 오르면 한국의 변압기·전선 회사도 따라가기 쉬워요." },
-    { k: "nuke", hit: [81, null], g: "BC", noDown: true, kw: ["원자력","원전","SMR"], grp: "energy", name: "원전 (원자력 발전)", th: 1, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
+    { k: "nuke", hit: [83, 73], g: "BB", noDown: true, kw: ["원자력","원전","SMR"], grp: "energy", name: "원전 (원자력 발전)", th: 1, label: "미국", links: [["컨스텔레이션", nvStock("CEG.O")], ["오클로", nvStock("OKLO.K")]],
       learn: "미국 원자력 발전 회사(컨스텔레이션, 오클로)가 오르면 한국 원전 부품 회사에도 관심이 몰려요." },
-    { k: "batt", hit: [91, 100], g: "AA", kw: ["2차전지","이차전지","배터리","리튬","양극재","음극재","전고체"], grp: "mobility", name: "2차전지 (배터리)", th: 4, thDn: 6, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
+    { k: "batt", hit: [96, 95], g: "AA", kw: ["2차전지","이차전지","배터리","리튬","양극재","음극재","전고체"], grp: "mobility", name: "2차전지 (배터리)", th: 4, thDn: 6, label: "미국", links: [["테슬라", nvStock("TSLA.O")], ["앨버말", nvStock("ALB")]],
       learn: "테슬라(전기차)와 앨버말(배터리 재료인 리튬 회사)을 보면 한국 배터리 회사들의 분위기를 알 수 있어요." },
-    { k: "def", hit: [80, null], g: "BC", noDown: true, kw: ["방산","방위","조선","K-방산"], grp: "heavy", name: "조선 · 방산 (배·무기)", th: 1.5, thDn: 2.5, label: "미국", links: [["ITA", nvStock("ITA", true)]],
+    { k: "def", hit: [84, 71], g: "AB", noDown: true, kw: ["방산","방위","조선","K-방산"], grp: "heavy", name: "조선 · 방산 (배·무기)", th: 1.5, thDn: 2.5, label: "미국", links: [["ITA", nvStock("ITA", true)]],
       learn: "ITA는 미국 무기·항공 회사 묶음이에요. 전쟁 같은 긴장이 커지면 한국 무기·배 만드는 회사도 같이 움직여요." },
-    { k: "bio", hit: [79, 76], g: "BB", kw: ["바이오","제약","비만","신약","의료","CMO","바이오시밀러"], grp: "bio", name: "비만치료제 · 바이오", th: 3, thDn: 2.5, label: "미국", links: [["일라이릴리", nvStock("LLY")], ["노보노디스크", nvStock("NVO")], ["XBI", nvStock("XBI", true)]],
+    { k: "bio", hit: [80, 77], g: "AB", kw: ["바이오","제약","비만","신약","의료","CMO","바이오시밀러"], grp: "bio", name: "비만치료제 · 바이오", th: 3, thDn: 2.5, label: "미국", links: [["일라이릴리", nvStock("LLY")], ["노보노디스크", nvStock("NVO")], ["XBI", nvStock("XBI", true)]],
       learn: "일라이릴리·노보노디스크(비만치료제 회사)와 XBI(미국 바이오 회사 묶음)가 크게 움직이면 한미약품·알테오젠·삼성바이오로직스 같은 한국 제약·바이오 주식도 따라가기 쉬워요." },
-    { k: "robot", hit: [80, 82], g: "AB", kw: ["로봇","휴머노이드"], grp: "mobility", name: "로봇", th: 2, thDn: 5, label: "미국", links: [["BOTZ", nvStock("BOTZ.O", true)], ["심보틱", nvStock("SYM.O")]],
+    { k: "robot", hit: [77, 80], g: "BB", kw: ["로봇","휴머노이드"], grp: "mobility", name: "로봇", th: 2, thDn: 5, label: "미국", links: [["BOTZ", nvStock("BOTZ.O", true)], ["심보틱", nvStock("SYM.O")]],
       learn: "BOTZ(미국 로봇·AI 회사 묶음)와 심보틱(물류 로봇 회사)이 크게 움직이면 레인보우로보틱스·두산로보틱스 같은 한국 로봇 주식도 따라가기 쉬워요." },
-    { k: "space", hit: [71, 76], g: "BB", kw: ["우주","위성","항공","UAM"], grp: "heavy", name: "우주항공", th: 1, thDn: 6, label: "미국", links: [["로켓랩", nvStock("RKLB.O")], ["AST스페이스모바일", nvStock("ASTS.O")], ["UFO", nvStock("UFO", true)]],
+    { k: "space", hit: [82, 71], g: "BB", kw: ["우주","위성","항공","UAM"], grp: "heavy", name: "우주항공", th: 1, thDn: 6, label: "미국", links: [["로켓랩", nvStock("RKLB.O")], ["AST스페이스모바일", nvStock("ASTS.O")], ["UFO", nvStock("UFO", true)]],
       learn: "로켓랩(로켓 회사), AST스페이스모바일(위성 통신 회사), UFO(우주 회사 묶음)가 크게 움직이면 쎄트렉아이·한화에어로스페이스 같은 한국 우주 주식도 움직여요." },
-    { k: "solar", hit: [94, 79], g: "AA", kw: ["태양광","태양전지"], grp: "energy", name: "태양광", th: 4, thDn: 3, label: "미국", links: [["퍼스트솔라", nvStock("FSLR.O")], ["엔페이즈", nvStock("ENPH.O")], ["TAN", nvStock("TAN", true)]],
+    { k: "solar", hit: [98, 87], g: "AB", kw: ["태양광","태양전지"], grp: "energy", name: "태양광", th: 4, thDn: 3, label: "미국", links: [["퍼스트솔라", nvStock("FSLR.O")], ["엔페이즈", nvStock("ENPH.O")], ["TAN", nvStock("TAN", true)]],
       learn: "퍼스트솔라·엔페이즈(태양광 회사)와 TAN(태양광 회사 묶음)이 크게 움직이면 한화솔루션·OCI홀딩스 같은 한국 태양광 주식도 따라가요." },
-    { k: "equip", hit: [91, 84], g: "AA", kw: ["반도체 장비","반도체장비","장비","CXL","유리기판"], grp: "it", name: "반도체 장비", th: 2.5, label: "미국", links: [["어플라이드", nvStock("AMAT.O")], ["램리서치", nvStock("LRCX.O")], ["KLA", nvStock("KLAC.O")]],
+    { k: "equip", hit: [93, 86], g: "BA", kw: ["반도체 장비","반도체장비","장비","CXL","유리기판"], grp: "it", name: "반도체 장비", th: 2.5, label: "미국", links: [["어플라이드", nvStock("AMAT.O")], ["램리서치", nvStock("LRCX.O")], ["KLA", nvStock("KLAC.O")]],
       learn: "반도체를 만드는 기계 회사(어플라이드머티리얼즈·램리서치·KLA)가 움직이면 한미반도체·원익IPS·주성엔지니어링 같은 한국 장비 회사도 따라가요. 삼성전자·SK하이닉스와 따로 움직일 때가 있어서 반도체와 나눠 봐요." },
-    { k: "auto", hit: [90, 75], g: "AB", kw: ["자동차","완성차","자동차부품","타이어"], grp: "mobility", name: "자동차", th: 4, thDn: 2.5, label: "미국", links: [["GM", nvStock("GM")], ["포드", nvStock("F")]],
+    { k: "auto", hit: [83, 81], g: "AB", kw: ["자동차","완성차","자동차부품","타이어"], grp: "mobility", name: "자동차", th: 4, thDn: 2.5, label: "미국", links: [["GM", nvStock("GM")], ["포드", nvStock("F")]],
       learn: "미국 자동차 회사(GM·포드)가 크게 움직이면 현대차·기아도 따라가기 쉬워요. 관세 같은 미국 뉴스가 같이 영향을 줘요." },
-    { k: "ship", hit: [78, null], g: "BC", noDown: true, kw: ["해운","컨테이너","벌크"], grp: "heavy", name: "해운", th: 2.5, thDn: 6, label: "미국", links: [["ZIM", nvStock("ZIM")], ["맷슨", nvStock("MATX")]],
+    { k: "ship", hit: [81, 78], g: "BB", noDown: true, kw: ["해운","컨테이너","벌크"], grp: "heavy", name: "해운", th: 2.5, thDn: 6, label: "미국", links: [["ZIM", nvStock("ZIM")], ["맷슨", nvStock("MATX")]],
       learn: "미국 해운 회사(ZIM·맷슨)가 크게 움직이면 HMM·팬오션 같은 한국 해운 회사도 따라가요. 운임(배 삯)이 오르내릴 때 같이 움직여요." },
-    { k: "bank", hit: [87, 76], g: "BB", kw: ["은행","금융","증권","보험","지주"], grp: "fin", name: "은행 · 금융", th: 2, label: "미국", links: [["KBE", nvStock("KBE", true)], ["JP모건", nvStock("JPM")]],
+    { k: "bank", hit: [90, 76], g: "AB", kw: ["은행","금융","증권","보험","지주"], grp: "fin", name: "은행 · 금융", th: 2, label: "미국", links: [["KBE", nvStock("KBE", true)], ["JP모건", nvStock("JPM")]],
       learn: "미국 은행 묶음(KBE)과 JP모건이 움직이면 KB금융·신한지주 같은 한국 금융주도 따라가요." },
-    { k: "steel", hit: [74, 82], g: "BA", kw: ["철강","강관"], grp: "heavy", name: "철강", th: 2.5, thDn: 3, label: "미국", links: [["뉴코어", nvStock("NUE")], ["스틸다이내믹스", nvStock("STLD.O")]],
+    { k: "steel", hit: [77, 79], g: "AB", kw: ["철강","강관"], grp: "heavy", name: "철강", th: 2.5, thDn: 3, label: "미국", links: [["뉴코어", nvStock("NUE")], ["스틸다이내믹스", nvStock("STLD.O")]],
       learn: "미국 철강 회사(뉴코어·스틸다이내믹스)가 크게 움직이면 POSCO홀딩스·현대제철도 따라가요. 중국 철강 값 영향도 커서 참고로 같이 봐요." },
-    { k: "h2", hit: [84, 74], g: "BB", kw: ["수소","연료전지"], grp: "energy", name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
+    { k: "h2", hit: [89, 67], g: "BC", kw: ["수소","연료전지"], grp: "energy", name: "수소", th: 5, label: "미국", links: [["플러그파워", nvStock("PLUG.O")], ["블룸에너지", nvStock("BE")]],
       learn: "" },
-    { k: "build", hit: [78, 80], g: "BB", kw: ["건설","인프라","시멘트","레미콘"], grp: "heavy", name: "건설 · 인프라", th: 1.5, thDn: 2, label: "미국", links: [["PAVE", nvStock("PAVE", true)], ["벌컨머티리얼즈", nvStock("VMC")]],
+    { k: "build", hit: [81, 81], g: "BB", kw: ["건설","인프라","시멘트","레미콘"], grp: "heavy", name: "건설 · 인프라", th: 1.5, thDn: 2, label: "미국", links: [["PAVE", nvStock("PAVE", true)], ["벌컨머티리얼즈", nvStock("VMC")]],
       learn: "PAVE(미국 인프라 회사 묶음)와 벌컨머티리얼즈(건설 자재 회사)가 움직이면 현대건설·DL이앤씨 같은 한국 건설주도 따라가요. 금리 인하·경기 부양 때마다 돌아오는 테마예요." },
-    { k: "fintech", hit: [72, 88], g: "BB", kw: ["스테이블코인","핀테크","결제","페이","전자결제"], grp: "fin", name: "스테이블코인", th: 2, thDn: 6, label: "미국", links: [["코인베이스", nvStock("COIN.O")], ["페이팔", nvStock("PYPL.O")]],
+    { k: "fintech", hit: [81, 82], g: "BB", kw: ["스테이블코인","핀테크","결제","페이","전자결제"], grp: "fin", name: "스테이블코인", th: 2, thDn: 6, label: "미국", links: [["코인베이스", nvStock("COIN.O")], ["페이팔", nvStock("PYPL.O")]],
       learn: "코인베이스(코인 거래소)와 페이팔(간편결제)이 크게 움직이면 카카오페이·다날 같은 한국 결제·스테이블코인 관련주도 따라가요." },
-    { k: "aisw", hit: [82, 81], g: "AA", kw: ["AI","인공지능","챗봇","소프트웨어","온디바이스"], grp: "it", name: "AI 소프트웨어", th: 2, thDn: 4, label: "미국", links: [["IGV", nvStock("IGV", true)], ["팔란티어", nvStock("PLTR.O")]],
+    { k: "aisw", hit: [82, 80], g: "BB", kw: ["AI","인공지능","챗봇","소프트웨어","온디바이스"], grp: "it", name: "AI 소프트웨어", th: 2, thDn: 4, label: "미국", links: [["IGV", nvStock("IGV", true)], ["팔란티어", nvStock("PLTR.O")]],
       learn: "IGV(미국 소프트웨어 회사 묶음)와 팔란티어(AI 소프트웨어)가 크게 움직이면 코난테크놀로지·솔트룩스·폴라리스오피스 같은 한국 AI 소프트웨어 주식도 따라가요." },
-    { k: "cyber", hit: [72, 78], g: "BB", kw: ["보안","해킹","정보보안"], grp: "it", name: "사이버보안", th: 2, thDn: 4, label: "미국", links: [["크라우드스트라이크", nvStock("CRWD.O")], ["팔로알토", nvStock("PANW.O")], ["포티넷", nvStock("FTNT.O")], ["CIBR", nvStock("CIBR.O", true)]],
+    { k: "cyber", hit: [67, 79], g: "BB", kw: ["보안","해킹","정보보안"], grp: "it", name: "사이버보안", th: 2, thDn: 4, label: "미국", links: [["크라우드스트라이크", nvStock("CRWD.O")], ["팔로알토", nvStock("PANW.O")], ["포티넷", nvStock("FTNT.O")], ["CIBR", nvStock("CIBR.O", true)]],
       learn: "미국 보안 회사(크라우드스트라이크·팔로알토·포티넷)와 보안 묶음(CIBR)이 크게 움직이면 안랩·지니언스·라온시큐어·싸이버원 같은 한국 보안주도 따라가요. 해킹 사고 때마다 돌아오는 테마예요." },
-    { k: "lng", hit: [75, 52], g: "CC", weak: true, kw: ["LNG","LPG","가스","천연가스"], grp: "energy", name: "LNG · 가스", th: 4, label: "미국", links: [["셰니에르", nvStock("LNG")], ["UNG", nvStock("UNG", true)]],
+    { k: "lng", hit: [72, 56], g: "BC", weak: true, kw: ["LNG","LPG","가스","천연가스"], grp: "energy", name: "LNG · 가스", th: 4, label: "미국", links: [["셰니에르", nvStock("LNG")], ["UNG", nvStock("UNG", true)]],
       learn: "겨울철·에너지 위기 때마다 돌아오는 테마예요." },
-    { k: "vaccine", hit: [76, null], g: "BC", noDown: true, kw: ["백신","진단","코로나","mRNA"], grp: "bio", name: "백신 · 진단", th: 5, thDn: 6, label: "미국", links: [["모더나", nvStock("MRNA.O")], ["바이오엔텍", nvStock("BNTX.O")]],
+    { k: "vaccine", hit: [77, 60], g: "AC", noDown: true, kw: ["백신","진단","코로나","mRNA"], grp: "bio", name: "백신 · 진단", th: 5, thDn: 6, label: "미국", links: [["모더나", nvStock("MRNA.O")], ["바이오엔텍", nvStock("BNTX.O")]],
       learn: "전염병이 돌 때마다 돌아오는 테마예요." },
-    { k: "btc", hit: [96, 90], g: "AA", kw: ["가상화폐","비트코인","블록체인","코인","가상자산"], grp: "asset", name: "가상자산 (비트코인)", th: 6, thDn: 5, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
+    { k: "btc", hit: [93, 91], g: "AA", kw: ["가상화폐","비트코인","블록체인","코인","가상자산"], grp: "asset", name: "가상자산 (비트코인)", th: 6, thDn: 5, label: "BTC", links: [["업비트 BTC", "https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"], ["인베스팅", IV + "/crypto/bitcoin"]],
       learn: "비트코인이 크게 움직이면 코인 거래소와 관련된 한국 회사 주식이 따라 움직여요." },
-    { k: "gold", hit: [63, 59], g: "CC", weak: true, kw: ["금 ","금값","귀금속"], grp: "asset", name: "금", th: 2, thDn: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
+    { k: "gold", hit: [62, 56], g: "CC", weak: true, kw: ["금 ","금값","귀금속"], grp: "asset", name: "금", th: 2, thDn: 1.5, label: "금 선물", links: [["네이버", NV + "/marketindex/metals/GCcv1"], ["인베스팅", IV + "/commodities/gold"]],
       learn: "사람들이 불안할 때 금을 사요. 금값이 오르면 금 관련 주식이 움직여요." },
-    { k: "cu", hit: [82, 76], g: "AB", kw: ["구리","비철금속"], grp: "asset", name: "구리", th: 2, thDn: 2.5, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
+    { k: "cu", hit: [78, 69], g: "AB", kw: ["구리","비철금속"], grp: "asset", name: "구리", th: 2, thDn: 2.5, label: "구리 선물", links: [["네이버", NV + "/marketindex/metals/HGcv1"], ["인베스팅", IV + "/commodities/copper"]],
       learn: "구리는 전선을 만드는 재료예요. 구리값이 오르면 전선 회사 주식이 강해지기 쉬워요." },
   ];
   // 한국 테마 이름(네이버) ↔ 미국장 테마 연결: 이름에 kw 가 들어 있으면 같은 흐름으로 본다 (전일·오늘 주도 테마 ↔ 미국장 테마)
@@ -3266,7 +3360,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-104";
+  const APP_VER = "9.29-105";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3299,7 +3393,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   };
   // 9.29-104 원장 [2100] "설명이나 사용방법같은건 접어두고 누르면 펴지게": 설명 칸 = details.howto[data-howto] · 기본 접힘 · 펼침은 기기마다 기억(localStorage 「cockpit-howto」 · 막혀도 접힘으로 정상)
   const HOWTO_KEY = "cockpit-howto";
-  const howtoGet = () => { try { const v = JSON.parse(localStorage.getItem(HOWTO_KEY) || "{}"); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; } };
+  const HOWTO_MEM = {}; // 9.29-105: 저장소가 막힌 기기 = 이번 화면 안에서만 기억(다시 그리는 칸 · 판정 근거 「지표별 판정」 접힘이 입력마다 닫히지 않게) · 처음은 접힘 그대로
+  const howtoGet = () => { try { const v = JSON.parse(localStorage.getItem(HOWTO_KEY) || "{}"); return v && typeof v === "object" ? v : {}; } catch (e) { return HOWTO_MEM; } };
   const howtoOpen = (k) => !!howtoGet()[k];
   const howtoAttr = (k) => ` data-howto="${esc(k)}"${howtoOpen(k) ? " open" : ""}`;
   document.addEventListener("toggle", (e) => { const d = e.target; if (!d || !d.matches || !d.matches("details.howto[data-howto]")) return; try { const m = howtoGet(); if (d.open) m[d.dataset.howto] = 1; else delete m[d.dataset.howto]; localStorage.setItem(HOWTO_KEY, JSON.stringify(m)); } catch (err) {} }, true);
@@ -3402,9 +3497,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const US_GROUPS = [["💻 반도체 · IT", "it"], ["⚡ 에너지 · 전력", "energy"], ["🚗 2차전지 · 자동차 · 로봇", "mobility"], ["🚢 조선 · 방산 · 우주 · 중공업", "heavy"], ["💊 바이오 · 제약", "bio"], ["🏦 금융 · 핀테크", "fin"], ["🪙 가상자산 · 금 · 구리", "asset"]].map(([t, g]) => [t, US.filter((u) => u.grp === g)]);
   const US_SORTED = US_GROUPS.flatMap(([, l]) => l);
   $("usList").innerHTML = `<div class="uslist">${US_GROUPS.map(([gt, list]) => `<div class="ugrp">${gt}</div><div class="ugbox">` + list.map((u) => `
-      <div class="urow${(u.g || "").startsWith("A") ? "" : " usb"}" id="ur-${u.k}"><span class="rn" title="${esc(u.name)}">${esc(u.name.split(" (")[0])}<small>${u.thDn ? `+${u.th}/-${u.thDn}%` : u.noDown ? `+${u.th}%` : `±${u.th}%`}${u.weak ? " 참고" : u.noDown ? " ↓참고" : ""}</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div></div>`).join("") + `</div><button type="button" class="usrest" data-usg="${esc(gt.replace(/<[^>]*>/g, "").trim())}" aria-expanded="false" hidden></button>`).join("")}
+      <div class="urow${(u.g || "").startsWith("A") ? "" : " usb"}" id="ur-${u.k}"><span class="rn" title="${esc(u.name)}">${esc(u.name.split(" (")[0])}<small>${u.thDn ? `+${u.th}/-${u.thDn}%` : u.noDown ? `+${u.th}%` : `±${u.th}%`}${u.weak ? " 참고" : u.noDown ? " ↓참고" : ""}</small></span><div class="in"><button class="pm" type="button" data-us="${u.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="us-${u.k}" placeholder="0.0" autocomplete="off"><span class="unit">%</span><span class="status" id="uss-${u.k}">—</span></div><small class="usx" id="usx-${u.k}"></small></div>`).join("") + `</div><button type="button" class="usrest" data-usg="${esc(gt.replace(/<[^>]*>/g, "").trim())}" aria-expanded="false" hidden></button>`).join("")}
       <details class="more"><summary>✍️ 종목 · 사이트 링크 · 왜 이 종목?</summary>
-      ${US_SORTED.map((u) => `<div class="rdet"><b>${esc(u.name)}${u.hit ? ` <small>검증(2023~ 처음 보는 기간): 오를 때 +${u.th}%↑ → 다음 날 시가 같은 방향 ${u.hit[0]}% [${(u.g || "")[0] || "-"}] · 내릴 때 -${u.thDn || u.th}%↓ → ${u.hit[1] ? u.hit[1] + "% [" + ((u.g || "")[1] || "-") + "]" : "약해서 참고 [C]"}</small>` : ""}</b><div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div><div class="ul">${esc(u.learn)}</div></div>`).join("")}
+      ${US_SORTED.map((u) => `<div class="rdet"><b>${esc(u.name)}${u.hit ? ` <small>검증(2026-10-16 연구 · 2021~ 크게 움직인 날): 다음 날 시가 같은 방향 = 원래 적중률(시장 따라 움직인 몫 포함) 오를 때 ${u.hit[0]}% · 내릴 때 ${u.hit[1]}% · 등급(S&P 몫 뺀 판정) 오를 때 [${(u.g || "")[0] || "-"}] · 내릴 때 [${(u.g || "")[1] || "-"}] · A 쓸 수 있음 · B 참고만 · C 쓰면 안 됨</small>` : ""}</b><div class="links">열어서 보기 ${u.links.map(([t, l]) => `<a class="lk ${l.includes("investing") ? "iv" : "nv"}" href="${esc(l)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div><div class="ul">${esc(u.learn)}</div></div>`).join("")}
       </details><div class="usmore" id="usMore"></div></div>`;
 
   $("prevList").innerHTML = [0, 1].map((i) => `
@@ -3454,7 +3549,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       try { history.pushState({ eden: BACK.length }, "", "#" + d); histOk = true; } catch (e) { histOk = false; }
     } else { try { history.replaceState(history.state, "", "#" + d); } catch (e) {} } // 새로고침해도 이 날짜가 열리게
     DATE = d; S = loadDay(d); AUTO = autoEvents(d, CAL);
-    paintDate(); fill(); render(); renderStats();
+    paintDate(); fill(); render(); renderStats(); paintGroups();
     cancelReset();
     setStatus(); paintBack();
     if (gh) ghPull(); else pubPull(); // 이 날짜의 자동 연동 값도 바로 확인
@@ -3515,7 +3610,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     document.body.classList.toggle("simple", simple);
     const b = $("simpleBtn"); if (b) { b.textContent = simple ? "🧹 간단 보기 ✓" : "🔎 전체 보기 ✓"; b.classList.toggle("on", simple); b.title = simple ? "누르면 전체 보기 (참고 지표 · 모든 테마 · 수혜 업종 · 체크리스트 · 기록표 · 용어)" : "누르면 간단 보기 (판정에 쓰는 것만)"; }
     const rm = $("refMore"); if (rm) rm.open = !simple;
-    paintSimpleUs(); buildNav();
+    paintSimpleUs(); buildNav(); paintGroups();
   }
   $("simpleBtn").addEventListener("click", () => { simple = !simple; try { localStorage.setItem("eden.simple", simple ? "1" : "0"); } catch (e) {} applySimple(); paintNav(); });
   buildNav();
@@ -3530,15 +3625,15 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") openNav(false); });
   $("secnav").addEventListener("click", (e) => {
     const b = e.target.closest("[data-sec]"); if (!b) return;
-    const el = NAV[+b.dataset.sec]; if (el.tagName === "DETAILS") el.open = true;
+    const el = NAV[+b.dataset.sec]; if (el.tagName === "DETAILS") el.open = true; openGrpOf(el);
     navPin = { i: +b.dataset.sec, until: Date.now() + 1200 }; setActive(+b.dataset.sec);
     openNav(false);
     try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (err) { el.scrollIntoView(); }
   });
   $("topBtn").addEventListener("click", toTop);
   // 맨 위 바로가기: 📰 시황일지 · 📓 매매일지 (9.29-70)
-  document.querySelectorAll("[data-jump]").forEach((b) => b.addEventListener("click", () => { const el = $(b.dataset.jump); if (!el) return; try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); } }));
-  $("topLeadGo").addEventListener("click", () => { const el = $("mv-leaders") || $("marketCard"); try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); } const h = $("ldHelp"); if (h) h.open = true; });
+  document.querySelectorAll("[data-jump]").forEach((b) => b.addEventListener("click", () => { const el = $(b.dataset.jump); if (!el) return; openGrpOf(el); try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); } }));
+  $("topLeadGo").addEventListener("click", () => { const el = $("mv-leaders") || $("marketCard"); openGrpOf(el); try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); } const h = $("ldHelp"); if (h) h.open = true; });
   let navTick = 0, navPin = null;
   function paintNav() {
     navTick = 0;
@@ -3554,6 +3649,32 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     $("secnav").querySelectorAll("[data-sec]").forEach((b) => b.classList.toggle("on", +b.dataset.sec === cur));
   }
   window.addEventListener("scroll", () => { if (!navTick) navTick = requestAnimationFrame(paintNav); }, { passive: true });
+  // ---------- 9.29-105 원장 [2121][2134] C안 「지금 시간 펼침」 ----------
+  // 묶음 = ① 전일 시황(grp1) → ② 뉴욕증시 마감(grp2) → ③ 프리마켓·장전(grp3) → ④ 장중(grp4) → ⑤ 마감·매매일지(grp5) → 기록·매매수칙(grp6)
+  // 지금 시간대 묶음만 펼침 — 구성안 C안 「08:30 = ③ 프리마켓·장전 / 장중 = ④ / 16:00 뒤 = ⑤」: 보는 날이 오늘·거래일이면 00:00~08:59 ③ · 09:00~15:59 ④ · 16:00~ ⑤
+  //   오늘이 휴장일이면 ③(다음 장 준비) · 지난 날 ⑤(그날 마감·일지) · 다음 날 ③ · 기록 묶음은 늘 접힘 · 나머지는 머리말 한 줄(누르면 펼침)
+  // 손으로 펼치고 접은 것 = 기기 기억(localStorage 「cockpit-grp」 = { k: 오늘 날짜|지금 시간대, o: { 묶음 id: 1/0 } } · 시간대가 바뀌면 다시 지금 시간 기준) · 저장소가 막히면 이번 화면 안에서만
+  const GRP_KEY = "cockpit-grp", GRP_NOW = { pre: "grp3", live: "grp4", close: "grp5" };
+  let GRP_MEM = null, grpLast = "";
+  const kstHMnow = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(11, 16);
+  function grpSlot(d = DATE) { const today = kstDate(); if (d < today) return "close"; if (d > today || !isBusinessDay(d, CAL.holidays)) return "pre"; const hm = kstHMnow(); return hm < "09:00" ? "pre" : hm < "16:00" ? "live" : "close"; }
+  const grpClock = () => kstDate() + "|" + grpSlot(kstDate());
+  function grpMem() { let m; try { m = JSON.parse(localStorage.getItem(GRP_KEY) || "null"); } catch (e) { m = GRP_MEM; } return m && typeof m === "object" && m.k === grpClock() && m.o && typeof m.o === "object" ? m : { k: grpClock(), o: {} }; }
+  function grpSave(m) { GRP_MEM = m; try { localStorage.setItem(GRP_KEY, JSON.stringify(m)); } catch (e) {} }
+  function paintGroups() {
+    const now = GRP_NOW[grpSlot()], m = grpMem(); grpLast = m.k;
+    document.querySelectorAll(".wrap > .grp").forEach((g) => {
+      const isNow = g.id === now, open = g.id in m.o ? !!m.o[g.id] : isNow, b = g.querySelector(".grptog"), st = g.querySelector(".grpst");
+      const n = [...g.querySelectorAll(":scope > [data-nav], :scope > #verdict")].filter((el) => !el.hidden && !(simple && el.dataset.simple === "hide")).length;
+      g.classList.toggle("shut", !open); g.classList.toggle("now", isNow);
+      if (b) b.setAttribute("aria-expanded", String(open));
+      if (st) st.textContent = n + "칸 · " + (isNow ? (open ? "지금 시간 ▾" : "지금 시간 · 펼치기 ▸") : open ? "접기 ▾" : "펼치기 ▸");
+    });
+  }
+  function grpOpen(g, open) { if (!g || !g.id) return; const m = grpMem(); m.o[g.id] = open ? 1 : 0; grpSave(m); paintGroups(); }
+  const openGrpOf = (el) => { const g = el && el.closest && el.closest(".wrap > .grp"); if (g && g.classList.contains("shut")) grpOpen(g, true); }; // 메뉴·바로가기로 가는 카드가 접힌 묶음 안이면 먼저 펼침
+  document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest(".grptog"); if (!b) return; const g = b.closest(".grp"); grpOpen(g, g.classList.contains("shut")); });
+  setInterval(() => { if (grpMem().k !== grpLast) paintGroups(); }, 30000); // 화면을 켜 둔 채 시간대가 바뀌면(09:00 · 16:00 · 자정) 지금 시간 묶음으로
   applySimple(); paintNav();
 
   document.addEventListener("click", (e) => { const b = e.target.closest("[data-go]"); if (b) { e.preventDefault(); goto(b.dataset.go, { from: b }); } });
@@ -3815,7 +3936,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       el.textContent = u.noDown && st === "back" ? "참고 ↓" : u.weak && (st === "first" || st === "back") ? (st === "first" ? "참고 ↑" : "참고 ↓") : st === "first" ? "우선 관심" : st === "back" ? "후순위" : st === "flat" ? "중립" : "—";
       { const kr = [...(S.prev || []).map((p) => p && p.name), ...parseLeaders(S.journal.market.leaders).map((t) => t.name)].filter((n) => n && usLinkOf(n) === u); const rn = $("ur-" + u.k).querySelector(".rn"); let b = rn.querySelector(".krlk"); if (!b) { b = document.createElement("i"); b.className = "krlk"; rn.appendChild(b); } const krUp = kr.some((n) => (S.prev || []).some((p) => p && p.name === n && krUpPrev(p)) || parseLeaders(S.journal.market.leaders).some((t) => t.name === n && t.rate > 0)); b.textContent = krUp ? flagsOf(true, usUp(u)) : ""; b.title = krUp ? (usUp(u) ? "한국·미국 둘 다 오름: " : "한국에서 오름: ") + kr.join(", ") : ""; }
       $("ur-" + u.k).dataset.st = u.weak || (u.noDown && st === "back") ? "" : st === "first" ? "up" : st === "back" ? "dn" : "";
+      { const x = $("usx-" + u.k), v = themeValue(S.us[u.k]), sp = spxPctOf(S), ex = v === null || sp === null ? null : Math.round((v - sp) * 10) / 10; x.textContent = ex === null ? "" : "S&P 대비 " + (ex > 0 ? "+" : "") + ex.toFixed(1) + "%p"; } // 9.29-105 [2132] ② 테마 % − S&P % (S&P = 아침 수집 spx · 지수 마감 줄과 같은 값)
     });
+    $("usIdx").innerHTML = usIdxHtml(); // 9.29-105 중복 합침 ④: 어젯밤 미국 지수 마감 = 뉴욕증시 카드 맨 위
+    { const bt = prevBothList(r), el = $("prevBoth"); el.hidden = !bt.length; el.innerHTML = bt.length ? `<b class="upc">✅ 미국장도 같은 방향</b> ${esc(bt.join(" · "))} → 오늘 더 강할 가능성` : ""; } // 9.29-105 중복 합침 ⑤
     paintUsOrder(); paintSimpleUs(); paintTopLead();
     const tagHtml = (a) => (a.length ? a.map(([t, s]) => `<span>${esc(t)}<small>${esc(s)}</small></span>`).join("") : `<span class="empty">아직 없음</span>`);
     $("tFirst").innerHTML = tagHtml(r.themeFirst); $("tBack").innerHTML = tagHtml(r.themeBack);
@@ -3904,12 +4028,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     main.push(sigRow(r.statuses.ev, "주요 일정", evs.length ? `${evs.length}건` : "없음", LABEL[r.statuses.ev], evs.length ? evs.join(", ") : "특별한 일 없음"));
     const lines = [`<div class="sgrp">🎯 판정에 들어가는 지표</div>`, ...main];
     if (refs.length) lines.push(`<div class="sgrp">👀 참고만 하는 지표 <small>판정 개수에 안 들어가요</small></div>`, ...refs);
-    if (r.filled === 0) return briefHtml(r) + `<div class="sub">📊 지표별 판정</div><div>아직 넣은 숫자가 없어요. 아침 7시쯤(6:35·7:05·8:05 예약, 10~20분 늦을 수 있음) 자동으로 들어와요 (직접 넣어도 돼요).</div>` + lines.join("");
+    const fold = (inner) => `<details class="howto sigfold"${howtoAttr("sigjudge")}><summary>📊 지표별 판정 <small>장전 지표 칸과 같은 값 · 눌러서 보기</small></summary>${inner}</details>`; // 9.29-105 [2134] 중복 합침 ②⑦
+    if (r.filled === 0) return briefHtml(r) + `<div class="sub">📊 지표별 판정</div><div>아직 넣은 숫자가 없어요. 아침 7시쯤(6:35·7:05·8:05 예약, 10~20분 늦을 수 있음) 자동으로 들어와요 (직접 넣어도 돼요).</div>` + fold(lines.join(""));
     let end;
     if (r.counts.r > 0) end = `나쁨이 ${r.counts.r}개 있어요. 규칙은 <b>나쁨이 하나라도 있으면 쉼</b>이에요. 오늘은 새로 사지 말고, 가진 주식만 정리해요.`;
     else if (r.counts.a >= 2) end = `주의가 ${r.counts.a}개예요. 규칙은 <b>주의가 2개 이상이면 절반</b>이에요. 평소 돈의 반만 쓰고, 그날 산 건 그날 팔아요.`;
     else end = `나쁨 0개, 주의 ${r.counts.a}개예요. 그래서 <b>정상</b>이에요. 평소처럼 해도 돼요.` + (r.filled < 7 ? ` (아직 ${7 - r.filled}칸을 안 넣었어요. 다 넣으면 더 정확해요)` : "");
-    return briefHtml(r) + `<div class="sub">📊 지표별 판정</div>` + lines.join("") + `<div class="end">➜ ${end}</div>`;
+    return briefHtml(r) + fold(lines.join("")) + `<div class="end">➜ ${end}</div>`;
   }
   // 판단 근거 아래 한눈에 보기: 오늘 특별 일정 · 미국장 테마 · 전일 주도 테마(애프터·프리마켓) · 지표별 수혜 업종
   // 다음 거래일 2개의 예정 일정 (달력으로 미리 앎: 만기·FOMC·CPI·고용·금통위·MSCI)
@@ -4039,20 +4164,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const evHtml = (evAll.length ? evAll.map((e) => `<span class="bchip">${esc(e)}</span>`).join("") : `<span class="muted">특별한 일정 없음</span>`)
       + `<div class="nxline"><span class="muted">다음 거래일 예정</span> ${upcomingHtml()}</div>`
       + (calWarn() ? `<div class="nxline"><b class="upc">📅 ${esc(calWarn())}</b> <span class="muted">· 휴장일·FOMC 는 매달 1일 자동 갱신, CPI·고용·금통위·MSCI 는 연 1회 손으로 (data/events.json)</span></div>` : "");
-    // 9.29-96 원장 [1772] "종목은 많이 오른 순으로": 칩 = 등락률 높은 순(많이 오른 것 앞 · 내린 것 뒤) · 우선 관심·후순위 글자·색은 그대로 · 등락률 없는 칩은 맨 뒤(지금은 안 보임)
-    const usRows = US.map((u) => ({ u, v: themeValue(S.us[u.k]), st: r.themeStatus[u.k] })).filter((x) => x.v !== null)
-      .sort((a, b) => (b.v ?? -Infinity) - (a.v ?? -Infinity));
-    const usHtml = usRows.length ? usRows.map(({ u, v, st }) => `<span class="bchip ${st === "first" || v >= 1 ? "up" : st === "back" || v <= -1 ? "dn" : v > 0 ? "up2" : v < 0 ? "dn2" : ""}">${esc(u.name.split(" (")[0])} ${v > 0 ? "+" : ""}${v}%${st === "first" ? " · 우선 관심" : st === "back" ? " · 후순위" : ""}</span>`).join("")
-      : `<span class="muted">아직 없음 (아침 7시쯤 자동으로 들어와요)</span>`;
-    const prevs = (S.prev || []).filter((p) => p && (p.name || "").trim());
-    const both = [];
-    const pvHtml = prevs.length ? prevs.map((p) => { const u = usLinkOf(p.name), st = u && r.themeStatus[u.k];
-      if (u && st === "first" && !u.weak) both.push(p.name.trim() + " ↔ " + usLinkText(u));
-      return `<span class="bchip ${p.pre === "up" || (!p.pre && p.state === "up") ? "up" : p.pre === "down" || (!p.pre && p.state === "down") ? "dn" : ""}">${esc(prevLabel(p))}${u ? ` <small class="uslk ${st === "first" ? "up" : st === "back" ? "dn" : ""}">${krUpPrev(p) && usUp(u) ? "🇰🇷🇺🇸 " : ""}${esc(usLinkText(u))}</small>` : ""}</span>`; }).join("")
-        + (both.length ? `<div class="nxline"><b class="upc">✅ 미국장도 같은 방향</b> ${esc(both.join(" · "))} → 오늘 더 강할 가능성</div>` : "")
-      : `<span class="muted">아직 안 넣음 (아래 '전일 주도 테마' 칸)</span>`;
     const secs = Object.keys(SECTOR_NAMES).filter((k) => r.sectorOn[k]);
     const secHtml = secs.length ? secs.map((k) => `<div>· ${esc(sectorLine(k, S))}</div>`).join("") : `<span class="muted">켜진 업종 없음 (환율·유가·금리·SOX가 크게 오르면 켜져요)</span>`;
+    // 9.29-105 원장 [2134] 중복 합침 ④⑤: 「🇺🇸 미국장 테마 확인」(지수 마감 + 테마 칩) = 뉴욕증시 카드(usIdxHtml · 테마 줄)와 같은 자료 · 「🇰🇷 전일 주도 테마」 = 전일 주도 테마 카드와 같은 자료 → 이 카드에서 뺌(「✅ 미국장도 같은 방향」 줄은 전일 주도 테마 카드로 · prevBothList)
+    return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml + briefGroupsHtml(S))}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
+  }
+  // 9.29-105 [2134] ④: 어젯밤 미국 지수 마감 4줄(.usixb 칸 · 9.29-96 [1772][1781] · 9.29-98 [1815] 그대로) → 뉴욕증시 카드 맨 위 #usIdx
+  function usIdxHtml() {
     // 9.29-96 원장 [1772] "어젯밤 지수 다우나스닥 칸 별로 정렬": 지수마다 한 줄 · 이름 | 종가 | ▲▼변동 | (등락률%) 칸을 세로로 맞춤(.usix 격자) · 숫자 글자는 usidx 그대로 · 수준값 없는 옛 값(「다우 +0.18%」)은 등락률 칸에만 · 못 읽는 모양이면 예전 한 줄
     // 9.29-98 원장 [1815] "칸 깨짐": 이 칸 표시에서만 종가·변동을 소수 2자리로 통일(러셀 「2,793.2 ▼37.1」 → 「2,793.20 ▼37.10」 · 오른쪽 맞춤 소수점 세로 맞춤) · usidx 글자(블로그·장전 판단 카드)는 그대로
     const ux2 = (t) => { const m = String(t).match(/^([▲▼]?)(\d[\d,]*(?:\.\d+)?)$/); return m ? m[1] + Number(m[2].replace(/,/g, "")).toLocaleString("ko-KR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : t; };
@@ -4060,7 +4178,19 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     // 9.29-96 보강 원장 [1781] "이거 구분하고 더 잘보이게": 지수 묶음 = 테두리 칸(.usixb · 연한 바탕) + 위 작은 제목 · 이름·종가 크고 진하게 · 변동·등락률 상승 빨강(up)·하락 파랑(dn) — 방향은 ▲▼(없으면 등락률 부호)
     const uxDir = (c) => (/▲/.test(c[2]) ? "up" : /▼/.test(c[2]) ? "dn" : /^\(?\+/.test(c[3]) ? "up" : /^\(?-/.test(c[3]) ? "dn" : "");
     const idxLine = !(S.auto || {}).usidx ? "" : idxRows.length && idxRows.every(Boolean) ? `<div class="usixb"><div class="usixh">어젯밤 미국 지수 마감</div><div class="usix">${idxRows.map((c) => c.map((t, i) => `<span class="ux${i}${i >= 2 && uxDir(c) ? " " + uxDir(c) : ""}">${esc(t)}</span>`).join("")).join("")}</div></div>` : `<div class="nxline"><span class="muted">어젯밤 미국 지수 마감</span> ${esc(S.auto.usidx)}</div>`;
-    return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml + briefGroupsHtml(S))}${row("🇺🇸", "미국장 테마 확인", idxLine + usHtml)}${row("🇰🇷", "전일 주도 테마 (애프터·프리마켓)", pvHtml)}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
+    return idxLine;
+  }
+  // 9.29-105 [2134] ⑤: 전일 주도 테마 ↔ 미국장 같은 테마가 기준 넘게 오름(우선 관심 · 참고 테마 빼고) → 「✅ 미국장도 같은 방향」 줄 (옛 판정 근거 🇰🇷 상자 셈 그대로)
+  function prevBothList(r) {
+    const prevs = (S.prev || []).filter((p) => p && (p.name || "").trim());
+    return prevs.map((p) => { const u = usLinkOf(p.name), st = u && r.themeStatus[u.k]; return u && st === "first" && !u.weak ? p.name.trim() + " ↔ " + usLinkText(u) : null; }).filter(Boolean);
+  }
+  // 9.29-105 [2132] ②: S&P500 등락률 = 지수 마감 줄과 같은 값(아침 수집 spx 종가·전일 → blogQuote 와 같은 셈 toFixed(2)) · 수준값 없는 옛 값은 줄 글자 「S&P500 +0.18%」 · 없으면 null
+  function spxPctOf(st) {
+    st = st || S; const lv = lvlOf(st, "spx");
+    if (lv && typeof lv[0] === "number" && typeof lv[1] === "number" && lv[1] !== 0) return Number(((lv[0] / lv[1] - 1) * 100).toFixed(2));
+    const m = String((st.auto || {}).usidx || "").match(/(?:^| · )S&P500 (?:\S+ [▲▼]?\S+ \(([+-]?\d+(?:\.\d+)?)%\)|([+-]?\d+(?:\.\d+)?)%)/);
+    return m ? Number(m[1] ?? m[2]) : null;
   }
 
   // ---------- 매매 일지 ----------
@@ -4151,10 +4281,18 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const liveFresh = () => !!(liveHas() && LIVE.date === DATE && liveAsOf(LIVE) === DATE && (LIVE.at || "") >= "09:00" && liveWindow() && !((S.auto || {})["at.close"] && (S.auto || {})["at.close"] > (LIVE.at || "")));
   // 실시간 배지: state = "live" | "stale" | null(숨김 · 오늘/어제 주도 테마 카드)
   function liveBadge(state, text) { const el = $("topLeadBadge"); if (!el) return; el.hidden = !state; el.dataset.state = state || ""; el.textContent = state ? text : ""; }
+  // 9.29-105 [2134] 중복 합침 ③: 🔥 카드가 마감 카드(오늘 주도 테마 3개 · 16:55 확정 줄)면 ⑤ 마감 묶음(마감 시황 바로 위)으로 옮기고 마감 시황 안 같은 목록(#mvb-leaders .lds)은 숨김 · 실시간·어제·없음이면 ④ 장중 묶음 그대로
+  function topMode(close, dup) {
+    const box = $("topLead"), g = $(close ? "grp5" : "grp4"), at = $(close ? "marketCard" : "intraBox"), mv = $("mv-leaders"); if (!box || !g || !at) return;
+    if (mv) mv.classList.toggle("dup", !!(close && dup));
+    const nav = close ? "🔥 오늘 주도 테마" : "🔥 장중 주도 테마", moved = box.parentElement !== g || box.nextElementSibling !== at, renamed = box.dataset.nav !== nav;
+    box.dataset.nav = nav; if (moved) g.insertBefore(box, at);
+    if ((moved || renamed) && typeof buildNav === "function") { buildNav(); paintGroups(); }
+  }
   function paintTopLead() {
     const box = $("topLead"); if (!box) return;
     tmoreBind(); /* 9.29-101 [1937] 세 카드 공용 */
-    if (liveFresh()) { paintTopLive(box); return; }
+    if (liveFresh()) { topMode(false); paintTopLive(box); return; }
     liveBadge(null); box.classList.remove("live", "stale"); // 실시간 카드에서 마감·어제 카드로 바뀔 때 빨간 표시가 남지 않게
     { const sb = $("topShadow"); if (sb) sb.hidden = true; } // 그림자 상자도 실시간 카드에서만 (9.29-84)
     const ld = parseLeaders(S.journal.market.leaders).slice(0, 3);
@@ -4167,10 +4305,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     paintRef(null); // 참고 줄은 아래 가지에서 (9.29-100 [1845] ④)
     paintFreq(null); /* 9.29-102 단골 칸은 마감 카드 가지에서만 */
     const wasHidden = box.hidden;
-    const done = () => { if (wasHidden !== box.hidden && typeof buildNav === "function") buildNav(); };
+    const done = () => { if (wasHidden !== box.hidden && typeof buildNav === "function") { buildNav(); paintGroups(); } };
     if (ld.length) {
       const badge = a["market.leaders"] && a["market.leaders"] === S.journal.market.leaders ? a["leaders.badge"] || "" : "";
-      box.hidden = false; box.classList.remove("prev");
+      box.hidden = false; box.classList.remove("prev"); topMode(true, parseLeaders(S.journal.market.leaders).length <= 3);
       $("topLeadTitle").textContent = "🔥 오늘 주도 테마"; $("topLeadSub").textContent = badge || (a["at.close"] ? a["at.close"] + " 자동" : "손으로 적음");
       const cs = (() => { try { const v = JSON.parse(a["leaders.slots"] || "null"); return v && v.text === S.journal.market.leaders && Array.isArray(v.themes) ? v.themes : []; } catch (e) { return []; } })(); // 같은 run 의 종목 꼬리(짝꿍·경보·신규주·과열)
       $("topLeadList").innerHTML = ld.map((t, n) => { const c = cs.find((x) => x && x.name === t.name), sl = c && Array.isArray(c.slots) ? c.slots.slice(0, 3) : [], surge = typeof t.n10 === "number";
@@ -4185,10 +4323,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       return done();
     }
     // 장 시작 전·휴장일: 마지막 실시간 값을 '장 시작 전' 표시로 보여 줌 (오늘 화면을 볼 때만)
-    if (DATE === kstDate() && liveHas()) { paintTopLive(box, true); return done(); }
+    if (DATE === kstDate() && liveHas()) { topMode(false); paintTopLive(box, true); return done(); }
     const prev = (S.prev || []).filter((p) => p && p.name).slice(0, 2);
     if (prev.length) {
-      box.hidden = false; box.classList.add("prev");
+      box.hidden = false; box.classList.add("prev"); topMode(false);
       $("topLeadTitle").textContent = "🔥 어제 주도 테마"; $("topLeadSub").textContent = "오늘 주도 테마는 16:20 확정(정규장 값) 뒤 여기로 · 종목 수급은 19:45"; // 게이트 [1887] ② 9.29-100 새 규칙
       $("topLeadList").innerHTML = prev.map((p, n) => { const d = a["detail.prev." + n] || ""; const m = d.match(/어제 ([+-]?[\d.]+)%/);
         let ks = []; try { ks = JSON.parse(a["prev.stk." + n] || "[]"); } catch (e) {} if (!Array.isArray(ks)) ks = [];
@@ -4199,7 +4337,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         return card({ name: p.name, rate: m ? Number(m[1]) : null }, n, { head: [p.state ? "애프터 " + (PRE_WORD[p.state] || p.state) : "", p.pre ? "프리 " + (PRE_WORD[p.pre] || p.pre) : ""].filter(Boolean).join(" · ") /* 9.29-102 원장 [1956] 한글(강세·보합·약세) */, rows, key: "p:" + p.name, label: "자세히 (" + [us ? "미국장" : "", pre ? "주도주 프리마켓" : ""].filter(Boolean).join("·") + ")", more: (us ? `<span class="tlw">${esc(us)}</span>` : "") + pre }); }).join("");
       return done();
     }
-    box.hidden = true; done();
+    box.hidden = true; topMode(false); done();
   }
   // 9.29-99 원장 [1821]: 실시간 카드 종목 줄 칸(.sc) 너비 = 카드 안 모든 종목 중 그 칸 글자 폭의 최댓값 → #topLeadList 의 CSS 변수(--s0~s4 · --b0~b2) · 이름 칸은 최대 이름 폭까지(모자라면 줄어듦 · 말줄임) · 꼬리표 칸은 남는 폭
   //  글꼴이 늦게 오면 한 번 더 (fonts.ready) · 글자 폭은 화면 폭과 무관해 다시 잴 필요 없음
@@ -5836,6 +5974,10 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     catch (e) {} finally { liveBusy = false; }
   }
   // 주도 테마 적중 성적표 (9.29-84 원장 [1597] · [1585]): 수집기 마감 run 이 쌓는 auto/observe/leaders-scorecard.json 을 한 번 받아 📊 성적표 카드에 「주도 테마 적중」 절로 — 방식별 누적(기준율 대비 차이) · 최근 선정 D1~D4 ○×- · 20거래일 전 「참고용」 고정
+  // 9.29-105 원장 [2132] ③ 미국장 테마 전진 기록 요약 한 줄(뉴욕증시 카드 「전진 기록」 접힘 안) · 자료 = auto/observe/us-forward.json(마감 확정 수집이 쌓음 · shared/us-forward.js 와 같은 셈) · 없으면 안내 글 그대로
+  let FWD = null;
+  async function fwdPull() { try { FWD = await pubGet(PUB_RAW + "observe/us-forward.json"); } catch (e) {} paintFwd(); }
+  function paintFwd() { const el = $("usFwd"); if (!el) return; const t = fwdLine(fwdSummary(FWD)); el.textContent = t || "아직 기록 없음 · 매일 저녁 마감 확정 수집이 한 줄씩 쌓아요"; }
   let LDS = null;
   async function ldsPull() {
     try { LDS = await pubGet(PUB_RAW + "observe/leaders-scorecard.json"); } catch (e) {}
@@ -5875,7 +6017,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       + `<p class="ldssum"><b>${esc(sum)}</b>${su ? ` <small>(${esc(U[su])})</small>` : ""}</p>${howTo(k1 && k1.n ? k1 : null)}${blocks}${recent}`;
   }
   function pubStart() {
-    livePull(true); ldsPull(); clearInterval(liveTimer);
+    livePull(true); ldsPull(); fwdPull(); clearInterval(liveTimer);
     liveTimer = setInterval(() => { if (document.visibilityState === "visible") livePull(); }, 60000); // 실시간 주도 테마: 1분마다 (9.29-83 원장 [1583] · 장중 창에서만 실제로 받음)
     if (!liveHooked) { // 폰에서 화면이 꺼지거나 다른 앱에 갔다 오면 타이머가 멈춰 있으므로, 돌아오는 즉시 한 번 받는다 · ↻ 버튼 (9.29-69)
       liveHooked = true;

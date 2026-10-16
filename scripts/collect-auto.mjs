@@ -28,6 +28,7 @@ import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows,
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
 import { CAUTION_FILE, CAUTION_KEEP, loadCautions, tagAvoidAll, avoidText } from "../server/caution.js";
+import { collectForward, fwdText, fwdShouldSave, FWD_FILE, FWD_BUDGET_MS } from "../server/usforward.js"; /* 9.29-105 원장 [2132] ③ 미국장 테마 전진 기록 */
 import { regularsOf, fcText } from "../server/forecast.js"; /* 9.29-102 원장 [1905] 단골 참고 줄 · 9.29-103 원장 [2003] 그림자 기록은 뺌(세기만 남김) */ /* 9.29-101 원장 [1884] S4 종배 피함 (거래소 공시 지난 거래일 목록 · 하루 1번) */
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
@@ -307,6 +308,25 @@ if (when === "close" && LD && LD.method === "surge" && Array.isArray(LD.themes) 
   try { part.forecast = regularsOf(await loadHistory(date), { date, themes: LD.themes }); console.log(fcText(part.forecast)); }
   catch (e) { console.log("단골 세기 실패:", e.message || e); }
 }
+/* 9.29-105 원장 [2132] ③ 미국장 테마 전진 기록(전진 검증): 확정 close run 마다 오늘 아침 신호(테마 평균 % · S&P 대비 초과 · 등급) + 한국 대표 종목 시가 갭·시가→종가 → auto/observe/us-forward.json
+   하루 한 줄(같은 날짜 중복 0) · 지난 5줄 빈 칸도 채움 · 네이버 일봉 요청 상한 30 · 게이트 [2153]: 날짜 파일·latest 저장 「뒤」에 돌고(--dry 는 요약 뒤) 전체 60초 상한(넘으면 남은 칸은 다음 run)
+   저장 판단 = 부르기 전 파일 글자와 비교(fwdShouldSave) · 실패해도 날짜 파일 저장·종료 코드 그대로 (--dry 는 공개 저장소 읽기만 · --fwdout=경로 로 결과 파일) */
+async function runForward() {
+  if (when !== "close" || provisional) return null;
+  try {
+    let old = null;
+    if (save) { const x = await readFile(FWD_FILE); if (x.sha && !x.json) throw new Error(FWD_FILE + " 을 못 읽음(크기·형식) — 덮지 않음"); old = x.json; } else old = await readPublic(FWD_FILE);
+    const oldText = JSON.stringify(old);
+    const r = await collectForward({ get: nvGet, date, morning: todayMorning, themes: cfg.themes, file: old, deadline: Date.now() + FWD_BUDGET_MS });
+    console.log(fwdText(r));
+    if (!save) { if (arg("fwdout")) writeFileSync(arg("fwdout"), JSON.stringify(r.file)); return r; }
+    if (fwdShouldSave(r, oldText)) {
+      try { r.file.updatedAt = Date.now(); await writeFile(FWD_FILE, r.file, `전진 기록 ${date} 새 줄 ${r.added} · 채움 ${r.filled}`); console.log(`저장: ${FWD_FILE} (줄 ${r.file.rows.length})`); }
+      catch (e) { console.log("전진 기록 저장 실패:", e.message || e); }
+    }
+    return r;
+  } catch (e) { console.log("전진 기록 실패:", e.message || e); return null; }
+}
 // 아침 브리핑 (9.29-97): 아침 run 은 07:00 뒤(또는 --brief) 4묶음 · 장중 run 은 10:20 전 시작이면 ② 공시만 · 실패해도 날짜 파일 저장은 그대로
 let brief = null;
 {
@@ -331,6 +351,7 @@ if (!save) {
   if (part.candles) console.log(`일봉 ${Object.keys(part.candles).length}개 (저장 안 함): ${Object.values(part.candles).map((c) => c.code + " " + c.bars.length + "봉").join(" · ")}`);
   const rec = mergeAuto(null, date, saveAs, part);
   console.log(summarize(rec));
+  await runForward(); // 9.29-105 전진 기록(저장 안 함 · 요약 뒤)
   console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
@@ -361,6 +382,7 @@ if (sc && !sc.skipped && (sc.added || sc.filled) && JSON.stringify(sc.file) !== 
   try { sc.file.updatedAt = Date.now(); await writeFile(SC_FILE, sc.file, `성적표 ${date} 새 행 ${sc.added} · 채움 ${sc.filled}`); console.log(`저장: ${SC_FILE} (행 ${sc.file.rows.length} · ${sc.file.days.length}일)`); }
   catch (e) { console.log("성적표 저장 실패:", e.message || e); }
 }
+await runForward(); // 9.29-105 전진 기록 = 날짜 파일·latest·관찰·성적표 저장 뒤 (게이트 [2153] ② 지연 위험)
 if (part.shadow) console.log(shadowText(part.shadow));
 console.log(`저장: ${autoFile(date)} (${BRANCH})`);
 if (part.errors.length) console.log("일부 실패:", part.errors.join(" / "));
