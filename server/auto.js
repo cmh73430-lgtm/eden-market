@@ -628,6 +628,8 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
   // 코스닥도 같은 방식 (9.29-69 사용자 요청): 등락·거래대금 · 외인/기관(장중 누적) · 프로그램
   try { const q = await adapters.naver.quote("domestic:KOSDAQ"); out.kosdaq = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: round2(q.price), prev: round2(q.prevClose), amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스닥: " + (e.message || e)); }
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSDAQ/trend")); out.investQ = { foreign: k.foreign, institution: k.institution, bizdate: k.bizdate }; } catch (e) { out.errors.push("코스닥 수급: " + (e.message || e)); }
+  try { const f = parseTrend(await get("https://m.stock.naver.com/api/index/FUT/trend")); out.fut = { foreign: f.foreign, institution: f.institution, personal: f.personal, bizdate: f.bizdate }; } catch (e) { out.errors.push("선물 수급: " + (e.message || e)); } // 9.29-109 원장 [2298] 장중 재판정 5분마다: 외인 코스피200 선물(재판정 장중 run 과 같은 주소 · 요청 +1)
+  out.intra = { at: out.at, fut: out.fut || null, spot: out.invest ? { foreign: out.invest.foreign, institution: out.invest.institution } : null, kospi: out.kospi ? out.kospi.value : null, kospiLv: out.kospi ? { close: out.kospi.close, prev: out.kospi.prev } : null, program: out.program || null }; // 앱 재판정 칸이 쓰는 모양(날짜 파일 intraday 와 같음)
   try { out.programQ = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); }
   try {
     // 9.29-100 원장 [1845][1847]~[1850]: 장중 주도 테마 = 급등 묶음(server/surge.js) · 09:30 부터 · 옛 방식(T·L)·그림자 V2 는 장중에 계산 안 함(마감 run 이 비교용 옛 방식만) · surge = { map, flowsFor, regular, top10 }

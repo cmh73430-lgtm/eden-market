@@ -162,6 +162,8 @@ if (when === "live") {
   console.log("후보:", (live.candidates || []).map((c) => `${c.name}${c.alias.length ? "=" + c.alias.join("=") : ""} 단계${c.step} [${c.stocks.join(",")}]`).join(" / "));
   console.log(news2Text(live));
   if (!live.wait && (!live.themes || !live.themes.length) && !live.short) { console.error("주도 테마를 못 골랐음 — live.json 은 지난 값 그대로"); process.exit(1); }
+  { const it = live.intra, old = pl && Array.isArray(pl.intraRuns) ? pl.intraRuns : []; /* 9.29-109 원장 [2298] 장중 재판정 5분마다: 회차(외인 선물 · 현물 외인·기관 · 프로그램) 이어 쌓기 · 최근 12 */
+    live.intraRuns = it && it.at ? old.filter((x) => x.at !== it.at).concat([{ at: it.at, f: it.fut ? it.fut.foreign : null, sf: it.spot ? it.spot.foreign : null, si: it.spot ? it.spot.institution : null, pg: it.program && typeof it.program.total === "number" ? it.program.total : null }]).slice(-12) : old; }
   { const r0 = abRunOf(live), old = pl && Array.isArray(pl.abRuns) ? pl.abRuns : []; live.abRuns = r0 && !live.wait ? old.filter((x) => x.at !== r0.at).concat([r0]).slice(-AB_RUNS_MAX) : old; /* 9.29-108 원장 [2287] 장중 회차 A·B 이어 쌓기(오늘 live.json · 마감 뒤 채점) */
     console.log(`B 방식(거래대금 상위 ${live.rankB ? live.rankB.n : 0}): ${live.rankB ? live.rankB.themesB.map((t) => t.name + " " + t.n).join(" / ") : "없음"} · A: ${(live.themes || []).map((t) => t.name).join(" / ")} · 회차 ${live.abRuns.length} · 새 요청 0 · ${live.rankB ? live.rankB.ms : 0}ms`); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
