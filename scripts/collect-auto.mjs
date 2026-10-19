@@ -15,7 +15,7 @@
 //   성적표: 확정 close run(close.at ≥ 16:20) 이 auto/observe/leaders-scorecard.json 에 오늘 선정(a 확정 · b 잠정 · c live 마지막 · s shadow)을 적고 지난 행 D+1~D+4 를 채운다
 // 옵션 추가: --trace (요청 수·걸린 시간 출력 · 재현용)
 // 아침 브리핑 (9.29-97 원장 [1775][1779][1780] t일정뉴스 · server/brief.js): 07:00 뒤 아침 run(07:05·08:05) 이 ① IR 실적 ② 공시 ③ 미국 큰 폭 ④ 국내 종목 뉴스를 받아 날짜 파일 최상위 brief 에 둔다 (morning 블록 밖)
-//   09:25 장중 run(10:20 전 시작)은 ② 공시만 한 번 더 · 섹션마다 받은 것만 덮고 실패하면 지난 값 유지 · 하루 요청 상한 BRIEF_DAILY_MAX · --brief 면 시각과 관계없이 4묶음
+//   09:32·10:02 장중 run(10:20 전 시작 · 9.29-108 부터 장중은 09:32~14:32 30분마다)은 ② 공시만 한 번 더 · 섹션마다 받은 것만 덮고 실패하면 지난 값 유지 · 하루 요청 상한 BRIEF_DAILY_MAX · --brief 면 시각과 관계없이 4묶음
 //   SK하이닉스 ADR(SKHY) 환산 (원장 [1784]): 아침 run 이 한국 SK하이닉스 전일 종가 1회 + 지난 파일의 괴리 이력(요청 0)
 // 9.29-100 (원장 [1845]~[1850]): 주도 테마 = 급등 묶음(server/surge.js) — 테마 구성표 auto/observe/theme-map.json(아침 run 이 7일마다 다시 만듦 · 없으면 아무 run 이나 만듦 · 실패면 옛 표)
 //   장중 live = 09:30 부터 급등 묶음 · 마감: 오늘 확정이 없는 첫 close run(16:20) 이 정규장 값(15:30 봉)으로 한 번 고름 · 19:45·20:20 은 다시 고르지 않고 확정 수급만 채움
@@ -27,7 +27,7 @@ import { collectBrief, mergeBrief, briefText, BRIEF_SECTIONS } from "../server/b
 import { collectWatch, watchText, mergeWatch } from "../server/watch.js"; // 관심 후보 (9.29-97 범위 확장 · 확정 close run → close.watch → 다음 아침 brief ④)
 import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist, regimeOf as regimeOfAmt } from "../server/auto.js";
 import { memoGet, TOP10_CODES } from "../server/shadow.js";
-import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
+import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat, AB_FILE, AB_RUNS_MAX, abRunOf, abScore, abUpsert, abSummary } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
 import { CAUTION_FILE, CAUTION_KEEP, loadCautions, tagAvoidAll, avoidText } from "../server/caution.js";
@@ -161,7 +161,9 @@ if (when === "live") {
   if (!live.wait) console.log("종배 피함 표시 붙은 곳(실시간): " + avoidText({ themes: live.themes, closing: live.closing && live.closing.items }));
   console.log("후보:", (live.candidates || []).map((c) => `${c.name}${c.alias.length ? "=" + c.alias.join("=") : ""} 단계${c.step} [${c.stocks.join(",")}]`).join(" / "));
   console.log(news2Text(live));
-  if (!live.wait && (!live.themes || !live.themes.length) && !live.short) { console.error("주도 테마를 못 골랐음 — live.json 은 지난 값 그대로"); process.exit(1); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
+  if (!live.wait && (!live.themes || !live.themes.length) && !live.short) { console.error("주도 테마를 못 골랐음 — live.json 은 지난 값 그대로"); process.exit(1); }
+  { const r0 = abRunOf(live), old = pl && Array.isArray(pl.abRuns) ? pl.abRuns : []; live.abRuns = r0 && !live.wait ? old.filter((x) => x.at !== r0.at).concat([r0]).slice(-AB_RUNS_MAX) : old; /* 9.29-108 원장 [2287] 장중 회차 A·B 이어 쌓기(오늘 live.json · 마감 뒤 채점) */
+    console.log(`B 방식(거래대금 상위 ${live.rankB ? live.rankB.n : 0}): ${live.rankB ? live.rankB.themesB.map((t) => t.name + " " + t.n).join(" / ") : "없음"} · A: ${(live.themes || []).map((t) => t.name).join(" / ")} · 회차 ${live.abRuns.length} · 새 요청 0 · ${live.rankB ? live.rankB.ms : 0}ms`); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
@@ -280,7 +282,7 @@ if (when === "close" && prev.json && prev.json.date === date && prev.json.close)
 const saveAs = when === "themes" ? "morning" : when; // 테마만 받은 것도 아침 기록에 들어간다
 const got = when === "intraday" ? ["fut", "spot", "kospi"].filter((k) => part[k] !== undefined).length : saveAs === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 // 장중 재판정은 하루 여러 번 → 앞선 확인 기록을 이어 붙인다
-if (when === "intraday" && prev.json && prev.json.date === date && prev.json.intraday) part.list = [...(prev.json.intraday.list || []), { at: prev.json.intraday.at, kospi: prev.json.intraday.kospi, fut: prev.json.intraday.fut, spot: prev.json.intraday.spot }].slice(-6);
+if (when === "intraday" && prev.json && prev.json.date === date && prev.json.intraday) part.list = [...(prev.json.intraday.list || []), { at: prev.json.intraday.at, kospi: prev.json.intraday.kospi, fut: prev.json.intraday.fut, spot: prev.json.intraday.spot, program: prev.json.intraday.program }].slice(-12); // 9.29-108 원장 [2273]: 30분마다(09:32~14:32 · 11회) → 12회까지 · 회차별 프로그램도
 if (!got) { console.error("받은 값이 하나도 없음:", part.errors.join(" / ")); process.exit(1); }
 // 관찰 기록 (9.29-82 원장 [1556] · [1558]): 확정 close run 이고 오늘 종목 수급이 들어왔을 때만 (19:45 에 아직 없으면 20:20 이 함). 실패해도 날짜 파일 저장은 그대로
 let obs = null, obsOld = null;
@@ -359,6 +361,19 @@ async function runAfter(rec) {
     return r;
   } catch (e) { console.log("저녁 애프터 실패:", e.message || e); return null; }
 }
+/* 9.29-108 원장 [2287] A·B 자동 채점: 마감 run(잠정 16:20 제외 · 19:45·20:20) 이 오늘 live.json 의 장중 회차(abRuns)를 그날 확정 주도 테마와 맞춰 auto/observe/leaders-ab.json 에 한 줄(같은 날 다시 돌면 그 줄만) · 실패해도 마감 저장 그대로 */
+async function runAB(rec) {
+  if (when !== "close" || provisional) return;
+  try {
+    const L = rec && rec.close && rec.close.market ? rec.close.market.leaders : null, lv = save ? (await readFile(AUTO_DIR + "/live.json")).json : await readPublic(AUTO_DIR + "/live.json");
+    const row = lv && lv.date === date ? abScore(lv.abRuns, L, date) : null;
+    if (!row) { console.log("A·B 채점: 오늘 장중 회차 없음 — 건너뜀"); return; }
+    let old = null; if (save) { const x = await readFile(AB_FILE); if (x.sha && !x.json) throw new Error(AB_FILE + " 을 못 읽음 — 덮지 않음"); old = x.json; } else old = await readPublic(AB_FILE);
+    const u = abUpsert(old, row), sm = abSummary(u.file);
+    console.log(`A·B 채점 ${date}: 회차 ${row.runs} · A ${row.a}/3 · B ${row.b}/3 · 누적 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일`);
+    if (save && u.changed) { u.file.updatedAt = Date.now(); await writeFile(AB_FILE, u.file, `A·B 채점 ${date}`); console.log(`저장: ${AB_FILE}`); }
+  } catch (e) { console.log("A·B 채점 실패:", e.message || e); }
+}
 // 아침 브리핑 (9.29-97): 아침 run 은 07:00 뒤(또는 --brief) 4묶음 · 장중 run 은 10:20 전 시작이면 ② 공시만 · 실패해도 날짜 파일 저장은 그대로
 let brief = null;
 {
@@ -385,6 +400,7 @@ if (!save) {
   console.log(summarize(rec));
   await runForward(); // 9.29-105 전진 기록(저장 안 함 · 요약 뒤)
   await runAfter(rec); // 9.29-107 저녁 애프터장 줄(저장 안 함 · --afterout=파일)
+  await runAB(rec); // 9.29-108 A·B 채점(저장 안 함)
   console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
@@ -416,6 +432,7 @@ if (sc && !sc.skipped && (sc.added || sc.filled) && JSON.stringify(sc.file) !== 
   catch (e) { console.log("성적표 저장 실패:", e.message || e); }
 }
 await runForward(); // 9.29-105 전진 기록 = 날짜 파일·latest·관찰·성적표 저장 뒤 (게이트 [2153] ② 지연 위험)
+await runAB(rec); // 9.29-108 원장 [2287] A·B 채점 = 마감 저장 뒤
 { const af = await runAfter(rec); // 9.29-107 저녁 애프터장 줄 = 마감 저장 뒤 · 결과만 다시 저장
   if (af) { try { rec[AFTER_KEY] = af; const m2 = `자동 연동 ${date} 저녁 애프터 ${af.at}${af.ok ? "" : " (미완)"}`; await writeFile(autoFile(date), rec, m2); await writeFile(AUTO_DIR + "/latest.json", rec, m2); console.log(`저장: ${autoFile(date)} ${AFTER_KEY}`); } catch (e) { console.log("저녁 애프터 저장 실패:", e.message || e); } } }
 if (part.shadow) console.log(shadowText(part.shadow));

@@ -9,7 +9,7 @@ import { selectThemesV2, memoGet, attachRvol } from "./shadow.js";
 import { fetchNews2 } from "./news2.js";
 import { tvThreshold } from "../shared/trade-value.js";
 import { tagAvoidAll } from "./caution.js"; /* 9.29-101 종배 피함(S4) · 게이트 [1943] ② 장중·마감 같은 함수 */
-import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat } from "./surge.js"; // 9.29-100 급등 묶음 선정
+import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat, rankBOf } from "./surge.js"; // 9.29-100 급등 묶음 선정
 import { afterMove, AFTER_URL } from "./after.js"; /* 9.29-107 원장 [2205][2206] 아침 「어제 저녁 애프터마켓」 = 전날 분봉(15:30 봉 ↔ 19:59 봉) */
 export { selectThemesV2, memoGet, attachRvol, fetchNews2 };
 
@@ -636,6 +636,7 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
     if (hmReal < SURGE_START && !surge.force) { out.wait = SURGE_START; out.themes = []; out.text = ""; return out; } // 09:30 전 = 아직 (지어내기 0)
     const bizdate = day.replace(/-/g, "");
     const L = await selectSurge({ get, map: surge.map, date: day, hm: hmReal, kosdaqAmount: out.kosdaq && out.kosdaq.amount, regular: !!surge.regular, flowsFor: surge.flowsFor === false ? null : surge.flowsFor || makeFlowsFor(get, bizdate, { hm: hmReal }), us, history, kospiAmount: out.kospi && out.kospi.amount, top10: surge.top10 || new Set(), n });
+    try { out.rankB = rankBOf({ stocks: L.rankStocks, map: surge.map, flows: L.rankFlows, themesA: L.themes, at: out.at, idx: { kospi: out.kospi ? { close: out.kospi.close, pct: out.kospi.value } : null, kosdaq: out.kosdaq ? { close: out.kosdaq.close, pct: out.kosdaq.value } : null } }); } catch (e) { out.errors.push("B 방식: " + (e.message || e)); } // 9.29-108 원장 [2286] 비교용 저장만(화면 0 · 새 요청 0 · 실패해도 A 그대로)
     out.method = "surge"; out.v = L.v; out.basis = L.basis; if (L.closing) out.closing = L.closing; out.text = surgeText(L.themes); out.universe = L.universe; out.ladder = L.ladder; out.surgeReq = L.requests; if (L.ref) out.ref = L.ref; if (L.short) out.short = L.short; if (L.errors.length) out.errors.push(...L.errors.slice(0, 6).map((e) => "선정: " + e));
     out.candidates = L.themes.map((t) => ({ name: t.name, step: t.step, alias: t.alias || [], stocks: (t.slots || []).map((s) => s.code) }));
     const n2 = news2 ? { cache: news2.cache || null, budget: news2.budget || null, shared: {}, requests: 0, errors: [] } : null;

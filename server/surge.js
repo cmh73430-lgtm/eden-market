@@ -259,6 +259,32 @@ export function surgeText(themes) {
 
 // 본체: 대상 받기 → (15:40 뒤면 정규장 값) → 사다리 → 꼬리표(테마 상세·대장 차트·미장·며칠째·수급) → 참고 한 줄
 //  get = memoGet 으로 싼 요청 함수 · map = 테마 구성표 · hm = 실제 시각 "HH:MM" · regular = 정규장 다시 재기 · flowsFor(codes) = 수급(추정) · us = 아침 미국 테마 · history = historyFrom()
+// 9.29-108 원장 [2286] B 방식(비교용 기록 · 화면 0): 거래대금 상위 50(priceTop 두 시장 · ETF·ETN·우선주·스팩 제외 = 대상 목록과 같은 규칙) → 종목마다 소속 테마(테마 구성표 · 넓은 이름 제외)
+//  → 50 안에서 가장 많이 겹치는 테마 3개(겹친 종목 수 → 그 종목 거래대금 합 → 구성 종목 적은 테마) · 수급 = 선정 때 이미 받은 것만(flows · 새 요청 0)
+export const RANKB_N = 50, RANKB_TOP = 3;
+export function rankBOf({ stocks, map, flows = null, themesA = [], idx = {}, at = null }) {
+  const t0 = Date.now(), top = (stocks || []).filter((s) => s && s.code && typeof s.value === "number").slice().sort((a, b) => b.value - a.value).slice(0, RANKB_N);
+  const themesOf = new Map(); for (const t of (map && map.themes) || []) { if (!t || GENERIC_RE.test(t.name)) continue; for (const c of t.codes || []) { if (!themesOf.has(c)) themesOf.set(c, []); themesOf.get(c).push(t); } }
+  const rows = top.map((s, i) => { const f = flows && flows[s.code]; return { r: i + 1, code: s.code, name: s.name, mk: s.market, rate: s.rate, value: s.value, themes: (themesOf.get(s.code) || []).map((t) => t.name), ...(f && typeof f.foreign === "number" ? { flow: { f: f.foreign, i: f.inst } } : {}) }; });
+  const cnt = new Map(); for (const s of top) for (const t of themesOf.get(s.code) || []) { const x = cnt.get(t.no) || { no: t.no, name: t.name, count: t.count || (t.codes || []).length, n: 0, value: 0, codes: [] }; x.n++; x.value += s.value; x.codes.push(s.code); cnt.set(t.no, x); }
+  const themesB = [...cnt.values()].sort((a, b) => b.n - a.n || b.value - a.value || a.count - b.count || (a.name < b.name ? -1 : 1)).slice(0, RANKB_TOP).map((x) => ({ no: x.no, name: x.name, n: x.n, value: round2(x.value), codes: x.codes }));
+  return { v: 1, at, src: "네이버 거래대금 순위(priceTop · 선정과 같은 응답 · 새 요청 0)", n: rows.length, top: rows, themesB, themesA: (themesA || []).map((t) => t && t.name).filter(Boolean), idx, newReq: 0, ms: Date.now() - t0 };
+}
+// 9.29-108 원장 [2287] A·B 채점: 장중 회차마다 고른 3개(a · b)가 그날 마감 확정 주도 테마(이름 + 합친 이름 alias)와 몇 개 같은지 → 하루 평균 · 누적 파일 auto/observe/leaders-ab.json(날짜마다 한 줄 · 같은 날 다시 돌면 그 줄만 바꿈)
+export const AB_FILE = "auto/observe/leaders-ab.json", AB_RUNS_MAX = 100;
+export const abRunOf = (live) => (live && live.at ? { at: live.at, a: (live.themes || []).map((t) => t && t.name).filter(Boolean).slice(0, 3), b: live.rankB && Array.isArray(live.rankB.themesB) ? live.rankB.themesB.map((t) => t.name).slice(0, 3) : [] } : null);
+export function abScore(runs, leaders, date) {
+  const set = new Set(); for (const t of (leaders && leaders.themes) || []) { if (t && t.name) set.add(t.name); for (const x of (t && t.alias) || []) set.add(x); }
+  const rs = (runs || []).filter((r) => r && r.at && (r.a.length || r.b.length)); if (!rs.length || !set.size) return null;
+  const hit = (xs) => xs.filter((x) => set.has(x)).length, avg = (k) => Number((rs.reduce((s, r) => s + hit(r[k]), 0) / rs.length).toFixed(2));
+  return { date, runs: rs.length, a: avg("a"), b: avg("b"), bN: rs.filter((r) => r.b.length).length, close: [...set].slice(0, 6), last: { at: rs[rs.length - 1].at, a: hit(rs[rs.length - 1].a), b: hit(rs[rs.length - 1].b) } };
+}
+export function abUpsert(file, row) {
+  const f = file && Array.isArray(file.rows) ? JSON.parse(JSON.stringify(file)) : { app: "jangjeon-cockpit", kind: "leaders-ab", v: 1, rule: "장중 회차 A(지금 방식 3개)·B(거래대금 상위 50 겹침 3개) ↔ 그날 마감 확정 주도 테마 같은 개수 평균 (9.29-108 원장 [2287])", rows: [] };
+  const old = JSON.stringify(f.rows.find((r) => r.date === row.date) || null); f.rows = f.rows.filter((r) => r.date !== row.date).concat([row]).sort((x, y) => (x.date < y.date ? -1 : 1));
+  return { file: f, changed: old !== JSON.stringify(row) };
+}
+export function abSummary(file) { const rs = (file && Array.isArray(file.rows) ? file.rows : []).filter((r) => typeof r.a === "number"); if (!rs.length) return null; const m = (k) => Number((rs.reduce((s, r) => s + r[k], 0) / rs.length).toFixed(1)); return { a: m("a"), b: m("b"), n: rs.length }; }
 export async function selectSurge({ get, map, date, hm = null, regular = false, flowsFor = null, us = null, history = [], kospiAmount = null, kosdaqAmount = null, top10 = new Set(), n = SURGE_N, chart = true }) {
   const t0 = Date.now(), errors = []; const req = { universe: 0, regular: 0, detail: 0, chart: 0 };
   if (!map || !Array.isArray(map.themes) || !map.themes.length) throw new Error("테마 구성표 없음");
@@ -294,12 +320,13 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
   const big2 = TV_BIG2.map((c) => L.byCode.get(c)).filter((s) => s && typeof s.value === "number"), big2v = big2.length === TV_BIG2.length ? big2.reduce((a, s) => a + s.value, 0) : null;
   const closing = closingPicks(L.byCode, { T: tvStockThresholds({ kospi: kospiAmount, kosdaq: kosdaqAmount, big2: big2v }), flows: L.flows });
   const short = themes.length < n ? (themes.length ? "완화 끝까지 가도 " + themes.length + "개뿐" : "완화 끝까지 가도 0개") + " — +10% 종목이 있는 테마 묶음 부족(시장 전체 약세 등)" : undefined;
-  return {
+  const OUT = {
     v: SURGE_V, method: "surge", basis: regular ? "regular" : "live", hm, date, themes, ref: ref || undefined, short, closing,
     universe: { n: c10.N, have: c10.have, cut: Number.isFinite(c10.cut) ? Math.round(c10.cut) : null, complete: !!c10.complete, M: L.M, pages: U.pages, excluded: U.excluded, cuts: Object.fromEntries(Object.entries(L.cuts).map(([k, v]) => [k, Number.isFinite(v.cut) ? Math.round(v.cut) : null])) },
     ladder: { used: L.used, lastStep: L.lastStep, steps: LADDER.map((s) => ({ step: s.step, key: s.key, text: s.key ? RELAX_TEXT[s.key] : "엄격" })) },
     flowSrc: L.flows ? Object.keys(L.flows).length : 0, requests: req, ms: Date.now() - t0, errors: errors.slice(0, 20),
   };
+  return Object.defineProperties(OUT, { rankStocks: { value: stocks, enumerable: false }, rankFlows: { value: L.flows || null, enumerable: false } }); // 9.29-108 [2286] B 방식 입력(저장 안 함)
 }
 
 // 저녁(또는 다음 날 아침) 확정 수급: 이미 고른 테마는 그대로 · 슬롯 종목 그날 외인·기관(네이버 일별 · bizdate 맞을 때만)만 채움 · flow 를 확정값으로 바꿈 (재선정 0)
