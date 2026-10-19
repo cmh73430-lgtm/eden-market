@@ -10,6 +10,7 @@ import { fetchNews2 } from "./news2.js";
 import { tvThreshold } from "../shared/trade-value.js";
 import { tagAvoidAll } from "./caution.js"; /* 9.29-101 종배 피함(S4) · 게이트 [1943] ② 장중·마감 같은 함수 */
 import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat } from "./surge.js"; // 9.29-100 급등 묶음 선정
+import { afterMove, AFTER_URL } from "./after.js"; /* 9.29-107 원장 [2205][2206] 아침 「어제 저녁 애프터마켓」 = 전날 분봉(15:30 봉 ↔ 19:59 봉) */
 export { selectThemesV2, memoGet, attachRvol, fetchNews2 };
 
 export const AUTO_DIR = "auto";
@@ -467,7 +468,8 @@ export function nxtMove(d) {
   const o = d && d.overMarketPriceInfo; if (!o) return { session: null, pct: null, raw: "NXT 없음" };
   const type = String(o.tradingSessionType || ""), status = String(o.overMarketStatus || "");
   const price = num(o.overPrice), close = num(d.closePrice);
-  // 8시 전(프리마켓 시작 전)에는 세션 이름이 비고 상태가 PREOPEN → NXT 마지막 가격 = 어제 저녁 애프터마켓 마지막 값
+  // 8시 전(프리마켓 시작 전)에는 세션 이름이 비고 상태가 PREOPEN → session "after" 로 돌려주지만, 9.29-107 원장 [2205] 실측: 09-14 KRX 애프터장 뒤 closePrice 가 애프터 가격으로 바뀌어
+  //  이 값은 부호가 거꾸로 저장됐음(9건 중 9건) → 아침 「어제 저녁 애프터마켓」 은 이 함수를 안 쓰고 전날 분봉(afterMove)으로 잼 · 이 함수는 프리마켓(session pre)에만 씀
   const session = /AFTER/i.test(type) ? "after" : /PRE/i.test(type) && /^OPEN$/i.test(status) ? "pre" : /PREOPEN/i.test(status) && !/REGULAR/i.test(type) ? "after" : null;
   const pct = session && price && close ? Number(((price / close - 1) * 100).toFixed(2)) : null;
   const v = num(o.accumulatedTradingValueRaw); // NXT 누적 거래대금(원 → 억) — 프리마켓 세션이면 그날 프리 누적 (9.29-100 원장 [1846] 주도주 프리 거래대금 · 있으면)
@@ -482,7 +484,11 @@ const fromLeader = (t, T) => ({ no: t.no, name: t.name, rate: t.rate, value: t.v
 // leaders: 전날 18:40 확정 결과(close.market.leaders) — 아침엔 다시 뽑지 않고 그 상위 3개를 이어 쓴다. 없으면(장애) 예전처럼 n=2 잠정 재선정
 //  슬롯(code 있는 종목)이 있는 테마가 하나도 없으면 — 옛 형식(9.29-55 이전: stocks 가 이름 문자열, slots 없음)이나 relaxed·L=0 으로 슬롯이 다 빈 확정 결과 — NXT 를 볼 종목이 없으니 이어 쓰지 않고 재선정
 // us: 방금 받은 아침 미국 테마 값 → u ≥ +3 & 대장주 프리마켓 ≥ +3 이면 gapWarn(추격 대신 눌림 대기)
-export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, keep = null, bizdate = null, leaders = null, us = null, kospi = null } = {}) {
+// 9.29-107 원장 [2205][2206] 「어제 저녁 애프터마켓」 = 전날(bizdate) 분봉 15:30 봉 ↔ 16:00~19:59 마지막 봉 (server/after.js afterMove · 20:20 저녁 애프터장 줄과 같은 계산)
+//  afterKnown = 전날 날짜 파일 「애프터_2000」 ① 종목 값(코드 → { pct, n } · 요청 0) · 없는 종목만 분봉 1회(상한 AFTER_PREV_MAX) · 못 받으면 그 종목 after 없음(지어내기 0)
+//  s.after.by = "분봉" (옛 판이 polling 으로 넣은 값은 by 가 없어 8:05 이어 쓰기에서도 다시 잼)
+export const AFTER_PREV_MAX = 15;
+export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, keep = null, bizdate = null, leaders = null, us = null, kospi = null, afterKnown = null } = {}) {
   const get = async (u) => {
     const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) });
     if (!r.ok) throw new Error("HTTP " + r.status);
@@ -498,22 +504,32 @@ export async function collectPrevThemes({ fetchImpl = fetch, timeoutMs = 10000, 
   const raws = [];
   // 9.29-100 원장 [1846] 「그 주도주가 프리마켓에서 어땠는지」: 종목마다 s.pre = { pct, state, value? } · 프리 시작 전이면 s.preNote = "아직" · 못 받으면 "못 받음" (판정 문턱 = 테마 단위와 같은 moveState ±0.5%)
   //  요청: 지금처럼 종목마다 polling 1회 (테마 3 × 슬롯 최대 5 = 15 · 상한 PRE_MAX — 넘는 종목은 「못 받음」)
-  let asked = 0;
+  let asked = 0, askedAfter = 0;
+  const d8 = bizdate ? String(bizdate).replace(/-/g, "") : null;
   for (const t of themes) {
     const moves = { after: [], pre: [] }; let leadPre = null;
     for (const s of t.stocks) {
       let d = null;
+      if (!(s.after && s.after.by === "분봉") && s.code) { // 어제 저녁 애프터 = 분봉 (앞선 아침 run 이 이미 잰 값이면 그대로)
+        const k = afterKnown && afterKnown.get(String(s.code));
+        if (k && typeof k.pct === "number") s.after = { pct: k.pct, state: moveState(k.pct), by: "분봉", ...(typeof k.n === "number" ? { n: k.n } : {}) };
+        else if (d8 && askedAfter < AFTER_PREV_MAX) {
+          try { askedAfter++; const m = afterMove(await get(AFTER_URL(s.code, d8)), d8); if (m) s.after = { pct: m.pct, state: moveState(m.pct), by: "분봉", n: m.n }; else { delete s.after; raws.push(s.code + " 애프터 15:30 봉 없음"); } }
+          catch (e) { delete s.after; raws.push(s.code + " 애프터 " + (e.message || e)); }
+        } else delete s.after;
+      }
+      if (s.after && s.after.by === "분봉") moves.after.push(s.after.pct);
       if (asked >= PRE_MAX) { s.preNote = "못 받음"; continue; }
       try { asked++; const j = await get("https://polling.finance.naver.com/api/realtime/domestic/stock/" + s.code); d = j && j.datas && j.datas[0]; } catch (e) { raws.push(s.code + " " + (e.message || e)); }
       if (!d) { s.preNote = "못 받음"; continue; }
       const m = nxtMove(d);
       raws.push(s.code + " " + m.raw);
-      if (m.session) { moves[m.session].push(m.pct); if (m.session === "pre" && s === t.stocks[0]) leadPre = m.pct; }
+      if (m.session === "pre") { moves.pre.push(m.pct); if (s === t.stocks[0]) leadPre = m.pct; } // 9.29-107: session "after"(polling closePrice 기준 · 부호 거꾸로) 는 안 씀
       if (m.session === "pre") { s.pre = Object.assign({ pct: m.pct, state: moveState(m.pct) }, typeof m.value === "number" ? { value: m.value } : {}); delete s.preNote; }
-      else { if (m.session === "after") s.after = { pct: m.pct, state: moveState(m.pct) }; if (!s.pre) s.preNote = "아직"; }
+      else { if (!s.pre) s.preNote = "아직"; }
     }
     const a = avg(moves.after), p = avg(moves.pre);
-    if (a !== null) t.after = { pct: a, state: moveState(a), n: moves.after.length };
+    if (a !== null) t.after = { pct: a, state: moveState(a), n: moves.after.length, by: "분봉" }; else delete t.after;
     if (p !== null) t.pre = { pct: p, state: moveState(p), n: moves.pre.length };
     const c = t.pre || t.after; if (c) t.confirm = c.state; // 이어짐 확인 라벨 (순위는 안 바뀜)
     const u = usOf(t.name, us).u;

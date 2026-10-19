@@ -1,7 +1,10 @@
 // 자동 연동 수집기 — GitHub Actions(.github/workflows/auto.yml)가 평일 아침·오후에 실행한다.
 //   아침(KST 12시 전): 미국 선물·환율·SOX·VIX·유가·금리 + 미국 대응주 (네이버 → 야후 순) + 전일 주도 테마(애프터·프리마켓)
-//   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 + 오늘 주도 테마 (네이버) — 16:20 은 잠정(게이트·L·U·B, 요청 13회), 18:40 은 확정(+수급·일봉, 43회)
-//   아침 전일 테마는 전날 18:40 확정 결과(close.market.leaders)를 이어 쓰고 NXT 애프터·프리마켓만 붙인다 (재선정 안 함, 없으면 n=2 잠정 선정). 전날 결과가 아직 잠정·수급 없음이면 아침 수집 전에 먼저 확정(백필)한다
+//   오후:             코스피·코스닥 마감 등락률 + 투자자별 수급 + 오늘 주도 테마 (네이버) — 16:20 첫 마감 run 이 정규장 값으로 고르고, 19:45·20:20 run 은 확정 수급만 채움 (9.29-107: 옛 주석 「18:40」 = 지금은 없는 예약 시각)
+//   아침 전일 테마는 전날 마감 확정 결과(close.market.leaders)를 이어 쓰고 어제 저녁 애프터(전날 분봉 · 9.29-107)·NXT 프리마켓만 붙인다 (재선정 안 함, 없으면 n=2 잠정 선정). 전날 결과가 아직 잠정·수급 없음이면 아침 수집 전에 먼저 확정(백필)한다
+// 저녁 애프터장 줄 (9.29-107 원장 [2198][2200][2205][2206] · server/after.js): 20:05 뒤 마감 run(예약 20:20 · 실제 20:34~20:52)이 날짜 파일 최상위 「애프터_2000」 을 계산해 다시 저장(새 예약 0 — 같은 concurrency 묶음 대기 취소 위험)
+//   ① 주도 테마 이어짐/꺾임 ② 저녁 강한 테마 상위 3 ③ ±3% 종목 각 5 (저녁 거래대금 10억↑) · 마지막 봉 19:55 전이면 「자료 미완」 · 확정(ok) 있으면 다시 안 함 · 못 했으면 다음 날 07:00 뒤 아침 run 이 어제 분봉으로 보충
+//   옵션: --after (시각·기존 기록과 관계없이 계산) · --afterout=파일 (--dry 결과 저장)
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
 // 옵션: --when=morning|intraday|close|themes|live (기본: 지금 시각으로 판단 · live = 장중 실시간 주도 테마 → auto/live.json 만 · themes = 미국장 테마 값만 아침 기록에 채워 넣기, 새 테마를 추가한 날) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
 //       --final (close: 실행 시각과 관계없이 확정 run — 수급·일봉 포함). 오늘이 아닌 --date 로 손으로 백필하는 close run 도 확정으로 돈다 (잠정 결과가 확정을 덮지 않게)
@@ -29,6 +32,7 @@ import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
 import { CAUTION_FILE, CAUTION_KEEP, loadCautions, tagAvoidAll, avoidText } from "../server/caution.js";
 import { collectForward, fwdText, fwdShouldSave, FWD_FILE, FWD_BUDGET_MS } from "../server/usforward.js"; /* 9.29-105 원장 [2132] ③ 미국장 테마 전진 기록 */
+import { collectAfter, afterText, afterDue, afterLeadMap, AFTER_KEY, AFTER_BUDGET_MS, AFTER_MORNING_FROM } from "../server/after.js"; /* 9.29-107 저녁 애프터장 줄 */
 import { regularsOf, fcText } from "../server/forecast.js"; /* 9.29-102 원장 [1905] 단골 참고 줄 · 9.29-103 원장 [2003] 그림자 기록은 뺌(세기만 남김) */ /* 9.29-101 원장 [1884] S4 종배 피함 (거래소 공시 지난 거래일 목록 · 하루 1번) */
 import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
@@ -227,6 +231,20 @@ if (when === "morning" && save) {
 }
 // 9.29-100 테마 구성표 주 1회: 아침 run 이 7일 지났으면 다시 만든다(약 270회 · 실패하면 옛 표) — --dry 는 --map/--mapout 을 줄 때만
 if (when === "morning" && (save || has("map") || has("mapout"))) { try { await loadThemeMap({ rebuild: true }); } catch (e) { console.log("테마 구성표 확인 실패:", e.message || e); } }
+/* 9.29-107 원장 [2205] 저녁 애프터장 줄 보충: 07:00 뒤 아침 run(예약 07:05·08:05) 이 어제 날짜 파일에 「애프터_2000」 확정(ok)이 없으면 어제 분봉으로 계산해 어제 파일에 넣음
+   (분봉 약 7거래일 보관 실측 · 위 「어제 주도 테마 수급 채움」 과 같은 자리 · ②③ 후보 = 폴링 거래 시각(localTradedAt) 날짜가 어제인 종목만 — 아니면 ②③ 비우고 「자료 미완」 이유) · 실패해도 아침 수집 그대로 */
+if (when === "morning" && save && prevFile.json && (kstTime(now).slice(0, 5) >= AFTER_MORNING_FROM || has("after"))) {
+  const ex = prevFile.json[AFTER_KEY];
+  if (ex && ex.ok && !has("after")) console.log(`어제(${prevDay}) 저녁 애프터 이미 있음(${ex.at} · 마지막 봉 ${ex.lastBar})`);
+  else {
+    try {
+      const tm = await loadThemeMap();
+      const r = await collectAfter({ get: nvGet, date: prevDay, leaders: prevClose.leaders || null, map: tm.map, at: kstTime(now).slice(0, 5), now: Date.now(), src: "아침 보충", deadline: Date.now() + AFTER_BUDGET_MS });
+      console.log(afterText(r));
+      if (!ex || r.ok || !ex.ok) { prevFile.json[AFTER_KEY] = r; prevFile.json.updatedAt = Date.now(); await writeFile(autoFile(prevDay), prevFile.json, `자동 연동 ${prevDay} 저녁 애프터 보충`); console.log(`저장: ${autoFile(prevDay)} ${AFTER_KEY} (보충)`); }
+    } catch (e) { console.log("어제 저녁 애프터 보충 실패:", e.message || e); }
+  }
+}
 // 9.29-100 마감 주도 테마: 급등 묶음(오늘 확정 없으면 정규장 값으로 한 번 · 있으면 확정 수급만) + 옛 방식(T·L) 비교용 → close.shadow · 실패하면 leaders 없음(앞선 값 유지 · mergeCloseLeaders)
 async function closeLeaders(market) {
   const hm = kstTime(now).slice(0, 5), get = memoGet(nvGet), history = await loadHistory(date), us = todayMorning && todayMorning.us;
@@ -255,7 +273,7 @@ let part = when === "intraday"
   : when === "themes"
   ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: todayMorning })
   : when === "morning"
-  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null }), listings: () => fetchListings(fetch, { today: date }), adr: { krClose: () => fetchKrClose(fetch, "000660", date), hist: skhyHist() } })
+  ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null, afterKnown: afterLeadMap(prevFile.json && prevFile.json[AFTER_KEY]) }), listings: () => fetchListings(fetch, { today: date }), adr: { krClose: () => fetchKrClose(fetch, "000660", date), hist: skhyHist() } })
   : await collectClose({ adapters: { naver }, now, leaders: closeLeaders, listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
 // 같은 날 앞선 close run 과 합친다: 잠정 → 확정이면 잠정은 leadersProvisional 로 보관, 확정 뒤 잠정이 늦게 오면 확정 유지 (server/auto.js mergeCloseLeaders)
 if (when === "close" && prev.json && prev.json.date === date && prev.json.close) mergeCloseLeaders(prev.json.close, part);
@@ -327,6 +345,20 @@ async function runForward() {
     return r;
   } catch (e) { console.log("전진 기록 실패:", e.message || e); return null; }
 }
+/* 9.29-107 원장 [2198][2200][2205][2206] 저녁 애프터장 줄: 마감 run(잠정 16:20 제외)이 20:05 뒤(afterDue)면 「애프터_2000」 계산 — 날짜 파일·latest 저장 「뒤」에 돌고 결과만 한 번 더 저장(실패해도 마감 저장·종료 코드 그대로)
+   요청 = 폴링 약 6회(테마 구성표 종목 400개씩) + 분봉(주도 테마 ≤15 + 그날 거래대금 10억↑ 종목) · 상한 AFTER_MAX_REQ · 150초 */
+async function runAfter(rec) {
+  if (when !== "close" || provisional) return null;
+  const hm = kstTime(now).slice(0, 5), today = kstDate(now), due = afterDue({ date, today, hm, existing: rec && rec[AFTER_KEY], force: has("after") });
+  if (!due.due) { console.log("저녁 애프터 건너뜀: " + due.why); return null; }
+  try {
+    const tm = await loadThemeMap(), L = rec && rec.close && rec.close.market ? rec.close.market.leaders : null;
+    const r = await collectAfter({ get: nvGet, date, leaders: L, map: tm.map, at: hm, now: Date.now(), src: date < today ? "지난 날 보충" : "20:20", deadline: Date.now() + AFTER_BUDGET_MS });
+    console.log(afterText(r));
+    if (!save && arg("afterout")) writeFileSync(arg("afterout"), JSON.stringify(r));
+    return r;
+  } catch (e) { console.log("저녁 애프터 실패:", e.message || e); return null; }
+}
 // 아침 브리핑 (9.29-97): 아침 run 은 07:00 뒤(또는 --brief) 4묶음 · 장중 run 은 10:20 전 시작이면 ② 공시만 · 실패해도 날짜 파일 저장은 그대로
 let brief = null;
 {
@@ -352,6 +384,7 @@ if (!save) {
   const rec = mergeAuto(null, date, saveAs, part);
   console.log(summarize(rec));
   await runForward(); // 9.29-105 전진 기록(저장 안 함 · 요약 뒤)
+  await runAfter(rec); // 9.29-107 저녁 애프터장 줄(저장 안 함 · --afterout=파일)
   console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
@@ -383,6 +416,8 @@ if (sc && !sc.skipped && (sc.added || sc.filled) && JSON.stringify(sc.file) !== 
   catch (e) { console.log("성적표 저장 실패:", e.message || e); }
 }
 await runForward(); // 9.29-105 전진 기록 = 날짜 파일·latest·관찰·성적표 저장 뒤 (게이트 [2153] ② 지연 위험)
+{ const af = await runAfter(rec); // 9.29-107 저녁 애프터장 줄 = 마감 저장 뒤 · 결과만 다시 저장
+  if (af) { try { rec[AFTER_KEY] = af; const m2 = `자동 연동 ${date} 저녁 애프터 ${af.at}${af.ok ? "" : " (미완)"}`; await writeFile(autoFile(date), rec, m2); await writeFile(AUTO_DIR + "/latest.json", rec, m2); console.log(`저장: ${autoFile(date)} ${AFTER_KEY}`); } catch (e) { console.log("저녁 애프터 저장 실패:", e.message || e); } } }
 if (part.shadow) console.log(shadowText(part.shadow));
 console.log(`저장: ${autoFile(date)} (${BRANCH})`);
 if (part.errors.length) console.log("일부 실패:", part.errors.join(" / "));
