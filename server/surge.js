@@ -138,7 +138,7 @@ const coreOverlap = (a, b) => { const A = new Set(a); const inter = b.filter((x)
 export function themeFlowOf(core, flows) {
   const xs = (core || []).map((c) => flows && flows[c]).filter((f) => f && typeof f.foreign === "number" && typeof f.inst === "number");
   if (!xs.length) return null;
-  return { foreign: Math.round(xs.reduce((a, f) => a + f.foreign, 0)), inst: Math.round(xs.reduce((a, f) => a + f.inst, 0)), n: xs.length, of: core.length, est: xs.some((f) => f.est) || undefined, at: xs.map((f) => f.at).filter(Boolean).sort().pop() || undefined };
+  return { foreign: Math.round(xs.reduce((a, f) => a + f.foreign, 0)), inst: Math.round(xs.reduce((a, f) => a + f.inst, 0)), n: xs.length, of: core.length, est: xs.some((f) => f.est) || undefined, at: xs.map((f) => f.at).filter(Boolean).sort().pop() || undefined, ...(xs.some((f) => f.src === "kiwoom") ? { src: xs.every((f) => f.src === "kiwoom") ? "kiwoom" : "kiwoom+naver" } : {}) }; /* 9.29-111: 키움 값이 든 테마 수급 = src */
 }
 // 한 단계 평가: 통과 테마 [{ no, name, count, core(코드 · 거래대금 순), n10, money, flow, flowState }] 순위대로
 export function evalStep(byCode, cuts, map, st, flows = null) {
@@ -270,14 +270,70 @@ export function rankBOf({ stocks, map, flows = null, themesA = [], idx = {}, at 
   const themesB = [...cnt.values()].sort((a, b) => b.n - a.n || b.value - a.value || a.count - b.count || (a.name < b.name ? -1 : 1)).slice(0, RANKB_TOP).map((x) => ({ no: x.no, name: x.name, n: x.n, value: round2(x.value), codes: x.codes }));
   return { v: 1, at, src: "네이버 거래대금 순위(priceTop · 선정과 같은 응답 · 새 요청 0)", n: rows.length, top: rows, themesB, themesA: (themesA || []).map((t) => t && t.name).filter(Boolean), idx, newReq: 0, ms: Date.now() - t0 };
 }
+/* 9.29-111 원장 [2333] 「v7 C안 = 판정에 반영」 · [2343] ③ · v7 매매수칙 §2(reference/trading_rules_v7.html 「진짜 대금이 몰린 테마 찾기」):
+   C = 테마수급 상위 ∩ 테마 수익률 상위 — 테마수급 = 그 테마 구성 종목(테마 구성표)의 외인+기관 순매수 합(키움 ka10063 장중 잠정 · 억원 · 목록에 있는 값만 더함)
+   · 시총 상위 10(shared/top10_kospi.json = TOP10_CODES)이 들어 있어 합계가 큰 테마 = 제외(TOP10 몫이 테마 합의 RANKC_TOP10_SHARE(절반)↑ 「그 종목 하나 때문에 순위가 높은 것」)
+   · 수급 상위 RANKC_K(10) = 합 > 0 인 테마 합 큰 순 · 수익률 상위 RANKC_K = 테마 구성 종목 중 거래대금 순위(네이버 · 선정과 같은 응답 · 새 요청 0)에 든 종목 RANKC_MIN_N(2)↑ 평균 등락률 큰 순
+   · 양쪽에 다 있는 테마만 → 수급 합 큰 순 3개 · 한쪽에만 있으면 패스
+   · 꼬리: 외인 > 기관(외인 > 0) = 「강함」 · 기관만 큼(기관 > 0 · 외인 ≤ 0) = 「주의」 · 대장(등락률 1위) +25%↑ & 2등이 대장과 등락률 5%p 이내 = 「강한 테마」([2343] ③ · [2344])
+   · 키움 값이 없으면 none = 「수급 자료 없음」(화면 「C 수급 자료 없음」) · A·B 선정 결과는 그대로(덮어쓰기 0) */
+export const RANKC_TOP = 3, RANKC_K = 10, RANKC_MIN_N = 2, RANKC_TOP10_SHARE = 0.5, RANKC_LEAD = 25, RANKC_GAP = 5;
+export const RANKC_NONE = "수급 자료 없음", RANKC_EMPTY = "교차 테마 없음";
+/* 9.29-111 [집2353] 「테마수급」 하나의 원천: 테마 구성 종목(테마 구성표) 키움 외인·기관 합(목록에 있는 값만 · 억원) — C 선정(rankCOf)과 ④ 카드 테마 줄(collectLive row.tflow)이 이 함수 하나로 셈(두 번 계산 0) · big = TOP10 종목 몫 */
+export function themeKwSum(codes, kiwoom, top10 = null) {
+  let f = 0, i = 0, n = 0, big = 0; if (!kiwoom) return null;
+  for (const c of codes || []) { const k = kiwoom[c]; if (!k) continue; const kf = typeof k.foreign === "number" ? k.foreign : null, ki = typeof k.inst === "number" ? k.inst : null; if (kf === null && ki === null) continue; n++; f += kf || 0; i += ki || 0; if (top10 && top10.has(c)) big += (kf || 0) + (ki || 0); }
+  return n ? { foreign: round2(f), inst: round2(i), n, of: (codes || []).length, big: round2(big) } : null;
+}
+export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = null }) {
+  const t0 = Date.now(), base = { v: 1, at, src: "키움 장중 외인·기관(ka10063 · 테마 구성 종목 합) ∩ 네이버 거래대금 순위 등락률", rule: `테마수급 상위 ${RANKC_K} ∩ 테마 수익률 상위 ${RANKC_K} · 시총 TOP10 몫 ${RANKC_TOP10_SHARE * 100}%↑ 테마 제외 · 외인>기관 강함 · 기관만 주의 · 대장 +${RANKC_LEAD}%↑ & 2등 ${RANKC_GAP}%p 이내 강한 테마`, newReq: 0 };
+  const has = kiwoom && typeof kiwoom === "object" && Object.values(kiwoom).some((k) => k && (typeof k.foreign === "number" || typeof k.inst === "number"));
+  if (!has || !map || !Array.isArray(map.themes)) return Object.assign(base, { none: RANKC_NONE, themesC: [], ms: Date.now() - t0 });
+  const byCode = new Map((stocks || []).filter((s) => s && s.code && typeof s.rate === "number").map((s) => [s.code, s]));
+  const rows = [];
+  for (const t of map.themes) {
+    if (!t || !t.name || GENERIC_RE.test(t.name)) continue;
+    const ks = themeKwSum(t.codes, kiwoom, top10); if (!ks) continue;
+    const f = ks.foreign, i = ks.inst, n = ks.n, big = ks.big;
+    const mem = (t.codes || []).map((c) => byCode.get(c)).filter(Boolean); if (mem.length < RANKC_MIN_N) continue;
+    const sum = f + i;
+    rows.push({ no: t.no, name: t.name, count: t.count || (t.codes || []).length, foreign: round2(f), inst: round2(i), sum: round2(sum), n, rate: round2(mem.reduce((a, s) => a + s.rate, 0) / mem.length), rn: mem.length, big10: big !== 0 && sum > 0 && big / sum >= RANKC_TOP10_SHARE, mem });
+  }
+  const sTop = rows.filter((r) => !r.big10 && r.sum > 0).sort((a, b) => b.sum - a.sum || a.count - b.count).slice(0, RANKC_K);
+  const rTop = rows.filter((r) => !r.big10).sort((a, b) => b.rate - a.rate || b.sum - a.sum).slice(0, RANKC_K), rIdx = new Map(rTop.map((r, k) => [r.no, k + 1]));
+  /* [집2374] ④ C 테마끼리 겹치면 A 처럼 합침 — A 와 같은 기준(이 파일 coreOverlap:137 「겹친 종목 ≥1 & 작은 쪽 절반↑」 · ladderSelect:196 MERGE_SAME_LEAD 「대장 같음」 · 대표 테마와만 비교) · C 의 core = 테마 구성 종목 중 거래대금 순위에 든 종목(거래대금 큰 순 · 수익률 계산과 같은 종목) · 합쳐진 테마 = alias(아래 줄은 채움) */
+  const pickedC = [];
+  for (const r of sTop.map((r, k) => Object.assign(r, { sR: k + 1, rR: rIdx.get(r.no) })).filter((r) => r.rR)) {
+    if (pickedC.length >= RANKC_TOP) break;
+    r.core = r.mem.slice().sort((a, b) => (b.value || 0) - (a.value || 0)).map((s) => s.code); r.alias = [];
+    const host = pickedC.find((p) => coreOverlap(p.core, r.core) || (MERGE_SAME_LEAD && p.core[0] === r.core[0]));
+    if (host) { if (!host.alias.includes(r.name)) host.alias.push(r.name); continue; }
+    pickedC.push(r);
+  }
+  const themesC = pickedC.map((r) => {
+    const by = r.mem.slice().sort((a, b) => b.rate - a.rate), lead = by[0], second = by[1] || null, tags = [];
+    if (r.foreign > r.inst && r.foreign > 0) tags.push("강함"); else if (r.inst > 0 && r.foreign <= 0) tags.push("주의");
+    if (lead && lead.rate >= RANKC_LEAD && second && lead.rate - second.rate <= RANKC_GAP) tags.push("강한 테마");
+    const st = (s) => (s ? { code: s.code, name: s.name, rate: s.rate } : null);
+    return Object.assign({ no: r.no, name: r.name, foreign: r.foreign, inst: r.inst, sum: r.sum, n: r.n, rate: r.rate, rn: r.rn, sR: r.sR, rR: r.rR, tags, lead: st(lead), second: st(second) }, r.alias.length ? { alias: r.alias } : {});
+  });
+  const out = Object.assign(base, { n: rows.length, excluded: rows.filter((r) => r.big10).sort((a, b) => b.sum - a.sum).slice(0, 5).map((r) => r.name), themesC, ms: Date.now() - t0 });
+  if (!themesC.length) out.none = RANKC_EMPTY;
+  return out;
+}
 // 9.29-108 원장 [2287] A·B 채점: 장중 회차마다 고른 3개(a · b)가 그날 마감 확정 주도 테마(이름 + 합친 이름 alias)와 몇 개 같은지 → 하루 평균 · 누적 파일 auto/observe/leaders-ab.json(날짜마다 한 줄 · 같은 날 다시 돌면 그 줄만 바꿈)
 export const AB_FILE = "auto/observe/leaders-ab.json", AB_RUNS_MAX = 100;
-export const abRunOf = (live) => (live && live.at ? { at: live.at, a: (live.themes || []).map((t) => t && t.name).filter(Boolean).slice(0, 3), b: live.rankB && Array.isArray(live.rankB.themesB) ? live.rankB.themesB.map((t) => t.name).slice(0, 3) : [] } : null);
+export const abRunOf = (live) => (live && live.at ? Object.assign({ at: live.at, a: (live.themes || []).map((t) => t && t.name).filter(Boolean).slice(0, 3), b: live.rankB && Array.isArray(live.rankB.themesB) ? live.rankB.themesB.map((t) => t.name).slice(0, 3) : [] }, live.rankC ? { c: Array.isArray(live.rankC.themesC) ? live.rankC.themesC.map((t) => t.name).slice(0, 3) : [] } : {}) : null); /* 9.29-111: C(rankC) 있는 회차만 c */
 export function abScore(runs, leaders, date) {
   const set = new Set(); for (const t of (leaders && leaders.themes) || []) { if (t && t.name) set.add(t.name); for (const x of (t && t.alias) || []) set.add(x); }
-  const rs = (runs || []).filter((r) => r && r.at && (r.a.length || r.b.length)); if (!rs.length || !set.size) return null;
+  const rs = (runs || []).filter((r) => r && r.at && (r.a.length || r.b.length)); if (!rs.length || !set.size) return null; /* A·B 분모·runs·last·pick = 108 그대로(C 전용 회차 안 섞음 · gate-111 [집2375]) */
   const hit = (xs) => xs.filter((x) => set.has(x)).length, avg = (k) => Number((rs.reduce((s, r) => s + hit(r[k]), 0) / rs.length).toFixed(2));
-  return { date, runs: rs.length, a: avg("a"), b: avg("b"), bN: rs.filter((r) => r.b.length).length, close: [...set].slice(0, 6), last: { at: rs[rs.length - 1].at, a: hit(rs[rs.length - 1].a), b: hit(rs[rs.length - 1].b) }, pick: { a: rs[rs.length - 1].a.slice(0, 3), b: rs[rs.length - 1].b.slice(0, 3) } };
+  const out = { date, runs: rs.length, a: avg("a"), b: avg("b"), bN: rs.filter((r) => r.b.length).length, close: [...set].slice(0, 6), last: { at: rs[rs.length - 1].at, a: hit(rs[rs.length - 1].a), b: hit(rs[rs.length - 1].b) }, pick: { a: rs[rs.length - 1].a.slice(0, 3), b: rs[rs.length - 1].b.slice(0, 3) } };
+  /* 9.29-111 C: C 를 고른 회차(c 1개↑)만 평균(키움 값 없는 회차 = C 못 고름 → 0 으로 세지 않음) · cN = 그 회차 수 · 마지막 회차 c 는 last·pick 에 */
+  const rc = (runs || []).filter((r) => r && r.at && Array.isArray(r.c) && r.c.length), lr = rs[rs.length - 1]; /* C = 별도 필터(C 고른 회차만) · last.c·pick.c = A·B 마지막 회차에 c 가 있을 때만 */
+  if (rc.length) { out.c = Number((rc.reduce((s, r) => s + hit(r.c), 0) / rc.length).toFixed(2)); out.cN = rc.length; }
+  if (Array.isArray(lr.c) && lr.c.length) { out.last.c = hit(lr.c); out.pick.c = lr.c.slice(0, 3); }
+  return out;
 }
 export function abUpsert(file, row) {
   const f = file && Array.isArray(file.rows) ? JSON.parse(JSON.stringify(file)) : { app: "jangjeon-cockpit", kind: "leaders-ab", v: 1, rule: "장중 회차 A(지금 방식 3개)·B(거래대금 상위 50 겹침 3개) ↔ 그날 마감 확정 주도 테마 같은 개수 평균 (9.29-108 원장 [2287])", rows: [] };
@@ -291,11 +347,13 @@ export function abNext(file, leaders, date) {
   const prev = f.rows.filter((r) => r && r.date < date).pop(); if (!prev || !prev.pick || !Array.isArray(prev.pick.a) || !Array.isArray(prev.pick.b)) return { file: f, changed: false };
   const by = new Map(); for (const t of ths) for (const nm of [t.name, ...(t.alias || [])]) if (!by.has(nm)) by.set(nm, t);
   const sc = (names) => { const hit = [...new Set(names.map((n) => by.get(n)).filter(Boolean))], rs = hit.map((t) => t.rate).filter((v) => typeof v === "number"), avg = rs.length ? round2(rs.reduce((a, v) => a + v, 0) / rs.length) : null; return { n: names.length, re: hit.length, avg, hit: hit.length > 0 && avg !== null && avg > 0 }; };
-  const old = JSON.stringify(prev.next || null); prev.next = { date, a: sc(prev.pick.a), b: sc(prev.pick.b) };
+  const old = JSON.stringify(prev.next || null); prev.next = Object.assign({ date, a: sc(prev.pick.a), b: sc(prev.pick.b) }, Array.isArray(prev.pick.c) && prev.pick.c.length ? { c: sc(prev.pick.c) } : {}); /* 9.29-111 C 도 같은 틀 */
   return { file: f, changed: old !== JSON.stringify(prev.next), row: prev };
 }
 export function abSummary(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], rs = all.filter((r) => typeof r.a === "number"); if (!rs.length) return null; const m = (k) => Number((rs.reduce((s, r) => s + r[k], 0) / rs.length).toFixed(1)); const out = { a: m("a"), b: m("b"), n: rs.length };
-  const nx = all.filter((r) => r && r.next && r.next.a && r.next.b); if (nx.length) { const q = (k) => ({ re: Number((nx.reduce((s, r) => s + r.next[k].re, 0) / nx.length).toFixed(1)), hit: nx.filter((r) => r.next[k].hit).length }); out.next = { n: nx.length, a: q("a"), b: q("b") }; }
+  const nx = all.filter((r) => r && r.next && r.next.a && r.next.b); if (nx.length) { const q = (k) => ({ re: Number((nx.reduce((s, r) => s + r.next[k].re, 0) / nx.length).toFixed(1)), hit: nx.filter((r) => r.next[k].hit).length }); out.next = { n: nx.length, a: q("a"), b: q("b") };
+    const nc = nx.filter((r) => r.next.c); if (nc.length) out.next.c = { re: Number((nc.reduce((s, r) => s + r.next.c.re, 0) / nc.length).toFixed(1)), hit: nc.filter((r) => r.next.c.hit).length, n: nc.length }; }
+  const cs = rs.filter((r) => typeof r.c === "number"); if (cs.length) { out.c = Number((cs.reduce((s, r) => s + r.c, 0) / cs.length).toFixed(1)); out.cn = cs.length; } /* 9.29-111 C(고른 날만) */
   return out; }
 export async function selectSurge({ get, map, date, hm = null, regular = false, flowsFor = null, us = null, history = [], kospiAmount = null, kosdaqAmount = null, top10 = new Set(), n = SURGE_N, chart = true }) {
   const t0 = Date.now(), errors = []; const req = { universe: 0, regular: 0, detail: 0, chart: 0 };
@@ -368,12 +426,15 @@ export { compactThemes };
 // 수급(추정) 받기 (원장 [1848]): 키·로그인 없이 장중 종목별 외국인·기관 잠정값을 주는 곳은 아직 확인 못 함(조사 2026-10-09 · KRX 는 로그인 필요 · 네이버 PC 외국계 추정 화면 폐지)
 //  → 네이버 종목 일별 수급(trend)의 「오늘 날짜 행」 이 있을 때만 쓴다. 먼저 1종목만 물어보고(오늘 행 없음 = 아직 발표 전) 없으면 나머지 요청 0 → 모두 「수급 확인 전」(탈락 안 함)
 //  est = 저녁 확정 전(18:00 전) 값이면 true · 반환 { code: { foreign, inst, est, at } } 또는 null
-export function makeFlowsFor(get, bizdate, { hm = null, max = FLOW_MAX, url = FLOW1_URL } = {}) {
+/* 9.29-111 원장 [2343] ②안: kiwoom = 키움 장중 수급(server/sources/kiwoom.js kiwoomFlows().flows · 억원) — 외인·기관 둘 다 있는 종목은 그 값(src "kiwoom" · 네이버 요청 0) · 없는 종목만 지금처럼 네이버(첫 종목 물어보고 없으면 나머지 0) · 둘 다 없으면 null = 「수급 확인 전」 */
+export function makeFlowsFor(get, bizdate, { hm = null, max = FLOW_MAX, url = FLOW1_URL, kiwoom = null } = {}) {
   return async (codes) => {
     const out = {}, xs = (codes || []).slice(0, max); if (!xs.length) return null;
+    for (const c of xs) { const k = kiwoom && kiwoom[c]; if (k && typeof k.foreign === "number" && typeof k.inst === "number") out[c] = Object.assign({ foreign: k.foreign, inst: k.inst }, typeof k.program === "number" ? { program: k.program } : {}, { est: true, at: k.at || hm || undefined, src: "kiwoom" }); }
+    const rest = xs.filter((c) => !out[c]);
     const one = async (c) => { const f = stockFlow(await get(url(c)), bizdate); if (f) out[c] = { foreign: f.foreign, inst: f.inst, est: !hm || hm < "18:00" ? true : undefined, at: hm || undefined }; return !!f; };
-    try { if (!(await one(xs[0]))) return null; } catch (e) { return null; }
-    for (const c of xs.slice(1)) { try { await one(c); } catch (e) {} }
+    let first = false; if (rest.length) { try { first = await one(rest[0]); } catch (e) { first = false; } }
+    if (first) for (const c of rest.slice(1)) { try { await one(c); } catch (e) {} }
     return Object.keys(out).length ? out : null;
   };
 }

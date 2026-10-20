@@ -308,6 +308,7 @@ textarea.jin { resize: vertical; }
 .topld .tll .tq .tqr { display: contents; } .topld .tll .tq .qn { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; padding-left: 1.1em; } .topld .tll .tq .qs { flex: 0 0 1.1em; width: 1.1em; margin-left: -1.1em; } /* 9.29-103 [2004] ②: ★ 는 따로 좁은 칸(대장 아닌 줄은 빈 칸) · 이름은 모두 같은 x 에서 시작 */ .topld .tll .tq .qnm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } /* 9.29-101 [1937]: 이름만 말줄임 · 위험 표시(.tqk)는 자리가 없으면 아랫줄로(잘림 0) */ .topld .tll .tq .ld .qn { font-weight: 900; }
 .topld .tll .tq .qr, .topld .tll .tq .qv { text-align: right; white-space: nowrap; } .topld .tll .tq .qr { font-weight: 700; } .topld .tll .tq .qr.p { color: var(--up); } .topld .tll .tq .qr.n { color: var(--down); } .topld .tll .tq .qv { color: var(--muted); }
 .topld .tll .tq .tqk { margin: 0 0 0 5px; flex: none; }
+.topld .tll .tq .qf { grid-column: 1 / -1; padding-left: 1.1em; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; } .topld .tll .qf .p, .topld .tll .tfl .p { color: var(--up); } .topld .tll .qf .n, .topld .tll .tfl .n { color: var(--down); } /* 9.29-111 [집2353] 주도주 수급(종목 아래 작은 한 줄) · 테마 수급 */
 .topld .tll details.tmore { grid-column: 2 / -1; margin: 2px 0 0; } .topld .tll details.tmore > summary { cursor: pointer; list-style: none; font-size: 13px; font-weight: 700; color: var(--muted); padding: 3px 0; } .topld .tll details.tmore > summary::-webkit-details-marker { display: none; }
 .topld .tll details.tmore > summary::before { content: "▸ "; } .topld .tll details.tmore[open] > summary::before { content: "▾ "; }
 .topld .tll details.tmore > .tlw, .topld .tll details.tmore > .tln { display: block; } .topld .tll details.tmore > .tlbad { font-size: 13px; line-height: 1.6; } .topld .tll details.tmore > .tlpre { margin-top: 2px; } /* 9.29-101 [1937] ③ 마감·어제 카드의 자세히 안 */ .rulecard .tvmini { color: var(--muted); font-size: 12px; white-space: nowrap; }
@@ -3411,7 +3412,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-110";
+  const APP_VER = "9.29-111";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -4059,6 +4060,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const sup = parseInvest(mk.invest).map((x) => { const q = /닥/.test(x.mk); return { mk: x.mk, f: x.f, i: x.i, p: n(a[q ? "close.persQ" : "close.persK"]), g: n(a[q ? "close.progQ" : "close.progK"]), amt: x.a }; });
     return { idx, sup };
   }
+  /* 9.29-111 원장 [2333][2343] C 줄(v7 C안 = 테마수급(키움 외인+기관) 상위 ∩ 테마 수익률 상위 · 수집기 live.json 의 rankC 그대로 · 지어내기 0): 이름(꼬리 강함·주의·강한 테마) · 없으면 「C 수급 자료 없음」 · A·B 줄은 그대로 */
+  function cLineHtml(L) { const C = L && L.rankC, xs = C && Array.isArray(C.themesC) ? C.themesC.slice(0, 3) : [];
+    if (!xs.length) return `<div class="abc"><b>C</b> <small>${esc((C && C.none) || "수급 자료 없음")}</small></div>`;
+    return `<div class="abc"><b>C</b> ${xs.map((t) => `<span>${esc(t.name)}${Array.isArray(t.tags) && t.tags.length ? ` <small>(${esc(t.tags.join("·"))})</small>` : ""}</span>`).join(" · ")} <small>(테마 외인+기관 상위 ∩ 수익률 상위)</small></div>`;
+  }
+  function abCTxt() { const rs = AB && Array.isArray(AB.rows) ? AB.rows.filter((r) => r && typeof r.c === "number") : []; return rs.length ? ` · C ${(rs.reduce((s, r) => s + r.c, 0) / rs.length).toFixed(1)}/3 (${rs.length}일)` : ""; }
   /* 9.29-110 [2311][2312] 흐름: 장중 = ④ → 당일 마감 값이 들어오면 그날 것은 ⑤ 「📌 장중 주도 테마·A/B·애프터」 → 다음 날로 넘어가면 ① 「📌 전일 장중 주도 테마·A/B」 로 옮겨감 · ⑤ 는 당일 마감 들어오기 전엔 「오늘 마감 뒤 표시」 · 같은 날 값은 한 구획에만(⑤ = 보는 날(DATE) · ① = 보는 날의 직전 거래일) · 같은 원천(live.json · leaders-ab.json · live-after.json · 그 날 날짜 파일의 확정 수급) · 읽기만 */
   function paintLiveFinal() {
     const today = kstDate(), pd = prevBusinessDay(DATE, CAL.holidays), openDay = isBusinessDay(DATE, CAL.holidays);
@@ -4079,8 +4086,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         return `<li><b>${esc(t.name)}</b> <span class="${c(t.rate)}">${typeof t.rate === "number" ? (t.rate > 0 ? "+" : "") + t.rate + "%" : ""}</span> <small>${typeof t.strongN === "number" ? "강한 종목 " + t.strongN + "개 · +10%↑ " + t.n10 + "개" : ""}${esc(fl)}</small></li>`; }).join("");
       const B = L.rankB ? (L.rankB.themesB || []).map((t) => t.name + " " + t.n).slice(0, 3) : null;
       h += `<h3>장중 주도 테마 최종 <small>${mdw(T)} ${esc(L.at || "")} 마지막 고름${Array.isArray(L.abRuns) ? " · 회차 " + L.abRuns.length : ""}</small></h3><ol class="pclivel">${rows}</ol>`
-        + `<div class="pcab"><div><b>A</b> ${esc(L.themes.slice(0, 3).map((t) => t.name).join(" · "))}</div>${B ? `<div><b>B</b> ${esc(B.join(" · ") || "—")} <small>(거래대금 상위 ${L.rankB.n} 겹침)</small></div>` : ""}<small>${ab ? `마감과 맞은 수 A ${ab.a}/3 · B ${ab.b}/3 · ${ab.runs}회차` : "마감과 맞은 수: 채점 전"}</small></div>`;
-    } else if (ab) h += `<h3>장중 주도 테마 채점 <small>${mdw(T)}</small></h3><div class="pcab"><div><b>마감 주도 테마</b> ${esc((ab.close || []).slice(0, 3).join(" · "))}</div><small>마감과 맞은 수 A ${ab.a}/3 · B ${ab.b}/3 · ${ab.runs}회차</small></div>`;
+        + `<div class="pcab"><div><b>A</b> ${esc(L.themes.slice(0, 3).map((t) => t.name).join(" · "))}</div>${B ? `<div><b>B</b> ${esc(B.join(" · ") || "—")} <small>(거래대금 상위 ${L.rankB.n} 겹침)</small></div>` : ""}${cLineHtml(L)}<small>${ab ? `마감과 맞은 수 A ${ab.a}/3 · B ${ab.b}/3${typeof ab.c === "number" ? " · C " + ab.c + "/3" : ""} · ${ab.runs}회차` : "마감과 맞은 수: 채점 전"}</small></div>`;
+    } else if (ab) h += `<h3>장중 주도 테마 채점 <small>${mdw(T)}</small></h3><div class="pcab"><div><b>마감 주도 테마</b> ${esc((ab.close || []).slice(0, 3).join(" · "))}</div><small>마감과 맞은 수 A ${ab.a}/3 · B ${ab.b}/3${typeof ab.c === "number" ? " · C " + ab.c + "/3" : ""} · ${ab.runs}회차</small></div>`;
     el.innerHTML = `<h2>${o.h2} <small>${L || ab ? mdw(T) : "저녁 애프터 실시간"}</small></h2>` + h + af;
   }
   function paintPrevClose() {
@@ -4388,7 +4395,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const TL_OPEN = new Set(); /* 9.29-101 [1921] 실시간 카드에서 「자세히」를 펼쳐 둔 테마 이름 (화면을 다시 그려도 유지) */
   /* 9.29-101 [1937] ③ 「같이 맞추기」: 실시간·마감·어제 카드가 같이 쓰는 조각 — 종목 한 줄(이름 | 등락률 | 거래대금 · 대장 ★ 굵게 · 위험 표시 1개) · 「자세히」 접기(테마마다 따로 · 펼친 것 기억) */
   function riskOf(x) { const av = x && Array.isArray(x.avoid) ? x.avoid : []; return !x ? "" : x.stop ? "거래정지" : x.mgmt ? "관리종목" : x.alert ? String(x.alert) : av.find((r) => /단기과열/.test(r)) || (av.length ? "투자주의" : ""); } /* 거래정지 > 관리종목 > 시장경보 > 단기과열 > 투자주의(거래소 공시) */
-  function tqRow(o) { return `<span class="tqr${o.lead ? " ld" : ""}"><span class="qn"><span class="qs">${o.lead ? "★" : ""}</span><span class="qnm" title="${esc(o.name)}">${esc(o.name)}</span>${o.mark ? `<small class="sb ${o.markCls || "warn"} tqk" title="자세히를 누르면 꼬리표가 다 보여요">${esc(o.mark)}</small>` : ""}</span><span class="qr ${o.rc || ""}">${esc(o.rate || "")}</span><span class="qv">${esc(o.value || "")}</span></span>`; }
+  function tqRow(o) { return `<span class="tqr${o.lead ? " ld" : ""}"><span class="qn"><span class="qs">${o.lead ? "★" : ""}</span><span class="qnm" title="${esc(o.name)}">${esc(o.name)}</span>${o.mark ? `<small class="sb ${o.markCls || "warn"} tqk" title="자세히를 누르면 꼬리표가 다 보여요">${esc(o.mark)}</small>` : ""}</span><span class="qr ${o.rc || ""}">${esc(o.rate || "")}</span><span class="qv">${esc(o.value || "")}</span>${o.fl ? `<span class="qf">${o.fl}</span>` : ""}</span>`; } /* 9.29-111 [집2353] o.fl = 종목 아래 작은 한 줄(외인·기관) */
   function tmoreHtml(key, label, inner) { return `<details class="tmore" data-tl="${esc(key)}"${TL_OPEN.has(key) ? " open" : ""}><summary>${esc(label)}</summary>${inner}</details>`; }
   function tmoreBind() { if (tmoreBind.h) return; const ul = $("topLeadList"); if (!ul) return; tmoreBind.h = 1;
     ul.addEventListener("toggle", (e) => { const d = e.target; if (!d || !d.classList || !d.classList.contains("tmore")) return; const k = d.dataset.tl || ""; if (d.open) TL_OPEN.add(k); else TL_OPEN.delete(k); alignStocks(); }, true); } /* 펼친 테마 기억(1분 갱신에도 안 접힘) · 펼칠 때 칸 너비 다시 */
@@ -4569,9 +4576,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const stocks = slots.map((x, i) => stockLine(x).replace(/<\/span>$/, (typeof t.strongN === "number" ? stockBadges(x, i, "tsr3") : "") + "</span>")).join("") + (flows.length ? "" : `<span class="tls tlnote">종목별 외인·기관은 장 마감 뒤</span>`);
       // 9.29-100 원장 [1845] 2단계: 테마 머리 = 「강한 종목 n개 · +10%↑ m개 · 대장 ○○」 (옛 「테마 거래대금 · 강세 n종목」은 옛 기록에만) · 선정완화 배지 · 수급 확인 전
       const cf = stale ? closeFlowOf(L.date, t) : null;
-      const head = typeof t.strongN === "number" ? `강한 종목 ${t.strongN}개 · +10%↑ ${t.n10}개${t.lead ? " · 대장 " + esc(t.lead.name) + (t.lead.limit ? "(상한가)" : "") : ""}${t.flowState === "pending" ? (cf ? ` · 외인 ${sg(cf.foreign)} · 기관 ${sg(cf.inst)}` : " · 수급 확인 전") : ""}` : `테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}`;
+      /* 9.29-111 [집2353] 「테마수급이랑 주도주수급」: 키움 장중 값(수집기 live.json · 테마 = 구성 종목 외인·기관 합 tflow · 종목 = s.flow src kiwoom) · + 빨강 − 파랑 · 없으면 지금처럼 「수급 확인 전」 */
+      const fc = (v) => `<span class="${typeof v !== "number" ? "" : v > 0 ? "p" : v < 0 ? "n" : ""}">${sg(v)}</span>`, tfl = t.tflow && !stale ? ` · <span class="tfl">테마 수급 외인 ${fc(t.tflow.foreign)} · 기관 ${fc(t.tflow.inst)}</span>` : "";
+      const head = typeof t.strongN === "number" ? `강한 종목 ${t.strongN}개 · +10%↑ ${t.n10}개${t.lead ? " · 대장 " + esc(t.lead.name) + (t.lead.limit ? "(상한가)" : "") : ""}${tfl || (t.flowState === "pending" ? (cf ? ` · 외인 ${sg(cf.foreign)} · 기관 ${sg(cf.inst)}` : " · 수급 확인 전") : "")}` : `테마 거래대금 ${eok(t.value)}${t.hotN ? " · 강세 " + t.hotN + "종목" : ""}`;
       /* 9.29-101 [1921]: 종목마다 한 줄 = 이름 | 등락률 | 거래대금 (대장 ★ 굵게) · 위험 알림(거래정지 > 관리종목 > 시장경보 > 단기과열)은 접힌 줄에도 작은 표시 1개 */
-      const quick = slots.map((x, i) => tqRow({ name: x.name, lead: i === 0, mark: riskOf(x), rate: typeof x.rate === "number" ? pc(x.rate) : "", rc: x.rate > 0 ? "p" : x.rate < 0 ? "n" : "", value: typeof x.value === "number" ? eok(x.value) : "" })).join("");
+      const quick = slots.map((x, i) => tqRow({ name: x.name, lead: i === 0, mark: riskOf(x), fl: x.flow && x.flow.src === "kiwoom" && !stale ? `외인 ${fc(x.flow.foreign)} · 기관 ${fc(x.flow.inst)}` : "", rate: typeof x.rate === "number" ? pc(x.rate) : "", rc: x.rate > 0 ? "p" : x.rate < 0 ? "n" : "", value: typeof x.value === "number" ? eok(x.value) : "" })).join("");
       return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}<span class="tsum"><small>${head}</small>${rlxGroup(t.relax && t.relax.text)}</span></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}"${typeof t.strongN === "number" ? ` title="${esc("테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)" + (typeof t.strongAvg === "number" ? " · 강한 종목 " + t.strongN + "개 평균 " + pc(t.strongAvg) : ""))}"` : ""}>${pc(t.rate)}${typeof t.strongN === "number" ? `<small class="rtn">테마 평균</small>` : ""}</span><span class="tq">${quick}</span><details class="tmore" data-tl="${esc(t.name)}"${TL_OPEN.has(t.name) ? " open" : ""}><summary>자세히 (가격·꼬리표·뉴스)</summary><span class="tlw">${stocks}</span>${newsHtml(t)}</details></li>`; /* 게이트 [1887] 「테마 평균」 · 9.29-101 [1921] 한 줄 요약(.tq) + 펼치기(.tmore — 예전 종목 줄·꼬리표·뉴스 전부) */
     }).join("");
     paintRef(L.ref || null, L.short || ""); // 9.29-100 [1845] ④ 참고 한 줄 · 완화 끝까지 모자란 날 이유
@@ -6176,7 +6185,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   let AB = null;
   /* 9.29-110 [2318] 다음 날 적중 누적: 어제 마지막 회차 A·B 3개가 다음 거래일 마감 주도 테마에 다시 들어오고(재진입) 평균이 플러스면 적중일 — 수집기가 leaders-ab.json 줄의 next 에 기록 · 없으면 빈 글 */
   function abNextTxt() { const rs = AB && Array.isArray(AB.rows) ? AB.rows.filter((r) => r && r.next && r.next.a && r.next.b) : []; if (!rs.length) return ""; const q = (k) => ({ re: (rs.reduce((s, r) => s + r.next[k].re, 0) / rs.length).toFixed(1), hit: rs.filter((r) => r.next[k].hit).length }), a = q("a"), b = q("b");
-    return ` · 다음 날 재진입 A ${a.re}/3 · B ${b.re}/3 (평균 플러스 적중 A ${a.hit}/${rs.length}일 · B ${b.hit}/${rs.length}일)`; }
+    const rc = rs.filter((r) => r.next.c), c = rc.length ? { re: (rc.reduce((s, r) => s + r.next.c.re, 0) / rc.length).toFixed(1), hit: rc.filter((r) => r.next.c.hit).length } : null; /* 9.29-111 C(고른 날만) */
+    return ` · 다음 날 재진입 A ${a.re}/3 · B ${b.re}/3${c ? " · C " + c.re + "/3" : ""} (평균 플러스 적중 A ${a.hit}/${rs.length}일 · B ${b.hit}/${rs.length}일${c ? " · C " + c.hit + "/" + rc.length + "일" : ""})`; }
   async function abPull() { try { AB = await pubGet(PUB_RAW + "observe/leaders-ab.json"); } catch (e) {} paintAB(); paintLiveFinal(); }
   function paintAB() {
     const el = $("topLeadAB"); if (!el) return; const L = LIVE, fresh = !!(L && liveFresh()), has = !!(L && Array.isArray(L.themes) && L.themes.length);
@@ -6190,7 +6200,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const lastTxt = fresh ? `<small>마지막 고름 ${esc(L.at || "")}${age === null ? "" : " (" + age + "분 전)"}${chgTxt ? " · " + chgTxt : ""}</small>` : `<small>${Number(L.date.slice(5, 7))}/${Number(L.date.slice(8, 10))} ${esc(L.at || "")} 마지막 실시간 회차${chgTxt ? " · " + chgTxt : ""}</small>`;
     const A = (L.themes || []).map((t) => t.name).slice(0, 3), B = L.rankB ? (L.rankB.themesB || []).map((t) => t.name + " " + t.n).slice(0, 3) : null; // 9.29-109: B 없는 회차(108 배포 전에 고른 값) = 「B 다음 회차부터」
     const rs = AB && Array.isArray(AB.rows) ? AB.rows.filter((r) => typeof r.a === "number") : [], sm = rs.length ? { a: (rs.reduce((s, r) => s + r.a, 0) / rs.length).toFixed(1), b: (rs.reduce((s, r) => s + r.b, 0) / rs.length).toFixed(1), n: rs.length } : null;
-    el.innerHTML = `<div><b>A</b> ${esc(A.join(" · ") || "—")}</div><div><b>B</b> ${B ? `${esc(B.join(" · ") || "—")} <small>(거래대금 상위 ${L.rankB.n} 겹침)</small>` : "<small>다음 회차부터</small>"}</div>${lastTxt ? `<div>${lastTxt}</div>` : ""}<small>${sm ? `마감과 맞은 수 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일${abNextTxt()}` : "마감과 맞은 수: 아직 기록 없음"}</small>`;
+    el.innerHTML = `<div><b>A</b> ${esc(A.join(" · ") || "—")}</div><div><b>B</b> ${B ? `${esc(B.join(" · ") || "—")} <small>(거래대금 상위 ${L.rankB.n} 겹침)</small>` : "<small>다음 회차부터</small>"}</div>${cLineHtml(L)}${lastTxt ? `<div>${lastTxt}</div>` : ""}<small>${sm ? `마감과 맞은 수 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일${abCTxt()}${abNextTxt()}` : "마감과 맞은 수: 아직 기록 없음"}</small>`;
   }
   // 9.29-110 [2309] 저녁 애프터 실시간 (16:00~20:00): 수집기(--when=afterlive · 중계 서버가 5분마다 깨움)가 쓰는 auto/live-after.json 을 1분마다 · 그날 · 16:00 뒤에만 보임 · 값은 파일 그대로(지어내기 0)
   let AFL = null, afBusy = false;

@@ -38,6 +38,7 @@ import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
 import kis from "../server/sources/kis.js";
+import { kiwoomFlows, kwMask, kwText, kwKeys } from "../server/sources/kiwoom.js"; /* 9.29-111 원장 [2343] ②안 키움 장중 수급(키 = env KIWOOM_APP_KEY·KIWOOM_APP_SECRET · 없으면 건너뜀 · 토큰 출력 0 · Actions 면 ::add-mask::) */
 import tradingview from "../server/sources/tradingview.js";
 
 const arg = (name, def) => { const a = process.argv.find((x) => x.startsWith("--" + name + "=")); return a ? a.slice(name.length + 3) : def; };
@@ -153,7 +154,10 @@ if (when === "live") {
   const pl = await prevLive(); // 뉴스 캐시 (오늘 것만)
   const tmap = await loadThemeMap(); // 9.29-100 테마 구성표 (없을 때만 새로 만듦)
   const cautions = hm >= "09:30" || has("force") ? await loadCautionFile() : null; /* 9.29-101 S4 (09:30 전엔 후보가 없어 안 받음) */
-  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force") } }); // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
+  /* 9.29-111: 키움 장중 수급 — 09:30 전(고르기 전)엔 안 물음 · 키 없음·실패 = 「없음」 → 지금 동작(네이버 · 「수급 확인 전」) · C 는 「C 수급 자료 없음」 */
+  const kw = hm >= "09:30" || has("force") ? await kiwoomFlows({ env: process.env, date, hm, onToken: kwMask(process.env) }) : null;
+  console.log(kwKeys(process.env) ? kwText(kw) : "키움: 키 없음 — 건너뜀(네트워크 0)");
+  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force"), kiwoom: kw } }); // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
   if (slot && slot.closed) { live.at = slot.at; live.closed = true; console.log(`${hm} 도착 — 장 마감(15:30) 뒤 늦게 시작한 실시간 실행이라 「15:30 장 마감 값」으로 받음`); }
   if (save && !liveOverwrite((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, live)) { console.log("오늘 장 마감 값이 이미 있어 장중 값으로 덮지 않음 — 건너뜀"); process.exit(0); }
   console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${live.wait ? live.wait + " 부터 고름(아직)" : (live.themes || []).map((t) => `${t.name}${t.relax ? "[선정완화 " + t.relax.text + "]" : ""} ${t.rate > 0 ? "+" : ""}${t.rate}% (강한 ${t.strongN} · +10% ${t.n10} · 대장 ${t.lead ? t.lead.name : "-"} · ${t.flowState === "pending" ? "수급 확인 전" : t.flowState} · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
@@ -166,7 +170,9 @@ if (when === "live") {
   { const it = live.intra, old = pl && Array.isArray(pl.intraRuns) ? pl.intraRuns : []; /* 9.29-109 원장 [2298] 장중 재판정 5분마다: 회차(외인 선물 · 현물 외인·기관 · 프로그램) 이어 쌓기 · 최근 12 */
     live.intraRuns = it && it.at ? old.filter((x) => x.at !== it.at).concat([{ at: it.at, f: it.fut ? it.fut.foreign : null, sf: it.spot ? it.spot.foreign : null, si: it.spot ? it.spot.institution : null, pg: it.program && typeof it.program.total === "number" ? it.program.total : null }]).slice(-12) : old; }
   { const r0 = abRunOf(live), old = pl && Array.isArray(pl.abRuns) ? pl.abRuns : []; live.abRuns = r0 && !live.wait ? old.filter((x) => x.at !== r0.at).concat([r0]).slice(-AB_RUNS_MAX) : old; /* 9.29-108 원장 [2287] 장중 회차 A·B 이어 쌓기(오늘 live.json · 마감 뒤 채점) */
-    console.log(`B 방식(거래대금 상위 ${live.rankB ? live.rankB.n : 0}): ${live.rankB ? live.rankB.themesB.map((t) => t.name + " " + t.n).join(" / ") : "없음"} · A: ${(live.themes || []).map((t) => t.name).join(" / ")} · 회차 ${live.abRuns.length} · 새 요청 0 · ${live.rankB ? live.rankB.ms : 0}ms`); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
+    console.log(`B 방식(거래대금 상위 ${live.rankB ? live.rankB.n : 0}): ${live.rankB ? live.rankB.themesB.map((t) => t.name + " " + t.n).join(" / ") : "없음"} · A: ${(live.themes || []).map((t) => t.name).join(" / ")} · 회차 ${live.abRuns.length} · 새 요청 0 · ${live.rankB ? live.rankB.ms : 0}ms`);
+    const kwT = (live.themes || []).filter((t) => t.flow && t.flow.src).length; /* 9.29-111 */
+    console.log(`C 방식(v7 테마수급 ∩ 수익률): ${live.rankC ? (live.rankC.themesC.length ? live.rankC.themesC.map((t) => `${t.name} 외인 ${t.foreign}억 · 기관 ${t.inst}억 · ${t.rate}%${t.tags.length ? "(" + t.tags.join("·") + ")" : ""}`).join(" / ") : "C " + live.rankC.none) : "없음"} · A 테마 중 키움 수급 붙음 ${kwT}/${(live.themes || []).length} · 선정 수급 키움 종목 ${live.kiwoom ? live.kiwoom.flowN : 0} · ④ 테마 수급 ${(live.themes || []).filter((t) => t.tflow).map((t) => `${t.name} 외인 ${t.tflow.foreign}억·기관 ${t.tflow.inst}억(${t.tflow.n}/${t.tflow.of}종목)`).join(" / ") || "없음"} · 주도주 수급 키움 ${(live.themes || []).flatMap((t) => t.slots || []).filter((x) => x.flow && x.flow.src === "kiwoom").length}종목`); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
 }
@@ -391,9 +397,10 @@ async function runAB(rec) {
     let file = old, changed = false;
     if (row) { const u = abUpsert(file, row); file = u.file; changed = u.changed; } else console.log("A·B 채점: 오늘 장중 회차 없음 — 오늘 줄 건너뜀");
     /* 9.29-110 [2318] 다음 날 적중: 지난 거래일 줄의 마지막 회차 A·B 가 오늘 마감 확정 주도 테마에 재진입했나 · 평균 플러스인가 */
-    const nx = abNext(file, L, date); if (nx.row) { file = nx.file; changed = changed || nx.changed; console.log(`A·B 다음 날 ${nx.row.date} → ${date}: A 재진입 ${nx.row.next.a.re}/3 평균 ${nx.row.next.a.avg === null ? "—" : nx.row.next.a.avg + "%"}${nx.row.next.a.hit ? " 적중" : ""} · B 재진입 ${nx.row.next.b.re}/3 평균 ${nx.row.next.b.avg === null ? "—" : nx.row.next.b.avg + "%"}${nx.row.next.b.hit ? " 적중" : ""}`); }
+    const nx = abNext(file, L, date); if (nx.row) { file = nx.file; changed = changed || nx.changed; console.log(`A·B 다음 날 ${nx.row.date} → ${date}: A 재진입 ${nx.row.next.a.re}/3 평균 ${nx.row.next.a.avg === null ? "—" : nx.row.next.a.avg + "%"}${nx.row.next.a.hit ? " 적중" : ""} · B 재진입 ${nx.row.next.b.re}/3 평균 ${nx.row.next.b.avg === null ? "—" : nx.row.next.b.avg + "%"}${nx.row.next.b.hit ? " 적중" : ""}${nx.row.next.c ? ` · C 재진입 ${nx.row.next.c.re}/3 평균 ${nx.row.next.c.avg === null ? "—" : nx.row.next.c.avg + "%"}${nx.row.next.c.hit ? " 적중" : ""}` : ""}`); }
     if (!file || !changed && !row) return;
-    const sm = abSummary(file); if (sm) console.log(`A·B 누적: 장중 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일` + (sm.next ? ` · 다음 날 A ${sm.next.a.hit}/${sm.next.n}일 · B ${sm.next.b.hit}/${sm.next.n}일 적중` : ""));
+    if (row && typeof row.c === "number") console.log(`C 장중 ${row.c}/3 (${row.cN}회차)`); /* 9.29-111 */
+    const sm = abSummary(file); if (sm) console.log(`A·B 누적: 장중 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일` + (typeof sm.c === "number" ? ` · C ${sm.c}/3 (${sm.cn}일)` : "") + (sm.next ? ` · 다음 날 A ${sm.next.a.hit}/${sm.next.n}일 · B ${sm.next.b.hit}/${sm.next.n}일 적중` : ""));
     if (save && changed) { file.updatedAt = Date.now(); await writeFile(AB_FILE, file, `A·B 채점 ${date}`); console.log(`저장: ${AB_FILE}`); }
   } catch (e) { console.log("A·B 채점 실패:", e.message || e); }
 }

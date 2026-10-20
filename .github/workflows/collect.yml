@@ -41,6 +41,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUTO_BRANCH: main
+          KIWOOM_APP_KEY: ${{ secrets.KIWOOM_APP_KEY }}       # 9.29-111 키움 장중 수급(Secrets 비면 키움 길 건너뜀 · 토큰은 ::add-mask::)
+          KIWOOM_APP_SECRET: ${{ secrets.KIWOOM_APP_SECRET }}
         run: |
           ARGS=""
           if [ -n "${{ github.event.inputs.when }}" ]; then ARGS="$ARGS --when=${{ github.event.inputs.when }}"; fi
