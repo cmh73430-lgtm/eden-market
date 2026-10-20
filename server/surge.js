@@ -277,14 +277,26 @@ export function abScore(runs, leaders, date) {
   const set = new Set(); for (const t of (leaders && leaders.themes) || []) { if (t && t.name) set.add(t.name); for (const x of (t && t.alias) || []) set.add(x); }
   const rs = (runs || []).filter((r) => r && r.at && (r.a.length || r.b.length)); if (!rs.length || !set.size) return null;
   const hit = (xs) => xs.filter((x) => set.has(x)).length, avg = (k) => Number((rs.reduce((s, r) => s + hit(r[k]), 0) / rs.length).toFixed(2));
-  return { date, runs: rs.length, a: avg("a"), b: avg("b"), bN: rs.filter((r) => r.b.length).length, close: [...set].slice(0, 6), last: { at: rs[rs.length - 1].at, a: hit(rs[rs.length - 1].a), b: hit(rs[rs.length - 1].b) } };
+  return { date, runs: rs.length, a: avg("a"), b: avg("b"), bN: rs.filter((r) => r.b.length).length, close: [...set].slice(0, 6), last: { at: rs[rs.length - 1].at, a: hit(rs[rs.length - 1].a), b: hit(rs[rs.length - 1].b) }, pick: { a: rs[rs.length - 1].a.slice(0, 3), b: rs[rs.length - 1].b.slice(0, 3) } };
 }
 export function abUpsert(file, row) {
   const f = file && Array.isArray(file.rows) ? JSON.parse(JSON.stringify(file)) : { app: "jangjeon-cockpit", kind: "leaders-ab", v: 1, rule: "장중 회차 A(지금 방식 3개)·B(거래대금 상위 50 겹침 3개) ↔ 그날 마감 확정 주도 테마 같은 개수 평균 (9.29-108 원장 [2287])", rows: [] };
   const old = JSON.stringify(f.rows.find((r) => r.date === row.date) || null); f.rows = f.rows.filter((r) => r.date !== row.date).concat([row]).sort((x, y) => (x.date < y.date ? -1 : 1));
   return { file: f, changed: old !== JSON.stringify(row) };
 }
-export function abSummary(file) { const rs = (file && Array.isArray(file.rows) ? file.rows : []).filter((r) => typeof r.a === "number"); if (!rs.length) return null; const m = (k) => Number((rs.reduce((s, r) => s + r[k], 0) / rs.length).toFixed(1)); return { a: m("a"), b: m("b"), n: rs.length }; }
+/* 9.29-110 원장 [2318]: 다음 날 적중 — 어제 마지막 회차 A·B 3개가 다음 거래일 마감 확정 주도 테마에 다시 들어왔나(재진입 수) + 들어온 테마 등락률 평균이 플러스인가 → 적중일 = 재진입 1개↑ 이고 평균 > 0 · 마감 run 이 다음 거래일 확정을 넣을 때 직전 줄(date 가 더 이른 가장 가까운 줄)의 next 칸에 기록(같은 날 다시 돌면 그 칸만 바뀜 · 지어내기 0: 등락률 없으면 avg null → 적중 아님) */
+export function abNext(file, leaders, date) {
+  const f = file && Array.isArray(file.rows) ? JSON.parse(JSON.stringify(file)) : null; if (!f) return { file: file || null, changed: false };
+  const ths = ((leaders && leaders.themes) || []).filter((t) => t && t.name); if (!ths.length) return { file: f, changed: false };
+  const prev = f.rows.filter((r) => r && r.date < date).pop(); if (!prev || !prev.pick || !Array.isArray(prev.pick.a) || !Array.isArray(prev.pick.b)) return { file: f, changed: false };
+  const by = new Map(); for (const t of ths) for (const nm of [t.name, ...(t.alias || [])]) if (!by.has(nm)) by.set(nm, t);
+  const sc = (names) => { const hit = [...new Set(names.map((n) => by.get(n)).filter(Boolean))], rs = hit.map((t) => t.rate).filter((v) => typeof v === "number"), avg = rs.length ? round2(rs.reduce((a, v) => a + v, 0) / rs.length) : null; return { n: names.length, re: hit.length, avg, hit: hit.length > 0 && avg !== null && avg > 0 }; };
+  const old = JSON.stringify(prev.next || null); prev.next = { date, a: sc(prev.pick.a), b: sc(prev.pick.b) };
+  return { file: f, changed: old !== JSON.stringify(prev.next), row: prev };
+}
+export function abSummary(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], rs = all.filter((r) => typeof r.a === "number"); if (!rs.length) return null; const m = (k) => Number((rs.reduce((s, r) => s + r[k], 0) / rs.length).toFixed(1)); const out = { a: m("a"), b: m("b"), n: rs.length };
+  const nx = all.filter((r) => r && r.next && r.next.a && r.next.b); if (nx.length) { const q = (k) => ({ re: Number((nx.reduce((s, r) => s + r.next[k].re, 0) / nx.length).toFixed(1)), hit: nx.filter((r) => r.next[k].hit).length }); out.next = { n: nx.length, a: q("a"), b: q("b") }; }
+  return out; }
 export async function selectSurge({ get, map, date, hm = null, regular = false, flowsFor = null, us = null, history = [], kospiAmount = null, kosdaqAmount = null, top10 = new Set(), n = SURGE_N, chart = true }) {
   const t0 = Date.now(), errors = []; const req = { universe: 0, regular: 0, detail: 0, chart: 0 };
   if (!map || !Array.isArray(map.themes) || !map.themes.length) throw new Error("테마 구성표 없음");

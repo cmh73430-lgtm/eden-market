@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       when:
-        description: "morning(아침) · intraday(장중) · close(오후) · themes(미국장 테마만 아침 기록에 보충) · live(장중 실시간 주도 테마 → live.json) — 비우면 지금 시각으로"
+        description: "morning(아침) · intraday(장중) · close(오후) · themes(미국장 테마만 아침 기록에 보충) · live(장중 실시간 주도 테마 → live.json) · afterlive(16:00~20:05 애프터 실시간 → live-after.json) — 비우면 지금 시각으로"
         required: false
         default: ""
       force:
@@ -44,6 +44,6 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${{ github.event.inputs.when }}" ]; then ARGS="$ARGS --when=${{ github.event.inputs.when }}"; fi
-          case "${{ github.event.schedule }}" in "*/5 0-6 * * 1-5"|"*/20 0-6 * * 1-5") ARGS="$ARGS --when=live" ;; "0 7 * * 1-5") ARGS="$ARGS --when=close1600" ;; esac
+          case "${{ github.event.schedule }}" in "*/5 0-6 * * 1-5") ARGS="$ARGS --when=live" ;; "0 7 * * 1-5") ARGS="$ARGS --when=close1600" ;; esac
           if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
           node --disable-warning=ExperimentalWarning scripts/collect-auto.mjs $ARGS

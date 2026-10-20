@@ -25,6 +25,7 @@ export const AFTER_POLL_BATCH = 400, AFTER_MAX_REQ = 1500, AFTER_BUDGET_MS = 150
 //  근거(실측 · 레인 실제 호출 2026-10-16 20:06): 간격 0 으로 799회 24.6초(1회 평균 약 31ms) · 받아 둔 응답 replay(네트워크 0)에서 간격 50ms 만 쉰 시간 48.5초(Windows 타이머)
 //   → 20:20 실행 합 약 24.6 + 48.5 ≈ 73초(두 실측의 합) · 시간 상한 150초 · GitHub 작업 상한 10분 안
 //  실패 판정: 폴링 묶음 실패 1건↑ 또는 분봉 요청 실패 비율 > AFTER_FAIL_MAX(2%) → ok 거짓 + 이유(어느 묶음 · 몇 건) → 다음 실행(afterDue · 아침 보충)이 다시 계산
+export const AFTER_CONC = 4; // 분봉 동시 요청 수(워커) — 10-19 실측 순차 요청당 약 228ms · 658건 150초 → 동시 4개 · 요청 사이 gapMs 는 워커별
 export const AFTER_GAP_MS = 50, AFTER_RETRY_MS = 300, AFTER_FAIL_MAX = 0.02;
 export const AFTER_WARN = "슈팅 = 내일 시초가 추격 금지 · 급락 = 반등 매수 금지";
 export const AFTER_URL = (code, d8) => "https://api.stock.naver.com/chart/domestic/item/" + code + "/minute?startDateTime=" + d8 + "1530&endDateTime=" + d8 + "2000";
@@ -100,27 +101,44 @@ export function bigMoves(rows, { lim = AFTER_MOVE, max = AFTER_PICK } = {}) {
 //  candidates = false 면 ②③ 은 안 함(빈 칸 + 이유 · 시험·손 실행용)
 //  폴링 값은 localTradedAt 날짜가 그 날(date)인 종목만 씀(아침 보충 때 폴링이 이미 다음 날 값이면 ②③ 은 이유 적고 비움 · 레인 실측 20:06 = "2026-10-16T20:00:00+09:00")
 //  거래 시각이 그날 「뒤」 날짜인 종목(아침 보충 때 이미 다음 날 값이 섞임)이 하나라도 있으면 ok 거짓(게이트 [2231] ②) · 그날 「앞」 날짜(그날 거래 없음 · 정지)는 후보에서만 빠짐
-export async function collectAfter({ get, date, leaders = null, map = null, at = null, now = Date.now(), src = "20:20", candidates = true, clock = () => Date.now(), deadline = Infinity, maxReq = AFTER_MAX_REQ, batch = AFTER_POLL_BATCH, gapMs = AFTER_GAP_MS, retryMs = AFTER_RETRY_MS, sleep = (ms) => new Promise((ok) => setTimeout(ok, ms)) }) {
+export async function collectAfter({ get, date, leaders = null, map = null, at = null, now = Date.now(), src = "20:20", candidates = true, clock = () => Date.now(), deadline = Infinity, maxReq = AFTER_MAX_REQ, batch = AFTER_POLL_BATCH, gapMs = AFTER_GAP_MS, conc = AFTER_CONC, retryMs = AFTER_RETRY_MS, sleep = (ms) => new Promise((ok) => setTimeout(ok, ms)) }) {
   const d8 = String(date).replace(/-/g, ""), t0 = clock(), errors = [], req = { polling: 0, minute: 0, retry: 0 };
   const memo = new Map(), fail = { poll: [], pollN: 0, minute: 0 }; let cut = "", sent = 0;
   const total = () => req.polling + req.minute;
-  const call = async (u) => { // 요청 사이 간격 · 실패면 한 번 더(짧게 쉬고)
-    if (sent++ && gapMs > 0) await sleep(gapMs);
+  const call = async (u, wk = { n: 0 }) => { // 요청 사이 간격(워커별 · 전체 첫 요청만 면제) · 실패면 한 번 더(짧게 쉬고)
+    if ((wk.n++ || sent) && gapMs > 0) await sleep(gapMs);
+    sent++;
     try { return await get(u); } catch (e) { req.retry++; if (retryMs > 0) await sleep(retryMs); return await get(u); }
   };
-  const move = async (code) => {
-    if (memo.has(code)) return memo.get(code);
-    if (total() >= maxReq) { cut = cut || "요청 상한 " + maxReq; return null; }
-    if (clock() > deadline) { cut = cut || "시간 상한"; return null; }
-    let m = null; req.minute++;
-    try { m = afterMove(await call(AFTER_URL(code, d8)), d8); if (!m) errors.push(code + ": 15:30~16:00 봉 없음"); } catch (e) { fail.minute++; errors.push(code + ": " + String((e && e.message) || e).slice(0, 40)); }
-    memo.set(code, m); return m;
+  const pending = new Map();
+  const move = (code, wk) => {
+    if (memo.has(code)) return Promise.resolve(memo.get(code));
+    if (pending.has(code)) return pending.get(code);
+    if (total() >= maxReq) { cut = cut || "요청 상한 " + maxReq; return Promise.resolve(null); }
+    if (clock() > deadline) { cut = cut || "시간 상한"; return Promise.resolve(null); }
+    req.minute++; // 동기 구간에서 세므로 동시 실행이어도 상한 초과 0
+    const pr = (async () => {
+      let m = null;
+      try { m = afterMove(await call(AFTER_URL(code, d8), wk), d8); if (!m) errors.push(code + ": 15:30~16:00 봉 없음"); } catch (e) { fail.minute++; errors.push(code + ": " + String((e && e.message) || e).slice(0, 40)); }
+      memo.set(code, m); pending.delete(code); return m;
+    })();
+    pending.set(code, pr); return pr;
+  };
+  // 목록 순서대로 나눠 가져가는 동시 conc 개 워커 · 상한(cut)에 걸리면 더 안 집음 · 이미 보낸 요청은 끝까지 기다림
+  const moveAll = async (codes) => {
+    let i = 0;
+    const worker = async () => { const wk = { n: 0 }; while (i < codes.length && !cut) { const c = codes[i++]; await move(c, wk); } };
+    await Promise.all(Array.from({ length: Math.max(1, Math.min(conc, codes.length)) }, worker));
   };
   // ① 주도 테마
-  const lead = [];
+  const lead = [], leadThemes = [];
   for (const t of (leaders && Array.isArray(leaders.themes) ? leaders.themes : []).slice(0, AFTER_LEAD_THEMES)) {
-    const slots = (t.slots || []).filter((s) => s && s.code).slice(0, AFTER_LEAD_SLOTS), stocks = [];
-    for (const s of slots) { const m = await move(String(s.code)); stocks.push(m ? row(String(s.code), s.name, m) : { code: String(s.code), name: s.name || String(s.code), pct: null }); }
+    leadThemes.push([t, (t.slots || []).filter((s) => s && s.code).slice(0, AFTER_LEAD_SLOTS)]);
+  }
+  await moveAll([...new Set(leadThemes.flatMap(([, sl]) => sl.map((s) => String(s.code))))]);
+  for (const [t, slots] of leadThemes) {
+    const stocks = [];
+    for (const s of slots) { const m = memo.get(String(s.code)) || null; stocks.push(m ? row(String(s.code), s.name, m) : { code: String(s.code), name: s.name || String(s.code), pct: null }); }
     const got = stocks.filter((x) => typeof x.pct === "number"), avg = avgOf(got.map((x) => x.pct));
     const lc = t.lead && t.lead.code ? String(t.lead.code) : slots[0] ? String(slots[0].code) : null, ls = stocks.find((x) => x.code === lc) || null;
     lead.push({ name: t.name, avg, state: afterState(avg), n: got.length, of: stocks.length, v: r1(got.reduce((a, x) => a + (memo.get(x.code) || { won: 0 }).won, 0) / 1e8), lead: ls && typeof ls.pct === "number" ? { name: ls.name, pct: ls.pct, v: ls.v } : null, stocks });
@@ -140,7 +158,8 @@ export async function collectAfter({ get, date, leaders = null, map = null, at =
     }
     const pool = [...val].filter(([, w]) => w >= AFTER_MIN_EOK * 1e8).sort((a, b) => b[1] - a[1]).map(([c]) => c); // 큰 것부터(상한에 걸려도 큰 종목은 잼)
     cand = { codes: codes.length, got: val.size, pool: pool.length, other, newer };
-    for (const c of pool) { const m = await move(c); if (cut) break; if (afterPass(m)) rows.push(Object.assign(row(c, names.get(c), m), { won: m.won })); }
+    await moveAll(pool);
+    for (const c of pool) { if (!memo.has(c)) break; const m = memo.get(c); if (afterPass(m)) rows.push(Object.assign(row(c, names.get(c), m), { won: m.won })); }
     if (!val.size) why = other ? "폴링 값이 " + date + " 것이 아님(" + other + "종목 · 거래 시각 날짜 다름)" : "폴링 거래대금 못 받음";
     else if (!pool.length) why = "그날 거래대금 10억↑ 종목 0";
   }
@@ -176,4 +195,28 @@ export function afterLeadMap(rec) {
   const m = new Map();
   for (const t of (rec && Array.isArray(rec.lead) ? rec.lead : [])) for (const s of t.stocks || []) if (s && s.code && typeof s.pct === "number") m.set(String(s.code), { pct: s.pct, n: s.n });
   return m;
+}
+
+// ---- 애프터 실시간 (--when=afterlive · 10-19 저녁 「일부만」 대응) : 16:00~20:05 평일 5~15분마다 auto/live-after.json 한 파일에만 저장 ----
+export const AFTERLIVE_FILE = "live-after.json", AFTERLIVE_OPEN = "16:00", AFTERLIVE_LAST = "20:05", AFTERLIVE_BUDGET_MS = 110000, AFTERLIVE_SCAN_EVERY = 15, AFTERLIVE_SCAN_WINDOW = 5, RECENT_MS = 180000;
+// 돌 시각인가: 16:00 ≤ hm ≤ 20:05 (20:05 뒤 도착 = 건너뜀 · 평일·휴장은 수집기 skipReason 이 먼저 거름)
+export const afterLiveWindow = (hm) => !!hm && String(hm) >= AFTERLIVE_OPEN && String(hm) <= AFTERLIVE_LAST;
+// 후보 스캔(②③) 돌릴 때인가: 분 % 15 < 5 (:00~:04 :15~:19 :30~:34 :45~:49) 이거나 이전 기록이 오늘 것이 아닐 때
+export function afterLiveScan(hm, prev, date) {
+  if (!prev || prev.date !== date) return true;
+  const mm = Number(String(hm).slice(3, 5));
+  return Number.isFinite(mm) && mm % AFTERLIVE_SCAN_EVERY < AFTERLIVE_SCAN_WINDOW;
+}
+// 직전 저장이 3분 안인가 (중복 실행 방지 · live.json 의 ts / live-after.json 의 ts)
+export const savedRecently = (rec, nowMs, ms = RECENT_MS) => !!rec && typeof rec.ts === "number" && nowMs - rec.ts >= 0 && nowMs - rec.ts < ms;
+// collectAfter 결과 + 이전 기록 → 저장 객체 · 스캔 안 한 회차는 strong·up·down·stat 을 이전 값 그대로(asOfScan = 그 값의 시각)
+export function afterLiveRecord(res, prev, { date, hm, ts, scan }) {
+  const out = Object.assign({}, res, { date, at: hm, ts });
+  delete out.skip;
+  if (scan) { out.scanAt = hm; if (res.skip) out.skip = res.skip; return out; }
+  const p = prev && prev.date === date ? prev : null;
+  out.strong = p && Array.isArray(p.strong) ? p.strong : []; out.up = p && Array.isArray(p.up) ? p.up : []; out.down = p && Array.isArray(p.down) ? p.down : [];
+  out.stat = p && p.stat ? p.stat : null;
+  out.scanAt = p && p.scanAt ? p.scanAt : null; out.asOfScan = out.scanAt;
+  return out;
 }
