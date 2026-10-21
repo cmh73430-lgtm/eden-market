@@ -574,7 +574,8 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
 /* 9.29-112 원장 [집2352] ④ 실시간 카드 = 세로 두 칸(왼쪽 A 테마 기준 · 오른쪽 B 거래대금 기준 · 칸 안은 위아래 3개) · 실시간 카드(.ab2)에서만 · 칸 폭이 좁으면(휴대폰) 칸 안 줄바꿈 — A·B 모두 정보 그대로(거래대금은 등락률 아래 줄 · 오른쪽 정렬 · 9.29-116b [집2410] B 도 보임) */
 .topld .tlch { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 4px; } .topld .tlch[hidden] { display: none; }
 .topld.ab2 .tlcols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 10px; align-items: start; }
-.topld .tlcol { min-width: 0; container-type: inline-size; } /* 칸 폭 기준(마감 카드 한 칸일 때도 · 좁으면 종목 칸 줄바꿈) */ .topld.ab2 .tlcolb { border-left: 1px solid var(--line); padding-left: 9px; }
+.topld .tlcol { min-width: 0; container-type: inline-size; } /* 칸 폭 기준(마감 카드 한 칸일 때도 · 좁으면 종목 칸 줄바꿈) */ .topld.ab2 .tlcolb { position: relative; } .topld.ab2 .tlcolb::before { content: ""; position: absolute; left: -5px; top: 0; bottom: 0; border-left: 1px solid var(--line); } /* 9.29-125 [집2444] 가운데 줄 = 칸 사이 틈 가운데(B 칸 안쪽 여백 0) → A·B 칸 폭 같음 → 글자 크기 같음(@container 기준 같음) */
+.topld .tll .tsg .stg .s4 { white-space: normal; overflow: visible; max-width: 100%; min-width: 0; } .topld .tll .tsg .stg .s4 .mutag { white-space: normal; max-width: 100%; box-sizing: border-box; margin-left: 0; overflow-wrap: anywhere; } /* 9.29-125 「⚠ 마이크론 …」 꼬리표 = 좁은 칸에서 그 칸 안 줄바꿈(넘침 0) */
 .topld .tll li.tlbx { display: block; font-size: 13px; color: var(--muted); }
 .topld.pcab2 { padding: 0; border-left: 0; margin: 4px 0 0; } /* 9.29-116 원장 [집2389] ⑤·① 장중 주도 테마 최종 = ④ 와 같은 두 칸(A | B) · 카드 안 상자라 테두리·여백 0 */
 .topld.ab2 .tll .tq .qnm { flex: 1 1 0; min-width: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; } /* 두 칸에서는 종목 이름 말줄임 대신 칸 안 줄바꿈(잘림 0) */
@@ -3503,7 +3504,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-124";
+  const APP_VER = "9.29-125";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -4198,7 +4199,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function lfABHtml(L, T) {
     const eo = (v) => (typeof v !== "number" ? "—" : Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억"), sg = (v) => (typeof v !== "number" ? "—" : (v > 0 ? "+" : "") + eo(v)), pc = (v) => (typeof v !== "number" ? "" : (v > 0 ? "+" : "") + v + "%"), c = (v) => (v > 0 ? "p" : v < 0 ? "n" : "");
     const BR = rankBRows(L), eqA = (t) => !!(BR && BR.some((b) => b.same && abSameTheme(t, b))), bo = { innerHTML: "" };
-    if (BR) paintColB(BR, { pc, eok: eo }, bo);
+    if (BR) paintColB(BR, { pc, eok: eo, kp: "fb:" + T + ":" }, bo);
     const rows = L.themes.slice(0, 3).map((t, n) => {
       const cf = closeFlowOf(T, t), ord = shownSlots(t.slots), surge = typeof t.strongN === "number", ldName = t.lead && t.lead.name ? t.lead.name : ((t.slots || [])[0] || {}).name || "";
       const head = [surge ? "강한 종목 " + t.strongN + "개 · +10%↑ " + t.n10 + "개" + (t.lead && t.lead.name ? " · 대장 " + t.lead.name : "") : "", cf ? "외인 " + sg(cf.foreign) + " · 기관 " + sg(cf.inst) : t.flowState === "pending" ? "수급 확인 전" : ""].filter(Boolean).join(" · ");
@@ -4211,7 +4212,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LF_TB = new WeakSet();
   function lfABOn(el) {
     const w = el.querySelector ? el.querySelector(".pcab2") : null; if (!w) return;
-    abCols(w.dataset.b === "1", w); alignStocks(w.querySelector(".tlcola .tll")); /* 9.29-116 ④ 와 같은 두 칸 켜기 · 종목 칸 너비 맞춤(그 칸 안) */
+    abCols(w.dataset.b === "1", w); alignStocks(w.querySelector(".tlcola .tll")); if (w.dataset.b === "1") alignStocks(w.querySelector(".tlcolb .tll")); /* 9.29-125 [집2444] B 칸도 */ /* 9.29-116 ④ 와 같은 두 칸 켜기 · 종목 칸 너비 맞춤(그 칸 안) */
     if (!LF_TB.has(el)) { LF_TB.add(el); el.addEventListener("toggle", (e) => { const d = e.target; if (!d || !d.classList || !d.classList.contains("tmore")) return; const k = d.dataset.tl || ""; if (d.open) TL_OPEN.add(k); else TL_OPEN.delete(k); alignStocks(d.closest(".tll")); }, true); } /* 펼친 테마 기억(다시 그려도 안 접힘) */
   }
   function paintPrevClose() {
@@ -4557,7 +4558,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function tqRow(o) { return `<span class="tqr${o.lead ? " ld" : ""}"><span class="qn"><span class="qs">${o.lead ? "★" : ""}</span><span class="qnm" title="${esc(o.name)}">${esc(o.name)}</span>${o.mark ? `<small class="sb ${o.markCls || "warn"} tqk" title="자세히를 누르면 꼬리표가 다 보여요">${esc(o.mark)}</small>` : ""}</span><span class="qr ${o.rc || ""}">${esc(o.rate || "")}</span><span class="qv">${esc(o.value || "")}</span>${o.fl ? `<span class="qf">${o.fl}</span>` : ""}</span>`; } /* 9.29-111 [집2353] o.fl = 종목 아래 작은 한 줄(외인·기관) */
   function tmoreHtml(key, label, inner) { return `<details class="tmore" data-tl="${esc(key)}"${TL_OPEN.has(key) ? " open" : ""}><summary>${esc(label)}</summary>${inner}</details>`; }
   function tmoreBind() { if (tmoreBind.h) return; const ul = $("topLeadList"); if (!ul) return; tmoreBind.h = 1;
-    ul.addEventListener("toggle", (e) => { const d = e.target; if (!d || !d.classList || !d.classList.contains("tmore")) return; const k = d.dataset.tl || ""; if (d.open) TL_OPEN.add(k); else TL_OPEN.delete(k); alignStocks(); }, true); } /* 펼친 테마 기억(1분 갱신에도 안 접힘) · 펼칠 때 칸 너비 다시 */
+    ul.addEventListener("toggle", (e) => { const d = e.target; if (!d || !d.classList || !d.classList.contains("tmore")) return; const k = d.dataset.tl || ""; if (d.open) TL_OPEN.add(k); else TL_OPEN.delete(k); alignStocks(); }, true);
+    const ub = $("topLeadListB"); if (ub) ub.addEventListener("toggle", (e) => { const d = e.target; if (!d || !d.classList || !d.classList.contains("tmore")) return; const k = d.dataset.tl || ""; if (d.open) TL_OPEN.add(k); else TL_OPEN.delete(k); alignStocks(ub); }, true); } /* 펼친 테마 기억(1분 갱신에도 안 접힘) · 펼칠 때 칸 너비 다시 · 9.29-125 [집2444] B 칸 「자세히」도 같은 기억·칸 너비(그 칸 안) */ /* 펼친 테마 기억(1분 갱신에도 안 접힘) · 펼칠 때 칸 너비 다시 */
   // 9.29-98 원장 [1815] "칸 깨짐": 중계 /live-themes 덮기는 지수를 {value, close, amount, time} 로만 줌(전일 종가 없음) → 같은 날 수집기 live.json 의 kospi/kosdaq.prev(2자리)를 기억해 합친다 · 날짜가 다르면 안 씀
   let LIVE_PREV = null, livePrevTried = "";
   function livePrevMemo(l) { if (!l || !l.date || (l.fresh && l.fresh.overlay)) return; const p = { date: l.date }; let any = false; ["kospi", "kosdaq"].forEach((k) => { if (l[k] && typeof l[k].prev === "number") { p[k] = l[k].prev; any = true; } }); if (any) LIVE_PREV = p; }
@@ -4741,12 +4743,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const quick = ord.map(({ x, i }) => tqRow({ name: x.name, lead: i === 0, mark: riskOf(x), fl: x.flow && x.flow.src === "kiwoom" && !stale ? `외인 ${fc(x.flow.foreign)} · 기관 ${fc(x.flow.inst)}` : "", rate: typeof x.rate === "number" ? pc(x.rate) : "", rc: x.rate > 0 ? "p" : x.rate < 0 ? "n" : "", value: typeof x.value === "number" ? eok(x.value) : "" })).join("");
       return `<li class="tl2"><span class="rk">${n + 1}</span><span class="tn">${esc(t.name)}<span class="tsum"><small>${head}</small>${rlxGroup(t.relax && t.relax.text)}${eqA(t) ? `<span class="abeq">A·B 같음</span>` : ""}</span></span><span class="rt ${t.rate > 0 ? "p" : t.rate < 0 ? "n" : ""}"${typeof t.strongN === "number" ? ` title="${esc("테마 구성 종목 전체 단순 평균(네이버 테마 등락률과 같은 셈)" + (typeof t.strongAvg === "number" ? " · 강한 종목 " + t.strongN + "개 평균 " + pc(t.strongAvg) : ""))}"` : ""}>${pc(t.rate)}${typeof t.strongN === "number" ? `<small class="rtn">테마 평균</small>` : ""}</span><span class="tq">${quick}</span><details class="tmore" data-tl="${esc(t.name)}"${TL_OPEN.has(t.name) ? " open" : ""}><summary>자세히 (가격·꼬리표·뉴스)</summary><span class="tlw">${stocks}</span>${newsHtml(t)}</details></li>`; /* 게이트 [1887] 「테마 평균」 · 9.29-101 [1921] 한 줄 요약(.tq) + 펼치기(.tmore — 예전 종목 줄·꼬리표·뉴스 전부) */
     }).join("");
-    abCols(true); paintColB(BR, { pc, eok }); // 9.29-112 [집2352] 오른쪽 칸 B(거래대금 상위 겹침) · A 와 같은 회차·같은 갱신(paintTopLive 가 그릴 때마다)
+    abCols(true); paintColB(BR, { pc, eok, fl: !stale }); // 9.29-112 [집2352] 오른쪽 칸 B(거래대금 상위 겹침) · A 와 같은 회차·같은 갱신(paintTopLive 가 그릴 때마다)
     paintRef(L.ref || null, L.short || ""); // 9.29-100 [1845] ④ 참고 한 줄 · 완화 끝까지 모자란 날 이유
     paintFreq(null); /* 9.29-102 단골 칸은 마감 카드에서만 */
     paintClosingBet(); // 9.29-100 [1864] ③ 종가배팅 숫자 칸(실시간 후보)
     tmoreBind(); /* 9.29-101 [1921][1937]: 펼친 테마 기억 · 펼칠 때 칸 너비 다시 (공용) */
-    alignStocks(); // 9.29-99 [1821] 종목 줄 칸 너비 맞춤
+    alignStocks(); alignStocks($("topLeadListB")); // 9.29-99 [1821] 종목 줄 칸 너비 맞춤 · 9.29-125 [집2444] B 칸도(그 칸 안)
     paintShadow(L, { eok, pc });
     paintTags(); // 9.29-91 꼬리표 (주요 종목 · 그림자 표)
     if (wasHidden && typeof buildNav === "function") buildNav();
@@ -4758,17 +4760,29 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function rankBRows(L) {
     const rb = L && L.rankB; if (!rb || !Array.isArray(rb.themesB)) return null;
     const by = new Map((Array.isArray(rb.top) ? rb.top : []).filter((x) => x && x.code).map((x) => [x.code, x])), A = ((L && L.themes) || []).slice(0, 3);
+    const aS = new Map(); ((L && L.themes) || []).forEach((t) => ((t && t.slots) || []).forEach((x) => { if (x && x.code && !aS.has(x.code)) aS.set(x.code, x); })); /* 9.29-125 [집2444] 같은 회차 A 종목 자료(가격·꼬리표 근거)가 있으면 B 종목 칸에도 그대로 · 없으면 빈 칸(지어내기 0) */
     return rb.themesB.slice(0, 3).filter((t) => t && t.name).map((t) => {
       const ss = Array.isArray(t.codes) ? t.codes.map((c) => by.get(c)).filter(Boolean) : [], num = (v) => (typeof v === "number" && isFinite(v) ? v : null);
-      return { no: t.no, name: t.name, n: num(t.n), same: A.some((a) => abSameTheme(a, t)), stocks: ss.length ? rateOrder(ss.slice().sort((x, y) => (num(y.value) || 0) - (num(x.value) || 0)).slice(0, 3)).map(({ x }) => ({ /* gate [집2379]: 겹친 종목 중 거래대금 위 3개 그대로 · 순서만 등락률 순 */ name: x.name, rate: num(x.rate), value: num(x.value) })) : null };
+      const vs = ss.slice().sort((x, y) => (num(y.value) || 0) - (num(x.value) || 0)).slice(0, 3), rs = ss.map((x) => num(x.rate)).filter((v) => v !== null);
+      const slots = vs.length ? vs.map((x) => { const a = aS.get(x.code), fl = x.flow && typeof x.flow.f === "number" ? { foreign: x.flow.f, inst: x.flow.i } : undefined; return Object.assign({}, a || {}, { code: x.code, name: x.name, rate: num(x.rate), value: num(x.value) }, a && a.flow ? {} : fl ? { flow: fl } : {}); }) : null;
+      return { no: t.no, name: t.name, n: num(t.n), same: A.some((a) => abSameTheme(a, t)), slots, avg: rs.length ? Math.round((rs.reduce((p, v) => p + v, 0) / rs.length) * 100) / 100 : null, n10: rs.length ? rs.filter((v) => v >= 10).length : null, stocks: ss.length ? rateOrder(ss.slice().sort((x, y) => (num(y.value) || 0) - (num(x.value) || 0)).slice(0, 3)).map(({ x }) => ({ /* gate [집2379]: 겹친 종목 중 거래대금 위 3개 그대로 · 순서만 등락률 순 */ name: x.name, rate: num(x.rate), value: num(x.value) })) : null };
     });
   }
   function abCols(on, root) { const q = (s, id) => (root ? root.querySelector(s) : $(id)), b = root || $("topLead"), h = q(".tlch", "topLeadHA"), c = q(".tlcolb", "topLeadColB"), u = q(".tllb", "topLeadListB"); /* 9.29-116 root = ⑤·① 두 칸 */ if (b) b.classList.toggle("ab2", !!on); if (h) h.hidden = !on; if (c) c.hidden = !on; if (!on && u) u.innerHTML = ""; }
-  function paintColB(BR, { pc, eok }, to) {
+  /* 9.29-125 원장 [집2444] "a랑 표시 똑같이": B 줄 = A 줄과 같은 구성 — 순위 | 이름 + 작은 한 줄(겹친 종목 n개 · +10%↑ m개 · 대장 ○○ · A·B 같음) | 등락률(겹친 종목 평균) | 접힌 종목 3줄(tqRow · ★대장 · 위험 표시 · 외인·기관) | 「자세히」 = 종목 칸(stockLineHtml · 꼬리표 stockBadges · % 오른쪽)
+     종목 = rankBRows slots(겹친 종목 거래대금 위 3개 · 순서만 등락률 순 · 순위 꼬리 = 거래대금 순) · 옛 파일(codes·top 없음) = 예전처럼 이름 · n종목 겹침만 · 선정·판정(rankBOf) 무변 · o.fl = ④ 장중만 외인·기관(A 와 같은 조건) · o.kp = 「자세히」 기억 키 앞머리 */
+  function paintColB(BR, o, to) {
     const ul = to || $("topLeadListB"); if (!ul) return; /* 9.29-116 to = ⑤·① B 칸 */
     if (!BR || !BR.length) { ul.innerHTML = `<li class="tlbx"><small>${BR ? "겹치는 테마 없음" : "다음 회차부터"}</small></li>`; return; }
-    ul.innerHTML = BR.map((t, i) => `<li class="tl2 tlb"><span class="rk">${i + 1}</span><span class="tn">${esc(t.name)}${t.same ? `<span class="tsum"><span class="abeq">A·B 같음</span></span>` : ""}</span><span class="rt">${t.n === null ? "" : t.n + "종목"}<small class="rtn">겹침</small></span>`
-      + (t.stocks ? `<span class="tq">${t.stocks.map((x) => tqRow({ name: x.name, rate: x.rate === null ? "" : pc(x.rate), rc: x.rate > 0 ? "p" : x.rate < 0 ? "n" : "", value: x.value === null ? "" : eok(x.value) })).join("")}</span>` : "") + `</li>`).join("");
+    const { pc, eok } = o, c = (v) => (v > 0 ? "p" : v < 0 ? "n" : ""), sg = (v) => (typeof v !== "number" ? "—" : (v > 0 ? "+" : "") + eok(v)), fc = (v) => `<span class="${typeof v !== "number" ? "" : c(v)}">${sg(v)}</span>`;
+    ul.innerHTML = BR.map((t, i) => {
+      if (!t.slots) return `<li class="tl2 tlb"><span class="rk">${i + 1}</span><span class="tn">${esc(t.name)}${t.same ? `<span class="tsum"><span class="abeq">A·B 같음</span></span>` : ""}</span><span class="rt">${t.n === null ? "" : t.n + "종목"}<small class="rtn">겹침</small></span></li>`;
+      const ord = shownSlots(t.slots), ld = (t.slots[0] || {}).name || "";
+      const head = [t.n === null ? "" : "겹친 종목 " + t.n + "개", t.n10 === null ? "" : "+10%↑ " + t.n10 + "개", ld ? "대장 " + ld : ""].filter(Boolean).join(" · ");
+      const quick = ord.map(({ x, i: k }) => tqRow({ name: x.name, lead: k === 0, mark: riskOf(x), fl: o.fl && x.flow && x.flow.src === "kiwoom" ? `외인 ${fc(x.flow.foreign)} · 기관 ${fc(x.flow.inst)}` : "", rate: typeof x.rate === "number" ? pc(x.rate) : "", rc: c(x.rate), value: typeof x.value === "number" ? eok(x.value) : "" })).join("");
+      const boxes = ord.map((q) => stockLineHtml(q.x, stockBadges(q.x, q.i, "", ld), q.i === 0)).join("");
+      return `<li class="tl2 tlb"><span class="rk">${i + 1}</span><span class="tn">${esc(t.name)}<span class="tsum"><small>${esc(head)}</small>${t.same ? `<span class="abeq">A·B 같음</span>` : ""}</span></span><span class="rt ${c(t.avg)}" title="${esc("거래대금 상위 50 안에서 이 테마와 겹친 종목 등락률 단순 평균")}">${pc(t.avg)}<small class="rtn">겹친 종목 평균</small></span><span class="tq">${quick}</span>${boxes ? tmoreHtml((o.kp || "b:") + t.name, "자세히 (가격·꼬리표)", `<span class="tlw tlstk">${boxes}</span>`) : ""}</li>`;
+    }).join("");
   }
   /* 9.29-99 원장 [1821] 종목 줄 칸 · 9.29-112 [집2358][집2359][집2360]: 1줄 = 이름 | 가격 | 변동 | 등락률 | 꼬리표 칸(.stg = 마이크론 경고 · 순위·짝꿍·경보·과열 꼬리 · 개별주/지수주 — 등락률 바로 오른쪽 · 넘치면 그 칸 안에서 다음 줄) · 2줄 = 거래대금 | 평소 대비 ×n | 차트 | 외인·기관
      종목마다 한 칸(.tsg = 테두리·옅은 바탕) · 굵게 0 · 「 · 」 구분자는 글자로만(.lvs) · 없는 값은 빈 칸(자리 유지 · 지어내기 0) */
