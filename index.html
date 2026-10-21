@@ -363,7 +363,7 @@ textarea.jin { resize: vertical; }
 .topld .tlh .lvg .lvf::before { grid-row: var(--rb); grid-column: 1; color: var(--muted); }
 .topld .tlh .lvg .lvq:nth-of-type(1) .lvf::before { content: "코스피"; } .topld .tlh .lvg .lvq:nth-of-type(2) .lvf::before { content: "코스닥"; }
 .topld .tlh .lvg .lvx > .lvn > :first-child, .topld .tlh .lvg .lvcw, .topld .tlh .lvg .lvamt > :not(.lvl), .topld .tlh .lvg .lvf > :not(.lvl), .topld .tlh .lvg .lvi2 > :not(.lvl), .topld .tlh .lvg .lvpg > :not(.lvl) { text-align: right; white-space: nowrap; }
-.topld .tlh .lvg .lvh { font-size: 11px; font-weight: 600; color: var(--muted); text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); } .topld .tlh .lvg .lvh:nth-of-type(-n+3) { grid-row: 1; } .topld .tlh .lvg .lvh:nth-of-type(n+4) { grid-row: 4; margin-top: 2px; }
+.topld .tlh .lvg .lvh { font-size: 12px; font-weight: 600; color: var(--muted); text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); } .topld .tlh .lvg .lvh:nth-of-type(-n+3) { grid-row: 1; } .topld .tlh .lvg .lvh:nth-of-type(n+4) { grid-row: 4; margin-top: 2px; }
 .topld .tlh .lvg .lvh:nth-of-type(1), .topld .tlh .lvg .lvh:nth-of-type(4) { grid-column: 2; } .topld .tlh .lvg .lvh:nth-of-type(2), .topld .tlh .lvg .lvh:nth-of-type(5) { grid-column: 3; } .topld .tlh .lvg .lvh:nth-of-type(3), .topld .tlh .lvg .lvh:nth-of-type(6) { grid-column: 4; }
 @media (max-width: 379px) { .topld .tlh .lvg { font-size: 12px; column-gap: .35em; } } /* 360 등 좁은 화면 = 글자만 한 단계 작게(넘침 0) */
 @media (max-width: 339px) { .topld .tlh .lvg { grid-template-columns: max-content repeat(3, minmax(min-content, 1fr)); } .topld .tlh .lvg .lvcw { white-space: normal; } } /* 9.29-112 [집2352] 320 화면 = 등락 칸(▲변동 (등락률%))만 두 줄 허용(110 판 320 에서 지수 상자 7px 넘침 → 0 · 오른쪽 정렬 그대로) */
@@ -604,7 +604,7 @@ details.more[open] > summary { margin-bottom: 6px; } details.more > *:not(summar
   .topld .tll .tq .qnm { flex: 1 1 0; min-width: 0; white-space: normal; overflow: visible; overflow-wrap: anywhere; } .topld .tll .tq .qv { grid-column: 2; } /* 9.29-116b 원장 [집2410] 「거래대금도 표시하고」: B 칸도 A 처럼 거래대금(억) = 등락률 아래 줄 · 오른쪽 정렬(예전 B 숨김 규칙 뺌) */
   .topld .tll details.tmore { grid-column: 1 / -1; }
 }
-@container (max-width: 150px) { .topld .tll li.tl2 > .tn { font-size: 14px; } .topld .tll li.tl2 > .rt { font-size: 14px; } .topld .tll .rt .rtn { font-size: 11px; } .topld .tll .tq { font-size: 13px; column-gap: 4px; } } /* 320 화면 칸 = 글자 한 단계 작게 */
+@container (max-width: 150px) { .topld .tll li.tl2 > .tn { font-size: 14px; } .topld .tll li.tl2 > .rt { font-size: 14px; } .topld .tll .rt .rtn { font-size: 12px; } .topld .tll .tq { font-size: 13px; column-gap: 4px; } } /* 320 화면 칸 = 글자 한 단계 작게 · 9.29-128 [집2462] 테마 평균 글씨(.rtn) 11→12px(최소 12px) */
 .sb { display: inline-block; font-size: 12px; font-weight: 600; line-height: 1.35; padding: 0 5px; margin: 1px 4px 1px 0; border-radius: 4px; white-space: nowrap; background: var(--note); color: var(--muted); }
 .sb.warn, .sb.new { background: var(--sbw-bg); color: var(--sbw); } .sb.heat { background: var(--sbh-bg); color: var(--sbh); } .sb.pair { background: var(--sbp-bg); color: var(--sbp); }
 .topld .tll .tsg .tsr3 { display: flex; flex-wrap: wrap; padding-left: .9em; margin-top: 1px; }
@@ -3507,7 +3507,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-127";
+  const APP_VER = "9.29-128";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
