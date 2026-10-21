@@ -9,7 +9,7 @@ import { selectThemesV2, memoGet, attachRvol } from "./shadow.js";
 import { fetchNews2 } from "./news2.js";
 import { tvThreshold } from "../shared/trade-value.js";
 import { tagAvoidAll } from "./caution.js"; /* 9.29-101 종배 피함(S4) · 게이트 [1943] ② 장중·마감 같은 함수 */
-import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat, rankBOf, rankCOf, themeKwSum } from "./surge.js"; // 9.29-100 급등 묶음 선정
+import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat, rankBOf, rankCOf, themeKwSum, bigCapsOf, CAP_URL, RANKB_BIG_NONE } from "./surge.js"; // 9.29-100 급등 묶음 선정
 import { afterMove, AFTER_URL } from "./after.js"; /* 9.29-107 원장 [2205][2206] 아침 「어제 저녁 애프터마켓」 = 전날 분봉(15:30 봉 ↔ 19:59 봉) */
 export { selectThemesV2, memoGet, attachRvol, fetchNews2 };
 
@@ -638,7 +638,8 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
     if (hmReal < SURGE_START && !surge.force) { out.wait = SURGE_START; out.themes = []; out.text = ""; return out; } // 09:30 전 = 아직 (지어내기 0)
     const bizdate = day.replace(/-/g, "");
     const L = await selectSurge({ get, map: surge.map, date: day, hm: hmReal, kosdaqAmount: out.kosdaq && out.kosdaq.amount, regular: !!surge.regular, flowsFor: surge.flowsFor === false ? null : surge.flowsFor || makeFlowsFor(get, bizdate, { hm: hmReal, kiwoom: surge.kiwoom && surge.kiwoom.flows }), us, history, kospiAmount: out.kospi && out.kospi.amount, top10: surge.top10 || new Set(), n });
-    try { out.rankB = rankBOf({ stocks: L.rankStocks, map: surge.map, flows: L.rankFlows, themesA: L.themes, at: out.at, idx: { kospi: out.kospi ? { close: out.kospi.close, pct: out.kospi.value } : null, kosdaq: out.kosdaq ? { close: out.kosdaq.close, pct: out.kosdaq.value } : null } }); } catch (e) { out.errors.push("B 방식: " + (e.message || e)); } // 9.29-108 원장 [2286] 비교용 저장만(화면 0 · 새 요청 0 · 실패해도 A 그대로)
+    let bigB = null; try { bigB = bigCapsOf({ kospi: await get(CAP_URL), stocks: L.rankStocks }); } catch (e) { bigB = { none: RANKB_BIG_NONE, why: "코스피 시총 순위: " + (e.message || e) }; } /* 9.29-126 [집2449] B = 그날 시총 top20 빼고 상위 50 다시 · 시총 = 코스피 시총 순위 1쪽(요청 +1) + 코스닥 priceTop 같은 응답 · 못 얻으면 기존 방식 + 「대형주 제외 못 함」 · A·C 무변 */
+    try { out.rankB = rankBOf({ stocks: L.rankStocks, map: surge.map, flows: L.rankFlows, big: bigB, themesA: L.themes, at: out.at, idx: { kospi: out.kospi ? { close: out.kospi.close, pct: out.kospi.value } : null, kosdaq: out.kosdaq ? { close: out.kosdaq.close, pct: out.kosdaq.value } : null } }); } catch (e) { out.errors.push("B 방식: " + (e.message || e)); } // 9.29-108 원장 [2286] 비교용 저장만(화면 0 · 새 요청 0 · 실패해도 A 그대로)
     /* 9.29-111 원장 [2333][2343]: v7 C안(테마수급 ∩ 테마 수익률 · 키움 값) — 회차마다 계산·저장(rankC) · 화면 C 줄 · A·B 선정은 그대로 · 키움 값 없으면 rankC.none 「수급 자료 없음」 · 저장 = 정규화 값만(종목별 키움 원문 0) */
     if (surge.kiwoom !== undefined) { out.kiwoom = surge.kiwoom ? { src: "kiwoom", ok: !!surge.kiwoom.ok, at: surge.kiwoom.at || null, n: surge.kiwoom.n || 0, both: surge.kiwoom.both || 0, rows: surge.kiwoom.rows || null, requests: surge.kiwoom.requests || 0, flowN: L.rankFlows ? Object.values(L.rankFlows).filter((f) => f && f.src === "kiwoom").length : 0, ...(surge.kiwoom.why ? { why: surge.kiwoom.why } : {}) } : null; } /* flowN = 선정 수급(flowsFor)에 키움 값이 붙은 종목 수 */
     try { out.rankC = rankCOf({ stocks: L.rankStocks, map: surge.map, kiwoom: surge.kiwoom && surge.kiwoom.ok ? surge.kiwoom.flows : null, top10: surge.top10 || new Set(), at: out.at }); } catch (e) { out.errors.push("C 방식: " + (e.message || e)); }

@@ -79,6 +79,7 @@ export function univExcluded(s) {
   if (/스팩|기업인수목적/.test(name)) return "spac";
   return null;
 }
+const capOf = (s) => { const v = num(s && s.marketValueRaw); return v === null || !(v > 0) ? null : Math.round(v / 1e8); };
 // priceTop 응답(쪽들) → 종목 [{ code, name, market, rate, value(억), price, prev }] (제외 종목 빼고 · 같은 코드 한 번)
 export function parseUniverse(pages) {
   const out = [], seen = new Set(), excluded = { etf_etn: 0, preferred: 0, spac: 0 };
@@ -86,7 +87,7 @@ export function parseUniverse(pages) {
     const code = String((s && s.itemCode) || ""); if (!code || seen.has(code)) continue; seen.add(code);
     const why = univExcluded(s); if (why) { excluded[why]++; continue; }
     const raw = num(s.accumulatedTradingValueRaw), mk = s.stockExchangeType && s.stockExchangeType.code;
-    out.push({ code, name: String(s.stockName || ""), market: mk === "KQ" ? "KQ" : mk === "KS" ? "KS" : null, rate: num(s.fluctuationsRatio), value: raw === null ? null : round2(raw / 1e8), price: num(s.closePrice), prev: prevCloseOf(s) });
+    out.push({ code, name: String(s.stockName || ""), market: mk === "KQ" ? "KQ" : mk === "KS" ? "KS" : null, rate: num(s.fluctuationsRatio), value: raw === null ? null : round2(raw / 1e8), price: num(s.closePrice), prev: prevCloseOf(s), cap: capOf(s) }); /* 9.29-126 [집2449] cap = 그 시각 시총(억 · 네이버 marketValueRaw · 같은 응답) */
   }
   return { stocks: out, excluded };
 }
@@ -262,13 +263,30 @@ export function surgeText(themes) {
 // 9.29-108 원장 [2286] B 방식(비교용 기록 · 화면 0): 거래대금 상위 50(priceTop 두 시장 · ETF·ETN·우선주·스팩 제외 = 대상 목록과 같은 규칙) → 종목마다 소속 테마(테마 구성표 · 넓은 이름 제외)
 //  → 50 안에서 가장 많이 겹치는 테마 3개(겹친 종목 수 → 그 종목 거래대금 합 → 구성 종목 적은 테마) · 수급 = 선정 때 이미 받은 것만(flows · 새 요청 0)
 export const RANKB_N = 50, RANKB_TOP = 3;
-export function rankBOf({ stocks, map, flows = null, themesA = [], idx = {}, at = null }) {
-  const t0 = Date.now(), top = (stocks || []).filter((s) => s && s.code && typeof s.value === "number").slice().sort((a, b) => b.value - a.value).slice(0, RANKB_N);
+/* 9.29-126 원장 [집2445][집2448][집2449] B = 「그날 시총 top20 빼고 상위 50 다시」: 대형주 = 그 회차 코스피+코스닥 보통주(ETF·ETN·우선주·스팩 제외 = 대상 목록과 같은 규칙) 시총 상위 RANKB_BIG(20)
+   · 시총 = 네이버 marketValueRaw(현재가 × 상장주식수 · 그 시각 값) — 코스피 = 시총 순위 1쪽(CAP_URL · 30줄 · 요청 +1/회차) · 코스닥 = 선정과 같은 priceTop 응답(새 요청 0 · 3.8년 실측 코스닥 대형주 거래대금 순위 최대 32위 ≪ 받는 300줄)
+   · 고정 목록(top10_kospi.json)·N조 고정 기준 안 씀 · 못 얻으면 none(「대형주 제외 못 함」) = 기존 방식(빼지 않음) · A(selectSurge)·C(rankCOf) 무변 · 대형주는 참고 한 줄(ref = 대형주 중 거래대금 위 RANKB_BIG_REF 개)만 */
+export const RANKB_BIG = 20, RANKB_BIG_REF = 3, RANKB_BIG_NONE = "대형주 제외 못 함";
+export const CAP_URL = "https://m.stock.naver.com/api/stocks/marketValue/KOSPI?page=1&pageSize=30";
+export function bigCapsOf({ kospi = null, stocks = [], n = RANKB_BIG }) {
+  const ks = []; for (const s of (kospi && Array.isArray(kospi.stocks) ? kospi.stocks : [])) { if (univExcluded(s)) continue; const cap = capOf(s); if (cap !== null && s.itemCode) ks.push({ code: String(s.itemCode), name: String(s.stockName || ""), market: "KS", cap }); }
+  if (ks.length < n) return { none: RANKB_BIG_NONE, why: "코스피 시총 순위 " + ks.length + "개" };
+  const kq = (stocks || []).filter((s) => s && s.market === "KQ" && typeof s.cap === "number");
+  if (!kq.length) return { none: RANKB_BIG_NONE, why: "코스닥 시총 없음" };
+  const seen = new Set(), all = [];
+  for (const s of [...ks, ...kq]) { if (seen.has(s.code)) continue; seen.add(s.code); all.push({ code: s.code, name: s.name, market: s.market, cap: s.cap }); }
+  const list = all.sort((a, b) => b.cap - a.cap || (a.code < b.code ? -1 : 1)).slice(0, n);
+  return { codes: list.map((s) => s.code), list, src: "네이버 시총(코스피 순위 1쪽 + 코스닥 거래대금 순위 응답)" };
+}
+export function rankBOf({ stocks, map, flows = null, themesA = [], idx = {}, at = null, big = null }) {
+  const ok = (stocks || []).filter((s) => s && s.code && typeof s.value === "number").slice().sort((a, b) => b.value - a.value), bigSet = big && Array.isArray(big.codes) && big.codes.length ? new Set(big.codes) : null;
+  const t0 = Date.now(), top = (bigSet ? ok.filter((s) => !bigSet.has(s.code)) : ok).slice(0, RANKB_N);
+  const bigOut = !big ? null : bigSet ? { n: bigSet.size, src: big.src, codes: big.codes, ref: ok.filter((s) => bigSet.has(s.code)).slice(0, RANKB_BIG_REF).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value })), in50: ok.slice(0, RANKB_N).filter((s) => bigSet.has(s.code)).length } : { none: big.none || RANKB_BIG_NONE, why: big.why || undefined };
   const themesOf = new Map(); for (const t of (map && map.themes) || []) { if (!t || GENERIC_RE.test(t.name)) continue; for (const c of t.codes || []) { if (!themesOf.has(c)) themesOf.set(c, []); themesOf.get(c).push(t); } }
   const rows = top.map((s, i) => { const f = flows && flows[s.code]; return { r: i + 1, code: s.code, name: s.name, mk: s.market, rate: s.rate, value: s.value, themes: (themesOf.get(s.code) || []).map((t) => t.name), ...(f && typeof f.foreign === "number" ? { flow: { f: f.foreign, i: f.inst } } : {}) }; });
   const cnt = new Map(); for (const s of top) for (const t of themesOf.get(s.code) || []) { const x = cnt.get(t.no) || { no: t.no, name: t.name, count: t.count || (t.codes || []).length, n: 0, value: 0, codes: [] }; x.n++; x.value += s.value; x.codes.push(s.code); cnt.set(t.no, x); }
   const themesB = [...cnt.values()].sort((a, b) => b.n - a.n || b.value - a.value || a.count - b.count || (a.name < b.name ? -1 : 1)).slice(0, RANKB_TOP).map((x) => ({ no: x.no, name: x.name, n: x.n, value: round2(x.value), codes: x.codes }));
-  return { v: 1, at, src: "네이버 거래대금 순위(priceTop · 선정과 같은 응답 · 새 요청 0)", n: rows.length, top: rows, themesB, themesA: (themesA || []).map((t) => t && t.name).filter(Boolean), idx, newReq: 0, ms: Date.now() - t0 };
+  return { v: 1, at, src: "네이버 거래대금 순위(priceTop · 선정과 같은 응답 · 새 요청 0)", n: rows.length, top: rows, themesB, themesA: (themesA || []).map((t) => t && t.name).filter(Boolean), idx, newReq: big ? 1 : 0, ...(bigOut ? { big: bigOut } : {}), ms: Date.now() - t0 };
 }
 /* 9.29-111 원장 [2333] 「v7 C안 = 판정에 반영」 · [2343] ③ · v7 매매수칙 §2(reference/trading_rules_v7.html 「진짜 대금이 몰린 테마 찾기」):
    C = 테마수급 상위 ∩ 테마 수익률 상위 — 테마수급 = 그 테마 구성 종목(테마 구성표)의 외인+기관 순매수 합(키움 ka10063 장중 잠정 · 억원 · 목록에 있는 값만 더함)
