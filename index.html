@@ -776,6 +776,9 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 #prevClose .pcsup b { font-weight: 700; }
 .intrabox > b, .topld .tlh b { font-size: 15px; } .intrabox .ivd { font-size: 16px; }
 .topld .tll .tq .ld .qr, .topld .tll .tsg.ld .s3 { font-size: 15px; }
+/* 9.29-127 원장 [집2454][집2455] 「A·B 칸 자세히 안 작게」 · [집2452] 360·320 변동값(▲62,000) 잘림: A·B 두 칸(.ab2 = ④ 실시간 · ⑤·① 장중 주도 테마 최종) 「자세히」 안 종목 칸(.tsg)만 13→12px · 대장 등락률 15→13px(그래도 한 단계 크게 [집2373]) · 앱 최소 12px 유지 · 칸 밖(테마 이름·등락률·접힌 3줄·「자세히」 글자)·한 칸 마감 카드 무변 */
+.topld.ab2 .tll .tsg { font-size: 12px; } .topld.ab2 .tll .tsg .s3 { font-size: 12px; } .topld.ab2 .tll .tsg.ld .s3 { font-size: 13px; }
+@container (max-width: 130px) { .topld.ab2 .tll .tsg { padding-left: 3px; padding-right: 3px; } .topld.ab2 .tll .tsg .tsr1 { column-gap: 3px; } } /* 320 화면 칸(123px) = 12px 로도 모자란 만큼만 칸 안 좌우 여백 7→3 · 칸 사이 6→3 */
 </style>
 </head>
 <body>
@@ -3504,7 +3507,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-126";
+  const APP_VER = "9.29-127";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
