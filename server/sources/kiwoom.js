@@ -17,7 +17,9 @@ const LIMIT_RC = new Set([1700, 1701, 1702]);
 const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
 const round2 = (x) => Number(x.toFixed(2));
 
-export function kwKeys(env) { const k = env && env.KIWOOM_APP_KEY, s = env && env.KIWOOM_APP_SECRET; return k && s ? { appkey: String(k), secretkey: String(s) } : null; }
+// 키 앞뒤 공백·CR·LF·BOM 제거(Actions Secrets 끝 줄끝 → rc 8001 실측 [집2440]) · 지운 뒤 빈 글 = 키 없음(네트워크 0)
+const kwClean = (x) => (x === null || x === undefined ? "" : String(x).replace(/^[\s﻿]+|[\s﻿]+$/g, ""));
+export function kwKeys(env) { const k = kwClean(env && env.KIWOOM_APP_KEY), s = kwClean(env && env.KIWOOM_APP_SECRET); return k && s ? { appkey: k, secretkey: s } : null; }
 // 키움 숫자 글 → 수 (「+19」 「--51092」 「0」 · 빈 글 null) — 부호 글자에 「-」 가 하나라도 있으면 음수
 export function kwNum(s) {
   if (s === null || s === undefined) return null; const t = String(s).trim(); if (!t) return null;
