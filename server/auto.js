@@ -94,7 +94,7 @@ export function cumChange(k, bars, prevKr, expectedUs) {
   return { value, from: base.date, to: last.date, level: k === "ust" ? Number(normalizeYield(last.close).toFixed(2)) : undefined, price: r2(last.close), prev: r2(base.close) };
 }
 // 받아온 미국 값의 기준 날짜가 '기대하는 미국 거래일'보다 오래됐는지 (연휴·주말 뒤 묵은 값 방지). 선물·환율처럼 밤새 거래되는 값은 시각이 최신이라 걸리지 않는다
-export const US_DATED = ["sox", "vix", "ust", "ustlvl", "dji", "ixic", "spx", "rut", "fut", "es", "ym", "rty", "oil", "mu", "skhy"]; // mu·skhy (9.29-97 원장 [1784]): 연휴 뒤 묵은 미국 종목 값 차단 · 연휴 누적(CUM_SYMBOLS)에는 안 넣음(야후 daily 당일 close null)
+export const US_DATED = ["sox", "vix", "ust", "ustlvl", "dji", "ixic", "spx", "rut", "fut", "es", "ym", "rty", "oil", "mu", "skhy", "gc", "zn", "dx"]; // gc·zn·dx (9.29-115 원장 [집2370]): ②-2 참고 선물도 연휴 뒤 묵은 값 경고 · mu·skhy (9.29-97 원장 [1784]): 연휴 뒤 묵은 미국 종목 값 차단 · 연휴 누적(CUM_SYMBOLS)에는 안 넣음(야후 daily 당일 close null)
 export function staleCheck(signals, expectedUs) {
   const out = {};
   US_DATED.forEach((k) => { const v = signals[k]; const d = v && usDateOf(v.time); if (d && d < expectedUs) out[k] = { date: d, expected: expectedUs }; });

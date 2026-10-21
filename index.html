@@ -479,16 +479,26 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .nvex b { color: var(--g); font-size: 13px; }
 .helper { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; font-weight: 600; color: var(--muted); }
 .helper input.num { width: 90px; }
-#sigList .sig { grid-template-columns: minmax(0, 1fr) auto; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; background: var(--surface); }
-#sigList .sig[data-st="g"] { border-left-color: var(--g); } #sigList .sig[data-st="a"] { border-left-color: var(--a); } #sigList .sig[data-st="r"] { border-left-color: var(--r); }
-#sigList .sig .name { grid-column: 1 / -1; font-size: 13px; line-height: 1.3; }
-#sigList .sig .in { grid-column: 1 / -1; } #sigList .sig .in .status { margin-left: auto; min-width: 5em; }
-#sigList .sig .rule { gap: 4px; } #sigList .sig .rule b { padding: 1px 7px; border-radius: 99px; font-size: 12px; }
-#sigList .sig .rule .g { background: var(--g-bg); } #sigList .sig .rule .a { background: var(--a-bg); } #sigList .sig .rule .r { background: var(--r-bg); }
-#sigList .lvl { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px; padding: 6px 8px; border-radius: 6px; background: var(--note); }
-#sigList .lvl .ln { font-size: 13px; font-weight: 600; } #sigList .lvl .ln small { color: var(--muted); font-weight: 600; }
-#sigList .lvl .in input.num { width: 64px; font-size: 14px; padding: 4px 6px; } #sigList .lvl .status { min-width: 5em; }
-#sigList .lvl .lh, #sigList .lvl .autoat { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+:is(#sigList, #sigListUs, #sigListFut) .sig { grid-template-columns: minmax(0, 1fr) auto; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; background: var(--surface); }
+:is(#sigList, #sigListUs, #sigListFut) .sig[data-st="g"] { border-left-color: var(--g); } :is(#sigList, #sigListUs, #sigListFut) .sig[data-st="a"] { border-left-color: var(--a); } :is(#sigList, #sigListUs, #sigListFut) .sig[data-st="r"] { border-left-color: var(--r); }
+:is(#sigList, #sigListUs, #sigListFut) .sig .name { grid-column: 1 / -1; font-size: 13px; line-height: 1.3; }
+:is(#sigList, #sigListUs, #sigListFut) .sig .in { grid-column: 1 / -1; } :is(#sigList, #sigListUs, #sigListFut) .sig .in .status { margin-left: auto; min-width: 5em; }
+:is(#sigList, #sigListUs, #sigListFut) .sig .rule { gap: 4px; } :is(#sigList, #sigListUs, #sigListFut) .sig .rule b { padding: 1px 7px; border-radius: 99px; font-size: 12px; }
+:is(#sigList, #sigListUs, #sigListFut) .sig .rule .g { background: var(--g-bg); } :is(#sigList, #sigListUs, #sigListFut) .sig .rule .a { background: var(--a-bg); } :is(#sigList, #sigListUs, #sigListFut) .sig .rule .r { background: var(--r-bg); }
+:is(#sigList, #sigListUs, #sigListFut) .lvl { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px; padding: 6px 8px; border-radius: 6px; background: var(--note); }
+:is(#sigList, #sigListUs, #sigListFut) .lvl .ln { font-size: 13px; font-weight: 600; } :is(#sigList, #sigListUs, #sigListFut) .lvl .ln small { color: var(--muted); font-weight: 600; }
+:is(#sigList, #sigListUs, #sigListFut) .lvl .in input.num { width: 64px; font-size: 14px; padding: 4px 6px; } :is(#sigList, #sigListUs, #sigListFut) .lvl .status { min-width: 5em; }
+:is(#sigList, #sigListUs, #sigListFut) .lvl .lh, :is(#sigList, #sigListUs, #sigListFut) .lvl .autoat { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+/* 9.29-115 원장 [집2369][집2370][집2415][집2417] ②-2 선물시장 · ② 미국 지표 · ③ 한 줄 요약: 결과 한눈(줄 = 이름 | 값 | 변동 | 등락률 · 시각 · 원천) + 입력칸은 「직접 넣기」 접기 · 굵기 ≤600 · 390·320 가로 넘침 0 */
+.futlist { display: grid; } .futlist .frow { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 1px 8px; padding: 7px 0; border-top: 1px solid var(--line); } .futlist .frow:first-child { border-top: 0; }
+.futlist .frow .fn { flex: 1 1 8em; min-width: 0; font-size: 14px; font-weight: 600; word-break: keep-all; overflow-wrap: anywhere; } .futlist .frow .fq { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 0 7px; margin-left: auto; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.futlist .frow .fq .fv { color: var(--ink); } .futlist .frow .fq .up { color: var(--up); } .futlist .frow .fq .dn { color: var(--down); } .futlist .frow .fq .fp { font-weight: 600; }
+.futlist .frow .fm, .futlist .frow .fnote { flex-basis: 100%; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; } .futlist .frow .fnote { line-height: 1.45; }
+.futlist .frow .fst { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--note); color: var(--muted); } .futlist .frow .fst.g { background: var(--g-bg); color: var(--g); } .futlist .frow .fst.a { background: var(--a-bg); color: var(--a); } .futlist .frow .fst.r { background: var(--r-bg); color: var(--r); }
+.futlist.fcore .frow .fn, .futlist.fcore .frow .fq { font-size: 16px; } /* 핵심 4줄 = 위 · 크게 */
+.futref, .sigin { margin-top: 8px; } .futref > summary, .sigin > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); padding: 6px 0; } .futref > summary small, .sigin > summary small { font-weight: 400; }
+.usfutline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 2px 0 6px; padding: 7px 10px; border-radius: 8px; background: var(--note); font-size: 14px; } .usfutline b { font-weight: 600; } .usfutline .pill { font-size: 13px; }
+.usfutline .golink { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
 .refcard { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; background: var(--surface); display: grid; gap: 2px; }
 .refcard .rhead { display: grid; gap: 1px; margin-bottom: 4px; } .refcard .rhead b { font-size: 15px; } .refcard .rhead span { font-size: 12px; color: var(--muted); }
 .refcard .rrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 5px 0; border-top: 1px solid var(--line); } /* 원장 [1948] ③: 이름 칸이 8em 밑으로 안 줄어 「SK하이닉스 ADR」 가 세로로 안 깨짐(남는 자리는 이름 칸이 다 가짐 · 390 에서 한 줄) · 숫자 묶음(≈190px)은 자리가 모자라면 다음 줄 오른쪽으로 */
@@ -1180,20 +1190,42 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
     <details class="howto" data-howto="usfwd"><summary>전진 기록 (매일 신호 → 한국 결과)</summary><div class="hint" id="usFwd">아직 기록 없음 · 매일 저녁 마감 확정 수집이 한 줄씩 쌓아요</div></details> <!-- 9.29-105 원장 [2132] ③ -->
   </section>
 
+  <!-- 9.29-115 원장 [집2369]: 미국 비선물 지표(SOX · VIX · 미 10년 금리) = ② 안 「미국 지표」 · [집2417] 결과 한눈 + 입력칸은 「직접 넣기」 접기 · 판정 규칙 무변(표시 자리만) -->
+  <section class="card" id="usSigCard" data-nav="🇺🇸 미국 지표 (SOX·VIX·금리)">
+    <h2>🇺🇸 미국 지표 <small>SOX 반도체 · VIX 공포지수 · 미 10년 금리 · 판정에 들어가요</small></h2>
+    <div class="futlist" id="usSigSum"></div>
+    <details class="sigin" id="usSigIn"><summary>✍️ 직접 넣기 · 검증 근거 <small>(마이크론 · SK하이닉스 ADR 참고 칸 포함)</small></summary><div class="siglist" id="sigListUs"></div></details>
+  </section>
+
+  </div>
+
+  <!-- 9.29-115 원장 [집2369][집2370][집2415]: ② 뉴욕증시 마감 바로 다음 「②-2 선물시장」(③④⑤ 번호 유지) · 핵심 4(위 · 크게) + 참고 5(「자세히」) · 새 선물(금 GC=F · 미 10년물 국채 ZN=F · 달러인덱스 DX=F)은 아침 수집 야후 · 판정 규칙 무변 -->
+  <div class="grp grp2 grp2f" id="grp2f" data-grp="②-2 선물시장">
+  <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>②-2 선물시장</b><small class="grpst"></small></button></div>
+
+  <section class="card" id="futCard" data-nav="📈 선물시장 (야간선물·미국 선물)">
+    <h2>📈 선물시장 <small>아침 수집 · 이름 | 값 | 변동 | 등락률 · 시각 · 원천</small></h2>
+    <div class="futlist fcore" id="futCore"></div>
+    <details class="futref" id="futRef"><summary>자세히 — 다우 · WTI · 금 · 미 10년물 국채 · 달러인덱스 선물 <small>(참고 · 판정에 안 넣어요)</small></summary><div class="futlist" id="futRefList"></div></details>
+    <details class="sigin" id="futSigIn"><summary>✍️ 직접 넣기 · 검증 근거</summary><div class="siglist" id="sigListFut"></div></details>
+  </section>
+
   </div>
 
   <div class="grp grp3" id="grp3" data-grp="③ 프리마켓·장전 체크">
   <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>③ 프리마켓·장전 체크</b><small class="grpst"></small></button></div>
 
-  <section class="card" data-nav="장전 지표 (야간선물·환율·금리)">
-    <h2>장전 지표 (야간선물·환율·금리) <small>버튼(↗)을 눌러 숫자를 보고 → 칸에 넣기 · <b>±</b>는 마이너스 전환</small></h2>
+  <section class="card" data-nav="장전 지표 (환율·일정)">
+    <h2>장전 지표 (환율·일정) <small>미국 지표는 ② · 선물은 ②-2 · 여기는 한국 지표</small></h2>
+    <div class="usfutline" id="usFutLine"></div> <!-- 9.29-115 원장 [집2369]: 「미국·선물: 좋음 n · 주의 n · 나쁨 n (②·②-2 에서 보기)」 한 줄 -->
+    <div class="futlist" id="krSigSum"></div>
     <div class="autoline" id="autoSig" hidden></div>
     <div class="autobtns" id="autoBtns" hidden>
       <button class="btn" type="button" data-pull>🔄 지금 받아오기</button>
       <a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener">⚡ 지금 새로 수집 ↗</a>
       <span class="autobtnmsg" data-msg></span>
     </div>
-    <div id="sigList"></div>
+    <details class="sigin refmore" id="refMore"><summary>✍️ 직접 넣기 · 검증 근거 <small>(원달러 환율)</small></summary><div class="siglist" id="sigList"></div></details>
     <div class="sig" data-k="ev">
       <div class="name">오늘 특별한 일정</div>
       <div class="in"><span class="status" id="st-ev">—</span></div>
@@ -3471,7 +3503,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-123";
+  const APP_VER = "9.29-124";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3552,6 +3584,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 판정 지표(정상·절반·쉼을 정함)와 참고 지표(판정에 안 넣음)를 나눠 보여 준다
   const SIG_MAIN = SIGNALS.filter((s) => !s.ref && s.k !== "ustlvl"), SIG_REF = SIGNALS.filter((s) => s.ref), UST_LVL = SIGNALS.find((s) => s.k === "ustlvl");
   // 참고 지표 한 줄 요약 (칸 옆에 짧게)
+  // 9.29-115 원장 [집2369][집2370]: ②-2 선물시장(핵심 4 · 참고 5) · ② 미국 지표 · ③ 한국 지표 — 표시 자리만 (판정 = shared/rules.js evaluate 그대로 · 지표 집합 무변)
+  const FUT_CORE = ["k200", "fut", "es", "rty"], FUT_REF = ["ym", "oil", "gc", "zn", "dx"], US_SIG = ["sox", "vix", "ust"], KR_SIG = ["fx"], USFUT_JUDGE = ["k200", "fut", "sox", "vix", "ust"];
+  const FUT_NAME = { k200: "코스피200 야간선물", fut: "나스닥100 선물", es: "S&P500 선물", rty: "러셀2000 선물", ym: "다우 선물", oil: "WTI 원유 선물", gc: "금 선물", zn: "미 10년물 국채 선물", dx: "달러인덱스 선물", sox: "SOX 반도체지수", vix: "VIX 공포지수", ust: "미 10년 금리", fx: "원달러 환율" };
+  const FUT_SRC = { naver: "네이버", yahoo: "야후", tradingview: "트레이딩뷰", kis: "한국투자증권" };
+  // 연구 근거 한 줄 (research_us/out/signals_result.txt · 코스피 · 강 등급만(p<.001 · 95% 하한 > 평소) · 자료 끝 2026-10-19 · 러셀 선물은 2017~ · 대부분 시가에 반영 = 갭이 종가 변화보다 큼) — 값이 + 면 오름 줄 · 그 밖은 내림 줄
+  const FUT_NOTE = { fut: { dn: "-1% 이하인 다음 날 코스피 하락 67%(753/1121일 · 2001~2026) · 대부분 시가에 반영", up: "+1% 이상인 다음 날 코스피 상승 72%(887/1235일 · 2001~2026) · 대부분 시가에 반영" }, es: { dn: "-1% 이하인 다음 날 코스피 하락 71%(590/829일 · 2001~2026) · 대부분 시가에 반영", up: "+1% 이상인 다음 날 코스피 상승 75%(646/856일 · 2001~2026) · 대부분 시가에 반영" }, rty: { dn: "-1.5% 이하인 다음 날 코스피 하락 74%(189/254일 · 2017~2026) · 대부분 시가에 반영", up: "+1.5% 이상인 다음 날 코스피 상승 72%(199/275일 · 2017~2026) · 대부분 시가에 반영" } };
   const REF_SHORT = { es: "미국 전체 분위기", ym: "경기 민감주", rty: "코스닥 중소형주", fx: "외국인 돈 방향", oil: "기름값", mu: "SOX와 겹쳐 판정에는 안 넣음", skhy: "표본 짧아 검증 불가" };
   // 게이트 권고 ⑤: 표본 일수 = 나스닥 상장일 2026-07-10 부터 그 날 기준 마지막 미국 거래일까지 미국 거래일 수 (10/8 화면 = 10/7 까지 63일)
   const SKHY_LISTED = "2026-07-10";
@@ -3615,18 +3653,21 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       ${learnHtml(s.name, s.learn)}
       </details>
     </div>`;
-  const refHtml = () => `
+  const refHtml = (SIG_REF, head) => `
     <div class="refcard">
-      <div class="rhead"><b>👀 참고 지표</b><span>판정 개수에 안 들어가요 · 흐름만 봐요 (환율+유가가 같은 날 함께 급등하면 주의 1개)</span></div>
+      <div class="rhead"><b>👀 참고 지표</b><span>${esc(head)}</span></div>
       ${SIG_REF.map((s) => `<div class="rrow"><span class="rn">${esc(s.name.replace(/^미국 선물 \((.*)\)$/, "$1 선물").replace(/ \(.*\)$/, ""))}<small>${esc(REF_SHORT[s.k] || "")}</small></span><div class="in"><button class="pm" type="button" data-for="${s.k}" aria-label="부호 바꾸기">±</button><input class="num" type="text" inputmode="decimal" id="in-${s.k}" placeholder="${esc(s.ph)}" autocomplete="off"><span class="unit">${esc(s.unit)}</span><span class="status" id="st-${s.k}">—</span></div></div>${s.usStk ? `<div class="rsub" id="rsub-${s.k}" hidden></div>` : ""}<div class="warn" id="warn-${s.k}" hidden></div>`).join("")}
       <details class="more"><summary>✍️ 기준 · 직접 넣는 법 · 사이트 링크</summary>
       ${SIG_REF.map((s) => `<div class="rdet"><b>${esc(s.name)}</b><div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div><div class="links">열어서 보기 ${linkHtml(s.links)}</div><div class="what">${esc(s.what)}</div>${sigValidHtml(s) /* 9.29-107 원장 [2244] */}${learnHtml(s.name, s.learn)}</div>`).join("")}
       </details>
     </div>`;
-  // 간단 보기: 검증 A·B 등급(야간선물·미 선물·반도체·VIX·금리)만 펼쳐 두고, C 등급 환율과 참고 지표는 접어 둔다 (전체 보기면 펼쳐짐)
-  const SIG_CORE = SIG_MAIN.filter((s) => s.k !== "fx"), SIG_FOLD = SIG_MAIN.filter((s) => s.k === "fx");
-  $("sigList").innerHTML = `<div class="siggroup"><b>🎯 판정 지표</b><span>이 숫자들로 오늘 정상·절반·쉼을 정해요 (실제 14년 데이터로 검증 · 2021~ 처음 보는 기간에서도 확인)</span></div>` + SIG_CORE.map(sigHtml).join("")
-    + `<details class="refmore" id="refMore"><summary>👀 참고 지표 — 환율 · 유가 · S&P · 다우 · 러셀 · 마이크론 · SK하이닉스 ADR <small>(혼자서는 판정에 거의 안 들어가요 · 환율+유가가 같은 날 급등할 때만 주의 1)</small></summary>` + SIG_FOLD.map(sigHtml).join("") + refHtml() + `</details>`;
+  // 9.29-115 원장 [집2369][집2417]: 입력 카드 = 각 묶음 「✍️ 직접 넣기」 접기 안 (간단 보기 접힘 · 전체 보기 펼침 · id·판정 그대로)
+  //  ② 미국 지표 = SOX · VIX · 금리(+수준) + 참고 마이크론 · SKHY / ②-2 선물 = 야간선물 · 나스닥 + 참고 S&P · 러셀 · 다우 · WTI / ③ 한국 지표 = 환율(참고)
+  const sigOf = (ks) => ks.map((k) => SIGNALS.find((s) => s.k === k));
+  const REF_HEAD = "판정 개수에 안 들어가요 · 흐름만 봐요", REF_HEAD2 = REF_HEAD + " (환율+유가가 같은 날 함께 급등하면 주의 1개)";
+  $("sigListUs").innerHTML = sigOf(US_SIG).map(sigHtml).join("") + refHtml(sigOf(["mu", "skhy"]), REF_HEAD);
+  $("sigListFut").innerHTML = sigOf(["k200", "fut"]).map(sigHtml).join("") + refHtml(sigOf(["es", "rty", "ym", "oil"]), REF_HEAD2);
+  $("sigList").innerHTML = refHtml(sigOf(KR_SIG), REF_HEAD2);
 
   // 미국장 테마: 한 칸에 한 줄씩 (이름·기준 | ± 입력 | 우선 관심·후순위), 링크·설명은 맨 아래 접기 하나로
   // 비슷한 업종끼리 묶고, 묶음 안은 많이 오른 순으로 (paintUsOrder)
@@ -3746,7 +3787,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function applySimple() {
     document.body.classList.toggle("simple", simple);
     const b = $("simpleBtn"); if (b) { b.textContent = simple ? "🧹 간단 보기 ✓" : "🔎 전체 보기 ✓"; b.classList.toggle("on", simple); b.title = simple ? "누르면 전체 보기 (참고 지표 · 모든 테마 · 수혜 업종 · 체크리스트 · 기록표 · 용어)" : "누르면 간단 보기 (판정에 쓰는 것만)"; }
-    const rm = $("refMore"); if (rm) rm.open = !simple;
+    document.querySelectorAll("details.sigin").forEach((d) => { d.open = !simple; }); // 9.29-115 [집2417]: 「직접 넣기」(③ #refMore 포함) = 간단 보기 접힘 · 전체 보기 펼침
     paintSimpleUs(); buildNav(); paintGroups();
   }
   $("simpleBtn").addEventListener("click", () => { simple = !simple; try { localStorage.setItem("eden.simple", simple ? "1" : "0"); } catch (e) {} applySimple(); paintNav(); });
@@ -3808,6 +3849,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (st) st.textContent = n + "칸 · " + (isNow ? (open ? "지금 시간 ▾" : "지금 시간 · 펼치기 ▸") : open ? "접기 ▾" : "펼치기 ▸");
     });
   }
+  $("usFutLine").addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("button.golink"); if (!b) return; const g = $(b.dataset.go); if (!g) return; grpOpen(g, true); try { g.scrollIntoView({ block: "start" }); } catch (err) {} }); // 9.29-115 [집2369] 「②·②-2 에서 보기」
   function grpOpen(g, open) { if (!g || !g.id) return; const m = grpMem(); m.o[g.id] = open ? 1 : 0; grpSave(m); paintGroups(); }
   const openGrpOf = (el) => { const g = el && el.closest && el.closest(".wrap > .grp"); if (g && g.classList.contains("shut")) grpOpen(g, true); }; // 메뉴·바로가기로 가는 카드가 접힌 묶음 안이면 먼저 펼침
   document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest(".grptog"); if (!b) return; const g = b.closest(".grp"); grpOpen(g, g.classList.contains("shut")); });
@@ -4082,8 +4124,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       el.className = "status " + (r.statuses[k] || ""); el.textContent = r.statuses[k] ? LABEL[r.statuses[k]] : "—";
     });
     paintUsStk(); // 9.29-97 마이크론·SKHY 참고 칸 (판정 0)
+    paintFut(r); // 9.29-115 원장 [집2369] ②-2 선물시장 · ② 미국 지표 · ③ 한국 지표 · 한 줄 요약 (r 그대로 · 판정 무변)
     // 지표 카드 왼쪽 띠 색: 칸 옆 판정(좋음·주의·나쁨)과 같게
-    document.querySelectorAll("#sigList .sig").forEach((card) => { const b = card.querySelector(".status"); card.dataset.st = ["g", "a", "r"].find((c) => b.classList.contains(c)) || ""; });
+    document.querySelectorAll(".siglist .sig").forEach((card) => { const b = card.querySelector(".status"); card.dataset.st = ["g", "a", "r"].find((c) => b.classList.contains(c)) || ""; });
     const refN = Object.keys(r.excluded).filter((k) => r.excluded[k] && r.statuses[k]).length;
     $("verdict").className = "verdict " + r.cls;
     $("modeText").textContent = r.mode; $("modeWhy").textContent = r.mode === "—" ? "아래 칸에 숫자를 넣으면 오늘 날씨(모드)가 나와요" : r.why; $("modeAct").textContent = EASY_ACT[r.mode] ?? r.act;
@@ -4390,6 +4433,35 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       return `<div class="secrow${on ? " on" : ""}"><span>${esc(nm)}</span><b>${v === null ? "—" : esc((v > 0 ? "+" : "") + v + SEC_TH[k][0])} / ${esc(SEC_TH[k][1])}</b>${on ? `<small>→ ${esc(good)}</small>` : ""}</div>`; }).join("");
     // 9.29-105 원장 [2134] 중복 합침 ④⑤: 「🇺🇸 미국장 테마 확인」(지수 마감 + 테마 칩) = 뉴욕증시 카드(usIdxHtml · 테마 줄)와 같은 자료 · 「🇰🇷 전일 주도 테마」 = 전일 주도 테마 카드와 같은 자료 → 이 카드에서 뺌(「✅ 미국장도 같은 방향」 줄은 전일 주도 테마 카드로 · prevBothList)
     return `<div class="briefs">${row("📅", "오늘 특별 일정 · 다음 2거래일", evHtml + briefGroupsHtml(S))}${row("🏭", "지표별 수혜 업종", secHtml)}</div>`;
+  }
+  // ---------- 9.29-115 원장 [집2369][집2370][집2417] 결과 줄: 이름 | 값 | 변동 | 등락률 · 시각 · 원천 (표시만 · 판정 = render 의 evaluate 결과 r 그대로) ----------
+  function futNoteOf(k, v) { const n = FUT_NOTE[k]; if (!n) return ""; return typeof v === "number" && v > 0 ? n.up : n.dn; }
+  function futTimeText(t) { const s = String(t || ""); if (!s) return ""; if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return "미국 " + Number(s.slice(5, 7)) + "/" + Number(s.slice(8, 10)) + " 종가"; const d = new Date(s); if (isNaN(d.getTime())) return ""; const kd = kstDate(d); return Number(kd.slice(5, 7)) + "/" + Number(kd.slice(8, 10)) + " " + kstTime(d).slice(0, 5); }
+  function futRowOf(st, r, k) {
+    st = st || S; const a = st.auto || {}, isSig = SIGNALS.some((s) => s.k === k); let meta = {}; try { meta = JSON.parse(a["fut." + k] || "{}") || {}; } catch (e) { meta = {}; }
+    const cur = (st.signals || {})[k], raw = isSig ? parseNum(cur) : typeof meta.v === "number" ? meta.v : null;
+    const manual = isSig && raw !== null && a["signals." + k] !== undefined && String(cur) !== String(a["signals." + k]), noAuto = isSig && raw !== null && a["signals." + k] === undefined;
+    const q = manual || noAuto || raw === null ? null : isSig ? sigQuoteOf(st, k) : (() => { const L = lvlOf(st, k); return L ? blogQuote(L[0], L[1], "") : null; })(), p = q && String(q).match(/^(\S+) (\S+) \((.+)\)$/);
+    const unit = { vix: "점", ust: "bp", fx: "원" }[k] || "%", rawTxt = raw === null ? "" : k === "vix" ? raw + "점" : (raw > 0 ? "+" : "") + raw + unit;
+    const both = !!(r && r.combo && (k === "fx" || k === "oil")), s0 = r && r.statuses ? r.statuses[k] : null;
+    const stc = !isSig || !s0 ? "" : both ? "a" : r.excluded[k] ? "ref" : s0, lbl = stc === "ref" ? "참고" : both ? "동반 주의" : stc ? LABEL[stc] : "";
+    const src = manual || noAuto ? "손 입력" : FUT_SRC[meta.src] || meta.src || (raw !== null ? "자동 수집" : ""), time = manual || noAuto ? "" : futTimeText(meta.time) || (raw !== null && a["at.morning"] ? "수집 " + a["at.morning"] : "");
+    return { k, name: FUT_NAME[k] || k, price: p ? p[1] : raw !== null && k === "vix" ? rawTxt : "", chg: p ? p[2] : "", pct: p && isSig ? p[3] : raw !== null && k !== "vix" ? rawTxt : "", raw, dir: p ? (/▲/.test(p[2]) ? "up" : /▼/.test(p[2]) ? "dn" : "") : raw > 0 && k !== "vix" ? "up" : raw < 0 ? "dn" : "", time, src, stale: a["stale." + k] ? "⚠ 오래된 값일 수 있어요" : "", st: stc, lbl, note: futNoteOf(k, raw) };
+  }
+  function futRowHtml(x, core) {
+    const fq = x.raw === null ? `<span class="fv">—</span>` : (x.price ? `<span class="fv">${esc(x.price)}</span>` : "") + (x.chg ? `<span class="fc ${x.dir}">${esc(x.chg)}</span>` : "") + (x.pct ? `<span class="fp ${x.dir}">${esc(x.pct)}</span>` : "");
+    const meta = x.raw === null ? "아직 없음 · 아침 수집(7시쯤) 뒤 채워져요" : [x.time, x.src, x.stale].filter(Boolean).join(" · ");
+    return `<div class="frow" data-k="${esc(x.k)}"><span class="fn">${esc(x.name)}</span><span class="fq">${fq}</span><small class="fm">${esc(meta)}${x.lbl ? ` <b class="fst ${x.st === "ref" ? "" : x.st}">${esc(x.lbl)}</b>` : ""}</small>${core && x.note ? `<small class="fnote">${esc(x.note)}</small>` : ""}</div>`;
+  }
+  function usFutCounts(r) { const c = { g: 0, a: 0, r: 0 }; USFUT_JUDGE.forEach((k) => { const s = r && r.statuses ? r.statuses[k] : null; if (s && !r.excluded[k]) c[s]++; }); return c; }
+  function usFutLineHtml(r) {
+    const c = usFutCounts(r), n = c.g + c.a + c.r;
+    return `<b>미국·선물:</b> ` + (n ? `<span class="pill g">좋음 ${c.g}</span> · <span class="pill a">주의 ${c.a}</span> · <span class="pill r">나쁨 ${c.r}</span>` : `<span class="muted">아직 값 없음</span>`) + ` <span class="muted">(<button type="button" class="golink" data-go="grp2">②</button>·<button type="button" class="golink" data-go="grp2f">②-2</button> 에서 보기)</span>`;
+  }
+  function paintFut(r) {
+    const rows = (ks, core) => ks.map((k) => futRowHtml(futRowOf(S, r, k), core)).join("");
+    $("futCore").innerHTML = rows(FUT_CORE, true); $("futRefList").innerHTML = rows(FUT_REF, false);
+    $("usSigSum").innerHTML = rows(US_SIG, false); $("krSigSum").innerHTML = rows(KR_SIG, false); $("usFutLine").innerHTML = usFutLineHtml(r);
   }
   // 9.29-105 [2134] ④: 어젯밤 미국 지수 마감 4줄(.usixb 칸 · 9.29-96 [1772][1781] · 9.29-98 [1815] 그대로) → 뉴욕증시 카드 맨 위 #usIdx
   function usIdxHtml() {
@@ -6063,6 +6135,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     Object.entries(m.signals || {}).forEach(([k, v]) => { const d = (v && v.detail) || {};
       const p = typeof d.price === "number" ? d.price : k === "k200" && typeof d.night === "number" ? d.night : null, b = typeof d.prev === "number" ? d.prev : k === "k200" && typeof d.dayClose === "number" ? d.dayClose : null;
       if (p === null || b === null) return; const js = JSON.stringify([p, b]); if (st.auto["lvl." + k] !== js) { st.auto["lvl." + k] = js; changed.push(["auto.lvl." + k, m.ts]); } });
+    // 9.29-115 원장 [집2370]: ②-2 · ② · ③ 결과 줄의 시각·원천(수집기 morning.signals[k].time · src) + 새 선물(금 · 미 10년물 국채 · 달러인덱스) 등락률 v · 받은 키만
+    Object.entries(m.signals || {}).forEach(([k, v]) => { if (!v || ![...FUT_CORE, ...FUT_REF, ...US_SIG, ...KR_SIG].includes(k)) return; const js = JSON.stringify({ v: typeof v.value === "number" ? v.value : null, src: v.src || "", time: v.time || "" }); if (st.auto["fut." + k] !== js) { st.auto["fut." + k] = js; changed.push(["auto.fut." + k, m.ts]); } });
     // 칸 아래 회색 줄: 「종가 ▲전일대비 (+%)」 (9.29-87 원장 [1655]) + 연휴 누적 설명 · 야간선물 근거
     const kd = m.signals && m.signals.k200 && m.signals.k200.detail; // 야간선물 근거: 야간 종가 · 전날 주간 종가
     Object.entries(m.signals || {}).forEach(([k, v]) => {
