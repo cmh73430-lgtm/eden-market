@@ -1651,7 +1651,7 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 const SIGNAL_KEYS = ["k200", "fut", "fx", "sox", "vix", "oil", "ust"];
 // 참고만 하는 신호 (판정·입력 개수에 안 넣음): S&P500·다우·러셀2000 선물 — 아직 실제 데이터 검증 전이라 '내 기준 찾기'로 쌓아 보고 정한다
 const REF_KEYS = ["es", "ym", "rty"];
-// 미 10년물 금리 '수준'(%): 단독 집계는 안 하고 ust(하루 변화) 판정을 더 나쁘게만 만든다 (4.5%·4.75% + 오름, 2021~ 검증)
+// 미 10년물 금리 '수준'(%): 단독 집계는 안 하고 ust(하루 변화) 판정을 더 나쁘게만 만든다 (4.5%↑ + 오름 → 주의 · 4.75%↑도 주의까지만 [집2429])
 const LEVEL_KEYS = ["ustlvl"];
 const ALL_KEYS = [...SIGNAL_KEYS, ...REF_KEYS, ...LEVEL_KEYS];
 const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
@@ -1731,13 +1731,14 @@ function evaluate(input = {}, events = [], config = {}) {
   const combo = statuses.fx === "a" && statuses.oil === "a";
   const excluded = { fx: true, oil: true, es: true, ym: true, rty: true, ustlvl: true };
 
-  // 1-1) 미 10년물 수준 규칙: 4.5% 이상이면서 그날 오르면 주의, 4.75% 이상이면서 오르면 나쁨 → ust 판정을 그만큼 올린다
-  //      검증(2021~26, scripts/validate-rules.mjs): 4.5%↑+오름 91일 다음 날 코스피 하락 58%(평소 46%), 4.75%↑+오름 24일 67%·평균 -0.61% · 5.0%↑는 3일뿐이라 기준을 내림
+  // 1-1) 미 10년물 수준 규칙: 4.5% 이상이면서 그날 오르면 주의(4.75% 이상도 주의까지만 · 이 규칙 혼자서는 쉼을 못 만듦) → ust 판정을 그만큼 올린다
+  //      검증(2021~26, scripts/validate-rules.mjs): 4.5%↑+오름 91일 다음 날 코스피 하락 58%(평소 46%)
+  //      4.75%↑+오름 나쁨→주의 (9.29-123 · [집2428][집2429]): 2001~2026: 4.75%↑+오름 하락 46%(302일) = 평소 46% · 2023~: 66%(29일) — 관찰 중
   const RANK = { g: 0, a: 1, r: 2 };
   let ustLevel = null;
   if (v.ustlvl !== null) {
     const up = v.ust !== null && v.ust > 0;
-    const st = v.ustlvl >= 4.75 && up ? "r" : v.ustlvl >= 4.5 && up ? "a" : "g";
+    const st = v.ustlvl >= 4.5 && up ? "a" : "g"; // 4.75%↑+오름도 「a」(주의) — [집2429]
     statuses.ustlvl = st;
     ustLevel = { level: v.ustlvl, st, unverified: false, raised: false };
     if (statuses.ust && RANK[st] > RANK[statuses.ust]) { statuses.ust = st; ustLevel.raised = true; }
@@ -3372,11 +3373,11 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     { k: "ustlvl", name: "미국 10년 금리 수준", core: "검증 2021~", unit: "%", ph: "4.20", noPm: true,
       links: [["네이버", NV + "/marketindex/bond/US10YT=RR", "nv"], ["인베스팅", IV + "/rates-bonds/u.s.-10-year-bond-yield", "iv"]],
       what: "미국 10년 금리 '수준' 그대로 넣어요. 예: 4.25%면 4.25 (자동으로 들어와요)",
-      rule: { g: "4.5% 미만 → 영향 없음", a: "4.5% 이상 + 오름 → 금리 칸을 주의로", r: "4.75% 이상 + 오름 → 금리 칸을 나쁨으로" },
+      rule: { g: "4.5% 미만 → 영향 없음", a: "4.5% 이상 + 오름 → 금리 칸을 주의로 · 4.75% 이상 + 오름 → 이것도 주의까지만", r: "금리 수준 규칙 없음 (혼자서는 쉼 안 만듦)" },
       learn: [
         ["한 줄 요약", "하루 변화가 작아도 금리가 이미 너무 높으면(5% 이상) 주식에 부담이에요."],
-        ["어떻게 쓰나요?", "혼자 따로 세지 않고, 위 '미국 10년 금리' 칸의 판정을 한 단계 더 나쁘게만 만들어요. 금리가 4.5% 이상인데 그날 또 올랐으면 주의, 4.75% 이상인데 또 올랐으면 나쁨이에요."],
-        ["검증 결과", "2021~2026년 실제 자료로 보니 금리가 4.5% 이상이면서 그날 또 오른 날(91일)은 다음 날 코스피가 58% 내렸고(평소 46%), 4.75% 이상이면서 오른 날(24일)은 67% 내리고 평균 -0.61%였어요. 같은 수준인데 안 오른 날은 오히려 덜 내렸어요. 5% 이상은 3일뿐이라 기준을 4.5·4.75로 잡았어요."],
+        ["어떻게 쓰나요?", "혼자 따로 세지 않고, 위 '미국 10년 금리' 칸의 판정을 한 단계 더 나쁘게만 만들어요. 금리가 4.5% 이상인데 그날 또 올랐으면 주의예요. 4.75% 이상이어도 주의까지만 올려서, 이 규칙 혼자서는 쉼을 못 만들어요."],
+        ["검증 결과", "2021~2026년 실제 자료로 보니 금리가 4.5% 이상이면서 그날 또 오른 날(91일)은 다음 날 코스피가 58% 내렸고(평소 46%), 같은 수준인데 안 오른 날은 오히려 덜 내렸어요. 4.75% 이상 + 오름은 2001~2026년으로 넓혀 보니 하락 46%(302일)로 평소 46%와 같아서 나쁨→주의로 낮췄어요. 2023년 이후는 66%(29일)라 관찰 중이에요."],
       ] },
   ];
 
@@ -3470,7 +3471,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-116";
+  const APP_VER = "9.29-123";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -3573,7 +3574,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   // 9.29-107 원장 [2244] 「🔬 검증 근거」 수치 전부 — 아래 표 = 저장소 검증 결과 파일 2개를 그대로 옮긴 것(test/cockpit107.test.js 가 파일을 다시 읽어 같은지 대조 · 지어내기 0)
   //  docs/signal-validation-2026-09-29.txt (scripts/validate-signals.mjs · 야후 일봉 · 기준 고른 기간 ~2020 · 처음 보는 기간 2021~) · docs/rules-validation-2026-09-29.txt (scripts/validate-rules.mjs ③ 금리 수준)
-  const SIG_VALID = {"period":{"days":3616,"from":"2012-01-03","to":"2026-09-29","learnTo":"2020","testFrom":"2021-01-01"},"base":{"down":46,"day":"+0.08","big":16},"rows":{"fut":[{"lbl":"주의","t":"-0.5%","n":404,"yr":72,"down":66,"base":46,"lift":"+20.61","lo":62,"day":"-0.58","big":32,"years":"21:61 22:72 23:69 24:67 25:69 26:55","g":"A"},{"lbl":"나쁨","t":"-1%","n":264,"yr":47,"down":73,"base":46,"lift":"+27.38","lo":67,"day":"-0.80","big":37,"years":"21:60 22:76 23:74 24:76 25:78 26:67","g":"A"},{"lbl":"학습에서 고른 기준","t":"-1.5%","n":162,"yr":29,"down":78,"base":46,"lift":"+32.05","lo":71,"day":"-0.95","big":42,"years":"21:67 22:82 23:84 24:81 25:83 26:62","g":"A"}],"sox":[{"lbl":"주의","t":"0%","n":641,"yr":114,"down":60,"base":46,"lift":"+13.87","lo":56,"day":"-0.40","big":26,"years":"21:60 22:70 23:62 24:58 25:48 26:57","g":"A"},{"lbl":"나쁨","t":"-2%","n":224,"yr":40,"down":77,"base":46,"lift":"+31.06","lo":71,"day":"-1.03","big":41,"years":"21:81 22:81 23:85 24:74 25:79 26:63","g":"A"},{"lbl":"학습에서 고른 기준","t":"-3%","n":128,"yr":23,"down":78,"base":46,"lift":"+32.40","lo":70,"day":"-1.21","big":46,"years":"21:83 22:79 23:86 24:79 25:90 26:63","g":"A"}],"vix":[{"lbl":"주의","t":"20","n":474,"yr":84,"down":51,"base":46,"lift":"+5.12","lo":46,"day":"-0.09","big":22,"years":"21:56 22:52 23:42 24:58 25:44 26:46","g":"B"},{"lbl":"나쁨","t":"30","n":65,"yr":12,"down":60,"base":46,"lift":"+14.27","lo":48,"day":"-0.32","big":35,"years":"21:33 22:66 25:50","g":"B"},{"lbl":"학습에서 고른 기준","t":"30","n":65,"yr":12,"down":60,"base":46,"lift":"+14.27","lo":48,"day":"-0.32","big":35,"years":"21:33 22:66 25:50","g":"B"}],"ust":[{"lbl":"주의","t":"10bp","n":79,"yr":14,"down":61,"base":46,"lift":"+15.03","lo":50,"day":"-0.44","big":32,"years":"22:69 23:45 24:65 25:40","g":"B"},{"lbl":"학습에서 고른 기준","t":"10bp","n":79,"yr":14,"down":61,"base":46,"lift":"+15.03","lo":50,"day":"-0.44","big":32,"years":"22:69 23:45 24:65 25:40","g":"B"}],"oil":[{"lbl":"주의","t":"3%","n":122,"yr":22,"down":37,"base":46,"lift":"-8.84","lo":29,"day":"+0.00","big":16,"years":"21:41 22:30 23:27 24:44 25:14 26:50","g":"C"},{"lbl":"학습에서 고른 기준","t":"2%","n":267,"yr":48,"down":40,"base":46,"lift":"-5.28","lo":35,"day":"+0.03","big":15,"years":"21:42 22:43 23:33 24:47 25:22 26:46","g":"C"}],"fx":[{"lbl":"주의","t":"10원","n":117,"yr":21,"down":44,"base":46,"lift":"-1.28","lo":36,"day":"+0.32","big":15,"years":"21:57 22:48 23:39 24:64 25:37 26:29","g":"C"},{"lbl":"학습에서 고른 기준","t":"5원","n":357,"yr":64,"down":45,"base":46,"lift":"-1.19","lo":39,"day":"+0.13","big":18,"years":"21:44 22:56 23:45 24:53 25:28 26:34","g":"C"}]},"both":{"ln":10,"ld":30,"lday":"+0.54","tn":13,"td":62,"tday":"-0.81"},"ustlvl":{"period":{"days":3616,"from":"2012-01-03","to":"2026-09-29","base":46},"rows":[{"lbl":"주의","t":"4.5% 이상 + 오름","n":91,"down":58,"base":46,"lift":"+11.81","day":"-0.43","big":35,"g":"A","flatN":67,"flatDown":34,"flatDay":"+0.45"},{"lbl":"나쁨","t":"4.75% 이상 + 오름","n":24,"down":67,"base":46,"lift":"+20.23","day":"-0.61","big":42,"g":"A","flatN":12,"flatDown":25,"flatDay":"+0.63"}]}};
+  const SIG_VALID = {"period":{"days":3616,"from":"2012-01-03","to":"2026-09-29","learnTo":"2020","testFrom":"2021-01-01"},"base":{"down":46,"day":"+0.08","big":16},"rows":{"fut":[{"lbl":"주의","t":"-0.5%","n":404,"yr":72,"down":66,"base":46,"lift":"+20.61","lo":62,"day":"-0.58","big":32,"years":"21:61 22:72 23:69 24:67 25:69 26:55","g":"A"},{"lbl":"나쁨","t":"-1%","n":264,"yr":47,"down":73,"base":46,"lift":"+27.38","lo":67,"day":"-0.80","big":37,"years":"21:60 22:76 23:74 24:76 25:78 26:67","g":"A"},{"lbl":"학습에서 고른 기준","t":"-1.5%","n":162,"yr":29,"down":78,"base":46,"lift":"+32.05","lo":71,"day":"-0.95","big":42,"years":"21:67 22:82 23:84 24:81 25:83 26:62","g":"A"}],"sox":[{"lbl":"주의","t":"0%","n":641,"yr":114,"down":60,"base":46,"lift":"+13.87","lo":56,"day":"-0.40","big":26,"years":"21:60 22:70 23:62 24:58 25:48 26:57","g":"A"},{"lbl":"나쁨","t":"-2%","n":224,"yr":40,"down":77,"base":46,"lift":"+31.06","lo":71,"day":"-1.03","big":41,"years":"21:81 22:81 23:85 24:74 25:79 26:63","g":"A"},{"lbl":"학습에서 고른 기준","t":"-3%","n":128,"yr":23,"down":78,"base":46,"lift":"+32.40","lo":70,"day":"-1.21","big":46,"years":"21:83 22:79 23:86 24:79 25:90 26:63","g":"A"}],"vix":[{"lbl":"주의","t":"20","n":474,"yr":84,"down":51,"base":46,"lift":"+5.12","lo":46,"day":"-0.09","big":22,"years":"21:56 22:52 23:42 24:58 25:44 26:46","g":"B"},{"lbl":"나쁨","t":"30","n":65,"yr":12,"down":60,"base":46,"lift":"+14.27","lo":48,"day":"-0.32","big":35,"years":"21:33 22:66 25:50","g":"B"},{"lbl":"학습에서 고른 기준","t":"30","n":65,"yr":12,"down":60,"base":46,"lift":"+14.27","lo":48,"day":"-0.32","big":35,"years":"21:33 22:66 25:50","g":"B"}],"ust":[{"lbl":"주의","t":"10bp","n":79,"yr":14,"down":61,"base":46,"lift":"+15.03","lo":50,"day":"-0.44","big":32,"years":"22:69 23:45 24:65 25:40","g":"B"},{"lbl":"학습에서 고른 기준","t":"10bp","n":79,"yr":14,"down":61,"base":46,"lift":"+15.03","lo":50,"day":"-0.44","big":32,"years":"22:69 23:45 24:65 25:40","g":"B"}],"oil":[{"lbl":"주의","t":"3%","n":122,"yr":22,"down":37,"base":46,"lift":"-8.84","lo":29,"day":"+0.00","big":16,"years":"21:41 22:30 23:27 24:44 25:14 26:50","g":"C"},{"lbl":"학습에서 고른 기준","t":"2%","n":267,"yr":48,"down":40,"base":46,"lift":"-5.28","lo":35,"day":"+0.03","big":15,"years":"21:42 22:43 23:33 24:47 25:22 26:46","g":"C"}],"fx":[{"lbl":"주의","t":"10원","n":117,"yr":21,"down":44,"base":46,"lift":"-1.28","lo":36,"day":"+0.32","big":15,"years":"21:57 22:48 23:39 24:64 25:37 26:29","g":"C"},{"lbl":"학습에서 고른 기준","t":"5원","n":357,"yr":64,"down":45,"base":46,"lift":"-1.19","lo":39,"day":"+0.13","big":18,"years":"21:44 22:56 23:45 24:53 25:28 26:34","g":"C"}]},"both":{"ln":10,"ld":30,"lday":"+0.54","tn":13,"td":62,"tday":"-0.81"},"ustlvl":{"period":{"days":3616,"from":"2012-01-03","to":"2026-09-29","base":46},"rows":[{"lbl":"주의","t":"4.5% 이상 + 오름","n":91,"down":58,"base":46,"lift":"+11.81","day":"-0.43","big":35,"g":"A","flatN":67,"flatDown":34,"flatDay":"+0.45"},{"lbl":"주의","t":"4.75%↑+오름","fix":"2026-10-21 [집2429]","from":"2001","to":"2026","n":302,"down":46,"base":46,"day":"+0.02","rFrom":"2023","rN":29,"rDown":66,"rBase":44,"rDay":"-0.51","note":"관찰 중"}]}};
   const SIG_VALID_SRC = "docs/signal-validation-2026-09-29.txt (scripts/validate-signals.mjs · 야후 일봉)", SIG_RULES_SRC = "docs/rules-validation-2026-09-29.txt (scripts/validate-rules.mjs)";
   const SIG_VALID_NONE = { mu: "상세 검증 표가 저장소에 없음 — 위 요약 문구만 있음(9.29-97 · 커밋 59351a3 · 검증 결과 파일 미보관)", skhy: "검증 자료 없음 — 2026-07-10 나스닥 상장 · 표본 1년 미만", es: "검증 자료 없음 — 참고 칸(판정에 안 넣음) · 저장소 검증 결과 파일에 이 지표 없음", ym: "검증 자료 없음 — 참고 칸(판정에 안 넣음) · 저장소 검증 결과 파일에 이 지표 없음", rty: "검증 자료 없음 — 참고 칸(판정에 안 넣음) · 저장소 검증 결과 파일에 이 지표 없음" };
   function sigValidHtml(s) {
@@ -3590,7 +3591,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (s.k === "ust" && V.ustlvl && V.ustlvl.rows.length) {
       const Q = V.ustlvl.period;
       out.push(`<div class="vper">금리 수준(이 수준 이상 + 그날 오름) · 코스피 ${n0(Q.days)}일 (${Q.from}~${Q.to}) · 평소 하락 마감 ${Q.base}%</div>`);
-      V.ustlvl.rows.forEach((r) => out.push(`<div class="vrow"><b>금리 수준 ${r.lbl} ${esc(r.t)} [${r.g}]</b><span>표본 ${n0(r.n)}일 · 다음 날 하락 마감 ${r.down}% (평소 ${r.base}% · ${r.lift}%p)</span><span>다음 날 평균 ${r.day}% · -1%↓ ${r.big}%</span>${r.flatN !== undefined ? `<span>같은 수준인데 안 오른 날 ${r.flatN}일: 하락 ${r.flatDown}% · 평균 ${r.flatDay}%</span>` : ""}</div>`));
+      V.ustlvl.rows.forEach((r) => out.push(r.fix ? `<div class="vrow"><b>금리 수준 ${r.lbl}: ${esc(r.t)} · ${r.from}~${r.to} 하락 ${r.down}%(${n0(r.n)}일) ${r.down === r.base ? "=" : "·"} 평소 ${r.base}% · ${r.rFrom}~ ${r.rDown}%(${n0(r.rN)}일) ${esc(r.note)}</b><span>정정 ${esc(r.fix)} · 나쁨 자리 = 금리 수준 규칙 없음 · 다음 날 평균 ${r.from}~ ${r.day}% · ${r.rFrom}~ ${r.rDay}%</span></div>` : `<div class="vrow"><b>금리 수준 ${r.lbl} ${esc(r.t)} [${r.g}]</b><span>표본 ${n0(r.n)}일 · 다음 날 하락 마감 ${r.down}% (평소 ${r.base}% · ${r.lift}%p)</span><span>다음 날 평균 ${r.day}% · -1%↓ ${r.big}%</span>${r.flatN !== undefined ? `<span>같은 수준인데 안 오른 날 ${r.flatN}일: 하락 ${r.flatDown}% · 평균 ${r.flatDay}%</span>` : ""}</div>`));
       out.push(`<div class="vsrc">출처: ${esc(SIG_RULES_SRC)}</div>`);
     }
     if (!rows.length && !(s.k === "ust")) out.push(`<div class="vnone">${esc(SIG_VALID_NONE[s.k] || "검증 자료 없음 — 저장소 검증 결과 파일에 이 지표 없음")}</div>`);
@@ -3601,7 +3602,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       <div class="name">${esc(s.name)} <span class="sigq" id="sq-${s.k}" hidden></span>${s.core ? `<span class="core">${esc(s.core)}</span>` : ""}</div>
       <div class="in">${s.noPm ? "" : `<button class="pm" type="button" data-for="${s.k}" aria-label="부호 바꾸기">±</button>`}<input class="num" type="text" inputmode="decimal" id="in-${s.k}" placeholder="${esc(s.ph)}" autocomplete="off"><span class="unit">${esc(s.unit)}</span><span class="status" id="st-${s.k}">—</span></div>
       <div class="autoat" id="aa-signals.${s.k}" hidden></div>
-      ${s.k === "ust" ? `<div class="lvl"><span class="ln">금리 수준 <small>(검증 2021~)</small></span><div class="in"><input class="num" type="text" inputmode="decimal" id="in-ustlvl" placeholder="${esc(UST_LVL.ph)}" autocomplete="off"><span class="unit">%</span><span class="status" id="st-ustlvl">—</span></div><small class="lh">4.5%↑인데 또 오르면 주의 · 4.75%↑면 나쁨 (위 금리 판정을 올려요 · 검증: 다음 날 하락 58%·67%)</small></div>` : ""}
+      ${s.k === "ust" ? `<div class="lvl"><span class="ln">금리 수준 <small>(검증 2021~)</small></span><div class="in"><input class="num" type="text" inputmode="decimal" id="in-ustlvl" placeholder="${esc(UST_LVL.ph)}" autocomplete="off"><span class="unit">%</span><span class="status" id="st-ustlvl">—</span></div><small class="lh">4.5%↑인데 또 오르면 주의 · 4.75%↑도 주의까지만 (위 금리 판정을 올려요 · 4.75%↑+오름: 2001~ 하락 46% = 평소 46% · 2023~ 66% 관찰 중)</small></div>` : ""}
       <div class="warn" id="warn-${s.k}" hidden></div>
       <div class="rule"><b class="g">${esc(s.rule.g)}</b><b class="a">${esc(s.rule.a)}</b><b class="r">${esc(s.rule.r)}</b></div>
       ${sigValidHtml(s) /* 9.29-107 원장 [2244] 수치 전부 · 자료 없는 지표는 까닭 */}
@@ -4225,7 +4226,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (v === null || !st) return;
       const val = sigQuoteOf(S, s.k) || (v > 0 && s.k !== "vix" ? "+" : "") + v + s.unit; // 「종가 ▲전일대비 (+%)」 · 수준값 없으면 등락률만 (9.29-87 원장 [1655])
       if (s.k === "ustlvl") return; // 금리 칸 한 줄에 같이 보여 줌
-      if (s.k === "ust" && r.ustLevel) { const L = r.ustLevel; main.push(sigRow(st, "미국 10년 금리", sigQuoteOf(S, "ust") || `${val} · ${L.level}%`, LABEL[st], L.raised ? `금리 수준 ${L.level}%가 ${L.st === "r" ? "4.75%" : "4.5%"} 이상인데 또 올라서 한 단계 올림 (검증: 다음 날 하락 ${L.st === "r" ? "67" : "58"}%)` : `${s.rule[st].split(" → ")[0]} · 수준 ${L.level}% (4.5% 넘고 오르면 조심)`)); return; }
+      if (s.k === "ust" && r.ustLevel) { const L = r.ustLevel; main.push(sigRow(st, "미국 10년 금리", sigQuoteOf(S, "ust") || `${val} · ${L.level}%`, LABEL[st], L.raised ? (L.level >= 4.75 ? `금리 수준 ${L.level}%가 4.75% 이상인데 또 올라서 주의로 올림 (4.75%↑+오름: 2001~ 하락 46% = 평소 46% · 2023~ 66% 관찰 중)` : `금리 수준 ${L.level}%가 4.5% 이상인데 또 올라서 한 단계 올림 (검증: 다음 날 하락 58%)`) : `${s.rule[st].split(" → ")[0]} · 수준 ${L.level}% (4.5% 넘고 오르면 조심)`)); return; }
       if (r.excluded[s.k]) { refs.push(sigRow(s.k === "fut" || REF_KEYS.includes(s.k) ? "ref" : st + " ref", s.name, val, "참고", REF_WHY[s.k](st))); return; }
       main.push(sigRow(st, s.name, val, LABEL[st], s.rule[st].split(" → ")[0]));
     });
