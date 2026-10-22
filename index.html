@@ -644,8 +644,8 @@ details.jfold > summary { cursor: pointer; } details.jfold > summary h3 { displa
 .grp > .card:not(.topld.live), .wrap .grp > .verdict { margin-left: -2px; } /* 왼쪽 테두리 5 → 7px 늘린 2px 만큼 바깥으로 → 카드 안 글 폭 그대로(그림·표 폭 유지) */
 .snapcard .mv { border: 0; padding: 0; background: none; }
 #liveFinal .pclive { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 13px; } #liveFinal .pclive h3 { margin: 0 0 2px; font-size: 15px; } #liveFinal .pclive h3 small, #liveFinal .pclive small { font-size: 12px; font-weight: 400; color: var(--muted); } #liveFinal .pclivel { margin: 0; padding-left: 1.3em; line-height: 1.6; } #liveFinal .pclivel .p { color: var(--up); font-weight: 600; } #liveFinal .pclivel .n { color: var(--down); font-weight: 600; } #liveFinal .pcab { display: grid; gap: 2px; margin-top: 4px; } #liveFinal .pcab div { overflow-wrap: anywhere; } /* 9.29-110 전일 장중 주도 테마 */
-#prevClose .pclist { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.7; font-variant-numeric: tabular-nums; } #prevClose .pcsup { display: grid; gap: 4px; font-size: 13px; line-height: 1.6; font-variant-numeric: tabular-nums; }
-#prevClose .p { color: var(--up); } #prevClose .n { color: var(--down); } #prevClose .nw { white-space: nowrap; } #prevClose .muted { color: var(--muted); font-size: 13px; }
+#prevClose .pclist, .idxbox .pclist { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.7; font-variant-numeric: tabular-nums; } #prevClose .pcsup, .idxbox .pcsup { display: grid; gap: 4px; font-size: 13px; line-height: 1.6; font-variant-numeric: tabular-nums; }
+#prevClose .p, .idxbox .p { color: var(--up); } #prevClose .n, .idxbox .n { color: var(--down); } #prevClose .nw, .idxbox .nw { white-space: nowrap; } #prevClose .muted, .idxbox .muted { color: var(--muted); font-size: 13px; }
 .secnav .navgrp { flex: 0 0 auto; margin-top: 6px; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; background: var(--sc); color: var(--s-on); }
 .secnav .navgrp:first-child { margin-top: 0; }
 /* 9.29-79 원장 [1537]: 매매수칙 카드 (첫 화면 맨 위 · 메뉴 첫 항목) */
@@ -773,7 +773,7 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 /* 9.29-112 원장 [집2371][집2372][집2373] 글자 기준 = ① 전일 마감 수급 줄(#prevClose .pcsup · 13px · 이름 b 700 · 값 400 — 그 줄은 그대로) · 본문·숫자 13px · 제목 15px · 굵기는 600 이하(기준 줄 이름 700 아래) · 강조는 크기·색으로만:
    ① 오늘 매매 모드(.verdict .mode 26px) ② 장중 재판정 결론(.intrabox .ivd 16px) ③ 주도 테마 이름 16px · 테마 등락률 17px(.topld li.tl2) ④ 대장 종목 등락률 15px(접힌 줄 ★ · 자세히 칸) */
 :is(b, strong, h1, h2, h3, h4, h5, h6, th, summary, button, optgroup):not(#ruleDoc *) { font-weight: 600; } /* 문서(#ruleDoc) 안은 문서 자체 글꼴 그대로 */
-#prevClose .pcsup b { font-weight: 700; }
+#prevClose .pcsup b, .idxbox .pcsup b { font-weight: 700; }
 .intrabox > b, .topld .tlh b { font-size: 15px; } .intrabox .ivd { font-size: 16px; }
 .topld .tll .tq .ld .qr, .topld .tll .tsg.ld .s3 { font-size: 15px; }
 /* 9.29-127 원장 [집2454][집2455] 「A·B 칸 자세히 안 작게」 · [집2452] 360·320 변동값(▲62,000) 잘림: A·B 두 칸(.ab2 = ④ 실시간 · ⑤·① 장중 주도 테마 최종) 「자세히」 안 종목 칸(.tsg)만 13→12px · 대장 등락률 15→13px(그래도 한 단계 크게 [집2373]) · 앱 최소 12px 유지 · 칸 밖(테마 이름·등락률·접힌 3줄·「자세히」 글자)·한 칸 마감 카드 무변 */
@@ -1371,6 +1371,12 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
   <div class="grp grp4" id="grp4" data-grp="④ 장중 주도 테마·재판정">
   <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>④ 장중 주도 테마·재판정</b><small class="grpst"></small></button></div>
 
+  <!-- 9.29-130 원장 [집2466]~[집2468]: ① 전일 마감 카드와 같은 지수·수급 4줄 상자 · ④ = 장중 실시간(수집기 live.json 5분 · 중계 1분 덮기면 그 값) · 시각 표시 · 없는 값 「—」 -->
+  <section class="card idxbox" id="intraIdx" data-nav="📈 장중 지수·수급">
+    <h2>📈 장중 지수·수급 <small id="intraIdxAt"></small></h2>
+    <div id="intraIdxBody"><div class="muted">장중 값 없음</div></div>
+  </section>
+
   <section class="card topld" id="topLead" data-nav="🔥 장중 주도 테마" hidden>
     <div class="tlh"><b id="topLeadTitle">🔥 오늘 주도 테마</b><span class="lvbadge" id="topLeadBadge" hidden></span><small id="topLeadSub"></small></div>
     <div class="tlcols" id="topLeadCols"> <!-- 9.29-112 원장 [집2351][집2352] ④ 실시간 카드 = 왼쪽 칸 A(테마 기준) 3개 · 오른쪽 칸 B(거래대금 상위 겹침) 3개 · 실시간 카드에서만 두 칸(.ab2) · 마감 카드·빈 카드는 예전 한 칸 그대로 -->
@@ -1401,6 +1407,12 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 
   <div class="grp grp5" id="grp5" data-grp="⑤ 마감 시황·매매일지">
   <div class="grphead"><button class="grptog" type="button" aria-expanded="true"><b>⑤ 마감 시황·매매일지</b><small class="grpst"></small></button></div>
+
+  <!-- 9.29-130 원장 [집2466]~[집2468]: ① 과 같은 지수·수급 4줄 상자 · ⑤ = 그날 마감 확정값(그날 날짜 파일 close · ① 과 같은 prevCloseRows) · 없는 값 「—」 -->
+  <section class="card idxbox" id="closeIdx" data-nav="📊 마감 지수·수급">
+    <h2>📊 마감 지수·수급 <small id="closeIdxAt"></small></h2>
+    <div id="closeIdxBody"><div class="muted">마감 자료 없음</div></div>
+  </section>
 
   <!-- 9.29-110 [2311] 장중 주도 테마 최종 · A/B · 채점 · 저녁 애프터 실시간 = ⑤ 에서 (④ 는 그날 장중 09:00~15:40 에만) · 당일 마감 값이 들어오면 당일 것 · 그 전엔 직전 거래일 것 -->
   <section class="card" id="liveFinal" data-nav="📌 장중 주도 테마 최종·A/B·애프터" hidden></section>
@@ -3507,7 +3519,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-128";
+  const APP_VER = "9.29-130";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -4155,6 +4167,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     lastEval = r;
     $("jMorning").innerHTML = morningSummary(r).html; // 9.29-110 TF 합의: 장전 판단은 📰 마감 시황 ① 한 곳만(매매 일지 쪽 접힘 칸 없앰)
     paintPrevClose(); // 9.29-94 원장 [1718] ① 전날 장 마감 카드
+    paintIntraIdx(); paintCloseIdx(); // 9.29-130 [집2468] ④·⑤ 지수·수급 상자
     return r;
   }
   // 9.29-94 원장 [1718]①: 「전날 장 마감 시황·수급」 — 직전 거래일(prevBusinessDay)의 저장 기록(loadDay)에서 87판 시황 카드와 같은 칸을 읽는다:
@@ -4227,9 +4240,39 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       setTimeout(() => { prevDayFetch(pd).then(() => { paintPrevClose(); paintTvIntra(); }); }, 0); /* 게이트 [1943] ①: 저장 기록 없는 기기 첫 열람 — 앞 거래일 기준이 들어오면 장중 표도 바로 금액으로 */
     }
     if (!R.idx.length && !R.sup.length) { box.innerHTML = `<div class="muted">전날 자료 없음</div>`; return; }
-    const c = (v) => (v > 0 ? "p" : v < 0 ? "n" : ""), eo = (v, sg) => (v === null || v === undefined ? "—" : blogEok(v, sg));
-    box.innerHTML = (R.idx.length ? `<ul class="pclist">${R.idx.map(([nm, q, v]) => `<li><b>${esc(nm)}</b> <span class="${c(v)}">${esc(q)}</span></li>`).join("")}</ul>` : `<div class="muted">지수 마감 값 없음</div>`)
-      + (R.sup.length ? `<div class="pcsup">${R.sup.map((x) => `<div><b>${esc(x.mk)}</b> ${[["외국인", x.f], ["기관", x.i], ["개인", x.p], ["프로그램", x.g]].map(([l, v]) => `<span class="nw">${l} <span class="${c(v)}">${eo(v, true)}</span></span>`).join(" · ")}${x.amt !== null ? ` · <span class="nw">거래대금 ${eo(x.amt)}</span>` : ""}</div>`).join("")}</div>` : `<div class="muted">수급 값 없음</div>`);
+    box.innerHTML = idxBoxHtml(R);
+  }
+  /* 9.29-130 원장 [집2466]~[집2468]: 지수·수급 4줄 상자 한 벌 — ① 전일 마감(예전 그대로) · ④ 장중 · ⑤ 마감이 같이 씀 · 지수 줄 「코스피 5,552.74 ▼215.27 (-3.73%)」 · 수급 줄 「코스피 외국인 · 기관 · 개인 · 프로그램 · 거래대금」 · 없는 값 「—」
+     o.dash = 거래대금 없으면 「거래대금 —」(④·⑤) · ① 은 예전처럼 거래대금 없으면 줄에서 뺌 · o.idx0/o.sup0 = 값 없을 때 글 */
+  function idxBoxHtml(R, o = {}) {
+    const c = (v) => (v > 0 ? "p" : v < 0 ? "n" : ""), eo = (v, sg) => (v === null || v === undefined || !isFinite(v) ? "—" : blogEok(v, sg));
+    return (R.idx.length ? `<ul class="pclist">${R.idx.map(([nm, q, v]) => `<li><b>${esc(nm)}</b> <span class="${c(v)}">${esc(q)}</span></li>`).join("")}</ul>` : `<div class="muted">${esc(o.idx0 || "지수 마감 값 없음")}</div>`)
+      + (R.sup.length ? `<div class="pcsup">${R.sup.map((x) => `<div><b>${esc(x.mk)}</b> ${[["외국인", x.f], ["기관", x.i], ["개인", x.p], ["프로그램", x.g]].map(([l, v]) => `<span class="nw">${l} <span class="${c(v)}">${eo(v, true)}</span></span>`).join(" · ")}${x.amt !== null && x.amt !== undefined ? ` · <span class="nw">거래대금 ${eo(x.amt)}</span>` : o.dash ? ` · <span class="nw">거래대금 —</span>` : ""}</div>`).join("")}</div>` : `<div class="muted">${esc(o.sup0 || "수급 값 없음")}</div>`);
+  }
+  /* ④ 장중 상자 자료 = live.json(수집기 5분 · 중계 1분 덮기면 그 값) 그대로: 지수 = liveIdxText(④ 실시간 카드와 같은 글) · 외국인·기관·개인 = invest/investQ · 프로그램 = program/programQ.total · 거래대금 = kospi/kosdaq.amount(억) · 없는 값 null → 「—」(지어내기 0) */
+  function liveIdxRows(L) {
+    const n = (v) => (typeof v === "number" && isFinite(v) ? v : null), out = { idx: [], sup: [] }; if (!L) return out;
+    [["코스피", L.kospi, L.invest, L.program], ["코스닥", L.kosdaq, L.investQ, L.programQ]].forEach(([nm, k, inv, pg]) => {
+      if (k) { const q = liveIdxText(k); if (q) out.idx.push([nm, q, n(k.value)]); }
+      if (k || inv || pg) out.sup.push({ mk: nm, f: inv ? n(inv.foreign) : null, i: inv ? n(inv.institution) : null, p: inv ? n(inv.personal) : null, g: pg ? n(pg.total) : null, amt: k ? n(k.amount) : null });
+    });
+    return out;
+  }
+  function paintIntraIdx() {
+    const box = $("intraIdxBody"), at = $("intraIdxAt"); if (!box || !at) return;
+    const L = LIVE && LIVE.date === DATE && liveAsOf(LIVE) === DATE ? LIVE : null, R = liveIdxRows(L);
+    if (!L || (!R.idx.length && !R.sup.length)) { at.textContent = ""; box.innerHTML = `<div class="muted">${DATE === kstDate() && isBusinessDay(DATE, CAL.holidays) ? "장중 9:05부터 5분마다 자동" : "장중 값 없음"}</div>`; return; }
+    const fr = L.fresh && L.fresh.overlay && typeof L.fresh.at === "string" ? L.fresh.at.slice(0, 5) : "", t = fr || L.at || "";
+    at.textContent = mdw(L.date) + " " + t + " 기준 · " + (L.closed || t >= "15:30" ? "장 마감 값" : fr ? "1분마다" : "5분마다");
+    box.innerHTML = idxBoxHtml(R, { dash: true, idx0: "지수 값 없음" });
+  }
+  /* ⑤ 마감 상자 = 보는 날(DATE) 저장 기록(그날 날짜 파일 close 를 applyAuto 로 넣은 값) · ① 과 같은 prevCloseRows · 마감 값 없으면 「오늘 마감 뒤 표시」 */
+  function paintCloseIdx() {
+    const box = $("closeIdxBody"), at = $("closeIdxAt"); if (!box || !at) return;
+    const R = prevCloseRows(S), ca = (S.auto || {})["at.close"] || "";
+    if (!R.idx.length && !R.sup.length) { at.textContent = ""; box.innerHTML = `<div class="muted">${DATE === kstDate() && isBusinessDay(DATE, CAL.holidays) ? "오늘 마감 뒤 표시 (오후 4:20 자동)" : "마감 자료 없음"}</div>`; return; }
+    at.textContent = mdw(DATE) + " 오후 3:30 마감" + (ca ? " · 수집 " + ca : "");
+    box.innerHTML = idxBoxHtml(R, { dash: true });
   }
 
   // 9.29-97 원장 [1784]: 마이크론·SKHY 참고 칸 — 칸 옆 상태(마이크론 주의·나쁨 · 그 밖 참고) + 칸 아래 자동 줄(마이크론 경고 · SKHY 환산·괴리 · 표본 꼬리표)
@@ -4597,6 +4640,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const box = $("topLead"); if (!box) return;
     tmoreBind(); /* 9.29-101 [1937] 세 카드 공용 */
     paintAB(); paintLiveFinal(); // 9.29-108 원장 [2287] · 9.29-110 애프터 실시간
+    paintIntraIdx(); // 9.29-130 [집2468] ④ 지수·수급 상자(실시간 값 들어올 때마다)
     if (liveShow()) { topMode(false); paintTopLive(box); return; }
     abCols(false); /* 9.29-112 두 칸(A·B)은 장중 실시간 카드에서만 · 마감 카드·빈 카드 = 예전 한 칸 */
     liveBadge(null); box.classList.remove("live", "stale"); // 실시간 카드에서 마감·어제 카드로 바뀔 때 빨간 표시가 남지 않게
