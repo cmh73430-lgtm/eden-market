@@ -3519,7 +3519,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-130";
+  const APP_VER = "9.29-131";
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
     "절반": "⛅ 평소 돈의 반만 써요. 그날 산 건 그날 팔고, 밤을 넘기지 않아요.",
@@ -4964,43 +4964,67 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   // 9.29-77 원장 [1513]: o.dB·o.dS = 매수·매도 시점 칸의 날짜(없으면 그날) → 그 날 봉에 B·S · 그 날 봉이 60봉 안에 없으면 표식 생략(out.B/out.S = true · 날짜는 값 띠에)
   // 9.29-88 원장 [1658]·[1659] 네이버 「차트보기」 일봉 그림과 같은 요소: 위 범례 줄(LH) · 캔들 칸(H · 오른쪽 가격 눈금 7단 ticks · 최고 hiPt · 최저 loPt · 이동평균 mas 5·20·60·120 = 받은 봉 전체로 계산 · 봉이 모자란 점은 없음)
   //  · 경계선(bot) · 거래량 칸(VH · 자기 눈금 = 창 최대 거래량) · 맨 아래 날짜 축(DH · dates 약 9칸) · 오른쪽 눈금 폭 axis · 위·아래 여유 15% = 최고·최저 글자 자리
+  // 9.29-129 원장 [집2464][집2465]: o.fs(글자 px) 가 오면 = 화면 폭 그대로(o.W = 그림 칸 실제 px · 1:1) 그림 · 글자 자리(범례·날짜 줄 · 오른쪽 눈금 폭 · 최고/최저 글자 여유 · 날짜 칸 수)를 글자 크기에 맞춤
+  //  o.fs 없으면 예전 그대로(W 400 · 글자 10 · 화면 폭 따라 줄어듦)
+  //  9.29-129r 원장 [집2473]: o.tw(글자, 굵게) = 글자 실제 폭 · o.asc·o.dsc = 글자 상자 위·아래 높이(candleFit 이 브라우저 글꼴로 잼 · 없으면 어림 svgTW) · 글자 자리 다 놓아도 겹침·칸 밖이 남으면
+  //   그쪽(최고 = 위 · 최저 = 아래) 여유를 글자 크기만큼 늘리고 그림 높이도 같이 늘려 다시 그림(봉 칸 크기 그대로 · B·S 가격 글자 자리가 모자라면 봉 칸 높이를 늘림) · 값 무변
   function candleGeom(bars, day, buy, sell, o = {}) {
-    const W = o.W || 400, H = o.H || 200, VH = o.VH || 56, LH = 16, DH = 16, axis = 50;
+    const fs = o.fs || 0, W = o.W || 400, H = o.H || 200, VH = o.VH || 56;
+    const tw = fs ? (typeof o.tw === "function" ? o.tw : (s, b) => svgTW(s, fs, b)) : null, asc = o.asc || fs * 1.12, dsc = o.dsc || fs * 0.33;
+    const LH = fs ? Math.max(fs + 8, Math.ceil(asc + dsc) + 3) : 16, DH = fs ? Math.max(fs + 6, Math.ceil(asc + dsc) + 3) : 16;
     const rows = (Array.isArray(bars) ? bars : []).filter((b) => b && typeof b.c === "number" && typeof b.o === "number" && typeof b.h === "number" && typeof b.l === "number");
     const di = rows.findIndex((b) => b.date === day);
     if (di < 0) return null;
     let end = rows.length - 1, start = Math.max(0, end - 59);
     if (di < start) { start = Math.max(0, di - 30); end = Math.min(rows.length - 1, start + 59); }
-    const win = rows.slice(start, end + 1), n = win.length, PW = W - axis, cw = PW / n, bw = Math.max(1, Math.min(10, cw * 0.62));
+    const win = rows.slice(start, end + 1), n = win.length;
     const at = (dd) => { const k = rows.findIndex((b) => b.date === (dd || day)); return k >= start && k <= end ? k : -1; };
     const iB = typeof buy === "number" && buy > 0 ? at(o.dB) : -2, iS = typeof sell === "number" && sell > 0 ? at(o.dS) : -2; // -2 = 값 없음 · -1 = 범위 밖
     const marks = [iB >= 0 ? buy : null, iS >= 0 ? sell : null].filter((x) => x !== null);
-    let lo = Math.min(...win.map((b) => b.l), ...marks), hi = Math.max(...win.map((b) => b.h), ...marks);
-    if (hi === lo) { hi += 1; lo -= 1; }
-    const m = (hi - lo) * 0.15; lo -= m; hi += m;
-    const top = LH, bot = LH + H, vbot = bot + VH;
-    const x = (i) => (i + 0.5) * cw, y = (p) => top + ((hi - p) / (hi - lo)) * H;
-    const vmax = Math.max(0, ...win.map((b) => (typeof b.v === "number" ? b.v : 0)));
-    const candles = win.map((b, i) => { const pv = start + i > 0 ? rows[start + i - 1].v : null;
-      return { date: b.date, x: x(i), yo: y(b.o), yc: y(b.c), yh: y(b.h), yl: y(b.l), up: b.c >= b.o, vh: vmax > 0 && typeof b.v === "number" ? (b.v / vmax) * (VH - 6) : 0, vt: volTone(b.v, pv) }; });
-    const ma = (N) => win.map((b, i) => { const k = start + i; if (k - N + 1 < 0) return null; let s = 0; for (let j = k - N + 1; j <= k; j++) s += rows[j].c; return { x: x(i), y: y(s / N) }; }).filter(Boolean);
-    const mas = [5, 20, 60, 120].map((N) => ({ N, pts: ma(N) }));
-    let hiI = 0, loI = 0; win.forEach((b, i) => { if (b.h > win[hiI].h) hiI = i; if (b.l < win[loI].l) loI = i; });
-    const md = (dd) => String(dd).slice(5, 7) + "/" + String(dd).slice(8, 10);
-    const hiPt = { x: x(hiI), y: y(win[hiI].h), p: win[hiI].h, md: md(win[hiI].date) }, loPt = { x: x(loI), y: y(win[loI].l), p: win[loI].l, md: md(win[loI].date) };
-    const ticks = Array.from({ length: 7 }, (_, i) => { const p = hi - ((hi - lo) * i) / 6; return { p, y: y(p) }; });
-    const step = Math.max(1, Math.round(n / 9));
-    const dates = win.map((b, i) => (i % step === 0 ? { x: x(i), md: md(b.date) } : null)).filter(Boolean);
-    const d = di - start, yB = iB >= 0 ? y(buy) : null, yS = iS >= 0 ? y(sell) : null;
-    const apart = yB !== null && yS !== null && iB === iS && Math.abs(yB - yS) < 18 ? 10 : 0; // 같은 봉에서 두 표식이 겹치면 좌우로 비킴
-    return { W, H, VH, LH, DH, axis, PW, TH: LH + H + VH + DH, top, bot, vbot, n, start, d, cw, bw, lo, hi, candles, mas, hiPt, loPt, ticks, dates,
-      B: yB === null ? null : { x: x(iB - start) - apart, y: yB, p: buy }, S: yS === null ? null : { x: x(iS - start) + apart, y: yS, p: sell }, out: { B: iB === -1, S: iS === -1 } };
+    let lo0 = Math.min(...win.map((b) => b.l), ...marks), hi0 = Math.max(...win.map((b) => b.h), ...marks);
+    if (hi0 === lo0) { hi0 += 1; lo0 -= 1; }
+    let padL = 0, padR = 0;
+    const build = (et, eb, eh) => { // et·eb = 위·아래 여유 더함(px) · eh = 봉 칸 높이 더함(px) · 그림 높이 Hx = H + et + eb + eh
+      const Hx = H + et + eb + eh; let lo = lo0, hi = hi0;
+      if (!fs) { const m = (hi - lo) * 0.15; lo -= m; hi += m; }
+      else { // fs: 위·아래 여유 ≥ P px (최고·최저 화살표 + 글자 자리)
+        const r0 = hi - lo, P = fs * 2 + 14, Pt = P + et, Pb = P + eb;
+        const T = r0 / Math.max(0.2, 1 - (Pt + Pb) / Hx), mt = Math.max(r0 * 0.15, (Pt * T) / Hx), mb = Math.max(r0 * 0.15, (Pb * T) / Hx); lo -= mb; hi += mt; }
+      const tickP = Array.from({ length: 7 }, (_, i) => hi - ((hi - lo) * i) / 6);
+      const axis = fs ? Math.ceil(Math.max(tw("▮거래량"), ...tickP.map((p) => tw(Math.round(p).toLocaleString("ko-KR")))) + 8) : 50; // fs: 오른쪽 눈금 칸 = 가장 긴 눈금 글자 + 여유
+      const PW = W - axis, cw = (PW - padL - padR) / n, bw = Math.max(1, Math.min(10, cw * 0.62)); // 9.29-129r2: padL·padR = 봉 칸 왼·오른 끝 빈자리(B·S 동그라미 가로로 비킬 자리 · 평소 0)
+      const top = LH, bot = LH + Hx, vbot = bot + VH;
+      const x = (i) => padL + (i + 0.5) * cw, y = (p) => top + ((hi - p) / (hi - lo)) * Hx;
+      const vmax = Math.max(0, ...win.map((b) => (typeof b.v === "number" ? b.v : 0)));
+      const candles = win.map((b, i) => { const pv = start + i > 0 ? rows[start + i - 1].v : null;
+        return { date: b.date, x: x(i), yo: y(b.o), yc: y(b.c), yh: y(b.h), yl: y(b.l), up: b.c >= b.o, vh: vmax > 0 && typeof b.v === "number" ? (b.v / vmax) * (VH - 6) : 0, vt: volTone(b.v, pv) }; });
+      const ma = (N) => win.map((b, i) => { const k = start + i; if (k - N + 1 < 0) return null; let s = 0; for (let j = k - N + 1; j <= k; j++) s += rows[j].c; return { x: x(i), y: y(s / N) }; }).filter(Boolean);
+      const mas = [5, 20, 60, 120].map((N) => ({ N, pts: ma(N) }));
+      let hiI = 0, loI = 0; win.forEach((b, i) => { if (b.h > win[hiI].h) hiI = i; if (b.l < win[loI].l) loI = i; });
+      const md = (dd) => String(dd).slice(5, 7) + "/" + String(dd).slice(8, 10);
+      const hiPt = { x: x(hiI), y: y(win[hiI].h), p: win[hiI].h, md: md(win[hiI].date) }, loPt = { x: x(loI), y: y(win[loI].l), p: win[loI].l, md: md(win[loI].date) };
+      const ticks = tickP.map((p) => ({ p, y: y(p) }));
+      const step = Math.max(1, Math.round(n / 9), fs ? Math.ceil((tw("00/00") + fs) / cw) : 1); // fs: 날짜 글자끼리 겹치지 않게 칸 수 줄임
+      const dates = win.map((b, i) => (i % step === 0 ? { x: x(i), md: md(b.date) } : null)).filter(Boolean);
+      const d = di - start, yB = iB >= 0 ? y(buy) : null, yS = iS >= 0 ? y(sell) : null;
+      const apart = !fs && yB !== null && yS !== null && iB === iS && Math.abs(yB - yS) < 18 ? 10 : 0; // 같은 봉에서 두 표식이 겹치면 좌우로 비킴 (fs: 동그라미끼리·글자가 닿을 때 candleSvgFit 이 가로로 비킴)
+      return { fs, W, H: Hx, VH, LH, DH, axis, PW, TH: LH + Hx + VH + DH, top, bot, vbot, n, start, d, cw, bw, lo, hi, candles, mas, hiPt, loPt, ticks, dates, tw, asc, dsc, padL, padR,
+        B: yB === null ? null : { x: x(iB - start) - apart, y: yB, p: buy }, S: yS === null ? null : { x: x(iS - start) + apart, y: yS, p: sell }, out: { B: iB === -1, S: iS === -1 } };
+    };
+    if (!fs) return build(0, 0, 0);
+    let et = 0, eb = 0, eh = 0, g = build(0, 0, 0);
+    for (let k = 0; k < 8; k++) { const q = candleSvgFit(g, true); if (!q.hi && !q.lo && !q.m) break; // 글자 자리 다 놓아 봄 → 겹침·칸 밖 남은 쪽 여유 늘려 다시
+      // 9.29-129r2 [집2482]: B·S 동그라미가 칸 끝이라 가로로 비킬 자리가 없으면(q.pl·q.pr) 그쪽 끝에 빈자리 q.pad 를 두고 다시(봉 간격만 조금 좁아짐 · 값·높이 무변)
+      const pad = (q.pl && !padL) || (q.pr && !padR); if (q.pl && !padL) padL = q.pad; if (q.pr && !padR) padR = q.pad;
+      if (q.hi) et += fs; if (q.lo) eb += fs; if ((q.m && !pad) || q.hi || q.lo) eh += 2 * fs; g = build(et, eb, eh); } // 9.29-129r2: 최고·최저 글자가 B·S 사이에 끼면 여유만으론 못 벌림 → 봉 칸 높이도
+    return g;
   }
   // 네이버 「차트보기」 일봉 그림 색 (9.29-88 원장 [1659] 캡처): 흰 바탕 · 양봉 빨강 · 음봉 파랑 · 이동평균 5 초록 · 20 빨강 · 60 주황 · 120 보라 · 거래량 보라 막대 · 점선 눈금 회색
   const NVC = { up: "#e5392f", down: "#2f6fdf", ma5: "#2e9e3e", ma20: "#e8352e", ma60: "#f28c1b", ma120: "#8e44ad", vol: "#a98be0", grid: "#d4d4d4", axis: "#666", text: "#333" };
   // 네이버 「차트보기」 일봉 그림 그대로 (9.29-88 원장 [1658]·[1659]): 범례 「■5 ■20 ■60 ■120」 · 캔들(꼬리 포함 빨강/파랑) · 이동평균선 4 · 가로 점선 + 오른쪽 가격 눈금 7단 · 「최고 9,460 (10/01)」 빨강 ↓ · 「최저 4,050 (07/30)」 파랑 ↑
   //  · 경계선 아래 거래량 칸(보라 막대 · 오른쪽 「▮거래량」) · 맨 아래 날짜 축(MM/DD 약 9칸 · 세로 점선) · 우리 표식 = 그날 봉에 B 동그라미 + 옆에 매수가 「B 7,120」 · S 도 같은 식(네이버엔 없는 것 · 자리만 그림 위에)
   function candleSvg(g) {
+    if (g.fs) return candleSvgFit(g); // 9.29-129: 화면 폭 그대로 그림
     const f = (v) => Math.round(v * 10) / 10, C = NVC, fmt = (p) => Math.round(p).toLocaleString("ko-KR"), R = g.PW;
     const legend = `<text class="lg" x="4" y="11" font-size="10" font-weight="600">${[5, 20, 60, 120].map((N) => `<tspan fill="${C["ma" + N]}">■</tspan><tspan fill="${C.text}">${N} </tspan>`).join("")}</text>`;
     const grid = g.ticks.map((t) => `<line class="gy" x1="0" x2="${R}" y1="${f(t.y)}" y2="${f(t.y)}" stroke="${C.grid}" stroke-dasharray="2 2"/><text class="tk" x="${R + 4}" y="${f(Math.min(t.y + 3.5, g.bot - 1))}" font-size="10" fill="${C.axis}">${fmt(t.p)}</text>`).join("");
@@ -5021,6 +5045,94 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const mark = (k, p, t, col) => { if (!p) return "";
       return `<g class="bs ${k}"><circle cx="${f(p.x)}" cy="${f(p.y)}" r="7" fill="${col}"/><text x="${f(p.x)}" y="${f(p.y + 3.5)}" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">${k}</text><text class="px" x="${f(t.x)}" y="${f(t.y)}" text-anchor="${t.a}" font-size="10" font-weight="600" fill="${col}" stroke="#fff" stroke-width="2.5" paint-order="stroke">${fmt(p.p)}</text></g>`; };
     return `<svg class="candles" viewBox="0 0 ${g.W} ${g.TH}" role="img" aria-label="일봉 ${g.n}개 · 이동평균 5·20·60·120 · 거래량 · B 매수 · S 매도">${legend}${grid}${vgrid}${body}${mas}${hilo(g.hiPt, "hi")}${hilo(g.loPt, "lo")}${lines}${vol}${volLabel}${mark("B", g.B, pB, C.up)}${mark("S", g.S, pS, C.down)}</svg>`;
+  }
+  // 9.29-129 원장 [집2464][집2465]: 화면 폭 그대로 그린 일봉 그림(g.fs = 글자 px · 1:1) — 요소·값·색은 candleSvg 와 같음 · 글자 자리만 글자 크기에 맞춰 겹침 0
+  // 9.29-129r 원장 [집2473]: 글자 상자 = g.tw 실제 폭 × (g.asc 위 + g.dsc 아래) · 모든 글자 그림 안 · 1px 띄움
+  //  ① B·S 동그라미 = 자기 봉에서 10px 안 · 가격 높이 그대로(칸 끝이면 안쪽으로 · 동그라미끼리·B·S 글자가 닿으면 가로로만 비킴 · 9.29-129r2 [집2482])
+  //  ② 가격 글자 = 자기 표식 옆(오른쪽·왼쪽 × 같은 줄·반 줄·한 줄 위아래 · 동그라미 위·아래) 중 범례·B·S 글자·동그라미·다른 가격 글자와 안 닿고 봉 칸 안인 자리(B·S 함께 고름)
+  //  ③ 최고·최저 화살표+글자 = 화살표(바깥으로 반 줄씩 밀어 봄) × 글자(화살표 옆·바깥 줄) 중 안 닿고 봉 칸 안인 자리
+  //  probe = true 면 그림 대신 못 놓은 수 { hi, lo, m } (candleGeom 이 여유·높이를 늘려 다시 그림)
+  function candleSvgFit(g, probe) {
+    const f = (v) => Math.round(v * 10) / 10, C = NVC, fmt = (p) => Math.round(p).toLocaleString("ko-KR"), R = g.PW, fs = g.fs, rr = Math.round(fs * 0.7);
+    const tw = g.tw || ((s, b) => svgTW(s, fs, b)), A = g.asc || fs * 1.12, D = g.dsc || fs * 0.33, HH = A + D;
+    const tb = (x, y, w, a) => { const l = a === "end" ? x - w : a === "middle" ? x - w / 2 : x; return [l, y - A, l + w, y + D]; }; // 글자 상자(기준선 y)
+    const cross = (r, o) => r[0] < o[2] + 1 && o[0] < r[2] + 1 && r[1] < o[3] + 1 && o[1] < r[3] + 1; // 1px 안 띄우면 닿음
+    const inPlot = (r) => r[0] >= 0.5 - 1e-6 && r[2] <= R - 1 + 1e-6 && r[1] >= 0.5 && r[3] <= g.bot - 0.5; // 봉 칸 안(위는 범례 줄까지 · 오른쪽 눈금 칸·거래량 칸 안 들어감)
+    const lgTxt = "■5 ■20 ■60 ■120 ", lgY = Math.ceil(A) + 1, tkY = (t) => Math.min(t.y + fs * 0.35, g.bot - 2), vlY = Math.ceil(Math.max(g.bot + fs + 3, g.bot - 2 + D + 2 + A)), dtY = g.vbot + Math.ceil(A) + 1;
+    const fixed = [tb(4, lgY, tw(lgTxt, true), "start")]; // 범례 (눈금·거래량·날짜 글자는 봉 칸 밖)
+    // ① 표식 동그라미
+    const cl = (m, xx) => Math.min(Math.max(xx, rr + 1, m.x0 - 9.8), R - rr - 1, m.x0 + 9.8), ltr = (m, k) => tb(m.x, m.y + fs * 0.35, tw(k, true), "middle");
+    const B = g.B && Object.assign({ x0: g.B.x }, g.B), S = g.S && Object.assign({ x0: g.S.x }, g.S);
+    const ms = [B, S].filter(Boolean), dx = ms.length ? Math.max(0, rr + 1 - Math.min(...ms.map((m) => m.x))) - Math.max(0, Math.max(...ms.map((m) => m.x)) + rr + 1 - R) : 0; // 칸 끝이면 둘 다 같이 안쪽으로(앞뒤 간격 그대로)
+    ms.forEach((m) => { m.x = cl(m, m.x + dx); });
+    // 9.29-129r2 [집2482]: 두 동그라미가 닿으면(원 경계 1.5px 안 · B·S 글자 ↔ 상대 글자·동그라미 상자 1px 안) 높이는 그대로 두고 가로로만 비킴(자기 봉에서 9.8px 안)
+    //  가장 적게 벌린 자리 = 둘 가운데에서 0.25px씩 벌려 봄 · 칸 끝이라 자리가 없으면 pl·pr(그쪽 끝 빈자리 pad 요청 → candleGeom 이 봉을 안쪽으로 다시 그림)
+    const dot = (m) => [m.x - rr, m.y - rr, m.x + rr, m.y + rr];
+    const clash = () => !!(B && S) && (Math.hypot(B.x - S.x, B.y - S.y) < 2 * rr + 1.5 || cross(ltr(B, "B"), ltr(S, "S")) || cross(ltr(B, "B"), dot(S)) || cross(ltr(S, "S"), dot(B)));
+    let pl = 0, pr = 0;
+    if (clash()) { const l = B.x0 <= S.x0 ? B : S, r = l === B ? S : B, mid = (l.x0 + r.x0) / 2;
+      for (let s = Math.max(0, r.x - l.x); s <= 40 && clash(); s += 0.25) { l.x = cl(l, mid - s / 2); r.x = cl(r, l.x + s); l.x = cl(l, r.x - s); }
+      if (clash()) { pl = l.x0 - 9.8 < rr + 1 ? 1 : 0; pr = r.x0 + 9.8 > R - rr - 1 ? 1 : 0; } }
+    const obs = fixed.slice(); let bad = { hi: 0, lo: 0, m: 0, pl, pr, pad: rr + 11 };
+    [[B, "B"], [S, "S"]].forEach(([m, k]) => { if (!m) return; const r = ltr(m, k); if (!inPlot(r)) bad.m++; obs.push(dot(m), r); });
+    if (clash()) bad.m++;
+    const hit = (r) => obs.filter((o) => cross(r, o)).length;
+    // ② 가격 글자
+    const opts = (m) => { if (!m) return [null]; const w = tw(fmt(m.p), true), y0 = m.y + fs * 0.35, k1 = HH / 2 + 1, out = [];
+      for (const dy of [0, -k1, k1, -2 * k1, 2 * k1]) for (const end of [false, true]) out.push({ x: end ? m.x - rr - 3 : m.x + rr + 3, y: y0 + dy, a: end ? "end" : "start", w });
+      const cx = Math.min(Math.max(m.x, 0.5 + w / 2), R - 1 - w / 2); out.push({ x: cx, y: Math.min(m.y - rr, y0 - A) - 2 - D, a: "middle", w }, { x: cx, y: Math.max(m.y + rr, y0 + D) + 2 + A, a: "middle", w }); return out; }; // 위·아래 = 동그라미와 B·S 글자 상자 둘 다 비킴(9.29-129r2)
+    const gap = (a, o) => Math.hypot(Math.max(0, a[0] - o[2], o[0] - a[2]), Math.max(0, a[1] - o[3], o[1] - a[3]));
+    const box = (t) => tb(t.x, t.y, t.w, t.a), oneCost = (t, m, o) => (t ? !inPlot(box(t)) + hit(box(t)) + (o && gap(box(t), dot(o)) < gap(box(t), dot(m)) - 0.5 ? 1 : 0) : 0); // 9.29-129r2: 상대 동그라미에 더 가까운 자리 = 못 씀
+    let best = null; const oB = opts(B), oS = opts(S);
+    oB.forEach((tB, i) => { const cB = oneCost(tB, B, S); oS.forEach((tS, j) => { const c = cB + oneCost(tS, S, B) + (tB && tS && cross(box(tB), box(tS)) ? 1 : 0); if (!best || c < best[0] || (c === best[0] && i + j < best[1])) best = [c, i + j, tB, tS]; }); });
+    const pB = best[2], pS = best[3]; bad.m += best[0]; [pB, pS].forEach((t) => { if (t) obs.push(box(t)); });
+    // ③ 최고·최저
+    const hilo = (pt, k) => { const up = k === "hi", col = up ? C.up : C.down, txt = `${up ? "최고" : "최저"} ${fmt(pt.p)} (${pt.md})`, lw = tw(txt, true), arw = up ? "↓" : "↑", aw = tw(arw);
+      const axx = Math.min(Math.max(pt.x, aw / 2 + 1), R - 1 - aw / 2), a0 = up ? pt.y - 2 : pt.y + fs - 1, inner = pt.x > R / 2, cands = [];
+      const clx = (xx, a) => (a === "end" ? Math.min(Math.max(xx, lw + 0.5), R - 1) : Math.min(Math.max(xx, 0.5), R - 1 - lw));
+      for (let j = 0; j < 7; j++) { const ay = a0 + (up ? -1 : 1) * j * (HH / 2), ty = up ? ay - HH - 1 : ay + HH + 1;
+        for (const end of [inner, !inner]) { const a = end ? "end" : "start"; cands.push({ ay, tx: clx(end ? axx - aw / 2 - 3 : axx + aw / 2 + 3, a), ty: ay, a }, { ay, tx: clx(end ? pt.x + fs * 0.6 : pt.x - fs * 0.6, a), ty, a }); } }
+      for (let j = 0; j < 4; j++) { const ty = up ? a0 + D + 1.5 + A + j * (HH / 2) : a0 - A - 1.5 - D - j * (HH / 2); // 9.29-129r2: 칸이 좁아 바깥 줄이 다 막히면 점 안쪽 줄(최고 = 점 아래 · 최저 = 점 위)도 봄 · 화살표는 그대로
+        for (const end of [inner, !inner]) { const a = end ? "end" : "start"; cands.push({ ay: a0, tx: clx(end ? pt.x + fs * 0.6 : pt.x - fs * 0.6, a), ty, a }); } }
+      const cost = (c) => { const ar = tb(axx, c.ay, aw, "middle"), r = tb(c.tx, c.ty, lw, c.a); return !inPlot(ar) + !inPlot(r) + hit(ar) + hit(r) + cross(ar, r); };
+      const c = cands.map((c, i) => [cost(c), i, c]).sort((a, b) => a[0] - b[0] || a[1] - b[1])[0];
+      bad[k] += c[0]; obs.push(tb(axx, c[2].ay, aw, "middle"), tb(c[2].tx, c[2].ty, lw, c[2].a));
+      return `<g class="hilo ${k}"><text x="${f(axx)}" y="${f(c[2].ay)}" font-size="${fs}" fill="${col}" text-anchor="middle">${arw}</text><text x="${f(c[2].tx)}" y="${f(c[2].ty)}" font-size="${fs}" font-weight="600" fill="${col}" text-anchor="${c[2].a}">${txt}</text></g>`; };
+    const hiS = hilo(g.hiPt, "hi"), loS = hilo(g.loPt, "lo");
+    if (probe) return bad;
+    const legend = `<text class="lg" x="4" y="${lgY}" font-size="${fs}" font-weight="600">${[5, 20, 60, 120].map((N) => `<tspan fill="${C["ma" + N]}">■</tspan><tspan fill="${C.text}">${N} </tspan>`).join("")}</text>`;
+    const grid = g.ticks.map((t) => `<line class="gy" x1="0" x2="${R}" y1="${f(t.y)}" y2="${f(t.y)}" stroke="${C.grid}" stroke-dasharray="2 2"/><text class="tk" x="${R + 4}" y="${f(tkY(t))}" font-size="${fs}" fill="${C.axis}">${fmt(t.p)}</text>`).join("");
+    const dw = tw("00/00") / 2; let dEnd = -1e9; // 날짜 글자: 앞 글자와 닿으면(첫 글자를 왼쪽 끝에 맞춰 밀린 경우) 그 글자만 뺌 · 세로 점선은 그대로
+    const vgrid = g.dates.map((d) => { const st = d.x < dw + 1, l = st ? 1 : d.x - dw, show = l >= dEnd + fs / 2 && l + 2 * dw <= g.W - 0.5; if (show) dEnd = l + 2 * dw;
+      return `<line class="gx" x1="${f(d.x)}" x2="${f(d.x)}" y1="${g.top}" y2="${g.vbot}" stroke="${C.grid}" stroke-dasharray="2 2"/>` + (show ? `<text class="dt" x="${f(st ? 1 : d.x)}" y="${dtY}" font-size="${fs}" fill="${C.axis}" text-anchor="${st ? "start" : "middle"}">${d.md}</text>` : ""); }).join("");
+    const body = g.candles.map((c) => { const col = c.up ? C.up : C.down, top = Math.min(c.yo, c.yc), hh = Math.max(1, Math.abs(c.yo - c.yc));
+      return `<line x1="${f(c.x)}" x2="${f(c.x)}" y1="${f(c.yh)}" y2="${f(c.yl)}" stroke="${col}" stroke-width="1"/><rect x="${f(c.x - g.bw / 2)}" y="${f(top)}" width="${f(g.bw)}" height="${f(hh)}" fill="${col}"/>`; }).join("");
+    const mas = g.mas.filter((m) => m.pts.length > 1).map((m) => `<polyline class="ma ma${m.N}" fill="none" stroke="${C["ma" + m.N]}" stroke-width="1" points="${m.pts.map((p) => f(p.x) + "," + f(p.y)).join(" ")}"/>`).join("");
+    const lines = `<line class="sep" x1="0" x2="${g.W}" y1="${g.bot}" y2="${g.bot}" stroke="${C.axis}" stroke-width="0.6"/><line class="sep" x1="0" x2="${g.W}" y1="${g.vbot}" y2="${g.vbot}" stroke="${C.axis}" stroke-width="0.6"/>`;
+    const vol = g.candles.map((c) => c.vh > 0 ? `<rect class="vol ${c.vt}" x="${f(c.x - g.bw / 2)}" y="${f(g.vbot - c.vh)}" width="${f(g.bw)}" height="${f(c.vh)}" fill="${C.vol}"/>` : "").join("");
+    const volLabel = `<text class="vl" x="${R + 4}" y="${vlY}" font-size="${fs}" fill="${C.axis}"><tspan fill="${C.vol}">▮</tspan>거래량</text>`;
+    const mark = (k, p, t, col) => { if (!p) return "";
+      return `<g class="bs ${k}"><circle cx="${f(p.x)}" cy="${f(p.y)}" r="${rr}" fill="${col}"/><text x="${f(p.x)}" y="${f(p.y + fs * 0.35)}" text-anchor="middle" font-size="${fs}" font-weight="600" fill="#fff">${k}</text><text class="px" x="${f(t.x)}" y="${f(t.y)}" text-anchor="${t.a}" font-size="${fs}" font-weight="600" fill="${col}" stroke="#fff" stroke-width="2.5" paint-order="stroke">${fmt(p.p)}</text></g>`; };
+    return `<svg class="candles" viewBox="0 0 ${g.W} ${g.TH}" data-pw="${f(g.PW)}" role="img" aria-label="일봉 ${g.n}개 · 이동평균 5·20·60·120 · 거래량 · B 매수 · S 매도">${legend}${grid}${vgrid}${body}${mas}${hiS}${loS}${lines}${vol}${volLabel}${mark("B", B, pB, C.up)}${mark("S", S, pS, C.down)}</svg>`;
+  }
+  // 9.29-129: 그림 글자 폭 어림(px · 넉넉히) — 숫자 0.6 · 쉼표·마침표·빈칸 0.3 · 괄호·빗금 0.35 · 영문 0.62 · 한글·기호 1 (× 글자 크기 · 굵게 × 1.06)
+  function svgTW(s, fs, bold) {
+    let w = 0; for (const ch of String(s)) w += /[0-9]/.test(ch) ? 0.6 : /[,. ]/.test(ch) ? 0.3 : /[()/]/.test(ch) ? 0.35 : /[A-Za-z+-]/.test(ch) ? 0.62 : 1;
+    return w * fs * (bold ? 1.06 : 1);
+  }
+  // 9.29-129: 일봉 그림 칸 실제 폭 → 1:1 그림 크기(글자 12px) · 칸이 안 보이면(폭 0) null = 예전 그림(보이게 되면 FIT_RO 가 다시 그림)
+  // 9.29-129r 원장 [집2473]: 글자 폭·높이 = 이 화면 실제 글꼴로 잼(캔버스 measureText · 그림 글자와 같은 글꼴 목록 · 폭 tw · 위 asc · 아래 dsc) · 못 재면 어림(svgTW)
+  function candleFit(box) {
+    const h = box.hidden; box.hidden = false; const w = Math.floor(box.getBoundingClientRect().width) - 2; box.hidden = h; // 테두리 1px × 2
+    if (!(w >= 120)) return null;
+    const fit = { W: w, fs: 12, H: Math.min(300, Math.max(180, Math.round(w * 0.5))), VH: Math.max(44, Math.round(w * 0.14)) };
+    try {
+      const cx = candleFit.cx || (candleFit.cx = document.createElement("canvas").getContext("2d")), ff = getComputedStyle(box).fontFamily, memo = {};
+      cx.font = "12px " + ff; const q = cx.measureText("0가B↓");
+      if (q.fontBoundingBoxAscent > 0 && q.fontBoundingBoxDescent > 0) { fit.asc = q.fontBoundingBoxAscent; fit.dsc = q.fontBoundingBoxDescent; }
+      fit.tw = (s, b) => { const k = (b ? "b" : "n") + s; if (!(k in memo)) { cx.font = (b ? "600 " : "") + "12px " + ff; memo[k] = cx.measureText(String(s)).width * 1.015 + 0.5; } return memo[k]; }; // 그림 글자가 캔버스 잰 폭보다 최대 1.3px 넓게 그려짐(실측) → 넉넉히
+    } catch (e) {}
+    return fit;
   }
   // 일봉 받기 (9.29-77 원장 [1513]): ① 중계 서버(아무 종목 · 네이버 일봉 120봉) → ② 수집기 auto/candles/<코드>.json(링크판 jsDelivr · 홈페이지 raw) → ③ 둘 다 없으면 네이버 그림 + B/S 값 띠
   // 한 번 받은 건 이 화면 동안 기억(CANDLES · 저장 0) · 요청마다 15초 제한 · 링크판에서 중계가 막혀도(CORS·접속 제한) 화면 문구 없이 다음 길로
@@ -5047,6 +5159,14 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     try { const j = await pubGet(base + "candles/" + code + ".json"); if (j && Array.isArray(j.bars) && j.bars.length) return Object.assign({}, j, { src: "candles" }); } catch (e) {}
     return null;
   }
+  // 9.29-129: 그림 칸 폭이 바뀌면(화면 돌림·창 크기·접힌 칸 펼침) 일봉·손익 그림을 그 폭으로 다시 그림 (같은 폭이면 그대로)
+  var FIT_RAF = 0; // var = 시작 중 먼저 불려도 오류 0
+  var FIT_RO = typeof ResizeObserver === "function" ? new ResizeObserver((es) => {
+    let cd = false, ch = false;
+    for (const e of es) { const w = Math.floor(e.target.getBoundingClientRect().width); if (w < 120) continue;
+      if (e.target.id === "charts") { if (Math.abs(w - CH_W) > 1) ch = true; } else if (Math.abs(w - 2 - Number(e.target.dataset.fw || 0)) > 1) cd = true; }
+    if (cd || ch) { cancelAnimationFrame(FIT_RAF); FIT_RAF = requestAnimationFrame(() => { if (cd) paintCandles(); if (ch && CH_DAYS) renderCharts(CH_DAYS); }); }
+  }) : null;
   function paintCandles() {
     (S.journal.trades || []).forEach((t, i) => {
       const box = $("cd-" + i); if (!box) return;
@@ -5058,8 +5178,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         return;
       }
       const dB = (tradeDate(t.tIn, DATE) || {}).date, dS = (tradeDate(t.tOut, DATE) || {}).date; // 시점 칸 날짜 (없으면 일지 날짜)
-      const g = c && c !== "…" ? candleGeom(c.bars, DATE, pnum(t.buy), pnum(t.sell), { dB, dS }) : null;
-      if (g) { box.innerHTML = candleSvg(g); box.hidden = false; box.dataset.src = c.src || ""; if (nv) { nv.hidden = true; nv.dataset.byCandle = "1"; } }
+      const fit = c && c !== "…" ? candleFit(box) : null; // 9.29-129: 칸 폭 그대로 그림(글자 12px)
+      const g = c && c !== "…" ? candleGeom(c.bars, DATE, pnum(t.buy), pnum(t.sell), Object.assign({ dB, dS }, fit)) : null;
+      if (g) { box.innerHTML = candleSvg(g); box.hidden = false; box.dataset.src = c.src || ""; box.dataset.fw = fit ? fit.W : ""; if (FIT_RO) FIT_RO.observe(box); if (nv) { nv.hidden = true; nv.dataset.byCandle = "1"; } }
       else { box.innerHTML = ""; box.hidden = true; if (nv && nv.dataset.byCandle) { nv.hidden = false; delete nv.dataset.byCandle; } }
     });
   }
@@ -5661,8 +5782,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
 
   // ---------- 성적 차트 (일별 손익 막대 · 누적 손익 선) ----------
   function dayPnl(d) { const T = dayTotals(fixJournal(d.journal)); return T.n ? T.total : null; }
-  function chartSvg(points, kind) {
-    const W = 360, H = 150, L = 8, R = 8, Tp = 10, B = 22;
+  // 9.29-129 원장 [집2464][집2465]: w(그림 칸 실제 px)가 오면 화면 폭 그대로(1:1) · 날짜 글자 12px · 첫 날짜는 왼쪽 끝·끝 날짜는 오른쪽 끝에 맞춤(칸 밖 0) · w 없으면 예전 그대로
+  function chartSvg(points, kind, w) {
+    const fs = w ? 12 : 10, W = w || 360, H = w ? Math.max(120, Math.round((w * 150) / 360)) : 150, L = 8, R = 8, Tp = 10, B = w ? fs + 12 : 22;
     const vals = points.map((p) => p.v), lo = Math.min(0, ...vals), hi = Math.max(0, ...vals), span = hi - lo || 1;
     const x = (i) => L + (points.length === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (points.length - 1));
     const y = (v) => Tp + ((hi - v) * (H - Tp - B)) / span;
@@ -5680,17 +5802,21 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const last = points.length - 1;
       g += `<circle cx="${x(last)}" cy="${y(points[last].v)}" r="4" fill="${points[last].v >= 0 ? "var(--up)" : "var(--down)"}" stroke="var(--surface)" stroke-width="2"/>`;
     }
-    const lab = (i) => `<text x="${x(i)}" y="${H - 6}" font-size="10" text-anchor="middle" fill="var(--muted)">${points[i].d.slice(5).replace("-", "/")}</text>`;
+    const lab = (i) => { const a = !w || points.length === 1 ? "middle" : i === 0 ? "start" : "end", lx = a === "start" ? 0 : a === "end" ? W : x(i);
+      return `<text x="${lx}" y="${H - 6}" font-size="${fs}" text-anchor="${a}" fill="var(--muted)">${points[i].d.slice(5).replace("-", "/")}</text>`; };
     g += lab(0) + (points.length > 1 ? lab(points.length - 1) : "");
     g += `<rect x="0" y="0" width="${W}" height="${H}" fill="transparent" class="hit"/>`;
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${kind === "bar" ? "일별 손익" : "누적 손익"} 차트">${g}</svg>`;
   }
+  var CH_DAYS = null, CH_W = 0; // 9.29-129: 손익 그림을 그린 자료·폭 (칸 폭이 바뀌면 다시 그림)
   function renderCharts(days) {
     const pts = days.slice().reverse().map((d) => ({ d: d.date, v: dayPnl(d) })).filter((p) => p.v !== null).slice(-30);
+    CH_DAYS = days; if (FIT_RO) FIT_RO.observe($("charts"));
     if (!pts.length) { $("charts").innerHTML = `<div class="chart"><h4>손익 차트</h4><div class="empty">매매 내역에 매도가까지 적으면 날마다 손익 차트가 그려져요.</div></div>`; return; }
     let acc = 0; const cum = pts.map((p) => ({ d: p.d, v: (acc += p.v) }));
-    $("charts").innerHTML = `<div class="chart" data-k="bar"><h4>일별 손익 <small>최근 ${pts.length}일 · 빨강 수익, 파랑 손실</small></h4>${chartSvg(pts, "bar")}<div class="tip"></div></div>` +
-      `<div class="chart" data-k="line"><h4>누적 손익 <small>지금까지 ${money(acc)}</small></h4>${chartSvg(cum, "line")}<div class="tip"></div></div>`;
+    const cw = Math.floor($("charts").getBoundingClientRect().width), fw = cw >= 120 ? cw : 0; CH_W = cw; // 9.29-129: 칸 폭 그대로(안 보이면 예전 그림 · 보이면 다시 그림)
+    $("charts").innerHTML = `<div class="chart" data-k="bar"><h4>일별 손익 <small>최근 ${pts.length}일 · 빨강 수익, 파랑 손실</small></h4>${chartSvg(pts, "bar", fw)}<div class="tip"></div></div>` +
+      `<div class="chart" data-k="line"><h4>누적 손익 <small>지금까지 ${money(acc)}</small></h4>${chartSvg(cum, "line", fw)}<div class="tip"></div></div>`;
     document.querySelectorAll("#charts .chart").forEach((c) => {
       const svg = c.querySelector("svg"), tip = c.querySelector(".tip"), data = c.dataset.k === "bar" ? pts : cum;
       const show = (ev) => {
