@@ -831,6 +831,10 @@ header .tools { flex-direction: row; flex-wrap: wrap; align-items: center; justi
 @media (min-width: 421px) { header { grid-template-columns: max-content minmax(0, 1fr) auto; align-items: baseline; row-gap: 2px; } header > div:first-child { display: contents; } header > div:first-child > h1 { grid-area: 1 / 1; } header > div:first-child > .eyebrow { grid-area: 1 / 2; } header > div:first-child > .date { grid-area: 2 / 1 / 3 / 3; } header .tools { grid-area: 1 / 3 / 3 / 4; align-self: end; flex-direction: column; align-items: flex-end; } } /* 넓은 화면: 왼쪽 두 줄(제목+머리말 · 날짜) | 오른쪽 버튼·저장 표시 */
 @media (max-width: 379px) { header { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; } header > div:first-child, header .tools { display: contents; } header > div:first-child > h1 { order: 1; flex-basis: 100%; } header > div:first-child > .date { order: 2; } header .tools > .row { order: 3; flex-basis: 100%; } header > div:first-child > .eyebrow { order: 4; } header .tools > .sync { order: 5; text-align: left; } } /* 360·320: 제목 / 날짜 / 버튼 / 머리말+저장 표시(들어가면 한 줄) */
 .jumps { margin: -6px 0 2px; }
+/* 9.29-138 원장 [집2524][집2525][집2528][집2532] 긴 이름(「에스케이증권제14호기업인수목적(코스닥)」 · 40자 붙은 낱말)이 칸 밖으로 → 320 에서 가로 스크롤(355px). 원인: 줄바꿈 금지(nowrap)인 이름 칸 + 한 줄짜리 격자(1fr = 안 쪼개지는 글만큼 늘어남) → 격자 한 줄은 minmax(0,1fr)
+   이름 칸은 그대로 한 덩어리(nowrap) · 줄(.nx 앞 여백 포함) 밖으로 나갈 때만 .lng(fitLst · app.js): 「신규상장:」·「이름(시장),」 덩어리(.lc)마다 통째로 줄 넘김 · 덩어리 하나가 줄보다 길 때만 그 안에서 줄바꿈(그때만 overflow-wrap:anywhere) · 글씨 크기·글·값 무변 */
+.wrap, .card, .prev, .ev, .sector, .today, .slots, .todo, .jsec, .topld .tll, .explain .brief .bgrps, .explain .brief .bgl { grid-template-columns: minmax(0, 1fr); } /* .bgrps·.bgl = 칸 정하지 않은 격자(auto = 안 쪼개지는 글만큼 늘어남) */
+.explain .brief .bgall .nw.lng, .explain .nxline b.lst.lng { display: inline-block; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; vertical-align: top; } .lng > .lc { display: inline-block; max-width: 100%; vertical-align: top; }
 </style>
 </head>
 <body>
@@ -3587,7 +3591,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-132";
+  const APP_VER = "9.29-138";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
@@ -4234,7 +4238,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const tagHtml = (a) => (a.length ? a.map(([t, s]) => `<span>${esc(t)}<small>${esc(s)}</small></span>`).join("") : `<span class="empty">아직 없음</span>`);
     $("tFirst").innerHTML = tagHtml(r.themeFirst); $("tBack").innerHTML = tagHtml(r.themeBack);
     $("tAll").innerHTML = allThemesHtml(r); // 9.29-108 원장 [2274]
-    $("explain").innerHTML = explain(r); fitSrows(); /* 9.29-103 [2004] ① 긴 값 글은 이름 아래 줄로 */
+    $("explain").innerHTML = explain(r); fitSrows(); fitLst(); /* 9.29-103 [2004] ① 긴 값 글은 이름 아래 줄로 · 9.29-138 [집2528] 긴 이름만 덩어리째 줄 넘김 */
     lastEval = r;
     $("jMorning").innerHTML = morningSummary(r).html; // 9.29-110 TF 합의: 장전 판단은 📰 마감 시황 ① 한 곳만(매매 일지 쪽 접힘 칸 없앰)
     paintPrevClose(); // 9.29-94 원장 [1718] ① 전날 장 마감 카드
@@ -4791,6 +4795,24 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       window.addEventListener("resize", again);
       if (typeof ResizeObserver === "function") new ResizeObserver(() => { if (box.clientWidth !== w) { w = box.clientWidth; again(); } }).observe(box); /* 접혀 있다 펼쳐질 때(폭 0 → n)도 */
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(again).catch(() => {}); }
+  }
+  /* 9.29-138 원장 [집2524][집2525][집2528][집2532]: 이름 칸(다음 거래일 예정 b.lst · 청약·IR .nw) = 한 덩어리(nowrap · 예전 그대로) · 그 덩어리가 줄(.nx 앞 여백 포함) 밖으로 나갈 때만 .lng(폭 = min(제 글 폭, 줄 폭))
+     .lng = 「신규상장:」·「이름(시장),」 덩어리(.lc)마다 통째로 줄 넘김(「(」 앞 쪼개짐 0) · 덩어리 하나가 줄보다 길 때만 그 안에서 줄바꿈 · 폭이 바뀌면(화면·펼침·글꼴) 예전 모양으로 되돌린 뒤 다시 잼 */
+  var LST_RO = null, LST_W = new WeakMap(), LST_T = 0; // var = 시작 중 먼저 불려도 오류 0
+  function fitLst() {
+    const box = $("explain"); if (!box) return;
+    const els = [...box.querySelectorAll(".nxline b.lst, .brief .bgall .nw")];
+    els.forEach((e) => { if (e.classList.contains("lng")) { e.classList.remove("lng"); e.style.width = ""; e.textContent = e.textContent; } });
+    const cr = (el) => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el), l = r.left + el.clientLeft + parseFloat(cs.paddingLeft); return { l, r: l + el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) }; };
+    els.forEach((e) => { if (e.children.length || !e.getClientRects().length) return; const blk = e.closest(".nxline, li"); if (!blk) return; /* 하나씩 차례로 잼(앞 것을 바꾸면 .nx 폭이 줄어 뒤 것은 줄 안으로 들어올 수 있음) */
+      const b = cr(blk), nx = e.closest(".nx"), l = b.l + (nx ? parseFloat(getComputedStyle(nx).marginLeft) || 0 : 0), R = e.getBoundingClientRect(); if (R.right <= b.r + 0.5) return;
+      e.style.width = Math.max(0, Math.min(Math.ceil(R.width), Math.floor(b.r - l))) + "px"; /* 폭 = 제 글 폭(줄보다 짧으면) 또는 줄 폭(.nx 앞 여백 뺀) */
+      e.innerHTML = e.textContent.split(/(?<=[:,]) /).map((t) => `<span class="lc">${esc(t)}</span>`).join(" "); e.classList.add("lng"); });
+    if (typeof ResizeObserver === "function") {
+      if (!LST_RO) LST_RO = new ResizeObserver((es) => { let ch = false; for (const x of es) { const w = Math.round(x.target.getBoundingClientRect().width); if (LST_W.get(x.target) !== w) { LST_W.set(x.target, w); ch = true; } } if (ch) { cancelAnimationFrame(LST_T); LST_T = requestAnimationFrame(fitLst); } });
+      LST_RO.disconnect(); box.querySelectorAll(".nxline, .brief .bgall").forEach((x) => { if (!LST_W.has(x)) LST_W.set(x, Math.round(x.getBoundingClientRect().width)); LST_RO.observe(x); }); /* 접혀 있다 펼쳐질 때(폭 0 → n)·화면 폭 */
+    }
+    if (!fitLst.f && document.fonts && document.fonts.ready) { fitLst.f = 1; document.fonts.ready.then(() => fitLst()).catch(() => {}); }
   }
   /* 9.29-110 원장 [2306] ②: 장 마감 뒤·다음 날 아침 「실시간(마지막 값)」 카드의 「수급 확인 전」 = 그 날 날짜 파일(close.market.leaders · 16:55·19:45·20:20 마감 실행이 확정한 테마 외인·기관)에서 같은 테마(번호·이름)를 찾아 숫자로 바꿈 · 없으면 그대로 · 날짜 파일 읽기만(네이버 요청 0 · 판정 무변) · 숫자가 아직 없으면 10분 뒤 다시 */
   const CLOSE_FLOW = new Map();
