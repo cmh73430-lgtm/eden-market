@@ -386,7 +386,7 @@ textarea.jin { resize: vertical; }
 /* 9.29-116 원장 [집2390] 쉬운 결론 아래 「자세히」(방식별 표·고른 종목) · A·B·C 비교 = 세로 표 칸 3개(이름 | 장중 | 다음 날) · 휴대폰 가로 스크롤 0 */
 .ldscore .ldssum small, .abcmp .abcsum small, .abcmp .abcg small { color: var(--muted); font-weight: 400; font-size: 12px; } .ldscore .ldsmore { margin-top: 4px; } .ldscore .ldsmore > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); padding: 3px 0; }
 .abcmp .abcsum { margin: 0 0 4px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; } .abcmp .abcg { display: grid; grid-template-columns: minmax(0, 1fr) max-content max-content; column-gap: 10px; row-gap: 3px; font-size: 13px; font-variant-numeric: tabular-nums; align-items: baseline; }
-.abcmp .abcg .hd { font-size: 12px; color: var(--muted); text-align: right; } .abcmp .abcg > span small { display: block; } .abcmp .abcg > span:nth-child(3n+2), .abcmp .abcg > span:nth-child(3n) { text-align: right; } .abcmp .abcnote { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+.abcmp .abcg .hd { font-size: 12px; color: var(--muted); text-align: right; } .abcmp .abcg > span small { display: block; } .abcmp .abcg > span:nth-child(3n+2), .abcmp .abcg > span:nth-child(3n) { text-align: right; } .abcmp .abcnote { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); line-height: 1.45; } .abcmp .abcg b { font-weight: 600; font-size: 14px; } .abcmp .abcg .abno { font-size: 12px; color: var(--muted); } /* 9.29-133 [집2542]: 적중률 퍼센트 굵게 · 기록 없음 흐리게 */
 .ldscore .ldstbl { width: 100%; border-collapse: collapse; font-size: 13px; } .ldscore .ldstbl th, .ldscore .ldstbl td { padding: 4px 4px; border-bottom: 1px solid var(--line); text-align: center; } .ldscore .ldstbl td:first-child, .ldscore .ldstbl th:first-child { text-align: left; white-space: nowrap; }
 .ldscore .ldstbl small { display: block; color: var(--muted); font-size: 12px; } .ldscore .ldsrecent { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 13px; } .ldscore .ldsrecent .mk { font-weight: 600; letter-spacing: 2px; margin-left: 6px; }
 /* 9.29-99 원장 [1822][1823] 성적표 쉬운 말: 소개 · 한 줄 요약 · 방식마다 세로 목록(가로 표 없음 · 390 가로 밀기 0) · 「아직 채점 전」 흐린 글자 */
@@ -3591,7 +3591,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-138";
+  const APP_VER = "9.29-141";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
@@ -6691,17 +6691,22 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const nc = nx.filter((r) => r.next.c); if (nc.length) out.next.c = { re: Number((nc.reduce((s, r) => s + r.next.c.re, 0) / nc.length).toFixed(1)), hit: nc.filter((r) => r.next.c.hit).length, n: nc.length }; }
     const cs = rs.filter((r) => typeof r.c === "number"); if (cs.length) { out.c = Number((cs.reduce((s, r) => s + r.c, 0) / cs.length).toFixed(1)); out.cn = cs.length; }
     return out; }
-  /* 세로 표(칸 3개 · 휴대폰 가로 스크롤 0): 줄 = A 테마 기준 · B 거래대금 기준 · C 수급 교차(줄 이름 아래 기록 일수) · 칸 = 장중 적중 | 다음 날 적중 · 맨 위 결론 한 줄 · 자료 없으면 「아직 기록 없음」 */
+  /* 9.29-133 원장 [집2486][집2542]: 적중률 퍼센트(표시만 · 셈 abCmpOf 무변) — 장중 = 평균 맞은 수 ÷ 3 · 다음 날 = 적중일 ÷ 기록일 · 반올림 정수 · 값 없으면 null */
+  function abPct(num, den) { return typeof num === "number" && typeof den === "number" && den > 0 ? Math.round((num / den) * 100) : null; }
+  /* 세로 표(칸 3개 · 휴대폰 가로 스크롤 0): 줄 = A 테마 기준 · B 거래대금 기준 · C 수급 교차(줄 이름 아래 기록 일수) · 칸 = 장중 적중률 | 다음 날 적중 · 맨 위 결론 한 줄(퍼센트) · 숫자 뜻 = 「자세히」 · 자료 없으면 「아직 기록 없음」 */
   function abCmpHtml(S) {
     const h3 = `<h3>🆚 A·B·C 테마 적중 비교 <small>참고용</small></h3>`;
     if (!S) return h3 + `<p class="abcsum">아직 기록 없음 <small>장 마감 뒤 저녁 수집이 하루씩 채점해요</small></p>`;
-    const f = (v) => (typeof v === "number" ? v.toFixed(1) + "/3" : "—"), nx = S.next || null;
+    const nx = S.next || null, NO = `<span class="abno">기록 없음</span>`, pc = (v) => abPct(v, 3);
     const rows = [["A", "테마 기준", S.a, S.n, nx && nx.a, nx && nx.n], ["B", "거래대금 기준", S.b, S.n, nx && nx.b, nx && nx.n], ["C", "수급 교차", typeof S.c === "number" ? S.c : null, S.cn || 0, nx && nx.c, nx && nx.c ? nx.c.n : 0]];
     const vs = rows.filter((r) => typeof r[2] === "number"), top = Math.max(...vs.map((r) => r[2])), win = vs.filter((r) => r[2] === top).map((r) => r[0]);
-    const sum = `지금까지 장중은 ${vs.map((r) => r[0] + " " + r[2].toFixed(1)).join(" · ")} → ${win.length === 1 ? win[0] + " 가 더 맞음" : "비슷함"} · 표본 ${S.n}일`;
-    return h3 + `<p class="abcsum">${esc(sum)}${typeof S.c === "number" && S.cn < S.n ? ` <small>(C 는 고른 날 ${S.cn}일만)</small>` : ""}</p><div class="abcg"><span class="hd"></span><span class="hd">장중 적중</span><span class="hd">다음 날 적중</span>`
-      + rows.map(([k, nm, d, dn, q, qn]) => `<span class="lh">${k} ${nm}<small>${dn ? dn + "일" : "기록 없음"}</small></span><span>${f(d)}</span><span>${q ? f(q.re) + ` <small>적중 ${q.hit}/${qn}일</small>` : "—"}</span>`).join("")
-      + `</div><small class="abcnote">장중 = 장중에 고른 3개가 그날 마감 주도 테마와 맞은 수 평균 · 다음 날 = 그날 마지막 회차 3개가 다음 거래일 마감 주도 테마에 다시 든 수 평균(적중 = 다시 든 테마 평균 플러스)</small>`;
+    const sum = `장중 적중률 ${vs.map((r) => r[0] + " " + pc(r[2]) + "%").join(" · ")} → ${win.length === 1 ? win[0] + " 가 더 맞음" : "비슷함"} · 표본 ${S.n}일`;
+    const mid = (d) => (typeof d === "number" ? `<b>${pc(d)}%</b><small>평균 ${d.toFixed(1)}/3개</small>` : NO);
+    const rgt = (q, qn) => (q ? `<b>${abPct(q.hit, qn)}%</b><small>${q.hit}/${qn}일</small>` : NO);
+    const more = `<details class="ldsmore"><summary>자세히 (숫자 뜻)</summary><small class="abcnote">장중 적중률 = 장중에 고른 3개가 그날 마감 주도 테마와 맞은 비율(평균 맞은 수 ÷ 3) · 다음 날 적중 = 그날 마지막 회차 3개가 다음 거래일 마감 주도 테마에 다시 들고 평균이 플러스였던 날 ÷ 기록한 날${S.next ? " · 평균 다시 든 수 " + rows.filter((r) => r[4]).map((r) => r[0] + " " + r[4].re.toFixed(1) + "/3").join(" · ") : ""}</small></details>`;
+    return h3 + `<p class="abcsum">${esc(sum)}${typeof S.c === "number" && S.cn < S.n ? ` <small>(C 는 고른 날 ${S.cn}일만)</small>` : ""}</p><div class="abcg"><span class="hd"></span><span class="hd">장중 적중률</span><span class="hd">다음 날 적중</span>`
+      + rows.map(([k, nm, d, dn, q, qn]) => `<span class="lh">${k} ${nm}${dn ? `<small>기록 ${dn}일</small>` : ""}</span><span>${mid(d)}</span><span>${rgt(q, qn)}</span>`).join("")
+      + `</div>` + more;
   }
   function paintABCmp() { const el = $("abCmp"); if (!el) return; el.hidden = false; el.innerHTML = abCmpHtml(abCmpOf(AB)); }
   function paintAB() {
