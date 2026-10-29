@@ -25,9 +25,9 @@ import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay, kstTime, nextBusinessDays } from "../shared/calendar.js";
 import { collectBrief, mergeBrief, briefText, BRIEF_SECTIONS } from "../server/brief.js";
 import { collectWatch, watchText, mergeWatch } from "../server/watch.js"; // 관심 후보 (9.29-97 범위 확장 · 확정 close run → close.watch → 다음 아침 brief ④)
-import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist, regimeOf as regimeOfAmt } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist, regimeOf as regimeOfAmt, keepLiveExtra } from "../server/auto.js";
 import { memoGet, TOP10_CODES } from "../server/shadow.js";
-import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat, AB_FILE, AB_RUNS_MAX, abRunOf, abScore, abUpsert, abNext, abSummary } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
+import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat, AB_FILE, AB_RUNS_MAX, abRunOf, abScore, abUpsert, abNext, abSummary, abNeutralDay, abNeutralNext } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
 import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
 import { CAUTION_FILE, CAUTION_KEEP, loadCautions, tagAvoidAll, avoidText } from "../server/caution.js";
@@ -157,7 +157,7 @@ if (when === "live") {
   /* 9.29-111: 키움 장중 수급 — 09:30 전(고르기 전)엔 안 물음 · 키 없음·실패 = 「없음」 → 지금 동작(네이버 · 「수급 확인 전」) · C 는 「C 수급 자료 없음」 */
   const kw = hm >= "09:30" || has("force") ? await kiwoomFlows({ env: process.env, date, hm, onToken: kwMask(process.env) }) : null;
   console.log(kwKeys(process.env) ? kwText(kw) : "키움: 키 없음 — 건너뜀(네트워크 0)");
-  const live = await collectLive({ adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force"), kiwoom: kw } }); // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
+  const live = await collectLive({ liveExtra: true, adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force"), kiwoom: kw } }); keepLiveExtra(live, pl); /* 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸(+6요청 · 못 받은 조각 = 직전 값) */ // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
   if (slot && slot.closed) { live.at = slot.at; live.closed = true; console.log(`${hm} 도착 — 장 마감(15:30) 뒤 늦게 시작한 실시간 실행이라 「15:30 장 마감 값」으로 받음`); }
   if (save && !liveOverwrite((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, live)) { console.log("오늘 장 마감 값이 이미 있어 장중 값으로 덮지 않음 — 건너뜀"); process.exit(0); }
   console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${live.wait ? live.wait + " 부터 고름(아직)" : (live.themes || []).map((t) => `${t.name}${t.relax ? "[선정완화 " + t.relax.text + "]" : ""} ${t.rate > 0 ? "+" : ""}${t.rate}% (강한 ${t.strongN} · +10% ${t.n10} · 대장 ${t.lead ? t.lead.name : "-"} · ${t.flowState === "pending" ? "수급 확인 전" : t.flowState} · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
@@ -392,15 +392,20 @@ async function runAB(rec) {
   if (when !== "close" || provisional) return;
   try {
     const L = rec && rec.close && rec.close.market ? rec.close.market.leaders : null, lv = save ? (await readFile(AUTO_DIR + "/live.json")).json : await readPublic(AUTO_DIR + "/live.json");
-    const row = lv && lv.date === date ? abScore(lv.abRuns, L, date) : null;
+    let row = lv && lv.date === date ? abScore(lv.abRuns, L, date) : null;
+    /* 9.29-143 원장 [집2563][집2565] 중립 정답표 = 그날 마감 네이버 테마 상승률 순위(rec.close.themes · 이미 받은 목록 · 새 요청 0) · A·B·C 같은 자 · 장중(z)은 오늘 회차로 · 다음 날(zn)은 지난 날짜 파일 목록(loadHistory · 같은 호출 재사용)으로 채움 */
+    const zTh = rec && rec.close && Array.isArray(rec.close.themes) ? rec.close.themes : null, z = lv && lv.date === date && zTh ? abNeutralDay(lv.abRuns, zTh) : null;
+    if (z) row = row ? Object.assign(row, { z }) : { date, runs: z.runs, pick: z.pick, z };
     let old = null; if (save) { const x = await readFile(AB_FILE); if (x.sha && !x.json) throw new Error(AB_FILE + " 을 못 읽음 — 덮지 않음"); old = x.json; } else old = await readPublic(AB_FILE);
     let file = old, changed = false;
     if (row) { const u = abUpsert(file, row); file = u.file; changed = u.changed; } else console.log("A·B 채점: 오늘 장중 회차 없음 — 오늘 줄 건너뜀");
     /* 9.29-110 [2318] 다음 날 적중: 지난 거래일 줄의 마지막 회차 A·B 가 오늘 마감 확정 주도 테마에 재진입했나 · 평균 플러스인가 */
     const nx = abNext(file, L, date); if (nx.row) { file = nx.file; changed = changed || nx.changed; console.log(`A·B 다음 날 ${nx.row.date} → ${date}: A 재진입 ${nx.row.next.a.re}/3 평균 ${nx.row.next.a.avg === null ? "—" : nx.row.next.a.avg + "%"}${nx.row.next.a.hit ? " 적중" : ""} · B 재진입 ${nx.row.next.b.re}/3 평균 ${nx.row.next.b.avg === null ? "—" : nx.row.next.b.avg + "%"}${nx.row.next.b.hit ? " 적중" : ""}${nx.row.next.c ? ` · C 재진입 ${nx.row.next.c.re}/3 평균 ${nx.row.next.c.avg === null ? "—" : nx.row.next.c.avg + "%"}${nx.row.next.c.hit ? " 적중" : ""}` : ""}`); }
+    { const days = {}; for (const h of await loadHistory(date)) if (h && h.date && Array.isArray(h.themes) && h.themes.length) days[h.date] = h.themes; if (zTh) days[date] = zTh;
+      const zn = abNeutralNext(file, days, { holidays: cfg.holidays, today: date }); if (zn.changed) { file = zn.file; changed = true; console.log(`A·B·C 다음 날 중립 채점 채움: ${zn.filled.join(" · ")}`); } }
     if (!file || !changed && !row) return;
     if (row && typeof row.c === "number") console.log(`C 장중 ${row.c}/3 (${row.cN}회차)`); /* 9.29-111 */
-    const sm = abSummary(file); if (sm) console.log(`A·B 누적: 장중 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일` + (typeof sm.c === "number" ? ` · C ${sm.c}/3 (${sm.cn}일)` : "") + (sm.next ? ` · 다음 날 A ${sm.next.a.hit}/${sm.next.n}일 · B ${sm.next.b.hit}/${sm.next.n}일 적중` : ""));
+    const sm = abSummary(file); if (sm) console.log("A·B 누적:" + (typeof sm.a === "number" ? ` 장중 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일` : " 옛 채점 기록 없음") /* 9.29-145 gate-142 경미: 중립만 있는 파일 = 「장중 A undefined/3」 → 옛 숫자 없으면 안 적음 */ + (typeof sm.c === "number" ? ` · C ${sm.c}/3 (${sm.cn}일)` : "") + (sm.next ? ` · 다음 날 A ${sm.next.a.hit}/${sm.next.n}일 · B ${sm.next.b.hit}/${sm.next.n}일 적중` : "") + (sm && sm.z && sm.z.next ? ` · 중립 다음 날도 감 ${["a", "b", "c"].filter((m) => sm.z.next[m]).map((m) => m.toUpperCase() + " " + sm.z.next[m].go + "/" + sm.z.next[m].n + "개(" + sm.z.next[m].d + "일)").join(" · ")}` : ""));
     if (save && changed) { file.updatedAt = Date.now(); await writeFile(AB_FILE, file, `A·B 채점 ${date}`); console.log(`저장: ${AB_FILE}`); }
   } catch (e) { console.log("A·B 채점 실패:", e.message || e); }
 }

@@ -11,7 +11,7 @@
 //  ⑦ 등락률 = 정규장 기준: 15:40 뒤(넥스트레이드 애프터마켓·시간외 단일가가 현재가를 바꿈) 실행이면 네이버 분봉 15:30 봉 가격 ÷ 기준가(전일 정규장 종가)로 다시 잼
 //     (실측 2026-10-07: 15:30 봉 에이피알 379,000 · 삼성전자 268,500 = 다음 날 기준가 · 저녁 현재가 380,500 · 269,000 은 장 뒤 가격)
 import { thresholdFor, gradeC, withToday, chartUrl, stockFlow, usOf, gradeU, prevCloseOf, compactThemes, trendRows } from "./auto.js"; // auto.js 도 이 파일을 불러서(순환) 맨 위 계산에는 auto.js 값을 쓰지 않는다
-import { addDays } from "../shared/calendar.js";
+import { addDays, nextBusinessDays } from "../shared/calendar.js";
 import { tvStockThresholds, TV_BIG2 } from "../shared/trade-value.js";
 import { avg20FromBars, rvolOf } from "./shadow.js";
 import { supplyTags } from "./caution.js"; /* 9.29-101 수급 꼬리 S1~S3 */ /* RVOL(거래대금 평소의 ×n) — 9.29-84 계산 그대로(20일 평균 거래대금 · 장 경과율) · 게이트 [1894] B */
@@ -371,7 +371,8 @@ export function abScore(runs, leaders, date) {
 }
 export function abUpsert(file, row) {
   const f = file && Array.isArray(file.rows) ? JSON.parse(JSON.stringify(file)) : { app: "jangjeon-cockpit", kind: "leaders-ab", v: 1, rule: "장중 회차 A(지금 방식 3개)·B(거래대금 상위 50 겹침 3개) ↔ 그날 마감 확정 주도 테마 같은 개수 평균 (9.29-108 원장 [2287])", rows: [] };
-  const old = JSON.stringify(f.rows.find((r) => r.date === row.date) || null); f.rows = f.rows.filter((r) => r.date !== row.date).concat([row]).sort((x, y) => (x.date < y.date ? -1 : 1));
+  const was = f.rows.find((r) => r && r.date === row.date); if (was && was.zn && !row.zn) row = Object.assign({}, row, { zn: was.zn }); /* 9.29-143 [집2563] 지난 날 다시 돌려도 그 줄의 다음 날 중립 채점(zn)은 남김 */
+  const old = JSON.stringify(was || null); f.rows = f.rows.filter((r) => r && r.date !== row.date).concat([row]).sort((x, y) => (x.date < y.date ? -1 : 1));
   return { file: f, changed: old !== JSON.stringify(row) };
 }
 /* 9.29-110 원장 [2318]: 다음 날 적중 — 어제 마지막 회차 A·B 3개가 다음 거래일 마감 확정 주도 테마에 다시 들어왔나(재진입 수) + 들어온 테마 등락률 평균이 플러스인가 → 적중일 = 재진입 1개↑ 이고 평균 > 0 · 마감 run 이 다음 거래일 확정을 넣을 때 직전 줄(date 가 더 이른 가장 가까운 줄)의 next 칸에 기록(같은 날 다시 돌면 그 칸만 바뀜 · 지어내기 0: 등락률 없으면 avg null → 적중 아님) */
@@ -384,10 +385,54 @@ export function abNext(file, leaders, date) {
   const old = JSON.stringify(prev.next || null); prev.next = Object.assign({ date, a: sc(prev.pick.a), b: sc(prev.pick.b) }, Array.isArray(prev.pick.c) && prev.pick.c.length ? { c: sc(prev.pick.c) } : {}); /* 9.29-111 C 도 같은 틀 */
   return { file: f, changed: old !== JSON.stringify(prev.next), row: prev };
 }
-export function abSummary(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], rs = all.filter((r) => typeof r.a === "number"); if (!rs.length) return null; const m = (k) => Number((rs.reduce((s, r) => s + r[k], 0) / rs.length).toFixed(1)); const out = { a: m("a"), b: m("b"), n: rs.length };
+/* 9.29-143 원장 [집2563][집2565] 중립 정답표 채점 — 정답표 = 그날 마감 네이버 테마 상승률 순위(close.themes · 이미 받는 테마 100개 목록 · 새 요청 0) 위 AB_NEUTRAL_K 개 · A·B·C 어느 규칙도 아님 · 세 방식 같은 함수(abNeutralHit)로 채점
+   z  = 그날 장중 회차마다 고른 테마 중 그날 정답표에 든 수 평균(방식마다 그 방식이 1개↑ 고른 회차만 · 세 방식 같은 규칙)
+   zn = 「다음 날도 가는가」: 그날 마지막 회차에 고른 테마(pick)가 다음 거래일 정답표에 다시 들고 그 테마 등락률이 플러스(> 0) · 다음 거래일 목록이 없으면 안 적음(「기록 없음」) */
+export const AB_NEUTRAL_K = 10;
+/* 9.29-145 원장 [집2588] 「종목 3개짜리 작은 테마 = 빼기」: 구성 종목 수(close.themes count · 네이버 테마 목록 값)가 AB_NEUTRAL_SMALL 개 이하인 테마는 정답표에서 뺌 → 남은 것 중 위 k 개(「상위 10」 유지) · count 없는 칸 = 모름 → 그대로 둠(지어내기 0)
+   기준 3 근거(eden-market auto 날짜 파일 19일 close.themes 1,900칸 실측): 3종목 테마 = 목록 1.9% 인데 위 10 안 6.8%(3.6배 · 종목 적어 평균이 쉽게 튐) · 4종목 0.65배 · 6~8종목 ≈1배 */
+export const AB_NEUTRAL_SMALL = 3;
+export function abNeutralTop(themes, k = AB_NEUTRAL_K) {
+  const xs = (Array.isArray(themes) ? themes : []).filter((t) => t && t.name && typeof t.rate === "number" && isFinite(t.rate) && !(typeof t.count === "number" && t.count <= AB_NEUTRAL_SMALL)).map((t, i) => ({ name: String(t.name).trim(), rate: t.rate, i }));
+  xs.sort((a, b) => b.rate - a.rate || a.i - b.i); /* 네이버 순서(상승률 순) 그대로 · 같은 값은 받은 순 */
+  return xs.slice(0, k).map((t, i) => ({ name: t.name, rate: t.rate, rk: i + 1 }));
+}
+const abNeutralHit = (names, top) => { const by = new Map(top.map((t) => [t.name, t])); return [...new Set((Array.isArray(names) ? names : []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()))].map((nm) => { const t = by.get(nm); return t ? { name: nm, rk: t.rk, rate: t.rate } : { name: nm, rk: null, rate: null }; }); };
+export function abNeutralDay(runs, themes, k = AB_NEUTRAL_K) {
+  const top = abNeutralTop(themes, k); if (!top.length) return null;
+  const rs = (Array.isArray(runs) ? runs : []).filter((r) => r && r.at); if (!rs.length) return null;
+  const out = { k, min: AB_NEUTRAL_SMALL + 1, runs: rs.length, top: top.map((t) => t.name) };
+  for (const m of ["a", "b", "c"]) { const xs = rs.filter((r) => Array.isArray(r[m]) && r[m].length); if (!xs.length) continue; out[m] = Number((xs.reduce((s, r) => s + abNeutralHit(r[m], top).filter((h) => h.rk).length, 0) / xs.length).toFixed(2)); out[m + "N"] = xs.length; }
+  const last = rs[rs.length - 1]; out.pick = {}; for (const m of ["a", "b", "c"]) if (Array.isArray(last[m]) && last[m].length) out.pick[m] = last[m].slice(0, 3);
+  return out;
+}
+export function abNeutralNext(file, days, { holidays = [], today = null, k = AB_NEUTRAL_K } = {}) {
+  const f = file && Array.isArray(file.rows) ? JSON.parse(JSON.stringify(file)) : null; if (!f) return { file: file || null, changed: false, filled: [] };
+  const filled = [];
+  for (const r of f.rows) {
+    if (!r || !r.date || !r.pick) continue;
+    const nd = nextBusinessDays(r.date, holidays, 1)[0]; if (!nd || (today && nd > today)) continue;
+    const top = abNeutralTop(days && days[nd], k); if (!top.length) continue; /* 다음 거래일 목록 없음 = 안 적음 */
+    const zn = { date: nd, k, min: AB_NEUTRAL_SMALL + 1 }; let any = false;
+    for (const m of ["a", "b", "c"]) { const xs = Array.isArray(r.pick[m]) ? r.pick[m].slice(0, 3) : []; if (!xs.length) continue; zn[m] = abNeutralHit(xs, top).map((h) => Object.assign(h, { go: !!(h.rk && h.rate > 0) })); any = true; }
+    if (!any) continue;
+    const old = JSON.stringify(r.zn || null); r.zn = zn; if (old !== JSON.stringify(zn)) filled.push(r.date);
+  }
+  return { file: f, changed: filled.length > 0, filled };
+}
+export function abZOf(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], out = {}, nx = {}, lv = {};
+  for (const m of ["a", "b", "c"]) {
+    const ds = all.filter((r) => r && r.zn && Array.isArray(r.zn[m]) && r.zn[m].length); if (ds.length) nx[m] = { d: ds.length, n: ds.reduce((s, r) => s + r.zn[m].length, 0), go: ds.reduce((s, r) => s + r.zn[m].filter((h) => h && h.go).length, 0), day: ds.filter((r) => r.zn[m].some((h) => h && h.go)).length };
+    const ls = all.filter((r) => r && r.z && typeof r.z[m] === "number"); if (ls.length) lv[m] = { avg: Number((ls.reduce((s, r) => s + r.z[m], 0) / ls.length).toFixed(2)), d: ls.length };
+  }
+  if (Object.keys(nx).length) out.next = nx; if (Object.keys(lv).length) out.live = lv; if (!out.next && !out.live) return null;
+  const ex = all.filter((r) => r && r.zn && ["a", "b", "c"].some((m) => Array.isArray(r.zn[m]) && r.zn[m].length)).pop(); if (ex) out.ex = { date: ex.date, next: ex.zn.date, k: ex.zn.k, a: ex.zn.a || null, b: ex.zn.b || null, c: ex.zn.c || null };
+  out.k = ex ? ex.zn.k : AB_NEUTRAL_K; out.min = ex && typeof ex.zn.min === "number" ? ex.zn.min : AB_NEUTRAL_SMALL + 1; return out; }
+export function abSummary(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], rs = all.filter((r) => r && typeof r.a === "number"); if (!rs.length) { const z0 = abZOf(file); return z0 ? { z: z0 } : null; } const m = (k) => Number((rs.reduce((s, r) => s + r[k], 0) / rs.length).toFixed(1)); const out = { a: m("a"), b: m("b"), n: rs.length };
   const nx = all.filter((r) => r && r.next && r.next.a && r.next.b); if (nx.length) { const q = (k) => ({ re: Number((nx.reduce((s, r) => s + r.next[k].re, 0) / nx.length).toFixed(1)), hit: nx.filter((r) => r.next[k].hit).length }); out.next = { n: nx.length, a: q("a"), b: q("b") };
     const nc = nx.filter((r) => r.next.c); if (nc.length) out.next.c = { re: Number((nc.reduce((s, r) => s + r.next.c.re, 0) / nc.length).toFixed(1)), hit: nc.filter((r) => r.next.c.hit).length, n: nc.length }; }
   const cs = rs.filter((r) => typeof r.c === "number"); if (cs.length) { out.c = Number((cs.reduce((s, r) => s + r.c, 0) / cs.length).toFixed(1)); out.cn = cs.length; } /* 9.29-111 C(고른 날만) */
+  const z = abZOf(file); if (z) out.z = z; /* 9.29-143 중립 정답표 채점(있을 때만 · 옛 칸 무변) */
   return out; }
 export async function selectSurge({ get, map, date, hm = null, regular = false, flowsFor = null, us = null, history = [], kospiAmount = null, kosdaqAmount = null, top10 = new Set(), n = SURGE_N, chart = true, capBig = true }) {
   const t0 = Date.now(), errors = []; const req = { universe: 0, regular: 0, detail: 0, chart: 0 };

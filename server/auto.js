@@ -7,6 +7,7 @@ import { collectAll, normalizeYield } from "./collect.js";
 // 9.29-84 원장 [1597]: 그림자(shadow) 선정 V2 · 뉴스 v2 — 현행 선정·화면은 그대로, 옵션(shadow·news2)을 넘긴 run 만 같이 계산해 블록을 더한다 (server/shadow.js · server/news2.js)
 import { selectThemesV2, memoGet, attachRvol } from "./shadow.js";
 import { fetchNews2 } from "./news2.js";
+import { krNews } from "./brief.js"; /* 9.29-144 [집2511] 오른쪽 뉴스 칸 = 아침 브리핑과 같은 네이버 뉴스 목록 해석 */
 import { tvThreshold } from "../shared/trade-value.js";
 import { tagAvoidAll } from "./caution.js"; /* 9.29-101 종배 피함(S4) · 게이트 [1943] ② 장중·마감 같은 함수 */
 import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat, rankBOf, rankCOf, themeKwSum, bigCapsOf, CAP_URL, RANKB_BIG_NONE } from "./surge.js"; // 9.29-100 급등 묶음 선정
@@ -613,10 +614,41 @@ export async function fetchNews(fetchImpl, code, { n = 2, timeoutMs = 10000, wor
   const all = parseNews(await r.json(), 15);
   return words.length ? pickNews(all, words, n) : all.slice(0, n);
 }
+/* 9.29-144 원장 [집2510][집2511][집2575][집2576][집2577] ④ 장중 선물 카드 · 화면 오른쪽 뉴스 칸 — live run(5분)마다 이미 쓰는 공개 원천에서 +6요청(하루 약 79회 × 6 ≈ 474)
+   선물 = 코스피200 선물(네이버 polling domestic:FUT · 「오후 4시 기준」 묶음 k200d 와 같은 주소) + 미국 선물 3(네이버 futures NQcv1·EScv1·RTYcv1 · ②-2 와 같은 원천 · 네이버 10분 지연 표기 = 시각 그대로)
+   뉴스 = 네이버 증권 뉴스 목록 속보(flashnews)·주요 뉴스(mainnews) 1쪽 10개씩(아침 브리핑 ④ 와 같은 주소 · 쪽 크기만 10) · 저장 = 제목·언론사·시각·기사 번호만(본문 0) · 앱이 n.news.naver.com 원문 링크를 만듦
+   외국인 선물 순매수 = 이미 받는 out.fut(FUT/trend · 요청 +0) · 실패 = 그 칸 없음(지어내기 0) · 오류는 extra 블록 안에만(out.errors 무변) */
+export const LIVE_FUTS = [["k200", "domestic:FUT"], ["nq", "futures:NQcv1"], ["es", "futures:EScv1"], ["rty", "futures:RTYcv1"]];
+export const LIVE_NEWS_N = 10, LIVE_NEWS_TMAX = 120;
+export const LIVE_NEWS_CATS = [["flash", "flashnews"], ["main", "mainnews"]];
+export const LIVE_NEWS_URL = (cat) => "https://m.stock.naver.com/front-api/news/category?category=" + cat + "&pageSize=" + LIVE_NEWS_N + "&page=1";
+export function liveNewsRows(json) {
+  const cut = (t) => { const x = String(t || "").replace(/\s+/g, " ").trim(); return x.length > LIVE_NEWS_TMAX ? x.slice(0, LIVE_NEWS_TMAX - 1) + "…" : x; };
+  return krNews(json, "").filter((a) => a.t && /^\d{1,4}$/.test(a.oid) && /^\d{6,12}$/.test(a.aid) && /^\d{12}/.test(a.dt)).slice(0, LIVE_NEWS_N).map((a) => ({ t: cut(a.t), o: String(a.o || "").slice(0, 20), dt: a.dt.slice(0, 12), oid: a.oid, aid: a.aid }));
+}
+export function liveFutRow(q) {
+  if (!q || typeof q.price !== "number" || typeof q.prevClose !== "number" || !q.prevClose) return null;
+  return { price: round2(q.price), prev: round2(q.prevClose), change: round2(q.price - q.prevClose), pct: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), ...(q.time ? { time: String(q.time) } : {}) };
+}
+export async function collectLiveExtra({ adapters, get, now = new Date() }) {
+  const at = kstTime(now).slice(0, 5), futs = { at, errors: [] }, news = { at, errors: [] }; let requests = 0;
+  for (const [k, sym] of LIVE_FUTS) { requests++; try { const r = liveFutRow(await adapters.naver.quote(sym)); if (r) futs[k] = r; else futs.errors.push(k + ": 값 없음"); } catch (e) { futs.errors.push(k + ": " + String((e && e.message) || e).slice(0, 60)); } }
+  for (const [k, cat] of LIVE_NEWS_CATS) { requests++; try { news[k] = liveNewsRows(await get(LIVE_NEWS_URL(cat))); } catch (e) { news.errors.push(k + ": " + String((e && e.message) || e).slice(0, 60)); } }
+  return { futs, news, requests };
+}
+/* 이번 회차에 못 받은 조각은 직전 live.json(오늘 것)의 값을 그대로 둠(시각도 그 값의 것 · 화면에 「HH:MM 기준」) */
+export function keepLiveExtra(live, prev) {
+  if (!live || !prev || prev.date !== live.date) return live;
+  for (const [blk, keys] of [["futs", LIVE_FUTS.map(([k]) => k)], ["news", LIVE_NEWS_CATS.map(([k]) => k)]]) {
+    const cur = live[blk], old = prev[blk]; if (!cur || !old) continue;
+    for (const k of keys) if (!cur[k] && old[k]) { cur[k] = old[k]; (cur.kept = cur.kept || {})[k] = old.at || ""; }
+  }
+  return live;
+}
 // 장중 한 번: 코스피(등락·거래대금) · 코스피 외인/기관(장중 누적) · 프로그램 · 잠정 규칙으로 고른 주도 테마 3개(테마 거래대금·대장주 등락·거래대금) + 대장주 뉴스 2개 + 종목별 외인/기관(그 날 값이 이미 있을 때만 — 보통 장 마감 뒤)
 // 결과는 auto/live.json 하나에 덮어쓴다 (날짜 파일에는 안 넣음). 실패한 조각은 errors 에 적고 나머지는 남긴다
 // shadow · news2 (9.29-84 원장 [1597]): shadow = { bars, rvolCache, prevNames } → out.shadow(그림자 순위·RVOL·TOP10 제외) + 현행 3테마 슬롯에 rvol · news2 = { prevDate, cache, budget } → 테마마다 row.news2(검증 뉴스) + out.news2(캐시·상한). 둘 다 없으면 예전과 같다
-export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, us = null, history = [], date = null, n = 3, news2 = null, surge = null } = {}) {
+export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, us = null, history = [], date = null, n = 3, news2 = null, surge = null, liveExtra = false } = {}) {
   const day = date || kstDate(now), out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), date: day, errors: [] };
   const get0 = async (u) => { const r = await fetchImpl(u, { headers: NV_HEAD, signal: AbortSignal.timeout(timeoutMs) }); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); };
   const get = memoGet(get0); // 같은 주소 한 번 (테마 상세·종목 뉴스를 선정·뉴스 v2 가 나눠 씀) · get.count() = 실제 요청 수
@@ -629,6 +661,7 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
   try { const q = await adapters.naver.quote("domestic:KOSDAQ"); out.kosdaq = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: round2(q.price), prev: round2(q.prevClose), amount: q.amount || undefined, time: q.time || undefined }; } catch (e) { out.errors.push("코스닥: " + (e.message || e)); }
   try { const k = parseTrend(await get("https://m.stock.naver.com/api/index/KOSDAQ/trend")); out.investQ = { foreign: k.foreign, institution: k.institution, personal: k.personal, bizdate: k.bizdate }; } catch (e) { out.errors.push("코스닥 수급: " + (e.message || e)); } // 9.29-130 원장 [집2466]~[집2468]: 개인(personal) = ① 전일 마감 카드와 같은 원천(네이버 /api/index/{KOSPI,KOSDAQ}/trend personalValue · 마감 수집 parseTrend 그대로) · 같은 응답이라 요청 +0 · 없으면 null → 앱 「—」
   try { const f = parseTrend(await get("https://m.stock.naver.com/api/index/FUT/trend")); out.fut = { foreign: f.foreign, institution: f.institution, personal: f.personal, bizdate: f.bizdate }; } catch (e) { out.errors.push("선물 수급: " + (e.message || e)); } // 9.29-109 원장 [2298] 장중 재판정 5분마다: 외인 코스피200 선물(재판정 장중 run 과 같은 주소 · 요청 +1)
+  if (liveExtra) { try { const x = await collectLiveExtra({ adapters, get, now }); out.futs = x.futs; out.news = x.news; out.extraReq = x.requests; } catch (e) { out.futs = { at: out.at, errors: [String((e && e.message) || e).slice(0, 60)] }; } } /* 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸(09:30 전에도 · 아래 테마 고르기 앞) */
   out.intra = { at: out.at, fut: out.fut || null, spot: out.invest ? { foreign: out.invest.foreign, institution: out.invest.institution } : null, kospi: out.kospi ? out.kospi.value : null, kospiLv: out.kospi ? { close: out.kospi.close, prev: out.kospi.prev } : null, program: out.program || null }; // 앱 재판정 칸이 쓰는 모양(날짜 파일 intraday 와 같음)
   try { out.programQ = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); }
   try {
