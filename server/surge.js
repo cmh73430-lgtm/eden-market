@@ -17,7 +17,8 @@ import { avg20FromBars, rvolOf } from "./shadow.js";
 import { supplyTags } from "./caution.js"; /* 9.29-101 수급 꼬리 S1~S3 */ /* RVOL(거래대금 평소의 ×n) — 9.29-84 계산 그대로(20일 평균 거래대금 · 장 경과율) · 게이트 [1894] B */
 
 export const SURGE_V = 2;
-export const SURGE_RATE = 5, SURGE_N10 = 10, LIMIT_RATE = 29.5, SURGE_TOP = 0.10, SURGE_MIN_STRONG = 3, SURGE_MIN_N10 = 2, SURGE_N = 3, SURGE_SLOTS = 5;
+/* 9.29-140 원장 [집2544][집2545][집2546]: 강한 종목 +5%→+10% · 강한 종목 3→2개 · 개수 조건(n10 칸 이름 그대로) +10%→+15% 2개↑ · HOT_RATE = 테마 상세 「강세」 표시(+5%↑ · 선정 무관 · 그대로) */
+export const SURGE_RATE = 10, SURGE_N10 = 15, LIMIT_RATE = 29.5, SURGE_TOP = 0.10, SURGE_MIN_STRONG = 2, SURGE_MIN_N10 = 2, SURGE_N = 3, SURGE_SLOTS = 5, HOT_RATE = 5;
 export const SURGE_START = "09:30";            // 장중은 09:30 부터 같은 규칙 (홍인기 · 연구 1절)
 export const REGULAR_AFTER = "15:40";          // 이 시각 뒤 실행은 정규장 값(15:30 봉)으로 다시 잼
 export const GENERIC_RE = /지주사|밸류업|대표주|신규상장/; // 포괄 이름 (연구 03_backtest 와 같은 목록)
@@ -28,17 +29,18 @@ export const REG_MIN_RATE = 1.5, REG_MAX = 140;  // 정규장 다시 재기: 지
 export const FLOW_MAX = 40;
 export const MERGE_SAME_LEAD = true;            // 대장(강한 종목 거래대금 1위)이 같으면 같은 흐름으로 합침 (10/8 실측: 반도체 장비·OLED 둘 다 대장 주성엔지니어링 → 두 칸 차지 방지 · 옛 방식 dedupe 와 같은 규칙)                      // 수급(추정) 받을 강한 종목 수 상한 / run
 // 완화 사다리 (원장 [1849] 기본안) — 각 단계는 앞 단계까지 푼 조건을 그대로 두고 하나씩 더 푼다
+/* 9.29-140 [집2546] 새 기준(+10% 강한 종목 2개↑ · 그중 +15% 2개↑)에 맞춘 사다리 — 레인 실측(10/1~10/28 18거래일 · work/도구/t140/measure.mjs):
+   +15% 1개↑ 를 +7% 단계까지 유지(큰 상승 종목 있는 테마 먼저) → 그다음 +15% 0개 → +5%(옛 엄격 값) → 상위 15·20% · 강한 종목 2개 = 이미 바닥이라 strong 단계 없음
+   (3개 못 채운 날: 이 안 2일 · +15% 를 먼저 푸는 안 2일 · +15% 끝까지 유지안 2일(1개·1개) · 옛 규칙 1일) */
+/* 9.29-140r3 원장 [집2570](앞의 [집2567] 「사다리 없음」 대체): 3단계만 — ① +10%↑ 2개 · 그중 +15%↑ 2개 → ② +10%↑ 2개 · +15%↑ 1개 → ③ +10%↑ 1개 · +15%↑ 1개 · 그 밖 완화(+7%·+5%·상위 15/20%·수급 무시) 없음 · 3단계 뒤 모자라면 있는 만큼(0~2개)
+   수급: 옛 사다리는 엄격·+15% 1개 단계까지 수급 봄(flow_skip 은 그다음) → ①② 그대로 · ③ 은 디렉터 결정 밖이라 같은 수급 조건(flow true)
+   (57476db 8단계 = 엄격 → n10_1 → flow_skip → rate_7 → n10_0 → rate_5 → top_15 → top_20 · 앞 두 단계 값은 ①② 와 같음) · label = 화면 단계 표시 */
 export const LADDER = [
-  { step: 0, key: null, rate: 5, top: 0.10, minStrong: 3, minN10: 2, flow: true },
-  { step: 1, key: "n10_1", rate: 5, top: 0.10, minStrong: 3, minN10: 1, flow: true },
-  { step: 2, key: "flow_skip", rate: 5, top: 0.10, minStrong: 3, minN10: 1, flow: false },
-  { step: 3, key: "strong_2", rate: 5, top: 0.10, minStrong: 2, minN10: 1, flow: false },
-  { step: 4, key: "rate_4", rate: 4, top: 0.10, minStrong: 2, minN10: 1, flow: false },
-  { step: 5, key: "rate_3", rate: 3, top: 0.10, minStrong: 2, minN10: 1, flow: false },
-  { step: 6, key: "top_15", rate: 3, top: 0.15, minStrong: 2, minN10: 1, flow: false },
-  { step: 7, key: "top_20", rate: 3, top: 0.20, minStrong: 2, minN10: 1, flow: false },
+  { step: 0, key: null, rate: 10, top: 0.10, minStrong: 2, minN10: 2, flow: true },
+  { step: 1, key: "n10_1", rate: 10, top: 0.10, minStrong: 2, minN10: 1, flow: true, label: "기준②" },
+  { step: 2, key: "strong_1", rate: 10, top: 0.10, minStrong: 1, minN10: 1, flow: true, label: "기준③" },
 ];
-export const RELAX_TEXT = { n10_1: "+10% 1종목만", flow_skip: "외인·기관 순매도", strong_2: "강한 종목 2개", rate_4: "+4% 종목 포함", rate_3: "+3% 종목 포함", top_15: "거래대금 상위 15%까지", top_20: "거래대금 상위 20%까지" };
+export const RELAX_TEXT = { strong_1: "+10% 1종목만", n10_1: "+15% 1종목만", flow_skip: "외인·기관 순매도", n10_0: "+15% 종목 없음", rate_7: "+7% 종목 포함", rate_5: "+5% 종목 포함", top_15: "거래대금 상위 15%까지", top_20: "거래대금 상위 20%까지" };
 // 「참고」 한 줄 (원장 [1845] ④): +5% 묶음은 안 됐지만 돈이 크게 몰린 테마 — 대상(상위 10%) 안 구성 종목 4↑ · 오른 비율 ≥ 0.7 · 평균 +2%↑ · 오른 종목 거래대금 합(시총 TOP10 제외) ≥ 5,000억 · 선정 테마와 안 겹침 → 돈 합 1위 1개
 //   근거: 연구 일봉 8/21~10/8 32거래일에서 이 기준이면 20일(63%)에 1개 (도구/t100/ref_stats.mjs) — TOP10 을 빼지 않으면 삼성전자·SK하이닉스 테마가 매일 1위
 export const REF_MIN_N = 4, REF_MIN_UP = 0.7, REF_MIN_AVG = 2, REF_MIN_MONEY = 5000;
@@ -141,8 +143,10 @@ export function themeFlowOf(core, flows) {
   if (!xs.length) return null;
   return { foreign: Math.round(xs.reduce((a, f) => a + f.foreign, 0)), inst: Math.round(xs.reduce((a, f) => a + f.inst, 0)), n: xs.length, of: core.length, est: xs.some((f) => f.est) || undefined, at: xs.map((f) => f.at).filter(Boolean).sort().pop() || undefined, ...(xs.some((f) => f.src === "kiwoom") ? { src: xs.every((f) => f.src === "kiwoom") ? "kiwoom" : "kiwoom+naver" } : {}) }; /* 9.29-111: 키움 값이 든 테마 수급 = src */
 }
-// 한 단계 평가: 통과 테마 [{ no, name, count, core(코드 · 거래대금 순), n10, money, flow, flowState }] 순위대로
-export function evalStep(byCode, cuts, map, st, flows = null) {
+// 한 단계 평가: 통과 테마 [{ no, name, count, core(코드 · 거래대금 순), n10, money, moneyX, flow, flowState }] 순위대로
+/* 9.29-140 [집2547] 순위 = 강한 종목 거래대금 합에서 그날 시총 상위 10(bigSet = bigCapsOf · B 와 같은 목록) 뺀 값(moneyX) 큰 순 → +15% 수 → 구성 종목 적은 테마 · bigSet 없으면(시총 못 얻음) 빼지 않음(moneyX = money)
+   core 는 거래대금 순 그대로(합치기 「대장 같음」·수급 받을 종목 고르기 = 선정 규칙 무변) · 화면 대장·짝꿍 = 상승률 순(selectSurge slots) */
+export function evalStep(byCode, cuts, map, st, flows = null, bigSet = null, rank = rankCmp) {
   const cut = cuts[st.top]; if (!cut || !Number.isFinite(cut.cut)) return [];
   const res = [];
   for (const t of map.themes) {
@@ -150,29 +154,32 @@ export function evalStep(byCode, cuts, map, st, flows = null) {
     const core = t.codes.filter((c) => { const s = byCode.get(c); return s && typeof s.rate === "number" && s.rate >= st.rate && (s.value || 0) >= cut.cut; });
     if (core.length < st.minStrong) continue;
     core.sort((a, b) => byCode.get(b).value - byCode.get(a).value);
-    const n10 = core.filter((c) => byCode.get(c).rate >= SURGE_N10).length;
+    const n10 = core.filter((c) => byCode.get(c).rate >= (st.n10At ?? SURGE_N10)).length; /* st.n10At = 옛 규칙 재현(검증)용 · 없으면 +15% */
     if (n10 < st.minN10) continue;
     const flow = themeFlowOf(core, flows), flowState = !flow ? "pending" : flow.foreign + flow.inst > 0 ? "buy" : "sell";
     if (st.flow && flowState === "sell") continue;
-    res.push({ no: t.no, name: t.name, count: t.count, core, n10, money: round2(core.reduce((a, c) => a + byCode.get(c).value, 0)), flow, flowState });
+    res.push({ no: t.no, name: t.name, count: t.count, core, n10, money: round2(core.reduce((a, c) => a + byCode.get(c).value, 0)), moneyX: round2(core.reduce((a, c) => a + (bigSet && bigSet.has(c) ? 0 : byCode.get(c).value), 0)), flow, flowState });
   }
-  return res.sort((a, b) => b.n10 - a.n10 || b.money - a.money || a.count - b.count);
+  return res.sort(rank);
 }
-// 테마 하나가 엄격 기준에서 실제로 풀린 조건 (표시용 · 들어온 단계의 값으로 판정)
-export function relaxKeys(t, byCode, cuts, st) {
+export const rankCmp = (a, b) => b.moneyX - a.moneyX || b.n10 - a.n10 || a.count - b.count;
+// 테마 하나가 엄격 기준에서 실제로 풀린 조건 (표시용 · 들어온 단계의 값으로 판정 · 9.29-140 사다리 표(LADDER)에서 키를 찾음)
+export function relaxKeys(t, byCode, cuts, st, ladder = LADDER) {
   if (!st || st.step === 0) return [];
-  const keys = [], strict = LADDER[0], cut0 = cuts[strict.top] ? cuts[strict.top].cut : Infinity;
-  if (t.n10 < SURGE_MIN_N10) keys.push("n10_1");
-  if (t.flowState === "sell") keys.push("flow_skip");
-  const strong0 = t.core.filter((c) => { const s = byCode.get(c); return s.rate >= strict.rate && s.value >= cut0; });
-  if (t.core.length < SURGE_MIN_STRONG) keys.push("strong_2");
-  if (t.core.some((c) => byCode.get(c).rate < strict.rate)) keys.push(t.core.some((c) => byCode.get(c).rate < 4) ? "rate_3" : "rate_4");
-  if (t.core.some((c) => byCode.get(c).value < cut0)) keys.push(t.core.some((c) => cuts[0.15] && byCode.get(c).value < cuts[0.15].cut) ? "top_20" : "top_15");
-  if (!keys.length && strong0.length < SURGE_MIN_STRONG) keys.push("strong_2");
+  const keys = [], strict = ladder[0], cut0 = cuts[strict.top] ? cuts[strict.top].cut : Infinity, upto = ladder.filter((s) => s.step <= st.step && s.key);
+  const has = (k) => upto.some((s) => s.key === k);
+  if (t.n10 < strict.minN10) { const k = t.n10 >= 1 && has("n10_1") ? "n10_1" : "n10_0"; if (has(k)) keys.push(k); }
+  if (t.flowState === "sell" && has("flow_skip")) keys.push("flow_skip");
+  if (t.core.length < strict.minStrong) { const k = upto.filter((s) => s.minStrong < strict.minStrong && s.minStrong <= t.core.length).map((s) => s.key)[0]; if (k) keys.push(k); }
+  const minRate = Math.min(...t.core.map((c) => byCode.get(c).rate));
+  if (minRate < strict.rate) { const k = upto.filter((s) => s.rate < strict.rate && s.rate <= minRate && /^rate_/.test(s.key)).map((s) => s.key)[0]; if (k) keys.push(k); }
+  const minVal = Math.min(...t.core.map((c) => byCode.get(c).value));
+  if (minVal < cut0) { const k = upto.filter((s) => s.top > strict.top && /^top_/.test(s.key) && cuts[s.top] && minVal >= cuts[s.top].cut).map((s) => s.key)[0]; if (k) keys.push(k); }
   return keys;
 }
 // 사다리: ensure(top) 는 그 범위 기준선까지 대상·정규장 값을 준비하는 비동기 함수(없으면 그냥 씀) · flowsFor(codes) 는 수급(추정) 받기(없으면 수급 보류)
-export async function ladderSelect({ stocks, map, n = SURGE_N, flowsFor = null, ensure = null, ladder = LADDER, mergeLead = MERGE_SAME_LEAD }) {
+export async function ladderSelect({ stocks, map, n = SURGE_N, flowsFor = null, ensure = null, ladder = LADDER, mergeLead = MERGE_SAME_LEAD, big = null, rank = rankCmp, finalSort = true }) { /* rank·finalSort = 옛 규칙 재현(검증)용 */
+  const bigSet = big && Array.isArray(big.codes) && big.codes.length ? new Set(big.codes) : null; /* 9.29-140 [집2547] 시총 상위 10 = 순위 돈에서 뺌 */
   const byCode = new Map((stocks || []).map((s) => [s.code, s]));
   const memberSet = new Set(map.themes.flatMap((t) => t.codes)), M = map.codes || memberSet.size;
   const cuts = {}; const cutFor = (top) => (cuts[top] = cutOf([...byCode.values()], memberSet, M, top));
@@ -184,11 +191,13 @@ export async function ladderSelect({ stocks, map, n = SURGE_N, flowsFor = null, 
     cutFor(0.15);
     if (st.flow && !flowAsked && flowsFor) { // 수급(추정): 엄격·1단계 후보의 강한 종목만 · 상한 FLOW_MAX
       flowAsked = true;
-      const pre = evalStep(byCode, cuts, map, Object.assign({}, st, { flow: false, minN10: 1 }), null);
-      const codes = [...new Set(pre.flatMap((t) => t.core))].slice(0, FLOW_MAX);
+      const pre = evalStep(byCode, cuts, map, Object.assign({}, st, { flow: false, minN10: Math.min(1, st.minN10) }), null, bigSet, rank);
+      const minS = Math.min(...ladder.filter((s) => s.flow).map((s) => s.minStrong)); /* 9.29-140r3 ③(강한 종목 1개)도 같은 수급 조건 — 앞 단계 후보 종목 먼저 · 남는 자리에 ③ 후보(옛·57476db 사다리 = 추가 0) */
+      const more = minS < st.minStrong ? evalStep(byCode, cuts, map, Object.assign({}, st, { flow: false, minN10: Math.min(1, st.minN10), minStrong: minS }), null, bigSet, rank).flatMap((t) => t.core) : [];
+      const codes = [...new Set([...pre.flatMap((t) => t.core), ...more])].slice(0, FLOW_MAX);
       try { flows = codes.length ? await flowsFor(codes) : null; } catch (e) { flows = null; }
     }
-    const res = evalStep(byCode, cuts, map, st, flows);
+    const res = evalStep(byCode, cuts, map, st, flows, bigSet, rank);
     used.push({ step: st.step, key: st.key, passed: res.length });
     for (const t of res) {
       if (picked.length >= n) break;
@@ -196,13 +205,14 @@ export async function ladderSelect({ stocks, map, n = SURGE_N, flowsFor = null, 
       // 합치기 = 대표 테마의 강한 종목과 비교(연구 dedupe 와 같음 · 합쳐진 테마 종목까지 넓히면 10/8 2차전지가 전기차를 거쳐 자동차부품까지 삼켜 연쇄로 커짐 — 실측) · 대장 같음도 합침
       const host = picked.find((p) => coreOverlap(p.core, t.core) || (mergeLead && p.core[0] === t.core[0]));
       if (host) { if (!host.alias.includes(t.name)) host.alias.push(t.name); continue; }
-      const keys = relaxKeys(t, byCode, cuts, st);
-      picked.push(Object.assign(t, { alias: [], step: st.step, relax: st.step === 0 ? null : { step: st.step, keys, text: keys.map((k) => RELAX_TEXT[k]).join(" · ") } }));
+      const keys = relaxKeys(t, byCode, cuts, st, ladder);
+      picked.push(Object.assign(t, { alias: [], step: st.step, relax: st.step === 0 ? null : { step: st.step, keys, text: st.label || keys.map((k) => RELAX_TEXT[k]).join(" · ") } })); /* 9.29-140r3 새 사다리 = 「기준②」·「기준③」 */
     }
     lastStep = st.step;
     if (picked.length >= n) break;
   }
-  return { picked, byCode, cuts, used, lastStep, flows, M };
+  if (finalSort) picked.sort((a, b) => a.step - b.step || rank(a, b)); /* 9.29-140 [집2547][집2555] 고른 3개 순위 = 엄격(0단계) 통과 테마 먼저 · 그 안에서 moneyX(대형주 뺀 돈) 큰 순 · 완화 테마는 빈자리만(단계 → 돈 순) */
+  return { picked, byCode, cuts, used, lastStep, flows, M, bigSet };
 }
 // 참고 한 줄: 선정 안 된 테마 중 대상(상위 10%) 안 구성 4↑ · 오른 비율 ≥ 0.7 · 평균 +2%↑ · 오른 종목 돈(TOP10 제외) ≥ 5,000억 · 선정과 안 겹침 → 1위
 export function refTheme({ byCode, cut, map, picked = [], top10 = new Set() }) {
@@ -225,7 +235,7 @@ export function refTheme({ byCode, cut, map, picked = [], top10 = new Set() }) {
 export function detailNums(stocks, byCode) {
   const xs = (Array.isArray(stocks) ? stocks : []).map((x) => { const s = byCode && byCode.get(String(x.itemCode)); return { rate: s && s.reg ? s.rate : num(x.fluctuationsRatio), value: num(x.accumulatedTradingValueRaw) }; }).filter((x) => typeof x.rate === "number");
   if (!xs.length) return null;
-  const hot = xs.filter((x) => x.rate >= SURGE_RATE);
+  const hot = xs.filter((x) => x.rate >= HOT_RATE);
   return { rate: round2(xs.reduce((a, x) => a + x.rate, 0) / xs.length), rise: round2(xs.filter((x) => x.rate > 0).length / xs.length), value: Math.round(xs.reduce((a, x) => a + (x.value || 0), 0) / 1e8), hot: Math.round(hot.reduce((a, x) => a + (x.value || 0), 0) / 1e8), hotN: hot.length };
 }
 // 일봉 오늘 봉 종가를 정규장 종가로 (장 뒤 가격이 섞인 봉 방지) · 오늘 봉이 없으면 붙임
@@ -245,16 +255,19 @@ export function daysInRow(t, history = []) {
   return D;
 }
 
+/* 9.29-140 상승률 높은 순(같으면 거래대금 큰 순 → 코드) — A slots · B codes · C 대장·2·3등 같은 정렬 */
+export const rateSort = (xs) => (xs || []).filter(Boolean).slice().sort((a, b) => (b.rate ?? -Infinity) - (a.rate ?? -Infinity) || (b.value || 0) - (a.value || 0) || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 const slotOf = (s) => Object.assign({ code: s.code, name: s.name, rate: s.rate, value: s.value, price: s.price, market: s.market || undefined }, typeof s.prev === "number" ? { prev: s.prev } : {}, s.rate >= LIMIT_RATE ? { limit: true } : {}, s.reg === false ? { regMiss: true } : {});
 // 한 줄 글 (앱 parseLeaders 가 읽는 꼴 유지: "이름 +x% · 강세 N종목 X억 · … · 외인 … · 기관 … (대장·2등)")
 const eokText = (v) => (Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억");
 const signedEok = (v) => (v > 0 ? "+" : v < 0 ? "-" : "") + eokText(Math.abs(v));
+const STAGE_RE = /^기준[②③]$/;
 export function surgeText(themes) {
   return (themes || []).map((t) => t.name + " " + (t.rate > 0 ? "+" : "") + (t.rate ?? 0) + "%"
-    + " · 강세 " + t.strongN + "종목 " + eokText(t.money) + " · +10% " + t.n10 + "종목"
+    + " · 강세 " + t.strongN + "종목 " + eokText(t.money) + " · +" + (t.n10At || SURGE_N10) + "% " + t.n10 + "종목" /* 9.29-140: +15% (앱 parseLeaders 는 +10%·+15% 둘 다 읽음) */
     + (t.lead ? " · 대장 " + t.lead.name + (t.lead.limit ? "(상한가)" : "") : "")
     + (t.flow ? " · 외인 " + signedEok(t.flow.foreign) + " · 기관 " + signedEok(t.flow.inst) : t.flowState === "pending" ? " · 수급 확인 전" : "")
-    + (t.relax ? " · 선정완화(" + t.relax.text + ")" : "")
+    + (t.relax ? (STAGE_RE.test(t.relax.text) ? " · " + t.relax.text /* 9.29-140r3 「기준②」·「기준③」 */ : " · 선정완화(" + t.relax.text + ")") : "")
     + " (" + (t.slots || []).slice(0, 2).map((s) => s.name).join("·") + ")").join(" / ");
 }
 
@@ -266,7 +279,7 @@ export const RANKB_N = 50, RANKB_TOP = 3;
 /* 9.29-126 원장 [집2445][집2448][집2449] B = 「그날 시총 top20 빼고 상위 50 다시」: 대형주 = 그 회차 코스피+코스닥 보통주(ETF·ETN·우선주·스팩 제외 = 대상 목록과 같은 규칙) 시총 상위 RANKB_BIG(20)
    · 시총 = 네이버 marketValueRaw(현재가 × 상장주식수 · 그 시각 값) — 코스피 = 시총 순위 1쪽(CAP_URL · 30줄 · 요청 +1/회차) · 코스닥 = 선정과 같은 priceTop 응답(새 요청 0 · 3.8년 실측 코스닥 대형주 거래대금 순위 최대 32위 ≪ 받는 300줄)
    · 고정 목록(top10_kospi.json)·N조 고정 기준 안 씀 · 못 얻으면 none(「대형주 제외 못 함」) = 기존 방식(빼지 않음) · A(selectSurge)·C(rankCOf) 무변 · 대형주는 참고 한 줄(ref = 대형주 중 거래대금 위 RANKB_BIG_REF 개)만 */
-export const RANKB_BIG = 20, RANKB_BIG_REF = 3, RANKB_BIG_NONE = "대형주 제외 못 함";
+export const RANKB_BIG = 10, RANKB_BIG_REF = 3, RANKB_BIG_NONE = "대형주 제외 못 함"; /* 9.29-140 [집2544] 시총 상위 20 → 10 (11~20위 = 다시 B 대상) · A 순위 돈 빼기([집2547])도 같은 목록 */
 export const CAP_URL = "https://m.stock.naver.com/api/stocks/marketValue/KOSPI?page=1&pageSize=30";
 export function bigCapsOf({ kospi = null, stocks = [], n = RANKB_BIG }) {
   const ks = []; for (const s of (kospi && Array.isArray(kospi.stocks) ? kospi.stocks : [])) { if (univExcluded(s)) continue; const cap = capOf(s); if (cap !== null && s.itemCode) ks.push({ code: String(s.itemCode), name: String(s.stockName || ""), market: "KS", cap }); }
@@ -284,8 +297,9 @@ export function rankBOf({ stocks, map, flows = null, themesA = [], idx = {}, at 
   const bigOut = !big ? null : bigSet ? { n: bigSet.size, src: big.src, codes: big.codes, ref: ok.filter((s) => bigSet.has(s.code)).slice(0, RANKB_BIG_REF).map((s) => ({ code: s.code, name: s.name, rate: s.rate, value: s.value })), in50: ok.slice(0, RANKB_N).filter((s) => bigSet.has(s.code)).length } : { none: big.none || RANKB_BIG_NONE, why: big.why || undefined };
   const themesOf = new Map(); for (const t of (map && map.themes) || []) { if (!t || GENERIC_RE.test(t.name)) continue; for (const c of t.codes || []) { if (!themesOf.has(c)) themesOf.set(c, []); themesOf.get(c).push(t); } }
   const rows = top.map((s, i) => { const f = flows && flows[s.code]; return { r: i + 1, code: s.code, name: s.name, mk: s.market, rate: s.rate, value: s.value, themes: (themesOf.get(s.code) || []).map((t) => t.name), ...(f && typeof f.foreign === "number" ? { flow: { f: f.foreign, i: f.inst } } : {}) }; });
+  const byTop = new Map(top.map((s) => [s.code, s]));
   const cnt = new Map(); for (const s of top) for (const t of themesOf.get(s.code) || []) { const x = cnt.get(t.no) || { no: t.no, name: t.name, count: t.count || (t.codes || []).length, n: 0, value: 0, codes: [] }; x.n++; x.value += s.value; x.codes.push(s.code); cnt.set(t.no, x); }
-  const themesB = [...cnt.values()].sort((a, b) => b.n - a.n || b.value - a.value || a.count - b.count || (a.name < b.name ? -1 : 1)).slice(0, RANKB_TOP).map((x) => ({ no: x.no, name: x.name, n: x.n, value: round2(x.value), codes: x.codes }));
+  const themesB = [...cnt.values()].sort((a, b) => b.n - a.n || b.value - a.value || a.count - b.count || (a.name < b.name ? -1 : 1)).slice(0, RANKB_TOP).map((x) => ({ no: x.no, name: x.name, n: x.n, value: round2(x.value), codes: rateSort(x.codes.map((c) => byTop.get(c))).map((s) => s.code) })); /* 9.29-140 [집2506][집2507] codes = 상승률 높은 순(대장·짝꿍) · 테마 선정(겹친 수 → 거래대금 합)·대상 50 무변 */
   return { v: 1, at, src: "네이버 거래대금 순위(priceTop · 선정과 같은 응답 · 새 요청 0)", n: rows.length, top: rows, themesB, themesA: (themesA || []).map((t) => t && t.name).filter(Boolean), idx, newReq: big ? 1 : 0, ...(bigOut ? { big: bigOut } : {}), ms: Date.now() - t0 };
 }
 /* 9.29-111 원장 [2333] 「v7 C안 = 판정에 반영」 · [2343] ③ · v7 매매수칙 §2(reference/trading_rules_v7.html 「진짜 대금이 몰린 테마 찾기」):
@@ -303,7 +317,8 @@ export function themeKwSum(codes, kiwoom, top10 = null) {
   for (const c of codes || []) { const k = kiwoom[c]; if (!k) continue; const kf = typeof k.foreign === "number" ? k.foreign : null, ki = typeof k.inst === "number" ? k.inst : null; if (kf === null && ki === null) continue; n++; f += kf || 0; i += ki || 0; if (top10 && top10.has(c)) big += (kf || 0) + (ki || 0); }
   return n ? { foreign: round2(f), inst: round2(i), n, of: (codes || []).length, big: round2(big) } : null;
 }
-export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = null }) {
+/* 9.29-140 [집2555] ③ C 의 「대형주 몫 50%↑ 테마 제외」 목록 = 그날 시총 상위 10(auto.js 가 같은 회차 bigCapsOf 결과를 top10 으로 넘김 · 요청 +0) · 시총 못 얻으면 고정 목록(top10_kospi.json) 폴백 · big = 어느 목록을 썼는지(화면 표시) */
+export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = null, big = null }) {
   const t0 = Date.now(), base = { v: 1, at, src: "키움 장중 외인·기관(ka10063 · 테마 구성 종목 합) ∩ 네이버 거래대금 순위 등락률", rule: `테마수급 상위 ${RANKC_K} ∩ 테마 수익률 상위 ${RANKC_K} · 시총 TOP10 몫 ${RANKC_TOP10_SHARE * 100}%↑ 테마 제외 · 외인>기관 강함 · 기관만 주의 · 대장 +${RANKC_LEAD}%↑ & 2등 ${RANKC_GAP}%p 이내 강한 테마`, newReq: 0 };
   const has = kiwoom && typeof kiwoom === "object" && Object.values(kiwoom).some((k) => k && (typeof k.foreign === "number" || typeof k.inst === "number"));
   if (!has || !map || !Array.isArray(map.themes)) return Object.assign(base, { none: RANKC_NONE, themesC: [], ms: Date.now() - t0 });
@@ -329,12 +344,13 @@ export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = nu
     pickedC.push(r);
   }
   const themesC = pickedC.map((r) => {
-    const by = r.mem.slice().sort((a, b) => b.rate - a.rate), lead = by[0], second = by[1] || null, tags = [];
+    const by = rateSort(r.mem), lead = by[0], second = by[1] || null, third = by[2] || null, tags = []; /* 9.29-140 [집2509] 대장·짝꿍(2·3등) = 상승률 순(같으면 거래대금 큰 순) · C 테마 선정 무변 */
     if (r.foreign > r.inst && r.foreign > 0) tags.push("강함"); else if (r.inst > 0 && r.foreign <= 0) tags.push("주의");
     if (lead && lead.rate >= RANKC_LEAD && second && lead.rate - second.rate <= RANKC_GAP) tags.push("강한 테마");
     const st = (s) => (s ? { code: s.code, name: s.name, rate: s.rate } : null);
-    return Object.assign({ no: r.no, name: r.name, foreign: r.foreign, inst: r.inst, sum: r.sum, n: r.n, rate: r.rate, rn: r.rn, sR: r.sR, rR: r.rR, tags, lead: st(lead), second: st(second) }, r.alias.length ? { alias: r.alias } : {});
+    return Object.assign({ no: r.no, name: r.name, foreign: r.foreign, inst: r.inst, sum: r.sum, n: r.n, rate: r.rate, rn: r.rn, sR: r.sR, rR: r.rR, tags, lead: st(lead), second: st(second), third: st(third) }, r.alias.length ? { alias: r.alias } : {});
   });
+  if (big) base.big = big;
   const out = Object.assign(base, { n: rows.length, excluded: rows.filter((r) => r.big10).sort((a, b) => b.sum - a.sum).slice(0, 5).map((r) => r.name), themesC, ms: Date.now() - t0 });
   if (!themesC.length) out.none = RANKC_EMPTY;
   return out;
@@ -373,7 +389,7 @@ export function abSummary(file) { const all = file && Array.isArray(file.rows) ?
     const nc = nx.filter((r) => r.next.c); if (nc.length) out.next.c = { re: Number((nc.reduce((s, r) => s + r.next.c.re, 0) / nc.length).toFixed(1)), hit: nc.filter((r) => r.next.c.hit).length, n: nc.length }; }
   const cs = rs.filter((r) => typeof r.c === "number"); if (cs.length) { out.c = Number((cs.reduce((s, r) => s + r.c, 0) / cs.length).toFixed(1)); out.cn = cs.length; } /* 9.29-111 C(고른 날만) */
   return out; }
-export async function selectSurge({ get, map, date, hm = null, regular = false, flowsFor = null, us = null, history = [], kospiAmount = null, kosdaqAmount = null, top10 = new Set(), n = SURGE_N, chart = true }) {
+export async function selectSurge({ get, map, date, hm = null, regular = false, flowsFor = null, us = null, history = [], kospiAmount = null, kosdaqAmount = null, top10 = new Set(), n = SURGE_N, chart = true, capBig = true }) {
   const t0 = Date.now(), errors = []; const req = { universe: 0, regular: 0, detail: 0, chart: 0 };
   if (!map || !Array.isArray(map.themes) || !map.themes.length) throw new Error("테마 구성표 없음");
   const memberSet = new Set(map.themes.flatMap((t) => t.codes)), M = map.codes || memberSet.size;
@@ -381,15 +397,18 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
   const U = await fetchUniverse({ get, memberSet, M, maxTop: SURGE_TOP }); req.universe = U.requests; errors.push(...U.errors);
   if (!U.stocks.length) throw new Error("거래대금 순위 못 받음");
   let stocks = U.stocks; const done = new Set(); let widened = false;
+  /* 9.29-140 [집2547] A 순위 돈에서 그날 시총 상위 10 빼기 — B 와 같은 bigCapsOf(코스피 시총 순위 1쪽 CAP_URL 요청 +1 · 코스닥 = 받은 priceTop) · 못 얻으면 빼지 않음(none) · auto.js B 는 이 값을 그대로 씀(rankBig · 같은 회차 요청 +0) */
+  let big = null; if (capBig) { try { req.cap = 1; big = bigCapsOf({ kospi: await get(CAP_URL), stocks }); } catch (e) { big = { none: RANKB_BIG_NONE, why: "코스피 시총 순위: " + (e.message || e) }; } }
   const ensure = async (top, rate) => {
     if (top > SURGE_TOP && !widened) { widened = true; const W = await fetchUniverse({ get, memberSet, M, maxTop: maxTop }); req.universe += W.requests - U.requests > 0 ? W.requests - U.requests : 0; const have = new Set(stocks.map((s) => s.code)); for (const s of W.stocks) if (!have.has(s.code)) stocks.push(s); }
     if (regular) { const c = cutOf(stocks, memberSet, M, top); const r = await regularize(stocks, { get, date, minValue: c.cut, done, minRate: Math.min(REG_MIN_RATE, rate - 3.5) }); req.regular += r.requests; errors.push(...r.errors.slice(0, 6)); }
   };
-  const L = await ladderSelect({ stocks, map, n, flowsFor, ensure });
+  const L = await ladderSelect({ stocks, map, n, flowsFor, ensure, big });
   const themes = [];
   for (const p of L.picked) {
-    const by = L.byCode, slots = p.core.slice(0, SURGE_SLOTS).map((c) => slotOf(by.get(c))), lead = slots[0];
-    const row = { no: p.no, name: p.name, alias: p.alias, count: p.count, strongN: p.core.length, strongAvg: round2(p.core.reduce((a, c) => a + by.get(c).rate, 0) / p.core.length), n10: p.n10, /* strongAvg = 강한 종목 평균(테마 rate 는 구성 전체 평균 · 게이트 [1887]) */ limitN: p.core.filter((c) => by.get(c).rate >= LIMIT_RATE).length, money: Math.round(p.money),
+    /* 9.29-140 [집2506]~[집2508] 대장·짝꿍(2·3등) = 강한 종목(core)을 상승률 높은 순으로(같으면 거래대금 큰 순) · 고르는 종목 묶음(core)·테마 선정은 그대로 */
+    const by = L.byCode, slots = rateSort(p.core.map((c) => by.get(c))).slice(0, SURGE_SLOTS).map(slotOf), lead = slots[0];
+    const row = { no: p.no, name: p.name, alias: p.alias, count: p.count, strongN: p.core.length, strongAvg: round2(p.core.reduce((a, c) => a + by.get(c).rate, 0) / p.core.length), n10: p.n10, n10At: SURGE_N10, /* strongAvg = 강한 종목 평균(테마 rate 는 구성 전체 평균 · 게이트 [1887]) */ limitN: p.core.filter((c) => by.get(c).rate >= LIMIT_RATE).length, money: Math.round(p.money), moneyX: Math.round(p.moneyX),
       lead: lead ? { code: lead.code, name: lead.name, rate: lead.rate, value: lead.value, limit: lead.limit || undefined } : null, slots, stocks: slots.slice(0, 2).map((s) => s.name), core: p.core,
       flow: p.flow || undefined, flowState: p.flowState, step: p.step, relax: p.relax, warn: [] };
     try { // 테마 상세 1쪽(100개 넘으면 2쪽까지 — 1쪽만 평균 내면 10/8 2차전지(143종목) 2.93% vs 네이버 1.33% 로 틀어짐 · 실측)
@@ -407,14 +426,14 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
   // 종가배팅 숫자 기준 후보 (9.29-100 원장 [1864] ③ · 표시만) · 거래대금 기준 = 매매수칙 권장안 표(원장 [1880]): 코스피 종목 = 코스피 − 삼성전자 − SK하이닉스(두 종목 그날 거래대금 = 이미 받은 거래대금 순위 응답 · 추가 요청 0) · 코스닥 종목 = 코스닥
   const big2 = TV_BIG2.map((c) => L.byCode.get(c)).filter((s) => s && typeof s.value === "number"), big2v = big2.length === TV_BIG2.length ? big2.reduce((a, s) => a + s.value, 0) : null;
   const closing = closingPicks(L.byCode, { T: tvStockThresholds({ kospi: kospiAmount, kosdaq: kosdaqAmount, big2: big2v }), flows: L.flows });
-  const short = themes.length < n ? (themes.length ? "완화 끝까지 가도 " + themes.length + "개뿐" : "완화 끝까지 가도 0개") + " — +10% 종목이 있는 테마 묶음 부족(시장 전체 약세 등)" : undefined;
+  const short = themes.length < n ? (themes.length ? "기준 통과 " + themes.length + "개" : "오늘 기준 통과 테마 없음") : undefined; /* [집2570] 3단계 뒤 있는 만큼 */
   const OUT = {
-    v: SURGE_V, method: "surge", basis: regular ? "regular" : "live", hm, date, themes, ref: ref || undefined, short, closing,
+    v: SURGE_V, method: "surge", basis: regular ? "regular" : "live", hm, date, themes, ref: ref || undefined, short, closing, bigA: !big ? undefined : big.codes ? { n: big.codes.length, codes: big.codes } : { none: big.none, why: big.why || undefined }, /* 9.29-140 A 순위 돈에서 뺀 시총 상위 10 */
     universe: { n: c10.N, have: c10.have, cut: Number.isFinite(c10.cut) ? Math.round(c10.cut) : null, complete: !!c10.complete, M: L.M, pages: U.pages, excluded: U.excluded, cuts: Object.fromEntries(Object.entries(L.cuts).map(([k, v]) => [k, Number.isFinite(v.cut) ? Math.round(v.cut) : null])) },
-    ladder: { used: L.used, lastStep: L.lastStep, steps: LADDER.map((s) => ({ step: s.step, key: s.key, text: s.key ? RELAX_TEXT[s.key] : "엄격" })) },
+    ladder: { used: L.used, lastStep: L.lastStep, steps: LADDER.map((s) => ({ step: s.step, key: s.key, text: s.label || (s.key ? RELAX_TEXT[s.key] : "엄격") })) }, /* 앱 rule140 = steps 에 strong_1 */
     flowSrc: L.flows ? Object.keys(L.flows).length : 0, requests: req, ms: Date.now() - t0, errors: errors.slice(0, 20),
   };
-  return Object.defineProperties(OUT, { rankStocks: { value: stocks, enumerable: false }, rankFlows: { value: L.flows || null, enumerable: false } }); // 9.29-108 [2286] B 방식 입력(저장 안 함)
+  return Object.defineProperties(OUT, { rankStocks: { value: stocks, enumerable: false }, rankFlows: { value: L.flows || null, enumerable: false }, rankBig: { value: big, enumerable: false } }); // 9.29-108 [2286] B 방식 입력(저장 안 함) · 9.29-140 rankBig = B 대형주(같은 회차 · 요청 +0)
 }
 
 // 저녁(또는 다음 날 아침) 확정 수급: 이미 고른 테마는 그대로 · 슬롯 종목 그날 외인·기관(네이버 일별 · bizdate 맞을 때만)만 채움 · flow 를 확정값으로 바꿈 (재선정 0)
@@ -467,7 +486,7 @@ export async function collectSurgeLeaders({ get, map, date, hm, us = null, histo
   }
   /* 게이트 [1943] ③: 18:00 뒤 첫 마감·지난 날 백필(final)은 고를 때도 확정 수급과 같은 20행 주소로 물어 같은 종목을 두 번 받지 않음(memoGet · 값은 같은 날짜 행) */
   const sel = await selectSurge({ get, map, date, hm, regular: true, flowsFor: makeFlowsFor(get, bizdate, { hm, url: final ? FLOW20_URL : FLOW1_URL }), us, history, kospiAmount: kospi && kospi.amount, kosdaqAmount: kosdaq && kosdaq.amount, top10, n });
-  let L = { v: SURGE_V, method: "surge", provisional: false, confirmed: true, basis: sel.basis, text: surgeText(sel.themes), themes: sel.themes, candidates: sel.themes, ref: sel.ref, short: sel.short, closing: sel.closing, universe: sel.universe, ladder: sel.ladder,
+  let L = { v: SURGE_V, method: "surge", provisional: false, confirmed: true, basis: sel.basis, text: surgeText(sel.themes), themes: sel.themes, candidates: sel.themes, ref: sel.ref, short: sel.short, closing: sel.closing, universe: sel.universe, ladder: sel.ladder, bigA: sel.bigA,
     regime: regimeOf && kospi ? regimeOf(kospi.amount, history) : "", kospiRate: kospi && typeof kospi.value === "number" ? kospi.value : null, decidedAt: Date.now(), decidedHm: hm, flowReady: false, chartReady: sel.themes.some((t) => t.chart), requests: sel.requests, errors: sel.errors };
   if (final) { const r = await fillFinalFlows(L, { get, bizdate }); L = Object.assign(r.leaders, { flowReq: r.requests }); }
   return L;
