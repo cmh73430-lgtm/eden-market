@@ -10,7 +10,7 @@ import { fetchNews2 } from "./news2.js";
 import { krNews } from "./brief.js"; /* 9.29-144 [집2511] 오른쪽 뉴스 칸 = 아침 브리핑과 같은 네이버 뉴스 목록 해석 */
 import { tvThreshold } from "../shared/trade-value.js";
 import { tagAvoidAll } from "./caution.js"; /* 9.29-101 종배 피함(S4) · 게이트 [1943] ② 장중·마감 같은 함수 */
-import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat, rankBOf, rankCOf, themeKwSum, bigCapsOf, CAP_URL, RANKB_BIG_NONE } from "./surge.js"; // 9.29-100 급등 묶음 선정
+import { selectSurge, surgeText, SURGE_START, makeFlowsFor, attachAlerts, attachHeat, rankBOf, rankBExtra, rankCOf, themeKwSum, bigCapsOf, CAP_URL, RANKB_BIG_NONE } from "./surge.js"; // 9.29-100 급등 묶음 선정
 import { afterMove, AFTER_URL } from "./after.js"; /* 9.29-107 원장 [2205][2206] 아침 「어제 저녁 애프터마켓」 = 전날 분봉(15:30 봉 ↔ 19:59 봉) */
 export { selectThemesV2, memoGet, attachRvol, fetchNews2 };
 
@@ -721,11 +721,13 @@ export async function collectLive({ adapters, fetchImpl = fetch, now = new Date(
       }
       out.themes.push(row);
     }
-    try { const ht = await attachHeat(out.themes, { get, date: day, cache: surge.heatCache || null, hm: surge.regular ? null : hmReal }); out.heat = { date: ht.date, codes: ht.codes, open: ht.open, a20: ht.a20 }; /* 게이트 [1894] B: 슬롯 rvol(거래대금 평소의 ×n) 되살림 · 장 마감 뒤(regular)는 경과율 1 */ if (ht.errors.length) out.errors.push(...ht.errors.map((e) => "과열: " + e)); } catch (e) { out.errors.push("과열: " + (e.message || e)); } // 과열 꼬리표 3종(표시만 · 일봉 하루 1회 · 시가 1회)
+    try { const ht = await attachHeat(out.themes, { get, date: day, cache: surge.heatCache || null, hm: surge.regular ? null : hmReal }); out.heat = { date: ht.date, codes: ht.codes, open: ht.open, a20: ht.a20, ld: ht.ld }; /* 게이트 [1894] B: 슬롯 rvol(거래대금 평소의 ×n) 되살림 · 장 마감 뒤(regular)는 경과율 1 */ if (ht.errors.length) out.errors.push(...ht.errors.map((e) => "과열: " + e)); } catch (e) { out.errors.push("과열: " + (e.message || e)); } // 과열 꼬리표 3종(표시만 · 일봉 하루 1회 · 시가 1회)
     /* 9.29-101 원장 [1884]: 종가배팅 후보에 S6 전일 상한가(일봉 · 과열 꼬리표와 같은 하루 캐시 · 슬롯에 없는 후보만 새 요청) · S4 종배 피함(거래소 공시 지난 거래일 목록 · surge.cautions = { file, prevDays }) — 표시만 */
     if (out.closing && Array.isArray(out.closing.items) && out.closing.items.length) {
-      try { const h2 = await attachHeat([{ slots: out.closing.items }], { get, date: day, cache: out.heat || surge.heatCache || null, wantOpen: false, max: CLOSING_HEAT_MAX }); out.heat = { date: h2.date, codes: h2.codes, open: h2.open, a20: h2.a20 }; } catch (e) { out.errors.push("전일 상한가: " + (e.message || e)); }
+      try { const h2 = await attachHeat([{ slots: out.closing.items }], { get, date: day, cache: out.heat || surge.heatCache || null, wantOpen: false, max: CLOSING_HEAT_MAX }); out.heat = { date: h2.date, codes: h2.codes, open: h2.open, a20: h2.a20, ld: h2.ld }; } catch (e) { out.errors.push("전일 상한가: " + (e.message || e)); }
     }
+    /* 9.29-147 원장 [집2531] B 칸 표시 보강(rankBOf·선정 무변): 테마 평균(A 와 같은 정의 · 같은 테마면 A 값) + B 에 보이는 종목 평소×N(같은 일봉 하루 캐시) · 신규상장 「상장 n일」 */
+    if (out.rankB) { try { const c0 = typeof get.count === "function" ? get.count() : null, bx = await rankBExtra(out.rankB, { get, themesA: L.themes, stocks: L.rankStocks, date: day, hm: surge.regular ? null : hmReal, cache: out.heat || surge.heatCache || null }); if (bx.heat) out.heat = bx.heat; out.rankB.extraReq = c0 === null ? bx.requests : get.count() - c0; if (bx.errors.length) out.errors.push(...bx.errors.slice(0, 4)); } catch (e) { out.errors.push("B 표시 보강: " + (e.message || e)); } }
     tagAvoidAll({ themes: out.themes, closing: out.closing && out.closing.items }, surge.cautions); /* 종가배팅 후보 + 테마 종목(슬롯 · 접힌 줄 위험 표시용) · 요청 0 · 후보 0개여도 테마 종목에는 붙음 */
     try { const al = await attachAlerts(out.themes, { get, date: day, cache: surge.alertCache || null }); out.alerts = { date: al.date, codes: al.codes }; if (al.errors.length) out.errors.push(...al.errors.map((e) => "경보: " + e)); } catch (e) { out.errors.push("경보: " + (e.message || e)); } // 시장경보 꼬리표(K7 · 네이버 basic · 하루 캐시 → 다음 run 재사용)
     if (n2) out.news2 = { v: 1, cache: n2.cache, budget: n2.budget, requests: n2.requests, errors: n2.errors.slice(0, 12) };

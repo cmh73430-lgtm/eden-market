@@ -101,6 +101,14 @@ export function avg20FromBars(raw, today, n = RVOL_DAYS) {
   const avg = use.reduce((a, r) => a + (r.c * r.v) / 1e8, 0) / use.length;
   return { avg20: round2(avg), from: use[0].d, to: use[use.length - 1].d, n: use.length };
 }
+/* 9.29-147 원장 [집2531] 「신규상장은 상장 n일 표시」: 일봉(오늘 앞)이 RVOL_MIN_N 봉 미만 = 20일 평균을 못 내는 새내기 → 상장 n일(오늘 포함 거래일 수 = 앞 봉 수 + 1) · 1년 일봉(chartUrl 365일)을 받은 응답에만 씀(봉이 적다 = 상장이 최근)
+   · 묵은 봉(2주 넘게 거래 없음 = 거래정지 등)·봉 충분 = null (지어내기 0) · 실측 10/28 멜콘(10/15 상장) = 앞 봉 9 → 「상장 10일」 */
+export function listDaysOf(raw, today) {
+  const rows = barRows(raw).filter((r) => r.d < today);
+  if (rows.length >= RVOL_MIN_N) return null;
+  if (rows.length && rows[rows.length - 1].d < shiftDays(today, -14)) return null;
+  return rows.length + 1;
+}
 function shiftDays(d, k) { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() + k); return t.toISOString().slice(0, 10); }
 export const rvolOf = (valueToday, avg20, hm) => (typeof valueToday === "number" && typeof avg20 === "number" && avg20 > 0 ? round2(valueToday / elapsedRatio(hm) / avg20) : null);
 export const median = (xs) => { const a = xs.filter((x) => typeof x === "number").sort((p, q) => p - q); if (!a.length) return null; const m = a.length >> 1; return round2(a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2); };

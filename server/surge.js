@@ -13,7 +13,7 @@
 import { thresholdFor, gradeC, withToday, chartUrl, stockFlow, usOf, gradeU, prevCloseOf, compactThemes, trendRows } from "./auto.js"; // auto.js 도 이 파일을 불러서(순환) 맨 위 계산에는 auto.js 값을 쓰지 않는다
 import { addDays, nextBusinessDays } from "../shared/calendar.js";
 import { tvStockThresholds, TV_BIG2 } from "../shared/trade-value.js";
-import { avg20FromBars, rvolOf } from "./shadow.js";
+import { avg20FromBars, rvolOf, listDaysOf } from "./shadow.js";
 import { supplyTags } from "./caution.js"; /* 9.29-101 수급 꼬리 S1~S3 */ /* RVOL(거래대금 평소의 ×n) — 9.29-84 계산 그대로(20일 평균 거래대금 · 장 경과율) · 게이트 [1894] B */
 
 export const SURGE_V = 2;
@@ -592,12 +592,35 @@ export function heatOf({ price, prev, open, base }) {
 }
 /* 게이트 [1894] B: 같은 일봉 응답으로 20일 평균 거래대금(a20 · shadow.js avg20FromBars)도 같이 → hm 을 주면 슬롯에 s.rvol(평소 대비 배수 · rvolOf) — 추가 요청 0(일봉은 과열 꼬리표가 이미 받음) */
 export async function attachHeat(themes, { get, date, cache = null, max = HEAT_MAX, wantOpen = true, hm = undefined }) {
-  const c = cache && cache.date === date && cache.codes ? { date, codes: Object.assign({}, cache.codes), open: Object.assign({}, cache.open || {}), a20: Object.assign({}, cache.a20 || {}) } : { date, codes: {}, open: {}, a20: {} };
-  let requests = 0; const errors = [];
+  const c = cache && cache.date === date && cache.codes ? { date, codes: Object.assign({}, cache.codes), open: Object.assign({}, cache.open || {}), a20: Object.assign({}, cache.a20 || {}), ld: Object.assign({}, cache.ld || {}) } : { date, codes: {}, open: {}, a20: {}, ld: {} };
+  let requests = 0; const errors = []; /* 9.29-147 [집2531] ld = 상장 n일(listDaysOf · 20일 평균 못 낸 새내기만 숫자 · 그 밖 false) · 같은 일봉 응답(요청 +0) · 옛 캐시(ld 없음)의 a20 null 종목만 한 번 다시 받음 */
   const slots = (Array.isArray(themes) ? themes : []).flatMap((t) => (t && t.slots) || []).filter((s) => s && /^[0-9A-Z]{6}$/.test(String(s.code || "")));
-  for (const s of slots) { if (s.code in c.codes && s.code in c.a20) continue; if (requests >= max) break; try { requests++; const raw = await get(chartUrl(s.code, date)); c.codes[s.code] = heatBase(raw, date); const a = avg20FromBars(raw, date); c.a20[s.code] = a && typeof a.avg20 === "number" ? a.avg20 : null; } catch (e) { errors.push(s.code + ": " + String((e && e.message) || e).slice(0, 30)); } }
+  for (const s of slots) { if (s.code in c.codes && s.code in c.a20 && (c.a20[s.code] !== null || s.code in c.ld)) continue; if (requests >= max) break; try { requests++; const raw = await get(chartUrl(s.code, date)); c.codes[s.code] = heatBase(raw, date); const a = avg20FromBars(raw, date); c.a20[s.code] = a && typeof a.avg20 === "number" ? a.avg20 : null; if (c.a20[s.code] === null) { const n = a && a.error ? null : listDaysOf(raw, date); c.ld[s.code] = typeof n === "number" ? n : false; } } catch (e) { errors.push(s.code + ": " + String((e && e.message) || e).slice(0, 30)); } }
   const needOpen = wantOpen ? [...new Set(slots.map((s) => s.code))].filter((k) => !(c.open[k] > 0)) : [];
   if (needOpen.length) { try { requests++; const j = await get("https://polling.finance.naver.com/api/realtime/domestic/stock/" + needOpen.slice(0, 20).join(",")); for (const d of (j && j.datas) || []) { const o = num(d && (d.openPriceRaw ?? d.openPrice)); if (d && d.itemCode && o > 0) c.open[String(d.itemCode)] = o; } } catch (e) { errors.push("시가: " + String((e && e.message) || e).slice(0, 30)); } }
-  for (const s of slots) { const h = heatOf({ price: s.price, prev: s.prev, open: c.open[s.code], base: c.codes[s.code] }); if (h) s.heat = h; if (c.codes[s.code] && c.codes[s.code].lu) s.lu1 = true; if (hm !== undefined) { const x = rvolOf(s.value, c.a20[s.code], hm); if (x !== null) s.rvol = x; } }
-  return { date, codes: c.codes, open: c.open, a20: c.a20, requests, errors: errors.slice(0, 5) };
+  for (const s of slots) { const h = heatOf({ price: s.price, prev: s.prev, open: c.open[s.code], base: c.codes[s.code] }); if (h) s.heat = h; if (c.codes[s.code] && c.codes[s.code].lu) s.lu1 = true; if (hm !== undefined) { const x = rvolOf(s.value, c.a20[s.code], hm); if (x !== null) s.rvol = x; else if (typeof c.ld[s.code] === "number") s.ld = c.ld[s.code]; } }
+  return { date, codes: c.codes, open: c.open, a20: c.a20, ld: c.ld, requests, errors: errors.slice(0, 5) };
+}
+/* 9.29-147 원장 [집2531] B 칸 표시 자료 보강(B 선정·순위 rankBOf 무변 · 표시 값만 덧붙임):
+   ① 테마 평균 = A 와 같은 정의(테마 구성 종목 전체 단순 평균 · detailNums · 정규장 고친 값 같이) — 같은 회차 A 테마(번호 또는 이름 같음)면 그 값 그대로(요청 0 · A·B 큰 숫자 같음) · 아니면 테마 상세 1쪽(100개 넘으면 2쪽 · memoGet)
+   ② 평소×N = B 칸에 보이는 종목(테마마다 겹친 종목 상승률 위 RANKB_SLOTS 개 = 앱 rankBRows 와 같은 순서)만 일봉(attachHeat 하루 캐시 · A 슬롯과 같은 캐시 → 겹친 종목·이미 받은 종목 요청 0 · 새 종목만 하루 1번) → top 줄에 rvol · 못 내면 상장 n일(ld)
+   · 공개 원천(네이버)만 · 키움 TR 0 · 실패해도 B 선정·A 그대로 */
+export const RANKB_SLOTS = 3, RANKB_RVOL_MAX = 9;
+export async function rankBExtra(rb, { get, themesA = [], stocks = [], date, hm = undefined, cache = null }) {
+  const errors = []; let detail = 0;
+  if (!rb || !Array.isArray(rb.themesB)) return { detail, heat: null, requests: 0, errors };
+  const byCode = new Map((stocks || []).filter((s) => s && s.code).map((s) => [s.code, s]));
+  for (const t of rb.themesB) {
+    const a = (themesA || []).find((x) => x && ((typeof x.no === "number" && x.no === t.no) || x.name === t.name));
+    if (a && typeof a.rate === "number") { t.rate = a.rate; continue; }
+    try { detail++; const d = await get("https://m.stock.naver.com/api/stocks/theme/" + t.no + "?page=1&pageSize=100"); let xs = (d && d.stocks) || [];
+      if (num(d && d.totalCount) > 100) { detail++; const d2 = await get("https://m.stock.naver.com/api/stocks/theme/" + t.no + "?page=2&pageSize=100"); xs = xs.concat((d2 && d2.stocks) || []); }
+      const dn = detailNums(xs, byCode); if (dn) t.rate = dn.rate; } catch (e) { errors.push("B 테마 평균 " + t.no + ": " + String((e && e.message) || e).slice(0, 30)); }
+  }
+  const top = new Map((Array.isArray(rb.top) ? rb.top : []).filter((x) => x && x.code).map((x) => [x.code, x]));
+  const slots = [...new Set(rb.themesB.flatMap((t) => (Array.isArray(t.codes) ? t.codes : []).slice(0, RANKB_SLOTS)))].map((c) => top.get(c)).filter(Boolean).map((x) => ({ code: x.code, value: x.value }));
+  const ht = await attachHeat([{ slots }], { get, date, cache, wantOpen: false, max: RANKB_RVOL_MAX, hm });
+  for (const s of slots) { const x = top.get(s.code); if (typeof s.rvol === "number") x.rvol = s.rvol; else if (typeof s.ld === "number") x.ld = s.ld; }
+  errors.push(...ht.errors.map((e) => "B 평소×N: " + e));
+  return { detail, heat: { date: ht.date, codes: ht.codes, open: ht.open, a20: ht.a20, ld: ht.ld }, requests: detail + ht.requests, errors };
 }
