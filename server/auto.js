@@ -636,14 +636,25 @@ export async function collectLiveExtra({ adapters, get, now = new Date() }) {
   for (const [k, cat] of LIVE_NEWS_CATS) { requests++; try { news[k] = liveNewsRows(await get(LIVE_NEWS_URL(cat))); } catch (e) { news.errors.push(k + ": " + String((e && e.message) || e).slice(0, 60)); } }
   return { futs, news, requests };
 }
-/* 이번 회차에 못 받은 조각은 직전 live.json(오늘 것)의 값을 그대로 둠(시각도 그 값의 것 · 화면에 「HH:MM 기준」) */
+/* 이번 회차에 못 받은 조각은 직전 live.json(오늘 것)의 값을 그대로 둠(시각도 그 값의 것 · 화면에 「HH:MM 기준」)
+   9.29-146 gate-142x 경미 [집2590]: kept 시각 = 그 조각을 「원래 받은」 시각 — 직전 회차도 남긴 조각(old.kept[k])이면 그 시각을 이어 씀(예전엔 old.at = 직전 회차 시각으로 덮여 두 번째부터 틀림) · 화면은 kept 를 안 씀(영향 0) */
 export function keepLiveExtra(live, prev) {
   if (!live || !prev || prev.date !== live.date) return live;
   for (const [blk, keys] of [["futs", LIVE_FUTS.map(([k]) => k)], ["news", LIVE_NEWS_CATS.map(([k]) => k)]]) {
     const cur = live[blk], old = prev[blk]; if (!cur || !old) continue;
-    for (const k of keys) if (!cur[k] && old[k]) { cur[k] = old[k]; (cur.kept = cur.kept || {})[k] = old.at || ""; }
+    for (const k of keys) if (!cur[k] && old[k]) { cur[k] = old[k]; (cur.kept = cur.kept || {})[k] = (old.kept && old.kept[k]) || old.at || ""; }
   }
   return live;
+}
+/* 9.29-146 원장 [집2586] 장중 회차 한 줄(live.intraRuns · 최근 12): 외인 선물(f) · 현물 외인(sf)·기관(si) · 프로그램(pg) = 예전 그대로
+   + ④ 「지금 확인할 것」 급등락 알림용 코스피(k)·코스닥(q) 등락률 · A 주도 테마 위 3 [이름, 등락률](t · 고르기 전(09:30 전)엔 없음) — 모두 이번 회차에 이미 받은 값(요청 +0) */
+export function intraRunOf(live) {
+  const it = live && live.intra; if (!it || !it.at) return null;
+  const n = (v) => (typeof v === "number" && isFinite(v) ? v : null);
+  const r = { at: it.at, f: it.fut ? it.fut.foreign : null, sf: it.spot ? it.spot.foreign : null, si: it.spot ? it.spot.institution : null, pg: it.program && typeof it.program.total === "number" ? it.program.total : null, k: n(live.kospi && live.kospi.value), q: n(live.kosdaq && live.kosdaq.value) };
+  const t = (Array.isArray(live.themes) ? live.themes : []).slice(0, 3).filter((x) => x && x.name && n(x.rate) !== null).map((x) => [x.name, x.rate]);
+  if (t.length) r.t = t;
+  return r;
 }
 // 장중 한 번: 코스피(등락·거래대금) · 코스피 외인/기관(장중 누적) · 프로그램 · 잠정 규칙으로 고른 주도 테마 3개(테마 거래대금·대장주 등락·거래대금) + 대장주 뉴스 2개 + 종목별 외인/기관(그 날 값이 이미 있을 때만 — 보통 장 마감 뒤)
 // 결과는 auto/live.json 하나에 덮어쓴다 (날짜 파일에는 안 넣음). 실패한 조각은 errors 에 적고 나머지는 남긴다

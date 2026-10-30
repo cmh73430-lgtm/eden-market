@@ -25,7 +25,7 @@ import { loadCollectConfig } from "../server/config.js";
 import { prevBusinessDay, kstTime, nextBusinessDays } from "../shared/calendar.js";
 import { collectBrief, mergeBrief, briefText, BRIEF_SECTIONS } from "../server/brief.js";
 import { collectWatch, watchText, mergeWatch } from "../server/watch.js"; // 관심 후보 (9.29-97 범위 확장 · 확정 close run → close.watch → 다음 아침 brief ④)
-import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist, regimeOf as regimeOfAmt, keepLiveExtra } from "../server/auto.js";
+import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectPrevThemes, collectLeaders, collectIntraday, kstDate, mergeAuto, mergeCloseLeaders, skipReason, summarize, whenOf, collectThemesOnly, historyFrom, fetchListings, collectCandles, candleFile, liveSlot, liveOverwrite, collectObserve, obsText, OBS_FILE, OBS_UNIVERSE_FILE, chartUrl, collectCloseSnap, CLOSE_SNAP_KEY, CLOSE_SNAP_ITEMS, fetchKrClose, mergeHist, regimeOf as regimeOfAmt, keepLiveExtra, intraRunOf } from "../server/auto.js";
 import { memoGet, TOP10_CODES } from "../server/shadow.js";
 import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat, AB_FILE, AB_RUNS_MAX, abRunOf, abScore, abUpsert, abNext, abSummary, abNeutralDay, abNeutralNext } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
@@ -168,7 +168,7 @@ if (when === "live") {
   console.log(news2Text(live));
   if (!live.wait && (!live.themes || !live.themes.length) && !live.short) { console.error("주도 테마를 못 골랐음 — live.json 은 지난 값 그대로"); process.exit(1); }
   { const it = live.intra, old = pl && Array.isArray(pl.intraRuns) ? pl.intraRuns : []; /* 9.29-109 원장 [2298] 장중 재판정 5분마다: 회차(외인 선물 · 현물 외인·기관 · 프로그램) 이어 쌓기 · 최근 12 */
-    live.intraRuns = it && it.at ? old.filter((x) => x.at !== it.at).concat([{ at: it.at, f: it.fut ? it.fut.foreign : null, sf: it.spot ? it.spot.foreign : null, si: it.spot ? it.spot.institution : null, pg: it.program && typeof it.program.total === "number" ? it.program.total : null }]).slice(-12) : old; }
+    live.intraRuns = it && it.at ? old.filter((x) => x.at !== it.at).concat([intraRunOf(live)]).slice(-12) : old; } /* 9.29-146 [집2586] 회차 한 줄 = server/auto.js intraRunOf(예전 f·sf·si·pg 그대로 + 코스피·코스닥 등락률 k·q · 주도 테마 위 3 t · 요청 +0) */
   { const r0 = abRunOf(live), old = pl && Array.isArray(pl.abRuns) ? pl.abRuns : []; live.abRuns = r0 && !live.wait ? old.filter((x) => x.at !== r0.at).concat([r0]).slice(-AB_RUNS_MAX) : old; /* 9.29-108 원장 [2287] 장중 회차 A·B 이어 쌓기(오늘 live.json · 마감 뒤 채점) */
     console.log(`B 방식(거래대금 상위 ${live.rankB ? live.rankB.n : 0}): ${live.rankB ? live.rankB.themesB.map((t) => t.name + " " + t.n).join(" / ") : "없음"} · A: ${(live.themes || []).map((t) => t.name).join(" / ")} · 회차 ${live.abRuns.length} · 새 요청 0 · ${live.rankB ? live.rankB.ms : 0}ms`);
     const kwT = (live.themes || []).filter((t) => t.flow && t.flow.src).length; /* 9.29-111 */

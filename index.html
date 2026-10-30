@@ -852,6 +852,19 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 .topld .tll .tqx .qcn { min-width: 0; overflow-wrap: anywhere; } .topld .tll .tqx .qcr { white-space: nowrap; font-weight: 600; } .topld .tll .tqx .tqc.p .qcr { color: var(--up); } .topld .tll .tqx .tqc.n .qcr { color: var(--down); }
 .intrabox .fmk { font-size: 12px; font-weight: 600; margin-left: 2px; color: var(--muted); } .intrabox .fmk.up { color: var(--up); } .intrabox .fmk.dn { color: var(--down); }
 .intrabox .iflowh { font-size: 12px; color: var(--muted); margin-top: 6px; }
+/* 9.29-146 원장 [집2586] ④ 지금 확인할 것: 알림 한 줄(맨 위) · 점검표(✅/⚠️ · 이름 · 값) · 남은 일정(시각 · 내용) · 좁은 화면 = 값이 이름 아래로 */
+.nowchk .nca { font-size: 13px; line-height: 1.5; margin: 0 0 6px; overflow-wrap: anywhere; } .nowchk .nca.none { color: var(--muted); font-size: 12px; }
+.nowchk .nca.hit { display: grid; gap: 2px; padding: 6px 8px; border-radius: 8px; background: var(--s3-t, rgba(255,200,0,.12)); font-weight: 600; } .nowchk .nca.hit .p { color: var(--up); } .nowchk .nca.hit .n { color: var(--down); } .nowchk .nca small { font-size: 12px; font-weight: 400; color: var(--muted); }
+.nowchk .nck { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.nowchk .nck li { display: grid; grid-template-columns: 1.6em max-content minmax(0, 1fr); column-gap: 6px; align-items: baseline; } .nowchk .nck .ncs { text-align: center; } .nowchk .nck b { font-weight: 700; } .nowchk .nck .ncv { min-width: 0; overflow-wrap: anywhere; }
+.nowchk .nck li { padding: 2px 6px; border-radius: 6px; } .nowchk .nck li.ncw { background: var(--r-bg); } .nowchk .nck li.ncw b { color: var(--r); } .nowchk .nck small { font-size: 12px; color: var(--muted); } /* ⚠️ 줄 = 옅은 바탕 + 이름 색(값 글은 그대로) */
+.nowchk .fmk { font-size: 12px; font-weight: 600; margin-left: 2px; color: var(--muted); } .nowchk .fmk.up { color: var(--up); } .nowchk .fmk.dn { color: var(--down); }
+@media (max-width: 360px) { .nowchk .nck li { grid-template-columns: 1.6em minmax(0, 1fr); } .nowchk .nck .ncv { grid-column: 2; } }
+.nowchk h3 { font-size: 13px; margin: 10px 0 4px; }
+.nowchk .ncl { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.nowchk .ncl li { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 8px; font-size: 13px; line-height: 1.45; } .nowchk .ncl time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 1px; } .nowchk .ncl span { min-width: 0; overflow-wrap: anywhere; }
+.nowchk .ncmore, .nowchk .nchow { margin-top: 6px; } .nowchk .ncmore > summary, .nowchk .nchow > summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--muted); padding: 2px 0; } .nowchk .ncmore > .ncl { margin-top: 4px; }
+.nowchk .nchow > div { font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
 .intrabox .itab { padding-left: 0; text-indent: 0; } /* 9.29-144 [집2584] 지표 표 칸 글자 겹침(「-4,576억」⨯「-3,000억 이하」 · 「이하」⨯「안 넘음」 13px): .explain div 의 내어쓰기(text-indent -1em)가 표 칸까지 물려 글자가 칸 왼쪽 밖으로 → 표만 내어쓰기 0 */
 /* ② 맨 위 머리(관제): 제목 옆에 작은 머리말 · 날짜는 그 아래 한 줄 · 버튼 옆에 저장 표시 · 여백 조금 */
 header { gap: 4px 8px; padding-bottom: 6px; } header > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
@@ -1464,6 +1477,11 @@ header .tools { flex-direction: row; flex-wrap: wrap; align-items: center; justi
 
   <!-- 9.29-130 원장 [집2466]~[집2468]: ① 전일 마감 카드와 같은 지수·수급 4줄 상자 · ④ = 장중 실시간(수집기 live.json 5분 · 중계 1분 덮기면 그 값) · 시각 표시 · 없는 값 「—」 -->
   <!-- 9.29-137 원장 [집2512] "테마랑 시장 뉴스 선물 수급 다 각각 카드로 구분": ④ 실시간 = 시장(지수) · 수급 · 선물(빈 자리 · 135) · 뉴스(빈 자리 · 136) · 테마(아래 주도 테마 A|B) 카드 · 130 의 한 상자(지수+수급)를 시장·수급 둘로 나눔(값·모양 무변) -->
+  <!-- 9.29-146 원장 [집2586] ④ 맨 위 「지금 확인할 것」: 급등락 알림 한 줄 · 점검표 5줄(지수 · 외국인 선물 · 프로그램 · 미국 선물 · 주도 테마 유지 = 5분마다 ✅/⚠️) · 오늘 남은 일정·발표 시각 · 판정·선정 무변(보기만) -->
+  <section class="card idxbox nowchk" id="nowChk" data-nav="✅ 지금 확인할 것">
+    <h2>✅ 지금 확인할 것 <small id="nowChkAt"></small></h2>
+    <div id="nowChkBody"><div class="muted">기록 없음</div></div>
+  </section>
   <section class="card idxbox" id="intraMkt" data-nav="📈 장중 시장 (지수)">
     <h2>📈 시장 <small id="intraIdxAt"></small></h2>
     <div id="intraMktBody"><div class="muted">장중 값 없음</div></div>
@@ -3623,7 +3641,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-145";
+  const APP_VER = "9.29-146";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
   const EASY_ACT = {
     "쉼": "☔ 오늘은 새로 사지 않아요. 가진 주식만 정리해요.",
@@ -4279,6 +4297,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     paintPrevClose(); // 9.29-94 원장 [1718] ① 전날 장 마감 카드
     paintIntraIdx(); paintCloseIdx(); // 9.29-130 [집2468] ④·⑤ 지수·수급 상자
     paintIntraFut(); paintNewsRail(); newsBind(); // 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸
+    paintNowChk(); // 9.29-146 [집2586] ④ 지금 확인할 것
     return r;
   }
   // 9.29-94 원장 [1718]①: 「전날 장 마감 시황·수급」 — 직전 거래일(prevBusinessDay)의 저장 기록(loadDay)에서 87판 시황 카드와 같은 칸을 읽는다:
@@ -4404,6 +4423,85 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (at) at.textContent = (L.futs && L.futs.at ? L.futs.at + " 받음 · " : "") + (L.closed || (L.at || "") >= "15:30" ? "장 마감 값" : "5분마다");
     intraSlot("intraFut", futsHtml(L), "📉 장중 선물");
   }
+  /* 9.29-146 원장 [집2586] ④ 맨 위 「✅ 지금 확인할 것」(#nowChk) = ① 급등락 알림 한 줄(맨 위) ② 점검표 5줄(5분마다 ✅/⚠️ · 값 없으면 「기록 없음」) ③ 오늘 남은 일정·발표 시각
+     자료 = live.json(수집기 live run 5분 · 이미 받는 값 · 요청 +0) · 일정 = 달력(data/events.json · calendar 워크플로) + 만기 계산 + KIND IR 실적 일정(아침 브리핑) + 장 시간 규칙 · 판정·선정 무변(보기만) · 투자 권유 0
+     점검 기준 = 이미 있는 규칙 그대로: 지수·미국 선물 = 장전 지표 「좋음」 경계 -0.5%(rules.js signalStatus k200·fut·es) · 외국인 선물·프로그램 = 장중 재판정 INTRA(-1,000 · -1,000억) · 옆 표시 = 5분 전 대비 flowMark(FLOW_STEP)
+     새 기준(실데이터 근거 · eden-market live.json 커밋 기록 10/21·22·23·28·29 5분 간격 회차): 주도 테마 유지 = 직전 회차 1위 테마가 지금 3위 안(합쳐진 이름 alias 포함 · 325회 중 315회 = 97% 유지 → ⚠️ 약 3%)
+     급등락 = 5분 사이 |변화| 위 약 5%: 코스피 0.6%p(343쌍 중 14 = 4.1%) · 코스닥 0.4%p(21 = 6.1%) · 주도 테마 등락률 0.6%p(회차 최대 324 중 12 = 3.7%) · 직전 회차와 7분 넘게 떨어지면 비교 안 함 */
+  const NOW_MOVE = { k: 0.6, q: 0.4, t: 0.6 }, NOW_GAP = 7, NOW_KEEP = 3, NOW_SHOW = 5;
+  const hmMin = (t) => (/^\d\d:\d\d/.test(String(t || "")) ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)) : null);
+  const nowNum = (v) => (typeof v === "number" && isFinite(v) ? v : null);
+  const nowPct = (v) => (v > 0 ? "+" : "") + v.toFixed(2) + "%";
+  function nowRuns(L) {
+    const R = (L && Array.isArray(L.intraRuns) ? L.intraRuns : []).filter((x) => x && typeof x.at === "string"), cur = R[R.length - 1] || null, prv = cur ? R.filter((x) => x.at < cur.at).slice(-1)[0] || null : null;
+    const gap = cur && prv && hmMin(cur.at) !== null && hmMin(prv.at) !== null ? hmMin(cur.at) - hmMin(prv.at) : null;
+    return { cur, prv, gap, ok: gap !== null && gap > 0 && gap <= NOW_GAP };
+  }
+  /* 급등락: 직전 회차(intraRuns) 대비 코스피(k)·코스닥(q)·주도 테마(t = [이름, 등락률] 위 3 · 두 회차에 다 있는 이름만) · 반환 null = 비교할 값 없음 · [] = 큰 움직임 없음 */
+  function nowMoves(L) {
+    const r = nowRuns(L); if (!r.ok) return null;
+    const out = []; let seen = 0;
+    const one = (nm, a, b, th) => { const x = nowNum(a), y = nowNum(b); if (x === null || y === null) return; seen++; const d = Math.round((y - x) * 100) / 100; if (Math.abs(d) >= th) out.push({ nm, d, from: x, to: y }); };
+    one("코스피", r.prv.k, r.cur.k, NOW_MOVE.k); one("코스닥", r.prv.q, r.cur.q, NOW_MOVE.q);
+    const T0 = Array.isArray(r.prv.t) ? r.prv.t : []; (Array.isArray(r.cur.t) ? r.cur.t : []).forEach((x) => { const p = Array.isArray(x) ? T0.find((y) => Array.isArray(y) && y[0] === x[0]) : null; if (p) one("주도 테마 " + x[0], p[1], x[1], NOW_MOVE.t); });
+    return seen ? { at: r.cur.at, gap: r.gap, list: out } : null;
+  }
+  function nowAlertHtml(L) {
+    const m = nowMoves(L);
+    if (!m) return `<div class="nca none">⚡ 큰 움직임: 비교할 직전 회차 기록 없음</div>`;
+    if (!m.list.length) return `<div class="nca none">⚡ ${esc(m.at)} · ${m.gap}분 사이 큰 움직임 없음</div>`;
+    return `<div class="nca hit">${m.list.map((x) => `<span class="${x.d > 0 ? "p" : "n"}">⚡ ${esc(m.at)} ${esc(x.nm)} ${m.gap}분 사이 크게 ${x.d > 0 ? "오름 ▲" : "내림 ▼"} ${(x.d > 0 ? "+" : "") + x.d.toFixed(2)}%p <small>(${esc(nowPct(x.from))} → ${esc(nowPct(x.to))})</small></span>`).join("")}</div>`;
+  }
+  /* 점검표 5줄: [이름, 상태(true ✅ · false ⚠️ · null 기록 없음), 값 글(html)] */
+  function nowChecks(L) {
+    const r = nowRuns(L), rows = [], sn = (v) => (v > 0 ? "+" : "") + Math.round(v).toLocaleString("ko-KR");
+    { const k = nowNum(L.kospi && L.kospi.value), q = nowNum(L.kosdaq && L.kosdaq.value), vs = [k, q].filter((v) => v !== null);
+      rows.push(["지수", vs.length ? vs.every((v) => signalStatus("k200", v) === "g") : null, vs.length ? [k !== null ? "코스피 " + nowPct(k) : "", q !== null ? "코스닥 " + nowPct(q) : ""].filter(Boolean).map(esc).join(" · ") : ""]); }
+    { const f = nowNum(L.fut && L.fut.foreign), mk = r.ok ? flowMarkHtml(flowMark(r.cur.f, r.prv.f, FLOW_STEP.f)) : "";
+      rows.push(["외국인 선물", f === null ? null : f > INTRA.fut, f === null ? "" : esc(sn(f)) + mk]); }
+    { const g = nowNum(L.program && L.program.total), mk = r.ok ? flowMarkHtml(flowMark(r.cur.pg, r.prv.pg, FLOW_STEP.pg)) : "";
+      rows.push(["프로그램", g === null ? null : g > INTRA.program, g === null ? "" : esc(sn(g)) + "억" + mk]); }
+    { const F = L.futs || {}, pc = (x) => (!x ? null : nowNum(x.pct) !== null ? x.pct : nowNum(x.price) !== null && nowNum(x.prev) ? Number(((x.price / x.prev - 1) * 100).toFixed(2)) : null), nq = pc(F.nq), es = pc(F.es), vs = [["나스닥", nq, "fut"], ["S&P", es, "es"]].filter((x) => x[1] !== null);
+      rows.push(["미국 선물", vs.length ? vs.every((x) => signalStatus(x[2], x[1]) === "g") : null, vs.map((x) => esc(x[0] + " " + nowPct(x[1]))).join(" · ")]); }
+    { const now = (Array.isArray(L.themes) ? L.themes : []).slice(0, NOW_KEEP), AR = (Array.isArray(L.abRuns) ? L.abRuns : []).filter((x) => x && typeof x.at === "string" && Array.isArray(x.a) && x.a.length), prv = AR.filter((x) => x.at < (L.at || "")).slice(-1)[0] || null;
+      if (L.wait || !now.length || !prv) rows.push(["주도 테마 유지", null, L.wait ? esc(L.wait) + "부터" : now.length ? "직전 회차 기록 없음" : ""]);
+      else { const t0 = prv.a[0], i = now.findIndex((t) => t && (t.name === t0 || (Array.isArray(t.alias) && t.alias.includes(t0))));
+        rows.push(["주도 테마 유지", i >= 0, i >= 0 ? esc(now[i].name) + " " + (i + 1) + "위" + (i === 0 ? " 그대로" : "") + (now[i].name === t0 ? ` <small>(${esc(prv.at)} 1위)</small>` : ` <small>(${esc(prv.at)} 1위 ${esc(t0)} 와 같은 묶음)</small>`) : esc(t0) + ` 3위 밖 <small>(${esc(prv.at)} 1위 → 지금 1위 ${esc(now[0].name || "")})</small>`]); } }
+    return rows;
+  }
+  /* 오늘 남은 일정·발표 시각: t = "HH:MM"(지나면 뺌) · "" = 시각 없음(오늘 내내 보임) · 내일 새벽 FOMC = 맨 뒤 */
+  function nowSched(day) {
+    const ev = CAL.events || {}, has = (k) => (ev[k] || []).includes(day), out = [], add = (t, txt, k) => out.push({ t, txt, k: k || t || "" });
+    const csat = has("csat"), close = csat ? "16:30" : "15:30", auc = csat ? "16:20" : "15:20", note = [];
+    autoEvents(day, CAL).forEach((e) => {
+      if (e.ev === "동시만기") note.push("오늘 선물·옵션 동시만기"); else if (e.ev === "옵션만기") note.push("오늘 옵션만기"); else if (e.ev === "MSCI") note.push("MSCI 리밸런싱 종가 반영");
+      else if (e.ev === "CPI") add(usReleaseKst(day), "미국 CPI(물가) 발표"); else if (e.ev === "고용") add(usReleaseKst(day), "미국 고용 발표");
+      else if (e.ev === "FOMC") add("내일 " + fomcKst(day), "미국 FOMC(기준금리) 발표", "9" + fomcKst(day)); else if (e.ev === "금통위") add("", "금통위(한국은행 기준금리 결정)");
+    });
+    if (has("pce")) add(usReleaseKst(day), "미국 PCE(물가) 발표");
+    if (has("k200rebal")) add("", "코스피200 정기변경");
+    if (day.slice(8) === "01") add("09:00", "수출입동향 발표");
+    irOn(day, S).forEach((x) => add(/^\d\d:\d\d$/.test(String(x.tm || "")) ? x.tm : "", `${x.co} 실적 발표(IR)`));
+    add(auc, `마감 동시호가 시작 (~${close})` + (note.length ? " · " + note.join(" · ") : "")); add(close, "장 마감");
+    return out.sort((a, b) => (a.k === b.k ? 0 : a.k < b.k ? -1 : 1));
+  }
+  function nowSchedHtml() {
+    const today = kstDate(); if (DATE < today) return `<h3>🕒 오늘 남은 일정</h3><div class="muted">지난 날이라 남은 일정 없음</div>`;
+    const hm = kstHM(), L = nowSched(DATE).filter((x) => DATE > today || !/^\d\d:\d\d$/.test(x.t) || x.t >= hm);
+    if (!L.length) return `<h3>🕒 오늘 남은 일정</h3><div class="muted">남은 일정 없음</div>`;
+    const li = (x) => `<li><time>${esc(x.t || "오늘")}</time><span>${esc(x.txt)}</span></li>`;
+    return `<h3>🕒 ${DATE > today ? esc(mdw(DATE)) + " 일정" : "오늘 남은 일정"}</h3><ul class="ncl">${L.slice(0, NOW_SHOW).map(li).join("")}</ul>` + (L.length > NOW_SHOW ? `<details class="ncmore"><summary>자세히 (${L.length - NOW_SHOW}개 더)</summary><ul class="ncl">${L.slice(NOW_SHOW).map(li).join("")}</ul></details>` : "");
+  }
+  const NOW_HOW = `<details class="nchow"><summary>자세히 (기준)</summary><div>✅ = 기준 안 · ⚠️ = 기준 넘음(한 번 더 볼 것) · 판단·추천이 아니라 확인용이에요.</div><div>지수 · 미국 선물(나스닥·S&P): -0.5%보다 위면 ✅ (장전 지표 「좋음」 기준과 같음)</div><div>외국인 선물: ${INTRA.fut.toLocaleString("ko-KR")}보다 위면 ✅ · 프로그램: ${INTRA.program.toLocaleString("ko-KR")}억보다 위면 ✅ (장중 재판정 기준과 같음) · 옆 글 = 5분 전보다 더 사면 좋음 · 더 팔면 나쁨 · 조금 바뀌면 중립</div><div>주도 테마 유지: 직전 회차 1위 테마가 지금도 3위 안이면 ✅ (지난 5일 325회 중 315회 유지)</div><div>⚡ 큰 움직임: 5분 사이 코스피 ${NOW_MOVE.k}%p · 코스닥 ${NOW_MOVE.q}%p · 주도 테마 ${NOW_MOVE.t}%p 넘게 움직이면 맨 위 한 줄 (지난 5일 5분 변화 중 큰 쪽 약 5%)</div></details>`;
+  function paintNowChk() {
+    const card = $("nowChk"), body = $("nowChkBody"), at = $("nowChkAt"); if (!card || !body) return;
+    if (!isBusinessDay(DATE, CAL.holidays)) { if (at) at.textContent = ""; body.innerHTML = `<div class="muted">휴장일 · 확인할 것 없음</div>`; return; }
+    const L = LIVE && LIVE.date === DATE && liveAsOf(LIVE) === DATE ? LIVE : null;
+    if (at) at.textContent = L ? (L.at || "") + " 기준 · " + (L.closed || (L.at || "") >= "15:30" ? "장 마감 값" : "5분마다") : "";
+    const chk = L ? nowChecks(L) : [["지수", null, ""], ["외국인 선물", null, ""], ["프로그램", null, ""], ["미국 선물", null, ""], ["주도 테마 유지", null, ""]];
+    const rows = chk.map(([nm, ok, v]) => `<li class="${ok === null ? "na" : ok ? "ok" : "ncw"}"><span class="ncs">${ok === null ? "—" : ok ? "✅" : "⚠️"}</span><b>${esc(nm)}</b><span class="ncv">${ok === null ? `<span class="muted">${v || "기록 없음"}</span>` : v}</span></li>`).join("");
+    body.innerHTML = (L ? nowAlertHtml(L) : `<div class="nca none">⚡ 큰 움직임: 기록 없음${DATE === kstDate() ? " · 장중 5분마다 자동" : ""}</div>`) + `<ul class="nck">${rows}</ul>` + nowSchedHtml() + NOW_HOW;
+  }
   /* 9.29-144 원장 [집2511][집2575][집2576] 화면 오른쪽 고정 뉴스 칸(#newsRail): 속보 · 주요 뉴스 최신 5줄씩(시각 · 제목 = 원문 링크 · 언론사) · 나머지 「자세히」 · 넓은 화면(1100px↑) 오른쪽에 늘 떠 있음 · 휴대폰 = 맨 위 「📰 뉴스」 버튼으로 열고 닫기
      자료 = live.json news(수집기 live run 5분 · 네이버 증권 뉴스 목록 · 제목·언론사·시각·기사 번호만 · 본문 0) · 원문 = n.news.naver.com(기사 번호 숫자만으로 만듦) · 없으면 「기록 없음」 · ④ 의 뉴스 빈 자리(#intraNews · 137)는 이 칸으로 합침 */
   const NEWS_SHOW = 5, NEWS_MORE = new Set();
@@ -4523,8 +4621,9 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       return `<span class="nx">${esc(mdw(d))} ${bits.length ? bits.join(" ") : "없음"}</span>`; }).join("");
   }
   /* 9.29-144 원장 [집2584] 외국인 흐름 항목마다 「좋음/나쁨/중립」 = 5분 전 회차 대비 변화(누적 순매수가 늘면 사는 쪽 = 좋음 · 줄면 파는 쪽 = 나쁨 · 문턱보다 작게 바뀌면 중립)
-     문턱 = 실데이터(eden-market live.json intraRuns 5일 · 5분 간격 55회 · |변화| 중앙값 선물 264 · 주식 88억 · 프로그램 65억)에서 중앙값 아래쪽으로: 선물 200 · 주식 100억 · 프로그램 50억 · 판정(rules.js)과 무관(표시만) */
-  const FLOW_STEP = { f: 200, s: 100, pg: 50 };
+     문턱 = 실데이터에서: 주식 100억 · 프로그램 50억(9.29-144 · intraRuns 5분 간격 55회 |변화| 중앙값 주식 88억 · 프로그램 65억) · 판정(rules.js)과 무관(표시만)
+     9.29-146 원장 [집2590][집2591] 「150으로 낮춤」: 선물 200 → 150 — 옛 주석 「중앙값 264 · 그 아래쪽 200」은 틀림(실제 = eden-market live.json 커밋 기록 5분 간격 353쌍 |변화| 중앙값 170 → 200 은 중앙값 위라 중립이 많았음 · 10/29 6회차 전부 중립) · 150 = 중앙값 170 아래(353쌍 중 195 = 55% 가 좋음/나쁨) */
+  const FLOW_STEP = { f: 150, s: 100, pg: 50 };
   function flowMark(cur, prev, step) { const n = (v) => (v === null || v === undefined || v === "" || !isFinite(Number(v)) ? null : Number(v)), c = n(cur), p = n(prev); if (c === null || p === null) return null; const d = c - p; return Math.abs(d) < step ? { t: "중립", c: "z" } : d > 0 ? { t: "좋음", c: "up" } : { t: "나쁨", c: "dn" }; }
   function flowMarkHtml(m) { return m ? ` <small class="fmk ${m.c}">${m.t}</small>` : ""; }
   // 장중 재판정 입력: 자동(09:30·10:30 수집) + 손으로 넣는 프로그램 순매수(억)
@@ -4815,6 +4914,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     paintAB(); paintLiveFinal(); // 9.29-108 원장 [2287] · 9.29-110 애프터 실시간
     paintIntraIdx(); // 9.29-130 [집2468] ④ 지수·수급 상자(실시간 값 들어올 때마다)
     paintIntraFut(); paintNewsRail(); // 9.29-144 ④ 선물 카드 · 오른쪽 뉴스 칸(실시간 값 들어올 때마다)
+    paintNowChk(); // 9.29-146 [집2586] ④ 지금 확인할 것(실시간 값 들어올 때마다)
     if (liveShow()) { topMode(false); paintTopLive(box); return; }
     abCols(false); /* 9.29-112 두 칸(A·B)은 장중 실시간 카드에서만 · 마감 카드·빈 카드 = 예전 한 칸 */
     liveBadge(null); box.classList.remove("live", "stale"); // 실시간 카드에서 마감·어제 카드로 바뀔 때 빨간 표시가 남지 않게
