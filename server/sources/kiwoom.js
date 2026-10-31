@@ -107,4 +107,30 @@ export const kwText = (k) => !k ? "키움: 안 돎" : k.ok ? `키움 장중 수�
 // 공개 저장소에 남길 꼴(정규화 메타만 · 종목별 원문 0)
 export const kwMeta = (k) => (k ? Object.assign({ src: "kiwoom", ok: !!k.ok, at: k.at || null, n: k.n || 0, both: k.both || 0, rows: k.rows, requests: k.requests || 0 }, k.retries ? { retries: k.retries } : {}, k.why ? { why: k.why } : {}) : null);
 
+// 9.29-148 원장 [집2601][집2602] 「집 PC 중계가 받기」: 키움 REST = 사전 등록 IP 에서만(Actions 10-14 뒤 0/454 rc 3 · 집 PC 고정 IP rc 0)
+//  → 집 PC(scripts/kiwoom-home.mjs · 장중 5분마다)가 kiwoomFlows 를 돌려 정규화 값만 eden-market auto/live-kiwoom.json 에 · Actions live run 은 그 파일이 오늘·15분 안이면 그 값(자기 키움 시도 0)
+//  · 파일 = { v, src, via:"home", date, at, ts, n, both, rows, requests, flows:{ 코드: [외인, 기관, 프로그램] } } (억원 · null = 값 없음) · 토큰·키·키움 원문 0 · 실패 회차는 안 씀(지난 좋은 값 유지 → 15분 넘으면 Actions 가 안 씀)
+export const KW_HOME_FILE = "live-kiwoom.json", KW_HOME_MAX_MS = 15 * 60 * 1000;
+const numOrNull = (x) => (typeof x === "number" && Number.isFinite(x) ? x : null);
+export function kwHomeRecord(k, { date, hm, ts } = {}) {
+  if (!k || !k.ok || !k.flows || typeof date !== "string" || typeof ts !== "number") return null;
+  const flows = {};
+  for (const [c, f] of Object.entries(k.flows)) { if (!/^[0-9A-Z]{6}$/.test(c) || !f) continue; const a = [numOrNull(f.foreign), numOrNull(f.inst)], p = numOrNull(f.program); if (p !== null) a.push(p); if (a[0] !== null || a[1] !== null || p !== null) flows[c] = a; }
+  return Object.assign({ v: 1, src: "kiwoom", via: "home", date, at: hm || k.at || null, ts, n: k.n || 0, both: k.both || 0, rows: k.rows || null, requests: k.requests || 0 }, k.retries ? { retries: k.retries } : {}, k.errors && k.errors.length ? { errors: k.errors.slice(0, 4).map((e) => String(e).slice(0, 80)) } : {}, { flows });
+}
+// 집 PC 파일 → kiwoomFlows 와 같은 모양(ok·flows·n·both·rows) · 오늘 날짜·ts 가 maxMs 안·모양 맞을 때만 · 아니면 null(→ 호출부 = 지금 동작)
+export function kwFromHome(rec, { date, nowMs, maxMs = KW_HOME_MAX_MS } = {}) {
+  if (!rec || typeof rec !== "object" || rec.v !== 1 || rec.via !== "home" || rec.date !== date || typeof rec.ts !== "number" || !rec.flows || typeof rec.flows !== "object") return null;
+  const age = nowMs - rec.ts; if (!(age >= -60000 && age <= maxMs)) return null; // 시계 차 1분까지
+  const at = typeof rec.at === "string" ? rec.at : null, flows = {}; let n = 0, both = 0;
+  for (const [c, a] of Object.entries(rec.flows)) {
+    if (!/^[0-9A-Z]{6}$/.test(c) || !Array.isArray(a)) continue; const fo = numOrNull(a[0]), ins = numOrNull(a[1]), p = numOrNull(a[2]);
+    if (fo === null && ins === null && p === null) continue;
+    flows[c] = Object.assign({ code: c, foreign: fo, inst: ins }, p !== null ? { program: p } : {}, { at, src: "kiwoom" });
+    if (fo !== null || ins !== null) n++; if (fo !== null && ins !== null) both++;
+  }
+  if (!n) return null;
+  return { ok: true, src: "kiwoom", via: "home", at, flows, n, both, rows: rec.rows && typeof rec.rows === "object" ? rec.rows : { frgn: 0, orgn: 0, prog: 0 }, requests: 0, retries: 0, errors: [], homeTs: rec.ts, homeRequests: typeof rec.requests === "number" ? rec.requests : 0 };
+}
+
 export default { name: "kiwoom", kiwoomFlows, kwKeys };

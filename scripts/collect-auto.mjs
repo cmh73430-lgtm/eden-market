@@ -38,7 +38,7 @@ import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
 import kis from "../server/sources/kis.js";
-import { kiwoomFlows, kwMask, kwText, kwKeys } from "../server/sources/kiwoom.js"; /* 9.29-111 원장 [2343] ②안 키움 장중 수급(키 = env KIWOOM_APP_KEY·KIWOOM_APP_SECRET · 없으면 건너뜀 · 토큰 출력 0 · Actions 면 ::add-mask::) */
+import { kiwoomFlows, kwMask, kwText, kwKeys, kwFromHome, KW_HOME_FILE } from "../server/sources/kiwoom.js"; /* 9.29-111 원장 [2343] ②안 키움 장중 수급(키 = env KIWOOM_APP_KEY·KIWOOM_APP_SECRET · 없으면 건너뜀 · 토큰 출력 0 · Actions 면 ::add-mask::) */
 import tradingview from "../server/sources/tradingview.js";
 
 const arg = (name, def) => { const a = process.argv.find((x) => x.startsWith("--" + name + "=")); return a ? a.slice(name.length + 3) : def; };
@@ -155,8 +155,11 @@ if (when === "live") {
   const tmap = await loadThemeMap(); // 9.29-100 테마 구성표 (없을 때만 새로 만듦)
   const cautions = hm >= "09:30" || has("force") ? await loadCautionFile() : null; /* 9.29-101 S4 (09:30 전엔 후보가 없어 안 받음) */
   /* 9.29-111: 키움 장중 수급 — 09:30 전(고르기 전)엔 안 물음 · 키 없음·실패 = 「없음」 → 지금 동작(네이버 · 「수급 확인 전」) · C 는 「C 수급 자료 없음」 */
-  const kw = hm >= "09:30" || has("force") ? await kiwoomFlows({ env: process.env, date, hm, onToken: kwMask(process.env) }) : null;
-  console.log(kwKeys(process.env) ? kwText(kw) : "키움: 키 없음 — 건너뜀(네트워크 0)");
+  /* 9.29-148 원장 [집2601][집2602]: 집 PC 중계(scripts/kiwoom-home.mjs · 고정 IP)가 올린 auto/live-kiwoom.json 이 오늘·15분 안이면 그 값 먼저(이 run 의 키움 요청 0 · 실패 시도가 화면을 덮지 않음) · 없거나 오래됐으면 지금처럼 Actions 키움 시도 */
+  const kwAsk = hm >= "09:30" || has("force");
+  const kwHome = kwAsk ? kwFromHome(await (save ? readFile(AUTO_DIR + "/" + KW_HOME_FILE).then((x) => x.json, () => null) : readPublic(AUTO_DIR + "/" + KW_HOME_FILE)), { date, nowMs: Date.now() }) : null;
+  const kw = kwHome || (kwAsk ? await kiwoomFlows({ env: process.env, date, hm, onToken: kwMask(process.env) }) : null);
+  console.log(kwHome ? `${kwText(kw)} · 집 PC 중계 ${kwHome.at}(${Math.round((Date.now() - kwHome.homeTs) / 60000)}분 전 · 집 PC 요청 ${kwHome.homeRequests}회)` : kwKeys(process.env) ? kwText(kw) : "키움: 키 없음 — 건너뜀(네트워크 0)");
   const live = await collectLive({ liveExtra: true, adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force"), kiwoom: kw } }); keepLiveExtra(live, pl); /* 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸(+6요청 · 못 받은 조각 = 직전 값) */ // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
   if (slot && slot.closed) { live.at = slot.at; live.closed = true; console.log(`${hm} 도착 — 장 마감(15:30) 뒤 늦게 시작한 실시간 실행이라 「15:30 장 마감 값」으로 받음`); }
   if (save && !liveOverwrite((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, live)) { console.log("오늘 장 마감 값이 이미 있어 장중 값으로 덮지 않음 — 건너뜀"); process.exit(0); }
