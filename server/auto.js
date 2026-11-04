@@ -648,10 +648,19 @@ export function keepLiveExtra(live, prev) {
 }
 /* 9.29-146 원장 [집2586] 장중 회차 한 줄(live.intraRuns · 최근 12): 외인 선물(f) · 현물 외인(sf)·기관(si) · 프로그램(pg) = 예전 그대로
    + ④ 「지금 확인할 것」 급등락 알림용 코스피(k)·코스닥(q) 등락률 · A 주도 테마 위 3 [이름, 등락률](t · 고르기 전(09:30 전)엔 없음) — 모두 이번 회차에 이미 받은 값(요청 +0) */
+/* 9.29-153 원장 [집2635] 재판정·좋음/나쁨 입력 = 시장 전체 통합(ka10051·ka90004 stex 3 · all = 오늘·15분 안일 때만 kwMarketFromHome) · 외인·기관·프로그램 셋 다 있어야 통합(섞음 0) · 아니면 네이버 값 그대로 · src 로 회차 원천 기록 · 외국인 선물은 늘 네이버(무접촉) */
+export function intraApplyAll(it, all) {
+  if (!it) return it;
+  const A = all && all.scope === "all" ? all.kospi : null, ok = (v) => typeof v === "number" && isFinite(v);
+  if (A && ok(A.foreign) && ok(A.institution) && ok(A.program)) { it.spot = { foreign: A.foreign, institution: A.institution }; it.program = { total: A.program, scope: "all" }; it.src = "all"; }
+  else it.src = "naver";
+  return it;
+}
 export function intraRunOf(live) {
   const it = live && live.intra; if (!it || !it.at) return null;
   const n = (v) => (typeof v === "number" && isFinite(v) ? v : null);
   const r = { at: it.at, f: it.fut ? it.fut.foreign : null, sf: it.spot ? it.spot.foreign : null, si: it.spot ? it.spot.institution : null, pg: it.program && typeof it.program.total === "number" ? it.program.total : null, k: n(live.kospi && live.kospi.value), q: n(live.kosdaq && live.kosdaq.value) };
+  if (it.src) r.src = it.src; /* 9.29-153 회차 원천(「all」 통합 · 「naver」 · 없으면 옛 기록 = 네이버) */
   const t = (Array.isArray(live.themes) ? live.themes : []).slice(0, 3).filter((x) => x && x.name && n(x.rate) !== null).map((x) => [x.name, x.rate]);
   if (t.length) r.t = t;
   return r;

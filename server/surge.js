@@ -308,6 +308,7 @@ export function rankBOf({ stocks, map, flows = null, themesA = [], idx = {}, at 
    · 수급 상위 RANKC_K(10) = 합 > 0 인 테마 합 큰 순 · 수익률 상위 RANKC_K = 테마 구성 종목 중 거래대금 순위(네이버 · 선정과 같은 응답 · 새 요청 0)에 든 종목 RANKC_MIN_N(2)↑ 평균 등락률 큰 순
    · 양쪽에 다 있는 테마만 → 수급 합 큰 순 3개 · 한쪽에만 있으면 패스
    · 꼬리: 외인 > 기관(외인 > 0) = 「강함」 · 기관만 큼(기관 > 0 · 외인 ≤ 0) = 「주의」 · 대장(등락률 1위) +25%↑ & 2등이 대장과 등락률 5%p 이내 = 「강한 테마」([2343] ③ · [2344])
+   · 9.29-153 원장 [집2635]: 기관 값이 하나도 없는 테마(instN 0 · themeKwSum 합이 0 으로 보임)엔 「강함」 안 붙임 — 꼬리표만 · 순위·선정·합계 무변
    · 키움 값이 없으면 none = 「수급 자료 없음」(화면 「C 수급 자료 없음」) · A·B 선정 결과는 그대로(덮어쓰기 0) */
 export const RANKC_TOP = 3, RANKC_K = 10, RANKC_MIN_N = 2, RANKC_TOP10_SHARE = 0.5, RANKC_LEAD = 25, RANKC_GAP = 5;
 export const RANKC_NONE = "수급 자료 없음", RANKC_EMPTY = "교차 테마 없음";
@@ -319,7 +320,7 @@ export function themeKwSum(codes, kiwoom, top10 = null) {
 }
 /* 9.29-140 [집2555] ③ C 의 「대형주 몫 50%↑ 테마 제외」 목록 = 그날 시총 상위 10(auto.js 가 같은 회차 bigCapsOf 결과를 top10 으로 넘김 · 요청 +0) · 시총 못 얻으면 고정 목록(top10_kospi.json) 폴백 · big = 어느 목록을 썼는지(화면 표시) */
 export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = null, big = null }) {
-  const t0 = Date.now(), base = { v: 1, at, src: "키움 장중 외인·기관(ka10063 · 테마 구성 종목 합) ∩ 네이버 거래대금 순위 등락률", rule: `테마수급 상위 ${RANKC_K} ∩ 테마 수익률 상위 ${RANKC_K} · 시총 TOP10 몫 ${RANKC_TOP10_SHARE * 100}%↑ 테마 제외 · 외인>기관 강함 · 기관만 주의 · 대장 +${RANKC_LEAD}%↑ & 2등 ${RANKC_GAP}%p 이내 강한 테마`, newReq: 0 };
+  const t0 = Date.now(), base = { v: 1, at, src: "키움 장중 외인·기관(ka10063 · 테마 구성 종목 합) ∩ 네이버 거래대금 순위 등락률", rule: `테마수급 상위 ${RANKC_K} ∩ 테마 수익률 상위 ${RANKC_K} · 시총 TOP10 몫 ${RANKC_TOP10_SHARE * 100}%↑ 테마 제외 · 외인>기관 강함(기관 값 있는 테마만) · 기관만 주의 · 대장 +${RANKC_LEAD}%↑ & 2등 ${RANKC_GAP}%p 이내 강한 테마`, newReq: 0 };
   const has = kiwoom && typeof kiwoom === "object" && Object.values(kiwoom).some((k) => k && (typeof k.foreign === "number" || typeof k.inst === "number"));
   if (!has || !map || !Array.isArray(map.themes)) return Object.assign(base, { none: RANKC_NONE, themesC: [], ms: Date.now() - t0 });
   const byCode = new Map((stocks || []).filter((s) => s && s.code && typeof s.rate === "number").map((s) => [s.code, s]));
@@ -330,7 +331,7 @@ export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = nu
     const f = ks.foreign, i = ks.inst, n = ks.n, big = ks.big;
     const mem = (t.codes || []).map((c) => byCode.get(c)).filter(Boolean); if (mem.length < RANKC_MIN_N) continue;
     const sum = f + i;
-    rows.push({ no: t.no, name: t.name, count: t.count || (t.codes || []).length, foreign: round2(f), inst: round2(i), sum: round2(sum), n, rate: round2(mem.reduce((a, s) => a + s.rate, 0) / mem.length), rn: mem.length, big10: big !== 0 && sum > 0 && big / sum >= RANKC_TOP10_SHARE, mem });
+    rows.push({ no: t.no, name: t.name, count: t.count || (t.codes || []).length, foreign: round2(f), inst: round2(i), sum: round2(sum), n, instN: (t.codes || []).filter((c) => kiwoom[c] && typeof kiwoom[c].inst === "number").length, rate: round2(mem.reduce((a, s) => a + s.rate, 0) / mem.length), rn: mem.length, big10: big !== 0 && sum > 0 && big / sum >= RANKC_TOP10_SHARE, mem });
   }
   const sTop = rows.filter((r) => !r.big10 && r.sum > 0).sort((a, b) => b.sum - a.sum || a.count - b.count).slice(0, RANKC_K);
   const rTop = rows.filter((r) => !r.big10).sort((a, b) => b.rate - a.rate || b.sum - a.sum).slice(0, RANKC_K), rIdx = new Map(rTop.map((r, k) => [r.no, k + 1]));
@@ -345,7 +346,7 @@ export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = nu
   }
   const themesC = pickedC.map((r) => {
     const by = rateSort(r.mem), lead = by[0], second = by[1] || null, third = by[2] || null, tags = []; /* 9.29-140 [집2509] 대장·짝꿍(2·3등) = 상승률 순(같으면 거래대금 큰 순) · C 테마 선정 무변 */
-    if (r.foreign > r.inst && r.foreign > 0) tags.push("강함"); else if (r.inst > 0 && r.foreign <= 0) tags.push("주의");
+    if (r.foreign > r.inst && r.foreign > 0 && r.instN > 0) tags.push("강함"); else if (r.inst > 0 && r.foreign <= 0) tags.push("주의");
     if (lead && lead.rate >= RANKC_LEAD && second && lead.rate - second.rate <= RANKC_GAP) tags.push("강한 테마");
     const st = (s) => (s ? { code: s.code, name: s.name, rate: s.rate } : null);
     return Object.assign({ no: r.no, name: r.name, foreign: r.foreign, inst: r.inst, sum: r.sum, n: r.n, rate: r.rate, rn: r.rn, sR: r.sR, rR: r.rR, tags, lead: st(lead), second: st(second), third: st(third) }, r.alias.length ? { alias: r.alias } : {});
