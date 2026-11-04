@@ -4,16 +4,19 @@
 //         → 정규화 값만 eden-market main auto/live-kiwoom.json 에 저장 → Actions live run 이 오늘·15분 안이면 그 값으로 C 순위 · ④ 테마 수급 · 주도주 수급
 //   키 = 금고(keyring 서비스 eden_kiwoom_rest · 항목 app_key / app_secret · 파이썬 keyring 을 파이프로 읽어 메모리에만) · GitHub 토큰 = env GITHUB_TOKEN 또는 `gh auth token`(메모리에만)
 //   출력·파일·로그에 키·토큰 0 (kiwoom.js 오류 글에도 0) · 실패 회차는 저장 안 함(지난 좋은 값 유지) · 런타임 LLM 0 · 주문 0
+//   9.29-152 원장 [집2619][집2620]: 시장 전체 통합(ka10051 stex 3 · ka90004 합계)도 같은 파일 market 에 · 창 08:00~20:05(KRX+NXT 통합 · 프리·애프터 시간까지 받음 · 그 시간대 값 포함 여부는 미실측 gate [집2632]) · 종목(ka10063·ka90004 전 쪽) = 09:25~15:45 그대로 · 창 밖 = 시장 전체만(요청 5회) · 16:05 뒤 종목 값 비움(커밋 작게)
 // 사용: node scripts/kiwoom-home.mjs [--dry(저장 안 함 · 건수만)] [--force(시간·휴장 무시)] [--check(연결 확인 = 토큰 발급 1회 + ka10063 외국인 1쪽 1회 · 건수만 · 저장 0)] [--noprog(프로그램 생략)]
 // 종료 코드(규약 6종): 0 OK(저장 또는 시간 밖 건너뜀) · 1 FAIL(키움·저장 실패) · 5 CONFIG(키 또는 GitHub 토큰 없음)
 import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
-import { kiwoomFlows, kwText, kwHomeRecord, makeKiwoom, KW_HOME_FILE } from "../server/sources/kiwoom.js";
+import { kiwoomFlows, kiwoomMarket, kwText, kwMarketText, kwHomeRecord, kwHomeMarketOnly, makeKiwoom, KW_HOME_FILE, KW_STEX } from "../server/sources/kiwoom.js";
 import { kstDate, kstTime } from "../shared/calendar.js";
 
 export const HOME_REPO = "cmh73430-lgtm/eden-market", HOME_BRANCH = "main", HOME_PATH = "auto/" + KW_HOME_FILE;
-export const HOME_FROM = "09:25", HOME_TO = "15:45"; // Actions 는 09:30 부터 키움 값을 씀 · 15:30 마감 뒤 늦은 「장 마감 값」 run(~16:00)도 15분 안 값으로
+export const HOME_FROM = "08:00", HOME_TO = "20:05"; // 9.29-152 시장 전체 KRX+NXT 통합 · NXT 프리(08:00~)·애프터(~20:00) 시간까지 받음(그 시간대 값 포함 여부 미실측 · gate [집2632])
+export const HOME_FLOW_FROM = "09:25", HOME_FLOW_TO = "15:45", HOME_FLOW_KEEP = "16:05"; // 종목 값: Actions 는 09:30 부터 씀 · 15:30 마감 뒤 늦은 「장 마감 값」 run(~16:00)도 15분 안 값으로 · 16:05 뒤엔 쓸 run 이 없어 비움
 export const homeWindow = (hm) => typeof hm === "string" && hm >= HOME_FROM && hm <= HOME_TO;
+export const homeFlowWindow = (hm) => typeof hm === "string" && hm >= HOME_FLOW_FROM && hm <= HOME_FLOW_TO;
 const KR_PY = "import keyring,sys; v=keyring.get_password('eden_kiwoom_rest', sys.argv[1]); sys.stdout.write((v or '').strip())";
 
 // 금고 키 → { KIWOOM_APP_KEY, KIWOOM_APP_SECRET } | null · env 에 둘 다 있으면 그 값 · 값은 반환만(출력 0)
@@ -46,17 +49,31 @@ export function makeGhWrite({ token, fetchImpl = fetch, repo = HOME_REPO, branch
   };
 }
 
+// 지금 파일 읽기(창 밖 회차가 같은 날 종목 값·시각을 잇는 데만 · 없거나 실패 = null)
+export function makeGhRead({ token, fetchImpl = fetch, repo = HOME_REPO, branch = HOME_BRANCH, path = HOME_PATH }) {
+  return async () => {
+    try { const r = await fetchImpl("https://api.github.com/repos/" + repo + "/contents/" + path + "?ref=" + branch, { signal: AbortSignal.timeout(20000), headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "eden-kiwoom-home" } }); if (r.status !== 200) return null; const j = await r.json(); return JSON.parse(Buffer.from(j.content || "", "base64").toString("utf8")); } catch (e) { return null; }
+  };
+}
+
 // 한 회차: 키 없음 = 네트워크 0 · rc 5 / 키움 실패 = 저장 0 · rc 1 / 정상 = 저장 · rc 0
-export async function kiwoomHome({ keys, fetchImpl = fetch, write = null, date, hm, ts = Date.now(), log = console.log, sleep, now, gapMs, retryMs, prog = true } = {}) {
+// 9.29-152: flowsOn(기본 = 09:25~15:45) 이면 종목+시장 전체 · 아니면 시장 전체만 · 종목 실패 + 시장 전체 성공 = 시장 전체만 저장(지난 종목 값·시각 유지) · rc 1
+export async function kiwoomHome({ keys, fetchImpl = fetch, write = null, read = null, date, hm, ts = Date.now(), log = console.log, sleep, now, gapMs, retryMs, prog = true, flowsOn = null } = {}) {
   if (!keys) { log("키움 중계: 금고 키 없음 — 건너뜀(네트워크 0)"); return { rc: 5, kw: null, rec: null, wrote: false }; }
-  const kw = await kiwoomFlows(Object.assign({ env: keys, fetchImpl, date, hm, prog }, sleep ? { sleep } : {}, now ? { now } : {}, gapMs !== undefined ? { gapMs } : {}, retryMs !== undefined ? { retryMs } : {}));
-  log("키움 중계(집 PC) " + date + " " + hm + " · " + kwText(kw));
-  if (!kw.ok) return { rc: 1, kw, rec: null, wrote: false };
-  const rec = kwHomeRecord(kw, { date, hm, ts });
-  if (!write) { log(`저장 안 함(--dry) · 종목 ${Object.keys(rec.flows).length} · ${JSON.stringify(rec).length} 바이트`); return { rc: 0, kw, rec, wrote: false }; }
-  try { await write(rec, `키움 수급(집 PC 중계) ${date} ${hm} · 종목 ${rec.n}`); } catch (e) { log("저장 실패: " + String((e && e.message) || e).slice(0, 80)); return { rc: 1, kw, rec, wrote: false }; }
+  const common = Object.assign({ env: keys, fetchImpl, date, hm }, sleep ? { sleep } : {}, now ? { now } : {}, gapMs !== undefined ? { gapMs } : {}, retryMs !== undefined ? { retryMs } : {});
+  const full = flowsOn === null ? homeFlowWindow(hm) : !!flowsOn;
+  const kw = full ? await kiwoomFlows(Object.assign({ prog, market: true }, common)) : await kiwoomMarket(common);
+  const market = kw.market || null, flowsOk = !!(full && kw.ok);
+  log("키움 중계(집 PC) " + date + " " + hm + " · " + (full ? kwText(kw) : "창 밖 · 요청 " + kw.requests + "회") + " · " + kwMarketText(market) + (kw.errors && kw.errors.length ? " · 참고 " + kw.errors.slice(0, 3).join(" / ") : ""));
+  if (!flowsOk && !market) return { rc: 1, kw, rec: null, wrote: false };
+  const prev = (!flowsOk || !market) && read ? await read() : null;
+  const rec = flowsOk ? kwHomeRecord(kw, { date, hm, ts, market }) : kwHomeMarketOnly(prev, { date, hm, market, keep: hm <= HOME_FLOW_KEEP });
+  if (flowsOk && !market && prev && prev.date === date && prev.market) rec.market = prev.market; // 시장 전체만 실패: 지난 값 유지(15분 규칙은 market.ts 로)
+  const rc = full && !flowsOk ? 1 : 0;
+  if (!write) { log(`저장 안 함(--dry) · 종목 ${Object.keys(rec.flows).length} · ${JSON.stringify(rec).length} 바이트`); return { rc, kw, rec, wrote: false }; }
+  try { await write(rec, `키움 수급(집 PC 중계) ${date} ${hm} · 종목 ${flowsOk ? rec.n : "유지"}${market ? " · 시장 전체" : ""}`); } catch (e) { log("저장 실패: " + String((e && e.message) || e).slice(0, 80)); return { rc: 1, kw, rec, wrote: false }; }
   log(`저장: ${HOME_PATH} (${HOME_REPO} ${HOME_BRANCH}) · 종목 ${Object.keys(rec.flows).length}`);
-  return { rc: 0, kw, rec, wrote: true };
+  return { rc, kw, rec, wrote: true };
 }
 
 async function main() {
@@ -65,18 +82,18 @@ async function main() {
   if (!has("force")) {
     const { loadCollectConfig } = await import("../server/config.js"), { skipReason } = await import("../server/auto.js"), cfg = loadCollectConfig();
     const skip = skipReason(date, cfg.holidays, cfg.holidayNames); if (skip) { console.log(`${date} ${skip} — 건너뜀`); return 0; }
-    if (!homeWindow(hm)) { console.log(`${hm} 장중 아님(${HOME_FROM}~${HOME_TO}) — 건너뜀`); return 0; }
+    if (!homeWindow(hm)) { console.log(`${hm} 시간 밖(${HOME_FROM}~${HOME_TO}) — 건너뜀`); return 0; }
   }
   const keys = readKeys();
   if (has("check")) { // 연결 확인: 토큰 1회 + ka10063 1쪽 1회(값·토큰 출력 0 · 건수만)
     if (!keys) { console.log("금고 키 없음"); return 5; }
     let got = false; const kw = makeKiwoom({ env: keys, onToken: () => { got = true; } });
-    try { const r = await kw.tr("ka10063", { mrkt_tp: "000", amt_qty_tp: "1", invsr: "6", frgn_all: "0", smtm_netprps_tp: "0", stex_tp: "1" }, { pages: 1 }); console.log(`토큰 rc 0 · ka10063 외국인 1쪽 ${r.rows.length}행 · 요청 ${kw.stats.requests}회`); return 0; }
+    try { const r = await kw.tr("ka10063", { mrkt_tp: "000", amt_qty_tp: "1", invsr: "6", frgn_all: "0", smtm_netprps_tp: "0", stex_tp: KW_STEX }, { pages: 1 }); console.log(`토큰 rc 0 · ka10063 외국인 1쪽 ${r.rows.length}행 · 요청 ${kw.stats.requests}회`); return 0; }
     catch (e) { console.log(`토큰 ${got ? "rc 0" : "실패"} · ${String((e && e.message) || e).slice(0, 80)} · 요청 ${kw.stats.requests}회`); return 1; }
   }
-  let write = null;
-  if (!has("dry")) { const token = readGhToken(); if (!token) { console.log("GitHub 토큰 없음(gh auth login 또는 env GITHUB_TOKEN) — 건너뜀"); return 5; } write = makeGhWrite({ token }); }
-  const r = await kiwoomHome({ keys, write, date, hm, prog: !has("noprog") });
+  let write = null, read = null;
+  if (!has("dry")) { const token = readGhToken(); if (!token) { console.log("GitHub 토큰 없음(gh auth login 또는 env GITHUB_TOKEN) — 건너뜀"); return 5; } write = makeGhWrite({ token }); read = makeGhRead({ token }); }
+  const r = await kiwoomHome({ keys, write, read, date, hm, prog: !has("noprog") });
   return r.rc;
 }
 

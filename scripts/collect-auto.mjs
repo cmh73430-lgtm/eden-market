@@ -38,7 +38,7 @@ import naver from "../server/sources/naver.js";
 import yahoo from "../server/sources/yahoo.js";
 import upbit from "../server/sources/upbit.js";
 import kis from "../server/sources/kis.js";
-import { kiwoomFlows, kwMask, kwText, kwKeys, kwFromHome, KW_HOME_FILE } from "../server/sources/kiwoom.js"; /* 9.29-111 원장 [2343] ②안 키움 장중 수급(키 = env KIWOOM_APP_KEY·KIWOOM_APP_SECRET · 없으면 건너뜀 · 토큰 출력 0 · Actions 면 ::add-mask::) */
+import { kiwoomFlows, kwMask, kwText, kwKeys, kwFromHome, kwMarketFromHome, kwMarketText, KW_HOME_FILE } from "../server/sources/kiwoom.js"; /* 9.29-111 원장 [2343] ②안 키움 장중 수급(키 = env KIWOOM_APP_KEY·KIWOOM_APP_SECRET · 없으면 건너뜀 · 토큰 출력 0 · Actions 면 ::add-mask::) */
 import tradingview from "../server/sources/tradingview.js";
 
 const arg = (name, def) => { const a = process.argv.find((x) => x.startsWith("--" + name + "=")); return a ? a.slice(name.length + 3) : def; };
@@ -137,6 +137,7 @@ async function loadThemeMap({ rebuild = false } = {}) {
   return { map: b.map, built: true, requests: b.requests };
 }
 // 직전 live.json(오늘 것) = RVOL 캐시 · 이름 안정화 · 뉴스 캐시·하루 상한의 원천. 저장 모드면 저장소, --dry 면 공개 저장소를 읽기만 한다 (없으면 null → 캐시 없이)
+const readKwHome = () => (save ? readFile(AUTO_DIR + "/" + KW_HOME_FILE).then((x) => x.json, () => null) : readPublic(AUTO_DIR + "/" + KW_HOME_FILE)); /* 9.29-148 · 9.29-152 집 PC 파일 */
 async function prevLive() { try { const j = save ? (await readFile(AUTO_DIR + "/live.json")).json : await readPublic(AUTO_DIR + "/live.json"); return j && j.date === date ? j : null; } catch (e) { return null; } }
 const news2Opts = (pl) => ({ prevDate: prevBusinessDay(date, cfg.holidays), cache: pl && pl.news2 ? pl.news2.cache : null, budget: pl && pl.news2 ? pl.news2.budget : null });
 const shadowText = (sh) => !sh ? "그림자 없음" : sh.error ? "그림자 실패: " + sh.error : sh.kind === "old-TL" ? `옛 방식(T·L · 비교용) T=${sh.T}억: ${sh.text || "없음"}` : `그림자 V2 T 코스피 ${sh.T.KS}·코스닥 ${sh.T.KQ} · 게이트 ${sh.gatePassed} → 상세 ${sh.scanned} → 자격(L≥${sh.minL}) ${sh.qualified} · 요청 네이버 +${(sh.requests || {}).naver ?? "?"} · 일봉 ${(sh.requests || {}).rvol ?? 0} · ${sh.ms}ms: `
@@ -157,10 +158,11 @@ if (when === "live") {
   /* 9.29-111: 키움 장중 수급 — 09:30 전(고르기 전)엔 안 물음 · 키 없음·실패 = 「없음」 → 지금 동작(네이버 · 「수급 확인 전」) · C 는 「C 수급 자료 없음」 */
   /* 9.29-148 원장 [집2601][집2602]: 집 PC 중계(scripts/kiwoom-home.mjs · 고정 IP)가 올린 auto/live-kiwoom.json 이 오늘·15분 안이면 그 값 먼저(이 run 의 키움 요청 0 · 실패 시도가 화면을 덮지 않음) · 없거나 오래됐으면 지금처럼 Actions 키움 시도 */
   const kwAsk = hm >= "09:30" || has("force");
-  const kwHome = kwAsk ? kwFromHome(await (save ? readFile(AUTO_DIR + "/" + KW_HOME_FILE).then((x) => x.json, () => null) : readPublic(AUTO_DIR + "/" + KW_HOME_FILE)), { date, nowMs: Date.now() }) : null;
+  const kwRaw = await readKwHome(); /* 9.29-152 [집2620] 시장 전체 통합 = 09:30 전 run 도 읽음(GitHub 읽기 1 · 키움 0) */
+  const kwHome = kwAsk ? kwFromHome(kwRaw, { date, nowMs: Date.now() }) : null, kwMk = kwMarketFromHome(kwRaw, { date, nowMs: Date.now() });
   const kw = kwHome || (kwAsk ? await kiwoomFlows({ env: process.env, date, hm, onToken: kwMask(process.env) }) : null);
   console.log(kwHome ? `${kwText(kw)} · 집 PC 중계 ${kwHome.at}(${Math.round((Date.now() - kwHome.homeTs) / 60000)}분 전 · 집 PC 요청 ${kwHome.homeRequests}회)` : kwKeys(process.env) ? kwText(kw) : "키움: 키 없음 — 건너뜀(네트워크 0)");
-  const live = await collectLive({ liveExtra: true, adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force"), kiwoom: kw } }); keepLiveExtra(live, pl); /* 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸(+6요청 · 못 받은 조각 = 직전 값) */ // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
+  const live = await collectLive({ liveExtra: true, adapters: { naver }, now, date, us: tm && tm.morning && tm.morning.us, history: await loadHistory(date), news2: news2Opts(pl), surge: { map: tmap.map, cautions, alertCache: pl && pl.alerts, heatCache: pl && pl.heat, top10: TOP10_CODES, regular: !!(slot && slot.closed && hm >= REGULAR_AFTER), force: has("force"), kiwoom: kw } }); keepLiveExtra(live, pl); if (kwMk) live.investAll = kwMk; /* 9.29-152 화면용 KRX+NXT 통합(재판정·흐름 입력 invest·program 은 네이버 그대로) · 없으면 칸 없음 → 앱 「정규만」 */ console.log(kwMk ? kwMarketText(kwMk) + " · " + kwMk.at : "시장 전체 통합 없음(집 PC 꺼짐·15분 넘음) — 네이버 값"); /* 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸(+6요청 · 못 받은 조각 = 직전 값) */ // 15:40 뒤 늦게 온 「장 마감 값」 run 은 정규장 값(15:30 봉)으로
   if (slot && slot.closed) { live.at = slot.at; live.closed = true; console.log(`${hm} 도착 — 장 마감(15:30) 뒤 늦게 시작한 실시간 실행이라 「15:30 장 마감 값」으로 받음`); }
   if (save && !liveOverwrite((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, live)) { console.log("오늘 장 마감 값이 이미 있어 장중 값으로 덮지 않음 — 건너뜀"); process.exit(0); }
   console.log(`실시간 ${live.at} · 코스피 ${live.kospi ? live.kospi.value + "% · 거래대금 " + live.kospi.amount : "-"} · ${live.wait ? live.wait + " 부터 고름(아직)" : (live.themes || []).map((t) => `${t.name}${t.relax ? "[선정완화 " + t.relax.text + "]" : ""} ${t.rate > 0 ? "+" : ""}${t.rate}% (강한 ${t.strongN} · +10% ${t.n10} · 대장 ${t.lead ? t.lead.name : "-"} · ${t.flowState === "pending" ? "수급 확인 전" : t.flowState} · ${(t.news[0] || {}).title || "뉴스 없음"})`).join(" / ")}`);
@@ -308,6 +310,12 @@ let part = when === "intraday"
   : await collectClose({ adapters: { naver }, now, leaders: closeLeaders, listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
 // 같은 날 앞선 close run 과 합친다: 잠정 → 확정이면 잠정은 leadersProvisional 로 보관, 확정 뒤 잠정이 늦게 오면 확정 유지 (server/auto.js mergeCloseLeaders)
 if (when === "close" && prev.json && prev.json.date === date && prev.json.close) mergeCloseLeaders(prev.json.close, part);
+/* 9.29-152 원장 [집2620] ⑤ 마감 수급 통합: 집 PC 파일이 오늘·15분 안이거나 20:00 뒤 끝값이면 close.market.investAll(화면용 · invest·program 은 네이버 그대로) · 못 받으면 같은 날 앞선 run 값 유지 · 그것도 없으면 칸 없음 → 앱 네이버 값 + 「정규만」·「KRX만」 */
+if (when === "close" && part.market) {
+  const m0 = kwMarketFromHome(await readKwHome(), { date, nowMs: Date.now(), final: true }), old0 = prev.json && prev.json.date === date && prev.json.close && prev.json.close.market ? prev.json.close.market.investAll : null;
+  if (m0 || old0) part.market.investAll = m0 || old0;
+  console.log(m0 ? kwMarketText(m0) + " · " + m0.at : old0 ? "시장 전체 통합: 앞선 run 값 유지 " + old0.at : "시장 전체 통합 없음 — 네이버 값");
+}
 const saveAs = when === "themes" ? "morning" : when; // 테마만 받은 것도 아침 기록에 들어간다
 const got = when === "intraday" ? ["fut", "spot", "kospi"].filter((k) => part[k] !== undefined).length : saveAs === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 // 장중 재판정은 하루 여러 번 → 앞선 확인 기록을 이어 붙인다
