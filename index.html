@@ -3659,7 +3659,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-153";
+  const APP_VER = "9.29-154";
   /* 9.29-152 원장 [집2619][집2620] 수급 범위 표시(실측 2026-11-04 · work/도구/152 · gate [집2632]: NXT 프리·애프터 포함은 미실측 → 「KRX+NXT 통합」 만 말함): 시장 전체 = 키움 ka10051·ka90004 통합(집 PC · 수집기 investAll) · 없으면 네이버(= 키움 KRX 값과 같음 · 16:00 뒤 값은 KRX 애프터 포함 → 「KRX만」) · 종목·테마·C = ka10063(거래소 구분 없는 장중 잠정 · stex 1·2·3 값 같음) */
   const SUP_ALL = "KRX+NXT 통합", SUP_REG = "정규만", SUP_KRX = "KRX만(NXT 제외)", SUP_EST = "장중 잠정(거래소 구분 없음)";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
@@ -4463,7 +4463,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   /* 9.29-146 원장 [집2586] ④ 맨 위 「✅ 지금 확인할 것」(#nowChk) = ① 급등락 알림 한 줄(맨 위) ② 점검표 5줄(5분마다 ✅/⚠️ · 값 없으면 「기록 없음」) ③ 오늘 남은 일정·발표 시각
      자료 = live.json(수집기 live run 5분 · 이미 받는 값 · 요청 +0) · 일정 = 달력(data/events.json · calendar 워크플로) + 만기 계산 + KIND IR 실적 일정(아침 브리핑) + 장 시간 규칙 · 판정·선정 무변(보기만) · 투자 권유 0
-     점검 기준 = 이미 있는 규칙 그대로: 지수·미국 선물 = 장전 지표 「좋음」 경계 -0.5%(rules.js signalStatus k200·fut·es) · 외국인 선물·프로그램 = 장중 재판정 INTRA(-1,000 · -1,000억) · 옆 표시 = 5분 전 대비 flowMark(FLOW_STEP)
+     점검 기준 = 이미 있는 규칙 그대로: 지수·미국 선물 = 장전 지표 「좋음」 경계 -0.5%(rules.js signalStatus k200·fut·es) · 외국인 선물·프로그램 = 장중 재판정 INTRA(-1,000 · -1,000억) · 옆 표시 = 재판정 값 줄과 같음(intraCmp · 9.29-154)
      새 기준(실데이터 근거 · eden-market live.json 커밋 기록 10/21·22·23·28·29 5분 간격 회차): 주도 테마 유지 = 직전 회차 1위 테마가 지금 3위 안(합쳐진 이름 alias 포함 · 325회 중 315회 = 97% 유지 → ⚠️ 약 3%)
      급등락 = 5분 사이 |변화| 위 약 5%: 코스피 0.6%p(343쌍 중 14 = 4.1%) · 코스닥 0.4%p(21 = 6.1%) · 주도 테마 등락률 0.6%p(회차 최대 324 중 12 = 3.7%) · 직전 회차와 7분 넘게 떨어지면 비교 안 함 */
   const NOW_MOVE = { k: 0.6, q: 0.4, t: 0.6 }, NOW_GAP = 7, NOW_KEEP = 3, NOW_SHOW = 5;
@@ -4486,18 +4486,19 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   }
   function nowAlertHtml(L) {
     const m = nowMoves(L);
-    if (!m) return `<div class="nca none">⚡ 큰 움직임: 비교할 직전 회차 기록 없음</div>`;
+    if (!m) { const r = nowRuns(L); return `<div class="nca none">⚡ 큰 움직임: ${r.gap !== null && r.gap > NOW_GAP ? `직전 회차가 ${NOW_GAP}분 넘게 떨어져 비교 안 함` : "비교할 직전 회차 기록 없음"}</div>`; }
     if (!m.list.length) return `<div class="nca none">⚡ ${esc(m.at)} · ${m.gap}분 사이 큰 움직임 없음</div>`;
     return `<div class="nca hit">${m.list.map((x) => `<span class="${x.d > 0 ? "p" : "n"}">⚡ ${esc(m.at)} ${esc(x.nm)} ${m.gap}분 사이 크게 ${x.d > 0 ? "오름 ▲" : "내림 ▼"} ${(x.d > 0 ? "+" : "") + x.d.toFixed(2)}%p <small>(${esc(nowPct(x.from))} → ${esc(nowPct(x.to))})</small></span>`).join("")}</div>`;
   }
   /* 점검표 5줄: [이름, 상태(true ✅ · false ⚠️ · null 기록 없음), 값 글(html)] */
   function nowChecks(L) {
-    const r = nowRuns(L), rows = [], sn = (v) => (v > 0 ? "+" : "") + Math.round(v).toLocaleString("ko-KR");
+    /* 9.29-154 원장 [집2641] 「재판정 표로 통일」: 좋음/나쁨 = intraCmp = 재판정 값 줄과 같은 함수 + 그날 기록 intra.*(같은 입력) · 옆에 보이는 값이 재판정 값과 다르면(중계 값 뒤 live.json 으로 돌아간 때 등) 표시 안 함 · ✅/⚠️·값 무변 */
+    const a = (S && S.auto) || {}, c = intraCmp(a), same = (v, k) => a[k] !== undefined && a[k] !== null && a[k] !== "" && Number(a[k]) === v, rows = [], sn = (v) => (v > 0 ? "+" : "") + Math.round(v).toLocaleString("ko-KR");
     { const k = nowNum(L.kospi && L.kospi.value), q = nowNum(L.kosdaq && L.kosdaq.value), vs = [k, q].filter((v) => v !== null);
       rows.push(["지수", vs.length ? vs.every((v) => signalStatus("k200", v) === "g") : null, vs.length ? [k !== null ? "코스피 " + nowPct(k) : "", q !== null ? "코스닥 " + nowPct(q) : ""].filter(Boolean).map(esc).join(" · ") : ""]); }
-    { const f = nowNum(L.fut && L.fut.foreign), mk = r.ok ? flowMarkHtml(flowMark(r.cur.f, r.prv.f, FLOW_STEP.f)) : "";
+    { const f = nowNum(L.fut && L.fut.foreign), mk = same(f, "intra.fut") ? c.fmk(a["intra.fut"], "f", FLOW_STEP.f) : "";
       rows.push(["외국인 선물(순매수)", f === null ? null : f > INTRA.fut, f === null ? "" : esc(sn(f)) + "억" + mk]); }
-    { const A = liveAllOf(L), g = A ? nowNum(A.kospi.program) : nowNum(L.program && L.program.total), mk = r.ok ? flowMarkHtml(flowMarkSrc(r.cur.pg, r.prv.pg, FLOW_STEP.pg, r.cur.src, !A && r.cur.src === "all" ? "naver" : r.prv.src)) : ""; /* 9.29-153 통합 값 · 없으면 네이버 · gate [집2639] 표시 값이 네이버로 폴백됐는데 회차는 통합 = 회차끼리 비교 안 함(재판정 표와 같음) */
+    { const A = liveAllOf(L), g = A ? nowNum(A.kospi.program) : nowNum(L.program && L.program.total), mk = same(g, "intra.prog") ? c.fms(a["intra.prog"], "pg", FLOW_STEP.pg) : ""; /* 9.29-153 통합 값 · 없으면 네이버 */
       rows.push(["프로그램(순매수)", g === null ? null : g > INTRA.program, g === null ? "" : esc(sn(g)) + "억" + mk]); }
     { const F = L.futs || {}, pc = (x) => (!x ? null : nowNum(x.pct) !== null ? x.pct : nowNum(x.price) !== null && nowNum(x.prev) ? Number(((x.price / x.prev - 1) * 100).toFixed(2)) : null), nq = pc(F.nq), es = pc(F.es), vs = [["나스닥", nq, "fut"], ["S&P", es, "es"]].filter((x) => x[1] !== null);
       rows.push(["미국 선물", vs.length ? vs.every((x) => signalStatus(x[2], x[1]) === "g") : null, vs.map((x) => esc(x[0] + " " + nowPct(x[1]))).join(" · ")]); }
@@ -4530,7 +4531,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const li = (x) => `<li><time>${esc(x.t || "오늘")}</time><span>${esc(x.txt)}</span></li>`;
     return `<h3>🕒 ${DATE > today ? esc(mdw(DATE)) + " 일정" : "오늘 남은 일정"}</h3><ul class="ncl">${L.slice(0, NOW_SHOW).map(li).join("")}</ul>` + (L.length > NOW_SHOW ? `<details class="ncmore"><summary>자세히 (${L.length - NOW_SHOW}개 더)</summary><ul class="ncl">${L.slice(NOW_SHOW).map(li).join("")}</ul></details>` : "");
   }
-  const NOW_HOW = `<details class="nchow"><summary>자세히 (기준)</summary><div>✅ = 기준 안 · ⚠️ = 기준 넘음(한 번 더 볼 것) · 판단·추천이 아니라 확인용이에요.</div><div>지수 · 미국 선물(나스닥·S&P): -0.5%보다 위면 ✅ (장전 지표 「좋음」 기준과 같음)</div><div>외국인 선물(순매수): ${INTRA.fut.toLocaleString("ko-KR")}억보다 위면 ✅ (${FUT_LAG}) · 프로그램: ${INTRA.program.toLocaleString("ko-KR")}억보다 위면 ✅ (장중 재판정 기준과 같음) · 옆 글 = 5분 전보다 더 사면 좋음 · 더 팔면 나쁨 · 조금 바뀌면 중립 · 통합↔네이버로 바뀐 회차는 비교 없음</div><div>주도 테마 유지: 직전 회차 1위 테마가 지금도 3위 안이면 ✅ (지난 5일 325회 중 315회 유지)</div><div>⚡ 큰 움직임: 5분 사이 코스피 ${NOW_MOVE.k}%p · 코스닥 ${NOW_MOVE.q}%p · 주도 테마 ${NOW_MOVE.t}%p 넘게 움직이면 맨 위 한 줄 (지난 5일 5분 변화 중 큰 쪽 약 5%)</div></details>`;
+  const NOW_HOW = `<details class="nchow"><summary>자세히 (기준)</summary><div>✅ = 기준 안 · ⚠️ = 기준 넘음(한 번 더 볼 것) · 판단·추천이 아니라 확인용이에요.</div><div>지수 · 미국 선물(나스닥·S&P): -0.5%보다 위면 ✅ (장전 지표 「좋음」 기준과 같음)</div><div>외국인 선물(순매수): ${INTRA.fut.toLocaleString("ko-KR")}억보다 위면 ✅ (${FUT_LAG}) · 프로그램: ${INTRA.program.toLocaleString("ko-KR")}억보다 위면 ✅ (장중 재판정 기준과 같음) · 옆 글 = 직전 회차보다 더 사면 좋음 · 더 팔면 나쁨 · 조금 바뀌면 중립 · 통합↔네이버로 바뀐 회차는 비교 없음 · ${NOW_GAP}분 넘게 떨어지면 비교 안 함</div><div>주도 테마 유지: 직전 회차 1위 테마가 지금도 3위 안이면 ✅ (지난 5일 325회 중 315회 유지)</div><div>⚡ 큰 움직임: 5분 사이 코스피 ${NOW_MOVE.k}%p · 코스닥 ${NOW_MOVE.q}%p · 주도 테마 ${NOW_MOVE.t}%p 넘게 움직이면 맨 위 한 줄 (지난 5일 5분 변화 중 큰 쪽 약 5%)</div></details>`;
   function paintNowChk() {
     const card = $("nowChk"), body = $("nowChkBody"), at = $("nowChkAt"); if (!card || !body) return;
     if (!isBusinessDay(DATE, CAL.holidays)) { if (at) at.textContent = ""; body.innerHTML = `<div class="muted">휴장일 · 확인할 것 없음</div>`; return; }
@@ -4667,6 +4668,15 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   /* 9.29-153 원장 [집2635] 원천이 다른 두 회차(통합 ↔ 네이버)는 숫자가 크게 뛰어 거짓 좋음/나쁨 → 비교 안 함 · 원천 표시 없으면 네이버(옛 기록) */
   const flowSrc = (s) => (s === "all" ? "all" : "naver"), SRC_TXT = { all: "통합", naver: "네이버" };
   function flowMarkSrc(cur, prev, step, sc, sp) { const m = flowMark(cur, prev, step); return m && flowSrc(sc) !== flowSrc(sp) ? { t: "비교 없음", c: "z" } : m; }
+  /* 9.29-154 원장 [집2645] 직전 회차 = 시각 t 바로 앞 줄 · 두 시각이 NOW_GAP(7분) 넘게 떨어지면 「비교 안 함」(값 줄·점검표·시각별 줄 같은 규칙) · src = [이번 원천, 직전 원천] 없으면 원천 안 봄(선물) */
+  function flowPrevOf(A, t) { return A.filter((y) => y && y.at && y.at < t).slice(-1)[0] || null; }
+  function flowMarkGap(cur, prev, step, tc, tp, src) { const m = src ? flowMarkSrc(cur, prev, step, src[0], src[1]) : flowMark(cur, prev, step), c = hmMin(tc), p = hmMin(tp); return m && c !== null && p !== null && c - p > NOW_GAP ? { t: "비교 안 함", c: "z" } : m; }
+  /* 9.29-154 원장 [집2641][집2645] 좋음/나쁨 비교 한 곳: 재판정 값 줄·점검표가 같이 씀 · 선물 값이 새로 안 왔으면(중계·폴백 = 선물 안 덮음 · 줄 fa = 그 값의 회차 시각) 그 회차의 앞 회차와 비교(같은 값끼리 비교 0) · 입력 = 그날 기록 intra.* · 직전 회차 = intra.list 에서 intra.at 바로 앞 · 선물 = fmk(늘 네이버) · 주식·프로그램 = fms(원천 같을 때만) */
+  function intraCmp(a) {
+    let L = []; try { L = JSON.parse(a["intra.list"] || "[]"); } catch (e) {} if (!Array.isArray(L)) L = [];
+    const at = a["intra.at"] || "", cr = L.find((x) => x && x.at === at), fa = (cr && cr.fa) || at, pv = flowPrevOf(L, at), pf = flowPrevOf(L, fa);
+    return { L, fmk: (cur, k, step) => flowMarkHtml(flowMarkGap(cur, pf ? pf[k] : null, step, fa, pf && pf.at)), fms: (cur, k, step) => flowMarkHtml(flowMarkGap(cur, pv ? pv[k] : null, step, at, pv && pv.at, [a["intra.src"], pv && pv.src])) };
+  }
   const ALL_MAX_MS = 15 * 60 * 1000;
   /* live.json 회차가 통합 값이면 그 investAll · 중계(1분 덮기)가 그보다 15분 넘게 새로우면 null(→ 네이버 값) */
   function liveAllOf(L) { const all = invAllOf(L && L.investAll); if (!all || !all.kospi || !L.intra || L.intra.src !== "all") return null; const fr = L.fresh && L.fresh.overlay && typeof L.fresh.ts === "number" ? L.fresh.ts : null; return fr !== null && typeof all.ts === "number" && fr - all.ts > ALL_MAX_MS ? null : all; }
@@ -4681,9 +4691,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const el = $("intraInfo"); if (!el) return;
     const a = S.auto || {}, it = r.intraday, n = (v) => (v === null || v === undefined || v === "" ? "—" : (Number(v) > 0 ? "+" : "") + Number(v).toLocaleString("ko-KR"));
     const kq = (() => { try { const x = JSON.parse(a["intra.kospiLv"] || "null"); return Array.isArray(x) ? idxQuote(x[0], x[1]) : null; } catch (e) { return null; } })(); // 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1656]) · 수준값 없으면 등락률만 · 늘 2자리(idxQuote · 9.29-96 꼬리 방어)
-    let L = []; try { L = JSON.parse(a["intra.list"] || "[]"); } catch (e) {} if (!Array.isArray(L)) L = [];
     /* 9.29-144 원장 [집2584][집2585] 쉬운 말 · 종합 낱말(「→ 그대로」) 0 · 항목마다 「좋음/나쁨/중립」(5분 전 회차 대비 · flowMark) — 판정(shared/rules.js INTRA · r.intraday)·규칙 값 무변 · 글만 */
-    const pv = L.filter((x) => x && x.at && x.at < (a["intra.at"] || "")).slice(-1)[0] || null, fmk = (cur, k, step) => flowMarkHtml(flowMark(cur, pv ? pv[k] : null, step)), fms = (cur, k, step) => flowMarkHtml(flowMarkSrc(cur, pv ? pv[k] : null, step, a["intra.src"], pv && pv.src)); /* 9.29-153 주식·프로그램 = 원천 같을 때만 비교 · 선물 = 늘 네이버 */
+    const { L, fmk, fms } = intraCmp(a); /* 9.29-153 주식·프로그램 = 원천 같을 때만 비교 · 선물 = 늘 네이버 · 9.29-154 점검표와 같은 함수 */
     const vals = a["intra.at"] ? `🤖 ${esc(a["intra.at"])} · 코스피 ${kq ? esc(kq) : esc(n(a["intra.kospi"])) + "%"} · 외국인 선물(순매수) ${esc(n(a["intra.fut"]))}억${fmk(a["intra.fut"], "f", FLOW_STEP.f)} · 외국인 주식 ${esc(n(a["intra.spotF"]))}억${fms(a["intra.spotF"], "sf", FLOW_STEP.s)} · 기관 주식 ${esc(n(a["intra.spotI"]))}억${fms(a["intra.spotI"], "si", FLOW_STEP.s)}${a["intra.prog"] !== undefined && a["intra.prog"] !== "" ? ` · 프로그램(순매수) ${esc(n(a["intra.prog"]))}억${fms(a["intra.prog"], "pg", FLOW_STEP.pg)}` : ""}` : "🤖 평일 장중 5분마다 자동으로 확인해요 (GitHub가 늦을 수 있음)";
     /* 9.29-112 원장 [집2368] 쉽게: ① 결론 한 줄 ② 「이 기능은?」 ③ 지표 3줄 표(이름 | 지금 | 기준 | 넘음/안 넘음) ④ 회차 기록·규칙 원문·미검증 안내 = 「자세히」(#intraMore) — 판정은 r.intraday(shared/rules.js) 그대로 · 9.29-150 [집2614] 선물 단위 = 억원(다음 금융 금액(억원)과 20분 차이로 같음 실측 · FUT_LAG) */
     const num = (v) => (v === null || v === undefined || v === "" || !isFinite(Number(v)) ? null : Number(v)), eo = (v, u) => (v === null ? "—" : n(v) + u);
@@ -4695,8 +4704,8 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const what = `<div class="iwhat">이 기능은? 장중 5분마다 외국인이 사는지 파는지 봐요. 선물과 프로그램으로 같이 크게 팔면 오늘 모드를 한 단계 낮춰요. (숫자 기준은 「자세히」)</div>`;
     const rule = `<div class="irule">숫자 기준: 외국인 선물 ${INTRA.fut.toLocaleString("ko-KR")}억 이하 + 프로그램 ${INTRA.program.toLocaleString("ko-KR")}억 이하가 함께면 한 단계 낮춤 (프로그램 값이 없으면 외국인+기관 주식 ${INTRA.spot.toLocaleString("ko-KR")}억 이하로 대신)</div>`; // 9.29-109 게이트: shared/rules.js 와 같은 규칙 한 줄 · 9.29-144 [집2585] 쉬운 말(값 무변)
     const sOf = (x) => (!x || (x.sf === null && x.si === null) ? null : (x.sf || 0) + (x.si || 0)), num0 = (v) => (typeof v === "number" && isFinite(v) ? v : null);
-    const rd = (x, i, A) => { const s = sOf(x), pr = i > 0 ? A[i - 1] : null, f = num0(x.f), g = num0(x.pg); return `<div class="irow"><b>${esc(x.at)} <small class="isrc">${SRC_TXT[flowSrc(x.src)]}</small></b><span>외국인 선물(순매수) ${esc(eo(f, "억"))}${flowMarkHtml(flowMark(f, pr ? num0(pr.f) : null, FLOW_STEP.f))} · 외국인+기관 주식 ${esc(eo(s, "억"))}${flowMarkHtml(flowMarkSrc(s, sOf(pr), FLOW_STEP.s, x.src, pr && pr.src))}${g !== null ? " · 프로그램(순매수) " + esc(eo(g, "억")) + flowMarkHtml(flowMarkSrc(g, pr ? num0(pr.pg) : null, FLOW_STEP.pg, x.src, pr && pr.src)) : ""}</span></div>`; }; /* 9.29-144 [집2584] 「→ 낮춤/그대로」 종합 낱말 0 · 항목마다 5분 전 대비 좋음/나쁨/중립 */
-    const rounds = L.length ? `<div class="iflowh">시각별 외국인 흐름 (외국인 선물(순매수) = 외국인 코스피200 선물 · ${FUT_LAG} · 외국인+기관 주식·프로그램 = 코스피 · 줄마다 통합/네이버 · 5분 전보다 더 사면 좋음 · 더 팔면 나쁨 · 조금 바뀌면 중립 · 원천이 바뀐 줄은 비교 없음)</div><div class="irounds">${L.map(rd).slice(-6).join("")}</div>` : ""; // 9.29-109 원장 [2298] 최근 6회만 · 맨 앞 회차도 그 앞 회차와 비교(slice 전에 map)
+    const rd = (x, i, A) => { const s = sOf(x), pr = i > 0 ? A[i - 1] : null, pF = x.fa ? flowPrevOf(A, x.fa) : pr, f = num0(x.f), g = num0(x.pg); return `<div class="irow"><b>${esc(x.at)} <small class="isrc">${SRC_TXT[flowSrc(x.src)]}</small></b><span>외국인 선물(순매수) ${esc(eo(f, "억"))}${flowMarkHtml(flowMarkGap(f, pF ? num0(pF.f) : null, FLOW_STEP.f, x.fa || x.at, pF && pF.at))} · 외국인+기관 주식 ${esc(eo(s, "억"))}${flowMarkHtml(flowMarkGap(s, sOf(pr), FLOW_STEP.s, x.at, pr && pr.at, [x.src, pr && pr.src]))}${g !== null ? " · 프로그램(순매수) " + esc(eo(g, "억")) + flowMarkHtml(flowMarkGap(g, pr ? num0(pr.pg) : null, FLOW_STEP.pg, x.at, pr && pr.at, [x.src, pr && pr.src])) : ""}</span></div>`; }; /* 9.29-144 [집2584] 「→ 낮춤/그대로」 종합 낱말 0 · 항목마다 5분 전 대비 좋음/나쁨/중립 */
+    const rounds = L.length ? `<div class="iflowh">시각별 외국인 흐름 (외국인 선물(순매수) = 외국인 코스피200 선물 · ${FUT_LAG} · 외국인+기관 주식·프로그램 = 코스피 · 줄마다 통합/네이버 · 직전 회차보다 더 사면 좋음 · 더 팔면 나쁨 · 조금 바뀌면 중립 · 원천이 바뀐 줄은 비교 없음 · ${NOW_GAP}분 넘게 떨어지면 비교 안 함)</div><div class="irounds">${L.map(rd).slice(-6).join("")}</div>` : ""; // 9.29-109 원장 [2298] 최근 6회만 · 맨 앞 회차도 그 앞 회차와 비교(slice 전에 map)
     const tab = `<div class="itab"><span class="ih">지표</span><span class="ih in">지금</span><span class="ih ic">기준</span><span class="ih ij">판단</span>${[["외국인 선물(순매수)", eo(pf, "억"), INTRA.fut.toLocaleString("ko-KR") + "억 이하", pf, pf !== null && pf <= INTRA.fut], ["외국인+기관 주식", eo(sp, "억"), INTRA.spot.toLocaleString("ko-KR") + "억 이하", sp, sp !== null && sp <= INTRA.spot], ["프로그램(순매수)", eo(pp, "억"), INTRA.program.toLocaleString("ko-KR") + "억 이하", pp, pp !== null && pp <= INTRA.program]].map(([l, v, c, raw, hit]) => `<span class="il">${l}</span><span class="in">${esc(v)}</span><span class="ic">${esc(c)}</span><span class="ij${hit ? " hit" : ""}">${raw === null ? "값 없음" : hit ? "넘음" : "안 넘음"}</span>`).join("")}</div>`;
     /* 9.29-153 원장 [집2635] 판정 입력 범위: 주식 = intra.src · 프로그램 칸 = signals.progSrc(손으로 고쳤으면 「손 입력」) · 같으면 한 줄 */
     const sp0 = (S.signals || {}).prog, progHand = sp0 !== undefined && sp0 !== null && sp0 !== "" && String(sp0) !== String(a["signals.prog"] ?? ""), sT = scopeTxt(a["intra.src"], a["intra.at"]), pT = progHand ? "손 입력" : scopeTxt(a["signals.progSrc"], a["signals.progAt"]);
@@ -6700,7 +6709,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (itd && itd.at && !(st.auto["intra.at"] && itd.at < st.auto["intra.at"])) { // 9.29-109: 더 늦은 값(live 5분)이 이미 있으면 이른 값으로 안 되돌림
       const sa = (k, v) => { v = v === undefined || v === null ? "" : String(v); if (st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, itd.ts]); } };
       sa("intra.at", itd.at); sa("intra.src", itd.src === "all" ? "all" : "naver"); sa("intra.prog", itd.program && itd.program.total); sa("intra.fut", itd.fut && itd.fut.foreign); sa("intra.spotF", itd.spot && itd.spot.foreign); sa("intra.spotI", itd.spot && itd.spot.institution); sa("intra.kospi", itd.kospi);
-      sa("intra.list", JSON.stringify([...(Array.isArray(itd.list) ? itd.list : []), itd].filter((x) => x && x.at).map((x) => ({ at: x.at, f: x.fut ? x.fut.foreign : null, sf: x.spot ? x.spot.foreign : null, si: x.spot ? x.spot.institution : null, pg: x.program && typeof x.program.total === "number" ? x.program.total : null, ...(x.src === "all" ? { src: "all" } : {}) })).filter((x, i, A) => A.findIndex((y) => y.at === x.at) === i))); // 9.29-108 원장 [2273] 회차별
+      sa("intra.list", JSON.stringify([...(Array.isArray(itd.list) ? itd.list : []), itd].filter((x) => x && x.at).map((x) => ({ at: x.at, f: x.fut ? x.fut.foreign : null, sf: x.spot ? x.spot.foreign : null, si: x.spot ? x.spot.institution : null, pg: x.program && typeof x.program.total === "number" ? x.program.total : null, ...(x.src === "all" ? { src: "all" } : {}), ...(x.futAt && x.futAt !== x.at ? { fa: x.futAt } : {}) })).filter((x, i, A) => A.findIndex((y) => y.at === x.at) === i))); // 9.29-108 원장 [2273] 회차별
       sa("intra.kospiLv", itd.kospiLv && typeof itd.kospiLv.close === "number" && typeof itd.kospiLv.prev === "number" ? JSON.stringify([itd.kospiLv.close, itd.kospiLv.prev]) : ""); // 장중 지수·전일 종가 → 「코스피 6,941.39 ▼62.35 (-0.89%)」 (9.29-87 원장 [1656])
     }
     // 프로그램 순매수(억): 마감 확정값(close.market.program) 이 있으면 그것, 아니면 장중 누적(intraday.program). 손으로 넣은 값이 있으면 그대로 둔다
@@ -6952,7 +6961,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       l = l || await pubGet(PUB_RAW + "live.json"); livePrevMemo(l); livePrevFill(l, LIVE_PREV);
       liveChecked = kstHM(); if (l && l.date <= kstDate() && (!LIVE || liveKey(l) !== liveKey(LIVE))) LIVE = l; if (LIVE) paintTopLead();
       if (LIVE && LIVE.intra && LIVE.intra.at && isValidDate(LIVE.date)) { const fr = LIVE.fresh && LIVE.fresh.overlay && typeof LIVE.fresh.at === "string" && !liveAllOf(LIVE) ? LIVE.fresh : null, at = fr ? fr.at.slice(0, 5) : LIVE.intra.at; /* 9.29-153 [집2635] 통합 회차 = 그 회차 값·시각 그대로(중계 네이버 1분 값과 안 섞음 · 시각을 중계로 바꾸면 같은 값끼리 비교돼 늘 중립) */ // 9.29-109 원장 [2298]: 중계(1분) 값이면 그 시각 · 코스피·현물·프로그램 = 중계 값 · 선물 = 중계에 있으면 그것, 없으면 마지막 live 회차
-        const cur = liveAllOf(LIVE) ? Object.assign({}, LIVE.intra) : { at, src: "naver", fut: LIVE.fut || LIVE.intra.fut, spot: LIVE.invest ? { foreign: LIVE.invest.foreign, institution: LIVE.invest.institution } : LIVE.intra.spot, kospi: LIVE.kospi ? LIVE.kospi.value : LIVE.intra.kospi, kospiLv: LIVE.kospi && typeof LIVE.kospi.close === "number" && typeof LIVE.kospi.prev === "number" ? { close: LIVE.kospi.close, prev: LIVE.kospi.prev } : LIVE.intra.kospiLv, program: LIVE.program || LIVE.intra.program };
+        const cur = liveAllOf(LIVE) ? Object.assign({}, LIVE.intra) : { at, src: "naver", fut: LIVE.fut || LIVE.intra.fut, spot: LIVE.invest ? { foreign: LIVE.invest.foreign, institution: LIVE.invest.institution } : LIVE.intra.spot, kospi: LIVE.kospi ? LIVE.kospi.value : LIVE.intra.kospi, kospiLv: LIVE.kospi && typeof LIVE.kospi.close === "number" && typeof LIVE.kospi.prev === "number" ? { close: LIVE.kospi.close, prev: LIVE.kospi.prev } : LIVE.intra.kospiLv, program: LIVE.program || LIVE.intra.program, futAt: !LIVE.fut || (LIVE.intra.fut && LIVE.fut.foreign === LIVE.intra.fut.foreign) ? LIVE.intra.at : at }; /* 9.29-154 [집2645] 선물 값이 그 회차 그대로면 회차 시각 */
         applyAuto(LIVE.date, { date: LIVE.date, intraday: Object.assign({ ts: LIVE.ts, list: (LIVE.intraRuns || []).filter((x) => x.at !== at).map((x) => ({ at: x.at, fut: { foreign: x.f }, spot: { foreign: x.sf, institution: x.si }, program: typeof x.pg === "number" ? { total: x.pg } : null, src: x.src })) }, cur) }); } } // 9.29-109 원장 [2298] 장중 재판정 5분마다(live.json 의 intra · intraRuns → 재판정 칸)
     catch (e) {} finally { liveBusy = false; }
   }
