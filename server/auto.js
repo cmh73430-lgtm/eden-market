@@ -792,14 +792,19 @@ export async function collectCloseSnap({ sources, adapters, now = new Date() }) 
   return out;
 }
 
-// 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버)
-export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, leaders = null, listings = null, candles = null, saveCandles = CANDLE_SAVE }) {
+// 9.29-158 gate [집2672] ①: 받은 값의 날짜(지수 시각 · 수급·프로그램 bizdate)가 그 거래일과 다르면 그 칸은 저장 안 함 — 늦은 실행·지난 날 --date 가 다른 날 값을 넣는 길 차단
+//  날짜 글자 → YYYYMMDD(앞 8자리 숫자 · ISO 「2026-10-08T15:30…」·「20261008」 둘 다) · 날짜를 못 읽으면 null(검사 못 함 → 예전처럼 둠)
+export const day8 = (s) => { const d = String(s ?? "").replace(/[^0-9]/g, ""); return d.length >= 8 ? d.slice(0, 8) : null; };
+export const dayMismatch = (got, date) => { const g = day8(got); return !!(date && g && g !== day8(date)); };
+// 오후: 코스피·코스닥 마감 등락률 + 투자자별 수급 (네이버) · date(그 거래일) 를 주면 받은 값 날짜 검사(다르면 그 칸 빼고 errors · out.dateSkip 에 칸 이름)
+export async function collectClose({ adapters, fetchImpl = fetch, now = new Date(), timeoutMs = 10000, leaders = null, listings = null, candles = null, saveCandles = CANDLE_SAVE, date = null }) {
   const out = { at: kstTime(now).slice(0, 5), ts: now.getTime(), market: {}, errors: [] };
-  const inv = {};
+  const inv = {}, skipD = (key, got) => { out.errors.push(`${key}: 받은 값 날짜 ${got} ≠ ${date} — 저장 안 함`); (out.dateSkip || (out.dateSkip = [])).push(key); };
   for (const k of ["kospi", "kosdaq"]) {
     const code = k.toUpperCase();
     try {
       const q = await adapters.naver.quote("domestic:" + code);
+      if (dayMismatch(q.time, date)) skipD(k, q.time); else
       out.market[k] = { value: Number(((q.price / q.prevClose - 1) * 100).toFixed(2)), close: q.price, change: Number((q.price - q.prevClose).toFixed(2)), amount: q.amount || undefined, src: "naver", time: q.time || undefined }; // change = 전일 대비(원) — 블로그 '코스피 7,003.74 ▲32.30 (+0.46%)' 용 (9.29-86 원장 [1624])
     } catch (e) { out.errors.push(k + ": " + (e.message || e)); }
     try {
@@ -808,13 +813,15 @@ export async function collectClose({ adapters, fetchImpl = fetch, now = new Date
         signal: AbortSignal.timeout(timeoutMs),
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      inv[k] = parseTrend(await res.json());
-      if (out.market[k] && out.market[k].amount) inv[k].amount = out.market[k].amount;
+      const tr = parseTrend(await res.json());
+      if (dayMismatch(tr.bizdate, date)) skipD(k + " 수급", tr.bizdate); else inv[k] = tr;
+      if (inv[k] && out.market[k] && out.market[k].amount) inv[k].amount = out.market[k].amount;
     } catch (e) { out.errors.push(k + " 수급: " + (e.message || e)); }
   }
-  if (Object.keys(inv).length) out.market.invest = Object.assign({ text: investText(inv) }, inv);
-  try { out.market.programQ = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); } // 블로그 수급 줄 (9.29-74)
-  try { out.market.program = await fetchProgram(fetchImpl, { timeoutMs }); } catch (e) { out.errors.push("프로그램: " + (e.message || e)); } // 마감 프로그램 순매수(억) → 장 흐름 문장·프로그램 칸
+  const invSkip = (out.dateSkip || []).some((x) => / 수급$/.test(x)); /* 9.29-158: 한쪽이라도 날짜가 다르면 수급 상자 전체를 빼고 앞선 값 유지 대상(섞인 날 0) */
+  if (invSkip) out.dateSkip.push("invest"); else if (Object.keys(inv).length) out.market.invest = Object.assign({ text: investText(inv) }, inv);
+  try { const pq = await fetchProgram(fetchImpl, { code: "KOSDAQ", timeoutMs }); if (dayMismatch(pq.bizdate, date)) skipD("programQ", pq.bizdate); else out.market.programQ = pq; } catch (e) { out.errors.push("코스닥 프로그램: " + (e.message || e)); } // 블로그 수급 줄 (9.29-74)
+  try { const pg = await fetchProgram(fetchImpl, { timeoutMs }); if (dayMismatch(pg.bizdate, date)) skipD("program", pg.bizdate); else out.market.program = pg; } catch (e) { out.errors.push("프로그램: " + (e.message || e)); } // 마감 프로그램 순매수(억) → 장 흐름 문장·프로그램 칸
   if (leaders) {
     try {
       const l = await leaders(out.market); // 코스피 등락률·거래대금(T·초과수익 게이트) 을 넘긴다

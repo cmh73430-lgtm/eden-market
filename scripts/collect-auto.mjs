@@ -14,6 +14,7 @@
 //   RVOL 20일 평균은 중계 /day 일봉(실패하면 네이버 일봉) · 직전 live.json 의 shadow.rvolCache(하루 1회) 를 이어 쓴다 · 뉴스 캐시·하루 상한도 live.json 의 news2 에서 이어 씀
 //   성적표: 확정 close run(close.at ≥ 16:20) 이 auto/observe/leaders-scorecard.json 에 오늘 선정(a 확정 · b 잠정 · c live 마지막 · s shadow)을 적고 지난 행 D+1~D+4 를 채운다
 // 옵션 추가: --trace (요청 수·걸린 시간 출력 · 재현용)
+// 옵션 추가(9.29-158 원장 [집2664]): --cron="분 시 * * 요일" = 예약 칸(eden/collect.yml 이 github.event.schedule 를 넘김) → 종류·날짜·허용 창을 server/slot.js 표로 고정 · 늦게 돈 실행은 그 칸의 거래일 · 창 밖 = 저장 0 · 칸 없으면 예전처럼 지금 시각
 // 아침 브리핑 (9.29-97 원장 [1775][1779][1780] t일정뉴스 · server/brief.js): 07:00 뒤 아침 run(07:05·08:05) 이 ① IR 실적 ② 공시 ③ 미국 큰 폭 ④ 국내 종목 뉴스를 받아 날짜 파일 최상위 brief 에 둔다 (morning 블록 밖)
 //   09:32·10:02 장중 run(10:20 전 시작 · 9.29-108 부터 장중은 09:32~14:32 30분마다)은 ② 공시만 한 번 더 · 섹션마다 받은 것만 덮고 실패하면 지난 값 유지 · 하루 요청 상한 BRIEF_DAILY_MAX · --brief 면 시각과 관계없이 4묶음
 //   SK하이닉스 ADR(SKHY) 환산 (원장 [1784]): 아침 run 이 한국 SK하이닉스 전일 종가 1회 + 지난 파일의 괴리 이력(요청 0)
@@ -29,6 +30,7 @@ import { autoFile, AUTO_DIR, collectLive, collectClose, collectMorning, collectP
 import { memoGet, TOP10_CODES } from "../server/shadow.js";
 import { MAP_FILE, mapStale, buildThemeMap, collectSurgeLeaders, fillFinalFlows, SURGE_V, REGULAR_AFTER, attachAlerts, attachHeat, AB_FILE, AB_RUNS_MAX, abRunOf, abScore, abUpsert, abNext, abSummary, abNeutralDay, abNeutralNext } from "../server/surge.js"; // 9.29-100 급등 묶음 선정 (원장 [1845]~[1850])
 import { collectScorecard, scText, SC_FILE } from "../server/scorecard.js";
+import { slotRun, slotText, morningEarly, onTimeBlock, closeAtFor, mergeRuns, AB_RUNS_KEY, usCloseKst } from "../server/slot.js"; /* 9.29-158 원장 [집2664] 수집 시각·날짜 고정(예약 칸 → 종류·날짜·허용 창) */
 import { ldsDupDays, ldsLatestA } from "../shared/leaders-score.js";
 import { CAUTION_FILE, CAUTION_KEEP, loadCautions, tagAvoidAll, avoidText } from "../server/caution.js";
 import { collectForward, fwdText, fwdShouldSave, FWD_FILE, FWD_BUDGET_MS } from "../server/usforward.js"; /* 9.29-105 원장 [2132] ③ 미국장 테마 전진 기록 */
@@ -48,9 +50,15 @@ const T0 = Date.now(); let FETCH_N = 0;
 if (has("trace")) { const f0 = globalThis.fetch; globalThis.fetch = (...a) => { FETCH_N++; return f0(...a); }; process.on("exit", () => console.log(`[trace] 요청 ${FETCH_N}회 · ${((Date.now() - T0) / 1000).toFixed(1)}초`)); }
 const BRANCH = process.env.AUTO_BRANCH || "cockpit-data"; // 공개 저장소 eden-market 은 main
 const now = new Date();
-const date = arg("date", kstDate(now));
-const when = arg("when", whenOf(now));
 const cfg = loadCollectConfig();
+/* 9.29-158 원장 [집2664] 수집 시각·날짜 고정: 워크플로가 예약 칸(github.event.schedule)을 --cron= 으로 넘기면 칸 표(server/slot.js SLOTS)로 종류·날짜를 정한다
+   늦게 돈 실행 = 그 칸이 속한 거래일(예: 20:20 칸이 다음 날 03:58 에 돌면 전날 「마감」) · 허용 창 밖이면 저장 0 + 로그 · 「지금 시각」 추정(whenOf·kstDate)은 칸이 없는 수동 실행만 · --when·--date 를 주면 그것이 먼저 */
+const SLOT = slotRun(arg("cron", ""), now, cfg.holidays);
+if (SLOT && SLOT.skip) { console.log(slotText(SLOT)); process.exit(0); } /* gate [집2672] ②: 칸을 주면 허용 창 검사는 --when 을 같이 줘도 항상 */
+const date = arg("date", (SLOT && SLOT.date) || kstDate(now));
+const when = arg("when", (SLOT && SLOT.when) || whenOf(now));
+const slotMeta = SLOT && SLOT.slot && arg("date") === undefined && when === SLOT.when ? SLOT.slot : null; /* --when 이 칸 종류와 같으면 칸 기록 유지 · 다르면 칸 기록 없음(날짜는 칸 날짜) */ // 블록마다 남기는 칸 기록 { name, date, at(예정) · ranDate·ranAt(실제 받은 날·시각) · delayMin · late(늦게 받음) }
+if (SLOT) console.log(slotText(SLOT));
 
 const skip = skipReason(date, cfg.holidays, cfg.holidayNames);
 if (skip && !has("force")) { console.log(`${date} ${skip} — 건너뜀`); process.exit(0); }
@@ -107,6 +115,20 @@ async function writeFile(path, obj, message) {
 }
 
 const save = !has("dry") && token && repo;
+/* 9.29-158: latest.json 은 더 새 날짜를 이미 담고 있으면 늦게 온 지난 날 run 이 덮지 않음(예: 전날 마감 칸이 다음 날 아침 run 뒤에 도착) */
+async function writeLatest(rec, msg) {
+  const cur = await readFile(AUTO_DIR + "/latest.json").catch(() => ({ json: null }));
+  if (cur.json && typeof cur.json.date === "string" && cur.json.date > rec.date) { console.log(`latest.json 은 더 새 날짜(${cur.json.date}) — ${rec.date} 값으로 덮지 않음`); return; }
+  await writeFile(AUTO_DIR + "/latest.json", rec, msg);
+}
+/* 9.29-158 원장 [집2664] ④: 장중 회차(abRuns)를 날짜 파일 최상위 abRuns 에도 보관 — live.json 은 다음 날 첫 실시간이 덮어 지난 날 회차가 git 이력에만 남았음(155 A 1-4) · 그 날 파일이 있을 때만 · 실패해도 본 작업 그대로 */
+async function keepRuns(d, runs) {
+  try {
+    const f = await readFile(autoFile(d)); if (!f.json || f.json.date !== d) return;
+    const merged = mergeRuns(f.json[AB_RUNS_KEY], runs); if (JSON.stringify(merged) === JSON.stringify(f.json[AB_RUNS_KEY] || [])) return;
+    f.json[AB_RUNS_KEY] = merged; await writeFile(autoFile(d), f.json, `자동 연동 ${d} 장중 회차 보관 ${merged.length}`); console.log(`${d} 장중 회차 ${merged.length}개 날짜 파일에 보관`);
+  } catch (e) { console.log("장중 회차 보관 실패:", e.message || e); }
+}
 // ---- 그림자 V2 · 뉴스 v2 입력 (9.29-84) ----
 // RVOL 20일 평균용 일봉: 중계 /day(종가×거래량 근사 · 앱과 같은 길) → 못 받으면 네이버 일봉(C 등급 계산과 같은 주소). server/shadow.js barRows 가 두 모양 다 읽는다
 const RELAY = "https://eden-chart.cmh-eden.workers.dev", NV_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
@@ -151,6 +173,7 @@ if (when === "live") {
   const hm = kstTime(now).slice(0, 5), slot = liveSlot(hm);
   if (!has("force") && !slot) { console.log(`${hm} 장중 아님 — 건너뜀`); process.exit(0); }
   if (!has("force") && save && savedRecently((await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json, Date.now())) { console.log("방금 받음 — 건너뜀"); process.exit(0); }
+  if (save) { const old = (await readFile(AUTO_DIR + "/live.json").catch(() => ({ json: null }))).json; if (old && typeof old.date === "string" && old.date < date && Array.isArray(old.abRuns) && old.abRuns.length) await keepRuns(old.date, old.abRuns); } /* 9.29-158: 오늘 첫 실시간이 지난 날 live.json 을 덮기 전에 그 날 회차를 그 날 파일로 */
   const tm = save ? (await readFile(autoFile(date)).catch(() => ({ json: null }))).json : null;
   const pl = await prevLive(); // 뉴스 캐시 (오늘 것만)
   const tmap = await loadThemeMap(); // 9.29-100 테마 구성표 (없을 때만 새로 만듦)
@@ -200,14 +223,17 @@ if (when === "afterlive") {
 
 // ---- 「오후 4시 기준」 묶음 (--when=close1600 · 16:00 KST run · 9.29-87 원장 [1662]~[1666]): 미국 선물 4종·코스피200 선물·원달러·WTI·비트코인만 받아 날짜 파일 「장마감_1600」 에 저장 (close 블록은 손대지 않음 · 실패 항목은 errors · 지어내기 0) ----
 if (when === "close1600") {
+  /* 9.29-158: 늦게 받은 값(slot.late · 16:30 뒤)은 그 날 「제때」 값이 이미 있으면 덮지 않음 · 18:00 뒤는 위 칸 창에서 이미 건너뜀 */
+  if (slotMeta && slotMeta.late && save) { const ex = (await readFile(autoFile(date)).catch(() => ({ json: null }))).json; if (ex && ex.date === date && onTimeBlock("close1600", ex[CLOSE_SNAP_KEY], date)) { console.log(`${date} 오후 4시 기준 제때 값(${ex[CLOSE_SNAP_KEY].at}) 있음 — 늦게 받은 값으로 덮지 않음`); process.exit(0); } }
   const snap = await collectCloseSnap({ sources: cfg.sources, adapters: { naver, yahoo, upbit }, now });
+  if (slotMeta) snap.slot = slotMeta;
   console.log(`오후 4시 기준 ${snap.at} · ` + CLOSE_SNAP_ITEMS.map(([k, n]) => { const x = snap.items[k]; return x ? `${n} ${x.price} (${x.pct > 0 ? "+" : ""}${x.pct}%)` : `${n} 없음`; }).join(" · "));
   if (snap.errors.length) console.log("일부 실패:", snap.errors.join(" / "));
   if (!Object.keys(snap.items).length) { console.error("받은 값이 하나도 없음"); process.exit(1); }
   if (save) {
     await ensureBranch();
-    const rec = mergeAuto((await readFile(autoFile(date))).json, date, CLOSE_SNAP_KEY, snap), msg = `자동 연동 ${date} 오후 4시 기준 ${snap.at}`;
-    await writeFile(autoFile(date), rec, msg); await writeFile(AUTO_DIR + "/latest.json", rec, msg);
+    const rec = mergeAuto((await readFile(autoFile(date))).json, date, CLOSE_SNAP_KEY, snap), msg = `자동 연동 ${date} 오후 4시 기준 ${snap.at}${slotMeta && slotMeta.late ? " (늦게 받음)" : ""}`;
+    await writeFile(autoFile(date), rec, msg); await writeLatest(rec, msg);
     console.log(`저장: ${autoFile(date)} ${CLOSE_SNAP_KEY} (${BRANCH})`);
   } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
   process.exit(0);
@@ -216,6 +242,9 @@ const prevDay = prevBusinessDay(date, cfg.holidays); // 어제(직전 거래일)
 const prev = save ? (await ensureBranch(), await readFile(autoFile(date))) : { json: null };
 const keep = prev.json && prev.json.date === date && prev.json.morning && prev.json.morning.prev; // 8:05 수집은 7:05에 고른 전일 테마를 이어 쓴다
 const todayMorning = prev.json && prev.json.date === date ? prev.json.morning : null;
+/* 9.29-158 ③ 아침 값 정직성: 미국장 마감(서머타임 05:00 · 아니면 06:00) 전에 받은 아침 = 「마감 전 값」(11/11~11/13 03:4x 실측) → 저장 안 함(--force 만) · 늦게 받은 아침(09:00 뒤)은 그 날 제때 아침이 있으면 덮지 않음 */
+if (when === "morning" && !has("force") && morningEarly(date, now)) { console.log(`${date} 아침: 미국장 마감(${usCloseKst(date)}) 전 ${kstDate(now)} ${kstTime(now).slice(0, 5)} — 마감 전 값이라 저장 안 함`); process.exit(0); }
+if (when === "morning" && slotMeta && slotMeta.late && onTimeBlock("morning", todayMorning, date)) { console.log(`${date} 아침: 제때 받은 값(${todayMorning.at}) 있음 — 늦게 받은 값(${slotMeta.ranAt})으로 덮지 않음`); process.exit(0); }
 // 지난 거래일 파일들(최근 먼저, 최대 n개): 코스피 거래대금 20일 평균(관망) · 테마 목록(지속일수 D) · 전일 수급(2일 연속). 빈 날이 5번 이어지면 그만 (첫 수집 2026-09-28 이전)
 async function loadHistory(from, n = 20) {
   if (!save) return [];
@@ -307,9 +336,13 @@ let part = when === "intraday"
   ? await collectThemesOnly({ themes: cfg.themes, sources: cfg.sources, adapters: { naver, yahoo, upbit }, now, morning: todayMorning })
   : when === "morning"
   ? await collectMorning({ sources: cfg.sources, themes: cfg.themes, adapters: { naver, yahoo, upbit, tradingview, kis }, now, holidays: cfg.holidays, date, prevThemes: (m) => collectPrevThemes({ keep, bizdate: prevDay.replace(/-/g, ""), leaders: prevClose.leaders || null, us: m.us, kospi: prevClose.kospi || null, afterKnown: afterLeadMap(prevFile.json && prevFile.json[AFTER_KEY]) }), listings: () => fetchListings(fetch, { today: date }), adr: { krClose: () => fetchKrClose(fetch, "000660", date), hist: skhyHist() } })
-  : await collectClose({ adapters: { naver }, now, leaders: closeLeaders, listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
+  : await collectClose({ adapters: { naver }, now, date, leaders: closeLeaders, listings: () => fetchListings(fetch, { today: date }), candles: (leaders, cache) => collectCandles({ date, leaders, morning: todayMorning, cache }) }); // 신규 상장 예정 · 앱 차트용 일봉 (9.29-76 원장 [1500] · [1502]) · 그림자 V2 (9.29-84)
 // 같은 날 앞선 close run 과 합친다: 잠정 → 확정이면 잠정은 leadersProvisional 로 보관, 확정 뒤 잠정이 늦게 오면 확정 유지 (server/auto.js mergeCloseLeaders)
 if (when === "close" && prev.json && prev.json.date === date && prev.json.close) mergeCloseLeaders(prev.json.close, part);
+/* 9.29-158 gate [집2672] ①: 받은 값 날짜가 그 거래일과 달라 뺀 칸(collectClose dateSkip)은 같은 날 앞선 run 값 유지(없으면 칸 없음) — 늦은 실행·지난 날 --date 가 다른 날 값을 넣지 않음 */
+if (when === "close" && part.dateSkip && part.market) { const om = prev.json && prev.json.date === date && prev.json.close && prev.json.close.market ? prev.json.close.market : {};
+  for (const k of ["kospi", "kosdaq", "invest", "program", "programQ"]) if (part.dateSkip.includes(k) && !part.market[k] && om[k]) part.market[k] = om[k];
+  console.log(`받은 값 날짜가 ${date} 와 달라 뺀 칸: ${part.dateSkip.join(" · ")} (앞선 값 ${["kospi", "kosdaq", "invest", "program", "programQ"].filter((k) => part.dateSkip.includes(k) && om[k]).join("·") || "없음"} 유지)`); }
 /* 9.29-152 원장 [집2620] ⑤ 마감 수급 통합: 집 PC 파일이 오늘·15분 안이거나 20:00 뒤 끝값이면 close.market.investAll(화면용 · invest·program 은 네이버 그대로) · 못 받으면 같은 날 앞선 run 값 유지 · 그것도 없으면 칸 없음 → 앱 네이버 값 + 「정규만」·「KRX만」 */
 if (when === "close" && part.market) {
   const m0 = kwMarketFromHome(await readKwHome(), { date, nowMs: Date.now(), final: true }), old0 = prev.json && prev.json.date === date && prev.json.close && prev.json.close.market ? prev.json.close.market.investAll : null;
@@ -317,6 +350,7 @@ if (when === "close" && part.market) {
   console.log(m0 ? kwMarketText(m0) + " · " + m0.at : old0 ? "시장 전체 통합: 앞선 run 값 유지 " + old0.at : "시장 전체 통합 없음 — 네이버 값");
 }
 const saveAs = when === "themes" ? "morning" : when; // 테마만 받은 것도 아침 기록에 들어간다
+if (slotMeta && part && typeof part === "object" && saveAs === when) part.slot = slotMeta; /* 9.29-158 ③ 블록에 칸 기록(예정 칸 · 실제 받은 날·시각 · 늦게 받음) — 앱이 「늦게 받음」 구분 · at 은 그대로 실제 받은 시각 */
 const got = when === "intraday" ? ["fut", "spot", "kospi"].filter((k) => part[k] !== undefined).length : saveAs === "morning" ? Object.keys(part.signals).length + Object.keys(part.us).length : Object.keys(part.market).length;
 // 장중 재판정은 하루 여러 번 → 앞선 확인 기록을 이어 붙인다
 if (when === "intraday") intraApplyAll(part, kwMarketFromHome(await readKwHome(), { date, nowMs: Date.now() })); /* 9.29-153 날짜 파일 장중 값도 live 와 같은 규칙 */
@@ -346,7 +380,7 @@ if (when === "close" && !provisional && LD && !LD.provisional) {
     const fixA = {};
     for (const d of ldsDupDays(scOld)) { if (d === date || ((scOld && scOld.days) || []).some((x) => x.date === d && Array.isArray(x.a))) continue;
       try { const j = save ? (await readFile(autoFile(d))).json : await readPublic(autoFile(d)); const L = j && j.close && j.close.market && j.close.market.leaders; if (L && !L.provisional && Array.isArray(L.themes) && L.themes.length) fixA[d] = ldsLatestA(L.themes); } catch (e) {} }
-    sc = await collectScorecard({ date, closeAt: part.at, file: scOld, units: { a: LD.themes, b: b && b.themes, c: pl && pl.themes, s: part.shadow && part.shadow.themes }, allThemes: part.themes, fixA });
+    sc = await collectScorecard({ date, closeAt: closeAtFor(part.at, date, kstDate(now)) /* 9.29-158: 다음 날 받은 확정 마감 = 24:00(그 날 장 끝 뒤) */, file: scOld, units: { a: LD.themes, b: b && b.themes, c: pl && pl.themes, s: part.shadow && part.shadow.themes }, allThemes: part.themes, fixA });
     console.log(scText(sc));
   } catch (e) { sc = null; console.log("성적표 실패:", e.message || e); }
 }
@@ -399,26 +433,31 @@ async function runAfter(rec) {
     return r;
   } catch (e) { console.log("저녁 애프터 실패:", e.message || e); return null; }
 }
-/* 9.29-108 원장 [2287] A·B 자동 채점: 마감 run(잠정 16:20 제외 · 19:45·20:20) 이 오늘 live.json 의 장중 회차(abRuns)를 그날 확정 주도 테마와 맞춰 auto/observe/leaders-ab.json 에 한 줄(같은 날 다시 돌면 그 줄만) · 실패해도 마감 저장 그대로 */
+/* 9.29-108 원장 [2287] A·B 자동 채점: 마감 run(잠정 16:20 제외 · 19:45·20:20) 이 오늘 live.json 의 장중 회차(abRuns)를 그날 확정 주도 테마와 맞춰 auto/observe/leaders-ab.json 에 한 줄(같은 날 다시 돌면 그 줄만) · 실패해도 마감 저장 그대로
+   9.29-158 원장 [집2664] ④: 회차 = live.json(그 날 것) + 날짜 파일 최상위 abRuns(보관분) 합침 · 늦게 온 확정 마감(다음 날 새벽)도 그 날 것으로 채점 · 잠정 run(16:20 · 18:00 전)은 중립 채점(z · 정답표 = 그 시각 close.themes)만 「prov」 표시로 적고 확정 run 이 그 줄을 덮음(확정 줄은 잠정이 안 덮음) */
+let liveRawP = null;
+const liveRaw = () => (liveRawP = liveRawP || (save ? readFile(AUTO_DIR + "/live.json").then((x) => x.json, () => null) : readPublic(AUTO_DIR + "/live.json")));
+async function runsOf(rec) { const lv0 = await liveRaw(); return mergeRuns(rec && rec[AB_RUNS_KEY], lv0 && lv0.date === date ? lv0.abRuns : null); }
 async function runAB(rec) {
-  if (when !== "close" || provisional) return;
+  if (when !== "close") return;
   try {
-    const L = rec && rec.close && rec.close.market ? rec.close.market.leaders : null, lv = save ? (await readFile(AUTO_DIR + "/live.json")).json : await readPublic(AUTO_DIR + "/live.json");
-    let row = lv && lv.date === date ? abScore(lv.abRuns, L, date) : null;
+    const L = rec && rec.close && rec.close.market ? rec.close.market.leaders : null, runs = await runsOf(rec), lv = runs.length ? { date, abRuns: runs } : null;
+    let row = lv && lv.date === date && !provisional ? abScore(lv.abRuns, L, date) : null;
     /* 9.29-143 원장 [집2563][집2565] 중립 정답표 = 그날 마감 네이버 테마 상승률 순위(rec.close.themes · 이미 받은 목록 · 새 요청 0) · A·B·C 같은 자 · 장중(z)은 오늘 회차로 · 다음 날(zn)은 지난 날짜 파일 목록(loadHistory · 같은 호출 재사용)으로 채움 */
     const zTh = rec && rec.close && Array.isArray(rec.close.themes) ? rec.close.themes : null, z = lv && lv.date === date && zTh ? abNeutralDay(lv.abRuns, zTh) : null;
-    if (z) row = row ? Object.assign(row, { z }) : { date, runs: z.runs, pick: z.pick, z };
+    if (z) row = row ? Object.assign(row, { z }) : Object.assign({ date, runs: z.runs, pick: z.pick, z }, provisional ? { prov: true, zAt: rec.close.at } : {});
     let old = null; if (save) { const x = await readFile(AB_FILE); if (x.sha && !x.json) throw new Error(AB_FILE + " 을 못 읽음 — 덮지 않음"); old = x.json; } else old = await readPublic(AB_FILE);
+    if (provisional && row && old && Array.isArray(old.rows) && old.rows.some((r) => r && r.date === date && !r.prov)) { console.log("A·B 채점: 오늘 확정 줄이 이미 있음 — 잠정 중립 채점으로 덮지 않음"); row = null; }
     let file = old, changed = false;
-    if (row) { const u = abUpsert(file, row); file = u.file; changed = u.changed; } else console.log("A·B 채점: 오늘 장중 회차 없음 — 오늘 줄 건너뜀");
-    /* 9.29-110 [2318] 다음 날 적중: 지난 거래일 줄의 마지막 회차 A·B 가 오늘 마감 확정 주도 테마에 재진입했나 · 평균 플러스인가 */
-    const nx = abNext(file, L, date); if (nx.row) { file = nx.file; changed = changed || nx.changed; console.log(`A·B 다음 날 ${nx.row.date} → ${date}: A 재진입 ${nx.row.next.a.re}/3 평균 ${nx.row.next.a.avg === null ? "—" : nx.row.next.a.avg + "%"}${nx.row.next.a.hit ? " 적중" : ""} · B 재진입 ${nx.row.next.b.re}/3 평균 ${nx.row.next.b.avg === null ? "—" : nx.row.next.b.avg + "%"}${nx.row.next.b.hit ? " 적중" : ""}${nx.row.next.c ? ` · C 재진입 ${nx.row.next.c.re}/3 평균 ${nx.row.next.c.avg === null ? "—" : nx.row.next.c.avg + "%"}${nx.row.next.c.hit ? " 적중" : ""}` : ""}`); }
+    if (row) { const u = abUpsert(file, row); file = u.file; changed = u.changed; if (provisional) console.log(`A·B 잠정 중립 채점(${rec.close.at} 정답표 · 확정 run 이 덮음): 회차 ${z.runs}`); } else if (!provisional) console.log("A·B 채점: 오늘 장중 회차 없음 — 오늘 줄 건너뜀");
+    /* 9.29-110 [2318] 다음 날 적중: 지난 거래일 줄의 마지막 회차 A·B 가 오늘 마감 확정 주도 테마에 재진입했나 · 평균 플러스인가 (확정 run 만) */
+    const nx = abNext(file, L, date); if (nx.row && !provisional) { file = nx.file; changed = changed || nx.changed; console.log(`A·B 다음 날 ${nx.row.date} → ${date}: A 재진입 ${nx.row.next.a.re}/3 평균 ${nx.row.next.a.avg === null ? "—" : nx.row.next.a.avg + "%"}${nx.row.next.a.hit ? " 적중" : ""} · B 재진입 ${nx.row.next.b.re}/3 평균 ${nx.row.next.b.avg === null ? "—" : nx.row.next.b.avg + "%"}${nx.row.next.b.hit ? " 적중" : ""}${nx.row.next.c ? ` · C 재진입 ${nx.row.next.c.re}/3 평균 ${nx.row.next.c.avg === null ? "—" : nx.row.next.c.avg + "%"}${nx.row.next.c.hit ? " 적중" : ""}` : ""}`); }
     { const days = {}; for (const h of await loadHistory(date)) if (h && h.date && Array.isArray(h.themes) && h.themes.length) days[h.date] = h.themes; if (zTh) days[date] = zTh;
       const zn = abNeutralNext(file, days, { holidays: cfg.holidays, today: date }); if (zn.changed) { file = zn.file; changed = true; console.log(`A·B·C 다음 날 중립 채점 채움: ${zn.filled.join(" · ")}`); } }
     if (!file || !changed && !row) return;
     if (row && typeof row.c === "number") console.log(`C 장중 ${row.c}/3 (${row.cN}회차)`); /* 9.29-111 */
     const sm = abSummary(file); if (sm) console.log("A·B 누적:" + (typeof sm.a === "number" ? ` 장중 A ${sm.a}/3 · B ${sm.b}/3 · ${sm.n}일` : " 옛 채점 기록 없음") /* 9.29-145 gate-142 경미: 중립만 있는 파일 = 「장중 A undefined/3」 → 옛 숫자 없으면 안 적음 */ + (typeof sm.c === "number" ? ` · C ${sm.c}/3 (${sm.cn}일)` : "") + (sm.next ? ` · 다음 날 A ${sm.next.a.hit}/${sm.next.n}일 · B ${sm.next.b.hit}/${sm.next.n}일 적중` : "") + (sm && sm.z && sm.z.next ? ` · 중립 다음 날도 감 ${["a", "b", "c"].filter((m) => sm.z.next[m]).map((m) => m.toUpperCase() + " " + sm.z.next[m].go + "/" + sm.z.next[m].n + "개(" + sm.z.next[m].d + "일)").join(" · ")}` : ""));
-    if (save && changed) { file.updatedAt = Date.now(); await writeFile(AB_FILE, file, `A·B 채점 ${date}`); console.log(`저장: ${AB_FILE}`); }
+    if (save && changed) { file.updatedAt = Date.now(); await writeFile(AB_FILE, file, `A·B 채점 ${date}${provisional ? " (잠정 중립)" : ""}`); console.log(`저장: ${AB_FILE}`); }
   } catch (e) { console.log("A·B 채점 실패:", e.message || e); }
 }
 // 아침 브리핑 (9.29-97): 아침 run 은 07:00 뒤(또는 --brief) 4묶음 · 장중 run 은 10:20 전 시작이면 ② 공시만 · 실패해도 날짜 파일 저장은 그대로
@@ -444,6 +483,7 @@ if (!save) {
   if (part.shadow) console.log(shadowText(part.shadow));
   if (part.candles) console.log(`일봉 ${Object.keys(part.candles).length}개 (저장 안 함): ${Object.values(part.candles).map((c) => c.code + " " + c.bars.length + "봉").join(" · ")}`);
   const rec = mergeAuto(null, date, saveAs, part);
+  if (when === "close") { const rs = await runsOf(rec); if (rs.length) rec[AB_RUNS_KEY] = rs; } // 9.29-158 장중 회차 보관(저장 안 함)
   console.log(summarize(rec));
   await runForward(); // 9.29-105 전진 기록(저장 안 함 · 요약 뒤)
   await runAfter(rec); // 9.29-107 저녁 애프터장 줄(저장 안 함 · --afterout=파일)
@@ -461,10 +501,11 @@ if (part.candles) {
   console.log(`일봉 저장: ${n}/${Object.keys(part.candles).length}개 → ${AUTO_DIR}/candles/`);
 }
 const rec = mergeAuto(prev.json, date, saveAs, part);
+if (when === "close") { const rs = await runsOf(rec); if (rs.length) rec[AB_RUNS_KEY] = rs; } /* 9.29-158 원장 [집2664] ④ 장중 회차를 날짜 파일 최상위 abRuns 에도(live.json 이 다음 날 덮어도 채점 가능) */
 if (brief) rec.brief = brief; // 최상위 brief (morning 블록 밖 — mergeAuto 가 morning 을 통째로 덮어도 그대로 · 이번에 못 만들면 앞선 brief 유지)
-const msg = `자동 연동 ${date} ${when === "morning" ? "아침" : when === "themes" ? "아침(테마 보충)" : when === "intraday" ? "장중" : "오후"} ${part.at}`;
+const msg = `자동 연동 ${date} ${when === "morning" ? "아침" : when === "themes" ? "아침(테마 보충)" : when === "intraday" ? "장중" : "오후"} ${part.at}${slotMeta && slotMeta.ranDate !== date ? " (" + slotMeta.ranDate + " 받음)" : slotMeta && slotMeta.late ? " (늦게 받음)" : ""}`;
 await writeFile(autoFile(date), rec, msg);
-await writeFile(AUTO_DIR + "/latest.json", rec, msg);
+await writeLatest(rec, msg);
 console.log(summarize(rec));
 if (obs && obs.universe) { // 대상 목록을 새로 만든 run 만 (7일마다)
   try { await writeFile(OBS_UNIVERSE_FILE, obs.universe, `관찰 대상 목록 ${date} ${obs.universe.stocks.length}종목`); console.log(`저장: ${OBS_UNIVERSE_FILE} (${obs.universe.stocks.length}종목)`); }
@@ -481,7 +522,7 @@ if (sc && !sc.skipped && (sc.added || sc.filled) && JSON.stringify(sc.file) !== 
 await runForward(); // 9.29-105 전진 기록 = 날짜 파일·latest·관찰·성적표 저장 뒤 (게이트 [2153] ② 지연 위험)
 await runAB(rec); // 9.29-108 원장 [2287] A·B 채점 = 마감 저장 뒤
 { const af = await runAfter(rec); // 9.29-107 저녁 애프터장 줄 = 마감 저장 뒤 · 결과만 다시 저장
-  if (af) { try { rec[AFTER_KEY] = af; const m2 = `자동 연동 ${date} 저녁 애프터 ${af.at}${af.ok ? "" : " (미완)"}`; await writeFile(autoFile(date), rec, m2); await writeFile(AUTO_DIR + "/latest.json", rec, m2); console.log(`저장: ${autoFile(date)} ${AFTER_KEY}`); } catch (e) { console.log("저녁 애프터 저장 실패:", e.message || e); } } }
+  if (af) { try { rec[AFTER_KEY] = af; const m2 = `자동 연동 ${date} 저녁 애프터 ${af.at}${af.ok ? "" : " (미완)"}`; await writeFile(autoFile(date), rec, m2); await writeLatest(rec, m2); console.log(`저장: ${autoFile(date)} ${AFTER_KEY}`); } catch (e) { console.log("저녁 애프터 저장 실패:", e.message || e); } } }
 if (part.shadow) console.log(shadowText(part.shadow));
 console.log(`저장: ${autoFile(date)} (${BRANCH})`);
 if (part.errors.length) console.log("일부 실패:", part.errors.join(" / "));
