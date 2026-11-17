@@ -923,6 +923,29 @@ header .tools { flex-direction: row; flex-wrap: wrap; align-items: center; justi
    이름 칸은 그대로 한 덩어리(nowrap) · 줄(.nx 앞 여백 포함) 밖으로 나갈 때만 .lng(fitLst · app.js): 「신규상장:」·「이름(시장),」 덩어리(.lc)마다 통째로 줄 넘김 · 덩어리 하나가 줄보다 길 때만 그 안에서 줄바꿈(그때만 overflow-wrap:anywhere) · 글씨 크기·글·값 무변 */
 .wrap, .card, .prev, .ev, .sector, .today, .slots, .todo, .jsec, .topld .tll, .explain .brief .bgrps, .explain .brief .bgl { grid-template-columns: minmax(0, 1fr); } /* .bgrps·.bgl = 칸 정하지 않은 격자(auto = 안 쪼개지는 글만큼 늘어남) */
 .explain .brief .bgall .nw.lng, .explain .nxline b.lst.lng { display: inline-block; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; vertical-align: top; } .lng > .lc { display: inline-block; max-width: 100%; vertical-align: top; }
+/* 9.29-167 원장 [집2685] 「종목 이름 끝 한 글자만 다음 줄로」(삼성에스디에/스 · 가온칩/스): 좁은 칸(≤270px · ①·④·⑤ 두 칸)에서 종목 줄이 [이름 | 등락률] 두 칸 표(이름 칸 = 남은 폭 · overflow-wrap:anywhere)라 이름이 남은 폭보다 길면 아무 글자 사이에서나 끊김
+   → 종목 줄을 줄바꿈 가능한 한 줄 흐름으로: 이름이 등락률 옆에 들어가면 예전과 같은 자리(이름 | 등락률 · 거래대금은 아래 오른쪽) · 안 들어가면 이름이 칸 폭 전체를 쓰고 등락률·거래대금이 아랫줄(낱말 단위 · keep-all) · 이름 하나가 칸 폭보다 길 때만 마지막 수단으로 칸 안에서 끊음 · 글씨 크기·글·값 무변 · 넓은 칸(271px~) 무변 */
+@container (max-width: 270px) {
+  :is(.topld .tll, #topLead.ab2 .tll) > li.tl2:not(:has(> details.tmore[open])) > .tq { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+  :is(.topld .tll, #topLead.ab2 .tll) > li.tl2:not(:has(> details.tmore[open])) > .tq > .tqr > .qn { flex: 1 1 auto; min-width: 0; grid-row: auto; }
+  :is(.topld .tll, #topLead.ab2 .tll) > li.tl2:not(:has(> details.tmore[open])) > .tq > .tqr > .qn > .qnm { flex: 0 1 auto; max-width: none; word-break: keep-all; overflow-wrap: break-word; }
+  :is(.topld .tll, #topLead.ab2 .tll) > li.tl2:not(:has(> details.tmore[open])) > .tq > .tqr:not(.ld) > .qn { padding-left: 0; } /* 9.29-169 [넓힘] 대장 아닌 줄은 ★ 자리(1.1em) 없이 이름이 칸 폭을 다 씀(320 두 칸 122px 에서 「HD현대에너지솔루션」 114px 이 108px 칸에 안 들어가 「솔루/션」) */
+  :is(.topld .tll, #topLead.ab2 .tll) > li.tl2:not(:has(> details.tmore[open])) > .tq > .tqr > .qr { flex: 0 0 auto; margin-left: auto; }
+  :is(.topld .tll, #topLead.ab2 .tll) > li.tl2:not(:has(> details.tmore[open])) > .tq > .tqr > .qv { flex: 0 0 100%; }
+  :is(.topld .tll, #topLead.ab2 .tll) > li.tl2:not(:has(> details.tmore[open])) > .tq > .tqr > .qf { flex: 0 0 100%; }
+}
+/* 9.29-169 [넓힘] 넓은 칸(두 칸 ab2 · 271px↑)도 이름은 낱말 단위: 종목 줄 격자 칸 사이 간격 8px → 4px (이름 칸 +8px · 등락률·거래대금 칸 위치 최대 8px 이동 · 글·값·줄 수 무변) */
+.topld .tll .tq { column-gap: 4px; }
+/* 9.29-169 [넓힘] 두 칸(ab2)에서 이름 옆 표시(관리종목 등)가 있으면 이름 칸이 남은 폭(flex 1 1 0)으로 줄어 「바이브컴퍼/니」 → 이름 칸 최소 폭 = 이름 한 덩어리(칸 폭 넘으면 칸 폭) · 안 들어가는 표시는 아랫줄로 · 들어갈 땐 예전과 같은 자리(남는 폭을 이름 칸이 채움) */
+.topld.ab2 .tll .tq .qnm { flex: 1 1 auto; min-width: min(100%, max-content); }
+/* 9.29-167 (이어서) 「자세히」 안 짝꿍 꼬리표(「짝꿍 후보 · 2등 · 대장 가온칩스」)는 등락률 오른쪽 48px 칸 안이라 대장 이름이 한 글자 줄로 끊김 → 이 꼬리표가 든 줄만 칸 폭 전체(다음 줄)를 씀 · 글·값 무변 */
+@container (max-width: 270px) { .topld .tll .tsg .stg:has(> .sb.pair[title^="대장 다음으로"]) { grid-column: 1 / -1; } }
+/* 9.29-167 ④·⑤ 「전체 테마」 칸(2열 · 123px)에서 테마 이름(스테이블코인)이 이름 | 값 두 칸 표 때문에 5/1 로 끊김 → 휴대폰 폭에서는 이름이 값 옆에 들어가면 예전 자리 · 안 들어가면 값이 아랫줄(오른쪽 맞춤) · 넓은 화면 무변 */
+@media (max-width: 430px) {
+  .thall .tc:not(:has(> .tcv.w)) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+  .thall .tc:not(:has(> .tcv.w)) > .tcn { flex: 1 1 auto; min-width: 0; word-break: keep-all; overflow-wrap: break-word; }
+  .thall .tc:not(:has(> .tcv.w)) > .tcv { flex: 0 0 auto; margin-left: auto; }
+}
 </style>
 </head>
 <body>
@@ -3694,7 +3717,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-166";
+  const APP_VER = "9.29-169";
   /* 9.29-152 원장 [집2619][집2620] 수급 범위 표시(실측 2026-11-04 · work/도구/152 · gate [집2632]: NXT 프리·애프터 포함은 미실측 → 「KRX+NXT 통합」 만 말함): 시장 전체 = 키움 ka10051·ka90004 통합(집 PC · 수집기 investAll) · 없으면 네이버(= 키움 KRX 값과 같음 · 16:00 뒤 값은 KRX 애프터 포함 → 「KRX만」) · 종목·테마·C = ka10063(거래소 구분 없는 장중 잠정 · stex 1·2·3 값 같음) */
   const SUP_ALL = "KRX+NXT 통합", SUP_REG = "정규만", SUP_KRX = "KRX만(NXT 제외)", SUP_EST = "장중 잠정(거래소 구분 없음)";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
@@ -4361,7 +4384,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const prevCloseTried = new Set();
   /* 게이트 [1943] ①: 앞 거래일 공개 파일 받기 — 날마다 한 번(전날 장 마감 카드와 장중 표 기준이 같이 씀 · 같은 파일을 두 번 받지 않음) · 받은 뒤 두 곳을 다 다시 그림 */
   const prevDayGot = new Map(), tvPrevTried = new Set();
-  function prevDayFetch(pd) { if (!prevDayGot.has(pd)) prevDayGot.set(pd, (async () => { try { const f = await pubGet(PUB_RAW + pd + ".json"); if (f && f.close) applyAuto(pd, f); } catch (e) {} })()); return prevDayGot.get(pd); }
+  function prevDayFetch(pd) { if (!prevDayGot.has(pd)) prevDayGot.set(pd, (async () => { try { const f = await pubGet(PUB_RAW + pd + ".json"); if (f && f.close) applyAuto(pd, f, true); } catch (e) {} })()); return prevDayGot.get(pd); }
   function invAllOf(o) { return o && typeof o === "object" && o.scope === "all" && (o.kospi || o.kosdaq) ? o : null; }
   function supNaver(at) { return typeof at === "string" && at >= "16:00" ? SUP_KRX : SUP_REG; }
   function supScope(all, at) { return all ? `수급 ${SUP_ALL}${all.at ? " · " + all.at + " 기준" : ""} · 거래대금 KRX` : `수급 ${supNaver(at)}`; }
@@ -6761,9 +6784,14 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     if (L.relaxed) out.push("조건 미달 · 참고용(게이트 통과 테마 없어 등락률 순)");
     return out.join(" · ");
   }
-  function fillAuto(st, a) {
+  function fillAuto(st, a, fileDate, priv) {
     st.auto = st.auto || {};
     const changed = [];
+    /* 9.29-169 원장 [집2688]: 날짜 파일을 실제로 받았고(applyAuto 3번째 인자 = 그 날짜) 파일 안 date 가 같을 때만 「파일에 없는 칸 = 기기에 남은 옛 값 지움」 · 못 받음·다른 날짜·장중 조각(live) 호출 = 예전 그대로(무접촉) */
+    const UK = priv ? "upd.gh" : "upd", upd = typeof a.updatedAt === "number" ? a.updatedAt : null, src = !!fileDate && a.date === fileDate && upd !== null && !(Number(st.auto[UK]) > upd); /* 9.29-169 gate ④: 받은 파일의 updatedAt 이 기기에 기억한 값(공개 auto.upd · 비공개 auto["upd.gh"] — 원천별로 따로)보다 옛것이면(늦게 온 옛 캐시 응답) 지우지 않음 · updatedAt 없는 파일도 지우지 않음 */
+    /* 9.29-169 gate ①(170 실측 정정): 비움 판단은 키마다 그 키를 싣는 원천에서 받은 파일일 때만 — 공개 eden-market 날짜 파일(priv=false) = 장마감_1600 · 애프터_2000 · 아침(morning) · 상장·청약 전부 · 열쇠 경로 비공개 cockpit-data 날짜 파일(priv=true) = morning 만(비공개에 morning 은 실제로 있음 · 장마감_1600 은 0개 · 애프터_2000 은 공개에만 있음 → 이 둘은 비공개 파일에 없다고 지우지 않음) */
+    const full = src, fullPub = src && !priv;
+    const dropAuto = (k) => { if (st.auto[k] !== undefined) { delete st.auto[k]; changed.push(["auto." + k, 0]); } };
     const fillOne = (key, cur, set, val, ts) => {
       if (val === null || val === undefined || val === "") return;
       val = String(val); cur = cur || "";
@@ -6821,13 +6849,13 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       if (js && st.auto["prev.all"] !== js) { st.auto["prev.all"] = js; changed.push(["auto.prev.all", m.ts]); } }
     { // 신규 상장 예정 (9.29-76 원장 [1500]): 마감 수집 값(더 최신)이 있으면 그것, 없으면 아침 값
       const L = (a.close && a.close.listings) || m.listings, js = L && Array.isArray(L.items) ? JSON.stringify(L.items) : undefined;
-      if (js !== undefined && st.auto.listings !== js) { st.auto.listings = js; changed.push(["auto.listings", L === m.listings ? m.ts : a.close.ts]); } }
+      if (js !== undefined && st.auto.listings !== js) { st.auto.listings = js; changed.push(["auto.listings", L === m.listings ? m.ts : a.close.ts]); } else if (js === undefined && fullPub && !(a.close && a.close.listings) && !m.listings) dropAuto("listings"); /* 9.29-169 */ }
     { // 9.29-97 원장 [1784] SKHY 환산·괴리 (수집기 morning.signals.skhy.detail · 없으면 안 넣음)
       const d = m.signals && m.signals.skhy && m.signals.skhy.detail, js = d && typeof d.prem === "number" ? JSON.stringify({ krw: d.krw, kr: d.kr, prem: d.prem, avg: d.avg, n: d.n, fx: d.fx }) : undefined;
       if (js !== undefined && st.auto["skhy.adr"] !== js) { st.auto["skhy.adr"] = js; changed.push(["auto.skhy.adr", m.ts]); } }
     { // 9.29-97 원장 [1779] 청약 일정 (청약중·청약예정 · 마감 수집 값이 더 최신) — 받은 적 없으면(subs 없음) 지난 값 유지
       const L = (a.close && a.close.listings && Array.isArray(a.close.listings.subs) ? a.close.listings : null) || (m.listings && Array.isArray(m.listings.subs) ? m.listings : null), js = L ? JSON.stringify(L.subs) : undefined;
-      if (js !== undefined && st.auto.subs !== js) { st.auto.subs = js; changed.push(["auto.subs", L === m.listings ? m.ts : a.close.ts]); } }
+      if (js !== undefined && st.auto.subs !== js) { st.auto.subs = js; changed.push(["auto.subs", L === m.listings ? m.ts : a.close.ts]); } else if (js === undefined && fullPub && !L) dropAuto("subs"); /* 9.29-169 */ }
     { // 9.29-97 원장 [1775][1780] 아침 브리핑 4묶음 (날짜 파일 최상위 brief · 그 날 것만 · 요청 상한·주도 종목 목록은 빼고 압축 문자열)
       const B = a.brief, ok = B && typeof B === "object" && (!a.date || !B.date || B.date === a.date);
       const js = ok ? JSON.stringify({ v: B.v, date: B.date, sched: B.sched, disc: B.disc, us: B.us, news: B.news }) : undefined;
@@ -6854,12 +6882,12 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     [["progK", c.program], ["progQ", c.programQ]].forEach(([k, pg]) => { if (pg && typeof pg.total === "number" && st.auto["close." + k] !== pg.total) { st.auto["close." + k] = pg.total; changed.push(["auto.close." + k, a.close.ts]); } }); // 블로그 수급 '프로그램' (9.29-74) // 블로그 '코스피 7,003.74 (+0.46%)' 용 (9.29-73)
     { const ia = c.investAll, js = ia && typeof ia === "object" && ia.scope === "all" && (ia.kospi || ia.kosdaq) ? JSON.stringify(ia) : undefined; if (a.close && st.auto["close.invAll"] !== js) { /* a.close 없는 호출(장중 재판정 applyAuto · intraday 만) = 무접촉 */ if (js === undefined) delete st.auto["close.invAll"]; else st.auto["close.invAll"] = js; changed.push(["auto.close.invAll", a.close.ts]); } } /* 9.29-152 ⑤·① 수급 통합(수집기 close.market.investAll · 옛 파일 없음 = 네이버 값) */
     { const sn = a["장마감_1600"], js = sn && sn.items && typeof sn.items === "object" ? JSON.stringify({ at: sn.at, items: sn.items, slot: sn.slot && typeof sn.slot === "object" && typeof sn.slot.date === "string" ? { d: sn.slot.date, rd: sn.slot.ranDate, ra: sn.slot.ranAt, late: !!sn.slot.late } : undefined }) : undefined; // 「오후 4시 기준」 묶음 (9.29-87 원장 [1666]) · 9.29-159 [집2672] ② 칸 기록(늦게 받음)
-      if (js !== undefined && st.auto["snap1600"] !== js) { st.auto["snap1600"] = js; changed.push(["auto.snap1600", sn.ts]); } }
+      if (js !== undefined && st.auto["snap1600"] !== js) { st.auto["snap1600"] = js; changed.push(["auto.snap1600", sn.ts]); } else if (js === undefined && fullPub) dropAuto("snap1600"); /* 9.29-169: 파일에서 지운 4시 묶음 = 기기 값도 지움 */ }
     { const af = a["애프터_2000"], js = af && typeof af === "object" && af.v ? JSON.stringify({ v: af.v, at: af.at, src: af.src, ok: !!af.ok, reason: af.reason || undefined, lastBar: af.lastBar, // 9.29-107 원장 [2198][2200] 저녁 애프터장 (날짜 파일 「애프터_2000」 · 화면용만 압축 · snap1600 과 같은 방식)
         lead: (af.lead || []).map((t) => ({ name: t.name, avg: t.avg, state: t.state, n: t.n, of: t.of, v: t.v, lead: t.lead || undefined })), strong: (af.strong || []).map((t) => ({ name: t.name, avg: t.avg, n: t.n, v: t.v, stocks: (t.stocks || []).map((x) => ({ name: x.name, pct: x.pct })) })),
         up: (af.up || []).map((x) => ({ name: x.name, pct: x.pct, v: x.v })), down: (af.down || []).map((x) => ({ name: x.name, pct: x.pct, v: x.v })), warn: af.warn, skip: af.skip || undefined, stat: af.stat ? { n: af.stat.n, rise: af.stat.rise, fall: af.stat.fall } : undefined,
         fail: af.fail && (af.fail.minute || (af.fail.poll || []).length) ? { m: af.fail.minute || 0, p: (af.fail.poll || []).length } : undefined }) : undefined;
-      if (js !== undefined && st.auto["after2000"] !== js) { st.auto["after2000"] = js; changed.push(["auto.after2000", af.ts]); } }
+      if (js !== undefined && st.auto["after2000"] !== js) { st.auto["after2000"] = js; changed.push(["auto.after2000", af.ts]); } else if (js === undefined && fullPub) dropAuto("after2000"); /* 9.29-169 */ }
     if (c.leaders && c.leaders.text) fillOne("market.leaders", st.journal.market.leaders, (x) => (st.journal.market.leaders = x), c.leaders.text, a.close.ts);
     { // 블로그 ② 주요 테마(한국) 종목 줄용 마감 종목 (9.29-93 원장 [1710]): 테마 3개 × 종목 3개의 종가·전일·등락률·거래대금·수급·차트 꼬리만 (글 text 와 같이 둬서 같은 run 인지 확인) · 판정·화면 무관
       const th = c.leaders && c.leaders.text && Array.isArray(c.leaders.themes) ? c.leaders.themes.slice(0, 3).map((t) => ({ name: t.name, relax: t.relax ? t.relax.text : undefined, slots: (t.slots || []).slice(0, 3).map((x) => ({ code: x.code, name: x.name, price: x.price, prev: x.prev, rate: x.rate, value: x.value, flow: x.flow || undefined, chart: x.chart && x.chart.tag ? { tag: x.chart.tag } : undefined, alert: x.alert || undefined, stop: x.stop || undefined, mgmt: x.mgmt || undefined, newly: x.newly || undefined, lu1: x.lu1 || undefined, sd: x.sd || undefined, avoid: x.avoid || undefined, heat: x.heat && x.heat.tags ? { tags: x.heat.tags, gap: x.heat.gap, disp: x.heat.disp, r5: x.heat.r5 } : undefined })) })) : null;
@@ -6879,15 +6907,24 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     }
     /* 9.29-159 원장 [집2672] ①②: 블록 칸 기록(slot · 수집기 9.29-158) → auto["slot.morning"|"slot.close"] = { d · rd · ra · late } · 그 블록이 없는 호출은 그대로 · 블록에 slot 없으면(옛·수동) 지움 */
     [["morning", a.morning], ["close", a.close]].forEach(([k, b]) => { if (!b || typeof b !== "object") return; const x = b.slot, js = x && typeof x === "object" && typeof x.date === "string" && typeof x.ranDate === "string" ? JSON.stringify({ d: x.date, rd: x.ranDate, ra: x.ranAt, late: !!x.late }) : undefined; if (st.auto["slot." + k] !== js) { if (js === undefined) delete st.auto["slot." + k]; else st.auto["slot." + k] = js; changed.push(["auto.slot." + k, b.ts]); } });
+    /* 9.29-169 원장 [집2688]: 날짜 파일에 아침 블록(morning)이 없으면 = 아침 칸 「받아온 값 없음」 · 자동으로 들어온 칸(기기 값 = 자동 기억 값)만 비움 · 손으로 고친 칸·마감(close)·장중(intraday) 키는 무접촉 */
+    if (full && !(a.morning && typeof a.morning === "object")) {
+      Object.keys(st.auto).forEach((k) => {
+        if (/^(signals|us)\./.test(k) && !k.startsWith("signals.prog")) { const [g, f] = [k.slice(0, k.indexOf(".")), k.slice(k.indexOf(".") + 1)], box = st[g]; if (box && box[f] !== undefined && String(box[f]) === st.auto[k]) { delete box[f]; changed.push([k, 0]); } dropAuto(k); }
+        else if (/^prev\.\d+\.(name|state|pre)$/.test(k)) { const [, i, f] = k.split("."), p = (st.prev || [])[i]; if (p && String(p[f] || "") === st.auto[k]) { p[f] = ""; changed.push([k, 0]); } dropAuto(k); }
+        else if (/^(lvl|fut|detail|stale)\./.test(k) || /^prev\.(all|stk\.\d+)$/.test(k) || ["gap", "usidx", "at.morning", "slot.morning", "skhy.adr"].includes(k)) dropAuto(k);
+      });
+    }
     [["at.morning", m.at, m.ts], ["at.close", (a.close || {}).at, (a.close || {}).ts]].forEach(([k, v, ts]) => { if (v && st.auto[k] !== v) { st.auto[k] = v; changed.push(["auto." + k, ts]); } });
+    if (src && st.auto[UK] !== String(upd)) { st.auto[UK] = String(upd); changed.push(["auto." + UK, 0]); } /* 9.29-169: 마지막으로 반영한 파일 시각 기억 */
     return changed;
   }
   // 하루치 자동 값을 그 날짜 기록에 넣고 저장·동기화한다 (화면 날짜가 아니어도 된다 → 앱을 안 연 날도 기록이 쌓인다)
-  function applyAuto(d, a) {
+  function applyAuto(d, a, fileGot) { // fileGot = true: 공개 날짜 파일을 실제로 받아 넘김 · "gh": 열쇠 경로 비공개 날짜 파일(9.29-169 · morning 만 비움 판단) · 장중 조각(live) 호출은 안 넘김
     if (!a || typeof a !== "object" || !isValidDate(d)) return false;
     const cur = d === DATE, st = cur ? S : loadDay(d);
     const before = flat(JSON.parse(JSON.stringify(st)));
-    const changed = fillAuto(st, a);
+    const changed = fillAuto(st, a, fileGot ? d : undefined, fileGot === "gh");
     if (!changed.length) return false;
     if (cur) save();
     else {
@@ -6923,7 +6960,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
       const fr = await ghApi("/repos/" + gh.repo + "/contents/" + f.path + "?ref=" + GH_BRANCH);
       if (!fr.ok) continue;
       let a = null; try { a = JSON.parse(b64dec((await fr.json()).content || "")); } catch (e) {}
-      if (a && applyAuto(f.d, a)) n++;
+      if (a && applyAuto(f.d, a, "gh") /* 9.29-169: 열쇠 경로(비공개 cockpit-data) = morning 만 비움 판단(장마감_1600·애프터_2000 은 공개에만 있음) */) n++;
       seen[f.d] = f.sha;
     }
     try { localStorage.setItem(AUTO_SEEN_KEY, JSON.stringify(seen)); } catch (e) {}
@@ -6959,7 +6996,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     let n = 0;
     for (const f of todo) {
       let a = null; try { a = await pubGet(PUB_RAW + f.d + ".json"); } catch (e) { continue; }
-      if (a && applyAuto(f.d, a)) n++;
+      if (a && applyAuto(f.d, a, true)) n++;
       seen[f.d] = f.sha;
     }
     try { localStorage.setItem(PUB_SEEN_KEY, JSON.stringify(seen)); } catch (e) {}
@@ -6972,7 +7009,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     pubBusy = true;
     try {
       const a = await pubGet(PUB_RAW + DATE + ".json");
-      pubLast = { found: !!a, changed: a ? applyAuto(DATE, a) : false, at: a ? [a.morning && a.morning.at, a.intraday && a.intraday.at, a.close && a.close.at].filter(Boolean).join("·") : "" };
+      pubLast = { found: !!a, changed: a ? applyAuto(DATE, a, true) : false, at: a ? [a.morning && a.morning.at, a.intraday && a.intraday.at, a.close && a.close.at].filter(Boolean).join("·") : "" };
       pubState = "on";
       paintAuto();
       if (!isLinkBuild()) { try { await pubBackfill(); } catch (e) {} } // 지난 날 몰아 받기 (GitHub 목록 API) — 링크에서는 안 함
@@ -7231,7 +7268,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const a = S.auto || {}, lm = !!(slotAuto(S, "morning") || {}).late; /* 9.29-159 [집2672] ② */
     if (!gh && pubState === "error") { sig.textContent = "🤖 자동 연동: 인터넷이 잠시 안 돼요 · 1분 뒤 다시 확인해요 (지금은 손 입력)"; mkt.hidden = true; return; }
     sig.textContent = a["at.morning"] ? "🤖 " + a["at.morning"] + "에 자동으로 받아온 값이에요" + (lm ? " · 늦게 받음" : "") + " (네이버·야간선물은 TradingView) · 칸을 고치면 고친 값이 우선해요" + (a.gap ? "\n" + a.gap : "")
-      : "🤖 자동 연동 켜짐" + (gh ? "" : " (열쇠 없이)") + " · 이 날 받아온 값은 아직 없어요 (평일 아침 6:35·7:05·8:05에 미국 지표, 오후 4:20에 마감을 받아와요 · 10~20분 늦을 수 있어요)";
+      : "🤖 자동 연동 켜짐" + (gh ? "" : " (열쇠 없이)") + " · " + (DATE < kstDate() ? "이 날 받아온 값 없음" /* 9.29-169: 지난 날짜엔 「아직」 빼고 짧게 */ : "이 날 받아온 값은 아직 없어요 (평일 아침 6:35·7:05·8:05에 미국 지표, 오후 4:20에 마감을 받아와요 · 10~20분 늦을 수 있어요)");
     mkt.textContent = a["at.close"] ? "🤖 " + recvAt(slotAuto(S, "close"), a["at.close"]) + "에 자동으로 받아온 마감·수급이에요 (네이버) · 고치면 고친 값이 우선해요"
       : "🤖 오후 4:20에 코스피·코스닥 마감과 수급(외국인·기관)이 자동으로 채워져요";
   }
@@ -7258,7 +7295,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
         cloudState = "on"; lastSyncAt = kstTime().slice(0, 5);
         afterRemote(changedDates);
         const auto = await ghAuto(DATE); // 화면 날짜는 20초마다 (합친 뒤에 채워야 다른 기기 값을 덮지 않는다)
-        if (auto) applyAuto(DATE, auto);
+        if (auto) applyAuto(DATE, auto, "gh"); /* 9.29-169: 열쇠 경로 = morning 만 비움 판단 */
         await ghAutoBackfill(); // 지난 날짜는 30분에 한 번
         if (ghPending.size) ghSchedule(300);
       } catch (e) { ghFail(e); }
