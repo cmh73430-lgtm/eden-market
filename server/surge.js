@@ -40,6 +40,9 @@ export const LADDER = [
   { step: 1, key: "n10_1", rate: 10, top: 0.10, minStrong: 2, minN10: 1, flow: true, label: "기준②" },
   { step: 2, key: "strong_1", rate: 10, top: 0.10, minStrong: 1, minN10: 1, flow: true, label: "기준③" },
 ];
+/* 9.29-160 원장 [집2710] ③(155 A 개선안 ③): 기준③(strong_1 · +10% 1종목만)으로 들어온 테마는 그 시각 「테마 전체 평균」(테마 상세 구성 전부 단순 평균 = detailNums rate · 이미 받는 상세 주소 · 새 요청 0) > CUT3_MIN_AVG 일 때만 칸에 넣음 · 아니면 빈칸(채우기 0 · 「기준 통과 n개」)
+   근거 = 155 A 2-1: 기준③ & 테마 평균 ≤ 0% = 423칸 중 7칸만 정답표(1.7%) · 평균을 못 받으면(상세 요청 실패·값 없음) 조건을 못 봤으므로 지어내지 않고 기존 동작(넣음) + cut3.miss 에 근거 기록 */
+export const CUT3_KEY = "strong_1", CUT3_MIN_AVG = 0;
 export const RELAX_TEXT = { strong_1: "+10% 1종목만", n10_1: "+15% 1종목만", flow_skip: "외인·기관 순매도", n10_0: "+15% 종목 없음", rate_7: "+7% 종목 포함", rate_5: "+5% 종목 포함", top_15: "거래대금 상위 15%까지", top_20: "거래대금 상위 20%까지" };
 // 「참고」 한 줄 (원장 [1845] ④): +5% 묶음은 안 됐지만 돈이 크게 몰린 테마 — 대상(상위 10%) 안 구성 종목 4↑ · 오른 비율 ≥ 0.7 · 평균 +2%↑ · 오른 종목 거래대금 합(시총 TOP10 제외) ≥ 5,000억 · 선정 테마와 안 겹침 → 돈 합 1위 1개
 //   근거: 연구 일봉 8/21~10/8 32거래일에서 이 기준이면 20일(63%)에 1개 (도구/t100/ref_stats.mjs) — TOP10 을 빼지 않으면 삼성전자·SK하이닉스 테마가 매일 1위
@@ -358,7 +361,24 @@ export function rankCOf({ stocks, map, kiwoom = null, top10 = new Set(), at = nu
 }
 // 9.29-108 원장 [2287] A·B 채점: 장중 회차마다 고른 3개(a · b)가 그날 마감 확정 주도 테마(이름 + 합친 이름 alias)와 몇 개 같은지 → 하루 평균 · 누적 파일 auto/observe/leaders-ab.json(날짜마다 한 줄 · 같은 날 다시 돌면 그 줄만 바꿈)
 export const AB_FILE = "auto/observe/leaders-ab.json", AB_RUNS_MAX = 100;
-export const abRunOf = (live) => (live && live.at ? Object.assign({ at: live.at, a: (live.themes || []).map((t) => t && t.name).filter(Boolean).slice(0, 3), b: live.rankB && Array.isArray(live.rankB.themesB) ? live.rankB.themesB.map((t) => t.name).slice(0, 3) : [] }, live.rankC ? { c: Array.isArray(live.rankC.themesC) ? live.rankC.themesC.map((t) => t.name).slice(0, 3) : [] } : {}) : null); /* 9.29-111: C(rankC) 있는 회차만 c */
+/* 9.29-160 원장 [집2710] ②(155 A 개선안 ②): 회차 기록에 칸별 합친 이름(alias)도 — ax[i] = a[i] 칸의 합친 이름 · cx[i] = c[i] 칸(C 도 합침) · ax 가 있는 회차 = 「새 자(칸 단위)」 채점 대상 · a·b·c 이름 칸은 그대로(옛 자·다른 읽는 쪽 무변) */
+const abAliasOf = (t) => (t && Array.isArray(t.alias) ? t.alias.filter((x) => typeof x === "string" && x.trim()) : []);
+export const abRunOf = (live) => { if (!live || !live.at) return null; const A = (live.themes || []).filter((t) => t && t.name).slice(0, 3), C = live.rankC && Array.isArray(live.rankC.themesC) ? live.rankC.themesC.filter((t) => t && t.name).slice(0, 3) : null;
+  return Object.assign({ at: live.at, a: A.map((t) => t.name), b: live.rankB && Array.isArray(live.rankB.themesB) ? live.rankB.themesB.map((t) => t.name).slice(0, 3) : [] }, live.rankC ? { c: C ? C.map((t) => t.name) : [] } : {}, { ax: A.map(abAliasOf) }, C ? { cx: C.map(abAliasOf) } : {}); }; /* 9.29-111: C(rankC) 있는 회차만 c */
+/* 9.29-160 ② 칸 단위 맞음 수: 칸 = [대표 이름, ...합친 이름] · 칸 하나가 정답 하나만(정답 하나도 칸 하나만) — 최대 짝짓기(칸 ≤3 · 정답 ≤10) · answers = [Set(정답 이름들)] (중립 = 정답마다 이름 1개 · 옛 자 = 확정 주도 테마마다 이름 + 합친 이름) */
+export function abSlotHit(names, groups, answers) {
+  const slots = (Array.isArray(names) ? names : []).map((nm, i) => [nm, ...(Array.isArray(groups) && Array.isArray(groups[i]) ? groups[i] : [])].filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()));
+  const ans = Array.isArray(answers) ? answers : [], adj = slots.map((g) => ans.map((A, j) => (g.some((x) => A.has(x)) ? j : -1)).filter((j) => j >= 0)), mt = new Array(ans.length).fill(-1);
+  const aug = (i, seen) => { for (const j of adj[i]) { if (seen[j]) continue; seen[j] = true; if (mt[j] < 0 || aug(mt[j], seen)) { mt[j] = i; return true; } } return false; };
+  let n = 0; for (let i = 0; i < slots.length; i++) if (aug(i, [])) n++; return n;
+}
+/* 9.29-160 ② 새 자 = ax 가 있는 회차만(옛 회차와 안 섞음) · B 는 합치기가 없어 이름 = 칸(같은 회차 묶음으로 나란히) · 결과 { n(회차), a, aN, b, bN, c, cN } · 회차 없으면 null */
+export function abSlotDay(runs, answers) {
+  const sr = (Array.isArray(runs) ? runs : []).filter((r) => r && r.at && Array.isArray(r.ax)); if (!sr.length || !answers.length) return null;
+  const out = { n: sr.length };
+  for (const m of ["a", "b", "c"]) { const xs = sr.filter((r) => Array.isArray(r[m]) && r[m].length); if (!xs.length) continue; const g = (r) => (m === "a" ? r.ax : m === "c" ? r.cx : null); out[m] = Number((xs.reduce((s, r) => s + abSlotHit(r[m], g(r), answers), 0) / xs.length).toFixed(2)); out[m + "N"] = xs.length; }
+  return out;
+}
 export function abScore(runs, leaders, date) {
   const set = new Set(); for (const t of (leaders && leaders.themes) || []) { if (t && t.name) set.add(t.name); for (const x of (t && t.alias) || []) set.add(x); }
   const rs = (runs || []).filter((r) => r && r.at && (r.a.length || r.b.length)); if (!rs.length || !set.size) return null; /* A·B 분모·runs·last·pick = 108 그대로(C 전용 회차 안 섞음 · gate-111 [집2375]) */
@@ -368,6 +388,7 @@ export function abScore(runs, leaders, date) {
   const rc = (runs || []).filter((r) => r && r.at && Array.isArray(r.c) && r.c.length), lr = rs[rs.length - 1]; /* C = 별도 필터(C 고른 회차만) · last.c·pick.c = A·B 마지막 회차에 c 가 있을 때만 */
   if (rc.length) { out.c = Number((rc.reduce((s, r) => s + hit(r.c), 0) / rc.length).toFixed(2)); out.cN = rc.length; }
   if (Array.isArray(lr.c) && lr.c.length) { out.last.c = hit(lr.c); out.pick.c = lr.c.slice(0, 3); }
+  const sd = abSlotDay(runs, ((leaders && leaders.themes) || []).filter((t) => t && t.name).map((t) => new Set([t.name, ...((t.alias) || [])]))); if (sd) out.s = sd; /* 9.29-160 ② 새 자(칸 단위 · 합친 이름 인정) · 옛 a·b·c 무변 */
   return out;
 }
 export function abUpsert(file, row) {
@@ -405,6 +426,7 @@ export function abNeutralDay(runs, themes, k = AB_NEUTRAL_K) {
   const out = { k, min: AB_NEUTRAL_SMALL + 1, runs: rs.length, top: top.map((t) => t.name) };
   for (const m of ["a", "b", "c"]) { const xs = rs.filter((r) => Array.isArray(r[m]) && r[m].length); if (!xs.length) continue; out[m] = Number((xs.reduce((s, r) => s + abNeutralHit(r[m], top).filter((h) => h.rk).length, 0) / xs.length).toFixed(2)); out[m + "N"] = xs.length; }
   const last = rs[rs.length - 1]; out.pick = {}; for (const m of ["a", "b", "c"]) if (Array.isArray(last[m]) && last[m].length) out.pick[m] = last[m].slice(0, 3);
+  const sd = abSlotDay(rs, top.map((t) => new Set([t.name]))); if (sd) out.s = sd; /* 9.29-160 ② 새 자(칸 단위 · 합친 이름 인정 · ax 있는 회차만) · 옛 a·b·c 무변 */
   return out;
 }
 export function abNeutralNext(file, days, { holidays = [], today = null, k = AB_NEUTRAL_K } = {}) {
@@ -421,12 +443,13 @@ export function abNeutralNext(file, days, { holidays = [], today = null, k = AB_
   }
   return { file: f, changed: filled.length > 0, filled };
 }
-export function abZOf(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], out = {}, nx = {}, lv = {};
+export function abZOf(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], out = {}, nx = {}, lv = {}, lv2 = {};
   for (const m of ["a", "b", "c"]) {
     const ds = all.filter((r) => r && r.zn && Array.isArray(r.zn[m]) && r.zn[m].length); if (ds.length) nx[m] = { d: ds.length, n: ds.reduce((s, r) => s + r.zn[m].length, 0), go: ds.reduce((s, r) => s + r.zn[m].filter((h) => h && h.go).length, 0), day: ds.filter((r) => r.zn[m].some((h) => h && h.go)).length };
     const ls = all.filter((r) => r && r.z && typeof r.z[m] === "number"); if (ls.length) lv[m] = { avg: Number((ls.reduce((s, r) => s + r.z[m], 0) / ls.length).toFixed(2)), d: ls.length };
+    const ss = all.filter((r) => r && r.z && r.z.s && typeof r.z.s[m] === "number"); if (ss.length) lv2[m] = { avg: Number((ss.reduce((s, r) => s + r.z.s[m], 0) / ss.length).toFixed(2)), d: ss.length }; /* 9.29-160 ② 새 자(칸 단위)만 · 옛 live 와 안 섞음 */
   }
-  if (Object.keys(nx).length) out.next = nx; if (Object.keys(lv).length) out.live = lv; if (!out.next && !out.live) return null;
+  if (Object.keys(nx).length) out.next = nx; if (Object.keys(lv).length) out.live = lv; if (Object.keys(lv2).length) out.liveS = lv2; if (!out.next && !out.live) return null;
   const ex = all.filter((r) => r && r.zn && ["a", "b", "c"].some((m) => Array.isArray(r.zn[m]) && r.zn[m].length)).pop(); if (ex) out.ex = { date: ex.date, next: ex.zn.date, k: ex.zn.k, a: ex.zn.a || null, b: ex.zn.b || null, c: ex.zn.c || null };
   out.k = ex ? ex.zn.k : AB_NEUTRAL_K; out.min = ex && typeof ex.zn.min === "number" ? ex.zn.min : AB_NEUTRAL_SMALL + 1; return out; }
 export function abSummary(file) { const all = file && Array.isArray(file.rows) ? file.rows : [], rs = all.filter((r) => r && typeof r.a === "number"); if (!rs.length) { const z0 = abZOf(file); return z0 ? { z: z0 } : null; } const m = (k) => Number((rs.reduce((s, r) => s + r[k], 0) / rs.length).toFixed(1)); const out = { a: m("a"), b: m("b"), n: rs.length };
@@ -450,7 +473,7 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
     if (regular) { const c = cutOf(stocks, memberSet, M, top); const r = await regularize(stocks, { get, date, minValue: c.cut, done, minRate: Math.min(REG_MIN_RATE, rate - 3.5) }); req.regular += r.requests; errors.push(...r.errors.slice(0, 6)); }
   };
   const L = await ladderSelect({ stocks, map, n, flowsFor, ensure, big });
-  const themes = [];
+  const themes = [], cut3Step = (LADDER.find((s) => s.key === CUT3_KEY) || {}).step, cut3 = { min: CUT3_MIN_AVG, out: [], miss: [] }; /* 9.29-160 ③ */
   for (const p of L.picked) {
     /* 9.29-140 [집2506]~[집2508] 대장·짝꿍(2·3등) = 강한 종목(core)을 상승률 높은 순으로(같으면 거래대금 큰 순) · 고르는 종목 묶음(core)·테마 선정은 그대로 */
     const by = L.byCode, slots = rateSort(p.core.map((c) => by.get(c))).slice(0, SURGE_SLOTS).map(slotOf), lead = slots[0];
@@ -462,6 +485,10 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
       if (num(d && d.totalCount) > 100) { req.detail++; const d2 = await get("https://m.stock.naver.com/api/stocks/theme/" + p.no + "?page=2&pageSize=100"); xs = xs.concat((d2 && d2.stocks) || []); }
       const dn = detailNums(xs, by); if (dn) Object.assign(row, dn);
     } catch (e) { errors.push("상세 " + p.no + ": " + (e.message || e)); }
+    if (p.step === cut3Step && cut3Step !== undefined) { /* 9.29-160 ③ 기준③ 테마 = 테마 전체 평균 > 0 일 때만 · 못 받으면 기존 동작 + 근거 */
+      if (typeof row.rate !== "number") { cut3.miss.push({ no: p.no, name: p.name, why: "테마 평균 못 받음" }); row.avgMiss = true; }
+      else if (!(row.rate > CUT3_MIN_AVG)) { cut3.out.push(Object.assign({ no: p.no, name: p.name, rate: row.rate }, p.alias.length ? { alias: p.alias } : {})); continue; }
+    }
     if (typeof row.rate !== "number") row.rate = round2(p.core.reduce((a, c) => a + by.get(c).rate, 0) / p.core.length);
     row.us = usOf(row.name, us); row.tags = { U: gradeU(row.us.u), days: daysInRow(row, history) };
     if (chart && lead) { try { req.chart++; const raw = await get(chartUrl(lead.code, date)); const c = gradeC(regular ? withRegular(raw, date, lead.price) : withToday(raw, date, lead.price), { vToday: lead.value, T: thresholdFor(kospiAmount) }); if (c) { row.chart = { lead: { grade: c.grade, tag: c.tag, offHigh: c.offHigh } }; slots[0].chart = { grade: c.grade, tag: c.tag }; } } catch (e) { errors.push("차트 " + lead.code + ": " + (e.message || e)); } }
@@ -474,7 +501,7 @@ export async function selectSurge({ get, map, date, hm = null, regular = false, 
   const closing = closingPicks(L.byCode, { T: tvStockThresholds({ kospi: kospiAmount, kosdaq: kosdaqAmount, big2: big2v }), flows: L.flows });
   const short = themes.length < n ? (themes.length ? "기준 통과 " + themes.length + "개" : "오늘 기준 통과 테마 없음") : undefined; /* [집2570] 3단계 뒤 있는 만큼 */
   const OUT = {
-    v: SURGE_V, method: "surge", basis: regular ? "regular" : "live", hm, date, themes, ref: ref || undefined, short, closing, bigA: !big ? undefined : big.codes ? { n: big.codes.length, codes: big.codes } : { none: big.none, why: big.why || undefined }, /* 9.29-140 A 순위 돈에서 뺀 시총 상위 10 */
+    v: SURGE_V, method: "surge", basis: regular ? "regular" : "live", hm, date, themes, ref: ref || undefined, short, closing, cut3, /* 9.29-160 ③ 뺀 테마(out)·조건 못 본 테마(miss) */ bigA: !big ? undefined : big.codes ? { n: big.codes.length, codes: big.codes } : { none: big.none, why: big.why || undefined }, /* 9.29-140 A 순위 돈에서 뺀 시총 상위 10 */
     universe: { n: c10.N, have: c10.have, cut: Number.isFinite(c10.cut) ? Math.round(c10.cut) : null, complete: !!c10.complete, M: L.M, pages: U.pages, excluded: U.excluded, cuts: Object.fromEntries(Object.entries(L.cuts).map(([k, v]) => [k, Number.isFinite(v.cut) ? Math.round(v.cut) : null])) },
     ladder: { used: L.used, lastStep: L.lastStep, steps: LADDER.map((s) => ({ step: s.step, key: s.key, text: s.label || (s.key ? RELAX_TEXT[s.key] : "엄격") })) }, /* 앱 rule140 = steps 에 strong_1 */
     flowSrc: L.flows ? Object.keys(L.flows).length : 0, requests: req, ms: Date.now() - t0, errors: errors.slice(0, 20),
@@ -532,7 +559,7 @@ export async function collectSurgeLeaders({ get, map, date, hm, us = null, histo
   }
   /* 게이트 [1943] ③: 18:00 뒤 첫 마감·지난 날 백필(final)은 고를 때도 확정 수급과 같은 20행 주소로 물어 같은 종목을 두 번 받지 않음(memoGet · 값은 같은 날짜 행) */
   const sel = await selectSurge({ get, map, date, hm, regular: true, flowsFor: makeFlowsFor(get, bizdate, { hm, url: final ? FLOW20_URL : FLOW1_URL }), us, history, kospiAmount: kospi && kospi.amount, kosdaqAmount: kosdaq && kosdaq.amount, top10, n });
-  let L = { v: SURGE_V, method: "surge", provisional: false, confirmed: true, basis: sel.basis, text: surgeText(sel.themes), themes: sel.themes, candidates: sel.themes, ref: sel.ref, short: sel.short, closing: sel.closing, universe: sel.universe, ladder: sel.ladder, bigA: sel.bigA,
+  let L = { v: SURGE_V, method: "surge", provisional: false, confirmed: true, basis: sel.basis, text: surgeText(sel.themes), themes: sel.themes, candidates: sel.themes, ref: sel.ref, short: sel.short, ...(sel.cut3 && (sel.cut3.out.length || sel.cut3.miss.length) ? { cut3: sel.cut3 } : {}), closing: sel.closing, universe: sel.universe, ladder: sel.ladder, bigA: sel.bigA,
     regime: regimeOf && kospi ? regimeOf(kospi.amount, history) : "", kospiRate: kospi && typeof kospi.value === "number" ? kospi.value : null, decidedAt: Date.now(), decidedHm: hm, flowReady: false, chartReady: sel.themes.some((t) => t.chart), requests: sel.requests, errors: sel.errors };
   if (final) { const r = await fillFinalFlows(L, { get, bizdate }); L = Object.assign(r.leaders, { flowReq: r.requests }); }
   return L;
