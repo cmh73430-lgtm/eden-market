@@ -4,7 +4,7 @@
 // 쓰기는 로컬 파일만(커밋·푸시는 eden/picker.yml 이 함). 자동 주문 0 · 투자 권유 아님 · 실행 중 LLM 0 · 키·토큰 0(네이버 공개 주소만).
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { pick, fillNext, orderbookOf, PICK } from "../shared/picker.js";
+import { pick, fillNext, orderbookOf, obMinOf, marketToday, PICK } from "../shared/picker.js";
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const m = /^--([^=]+)(?:=(.*))?$/.exec(a); return m ? [m[1], m[2] ?? true] : [a, true]; }));
 const DIR = args.dir || process.cwd();
@@ -87,12 +87,23 @@ let nasdaq = null;
 try { const j = await get("https://query1.finance.yahoo.com/v8/finance/chart/NQ=F?range=1d&interval=5m"); const m = j.chart.result[0].meta; const p = m.regularMarketPrice, pc = m.previousClose ?? m.chartPreviousClose; if (p > 0 && pc > 0) nasdaq = { rate: Math.round((p / pc - 1) * 1000) / 10, at: m.regularMarketTime ? new Date(m.regularMarketTime * 1000 + 9 * 3600e3).toISOString().slice(11, 16) : null }; } catch (e) { errors.push(`나스닥 선물: ${e.message || e}`); }
 
 // 9.29-179 R5 호가: 1차 후보(최대 40)만 네이버 askingPrice 받아 금액 추정 → 다시 계산(1억 미만 탈락 · 못 받으면 보류)
-const first = pick(stocks, { date, slot, interest: cfg.themes, map, indexNames: cfg.index, nasdaq });
+// 9.29-180 호가 기준 = 그날 시장 거래대금에 맞춤: 오늘 = auto/live.json(같은 날) 코스피+코스닥 거래대금 · 평균 = 지난 날짜 파일 close.market.invest 20거래일 · 장중은 지난 시간 비율로 환산
+const amt = (iv) => (iv && iv.kospi && iv.kosdaq && iv.kospi.amount > 0 && iv.kosdaq.amount > 0 ? iv.kospi.amount + iv.kosdaq.amount : null);
+const hist = []; for (let k = 1; k <= 45 && hist.length < 20; k++) { const d = addDays(date, -k); const j = readJson(`auto/${d}.json`); const v = j && j.close && j.close.market ? amt(j.close.market.invest) : null; if (v) hist.push(v); }
+// 게이트 180 REJECT ③: 지난 시간 비율 = 실행 시각 ✕ → 자료 자체 시각(kospi.time) · 오늘 장 마감 값(날짜 파일 close)이 있으면 그것(하루치 · 비율 1) · 실시간 자료가 30분 넘게 묵었으면 1억 그대로
+const todayRec = readJson(`auto/${date}.json`), closeAmt = todayRec && todayRec.close && todayRec.close.market ? amt(todayRec.close.market.invest) : null;
+const lv = readJson("auto/live.json"), lvOk = lv && lv.kospi && lv.kosdaq && lv.kospi.amount > 0 && lv.kosdaq.amount > 0;
+const mt = marketToday({ date, hm, closeAmt, live: lvOk ? { date: lv.date, at: typeof lv.kospi.time === "string" ? lv.kospi.time.slice(11, 16) : null, amount: lv.kospi.amount + lv.kosdaq.amount } : null }); // kospi.time "2026-11-25T12:25:23+09:00" → 12:25
+const todayAmt = mt.amount, mins = mt.elapsed * 390;
+if (todayAmt === null) errors.push(`호가 기준 = 1억 그대로(오늘 시장 거래대금 ${mt.src})`);
+const ob = obMinOf(todayAmt, hist.length >= 10 ? hist.reduce((a, x) => a + x, 0) / hist.length : null, mins / 390);
+if (ob.ratio === null) errors.push(`호가 기준 = 1억 그대로(시장 거래대금 자료 부족 · 오늘 ${todayAmt ?? "없음"} · 평균 ${hist.length}일)`);
+const first = pick(stocks, { date, slot, interest: cfg.themes, map, indexNames: cfg.index, nasdaq, obMin: ob.min });
 for (const p of first.picks.slice(0, 40)) {
   try { let ob = null; try { ob = orderbookOf(await get(`https://stock.naver.com/api/stockSecurity/items/v2/domestic/${p.code}/order-book?depth=10`, { tries: 2 })); } catch (e) {} if (!ob) ob = orderbookOf(await get(`https://m.stock.naver.com/api/stock/${p.code}/askingPrice`)); const s = stocks.find((x) => x.code === p.code); if (ob && s) s.ob = Object.assign(ob, { at: hm }); } catch (e) { errors.push(`호가 ${p.name}: ${e.message || e}`); }
   await sleep(120);
 }
-const r = pick(stocks, { date, slot, interest: cfg.themes, map, indexNames: cfg.index, nasdaq });
+const r = pick(stocks, { date, slot, interest: cfg.themes, map, indexNames: cfg.index, nasdaq, obMin: ob.min }); r.obRatio = ob.ratio; r.marketAmt = todayAmt; r.marketAvg20 = hist.length ? Math.round(hist.reduce((a, x) => a + x, 0) / hist.length) : null;
 const out = { app: "jangjeon-cockpit", kind: "picks", v: 1, date, slot, at: hm, ...r, pool: { top: top100.length, interest: pool.size - top100.length }, requests, errors: errors.slice(0, 30), note: "후보 표시 도구 · 자동 주문 0 · 투자 권유 아님 · 호가 10단계(R5) 1억 미만 = 탈락 · 못 받은 종목 = 보류", updatedAt: Date.now() };
 
 // 성과 기록: 같은 날·같은 회차는 그 줄만 바꿈 · 지난 줄에 다음 거래일 값 붙임(그 종목 일봉 다시 받음 · 최대 40종목)
@@ -104,7 +115,7 @@ const barsByCode = Object.fromEntries(stocks.map((s) => [s.code, s.bars]));
 for (const c of need) { if (barsByCode[c]) continue; try { barsByCode[c] = parseSise(await get(`https://api.finance.naver.com/siseJson.naver?symbol=${c}&requestType=1&startTime=${d8(addDays(date, -40))}&endTime=${d8(date)}&timeframe=day`, { json: false })); } catch (e) { errors.push(`성과 일봉 ${c}: ${e.message || e}`); } await sleep(120); }
 const filled = fillNext(log.rows, barsByCode); log.updatedAt = Date.now();
 
-console.log(`검색기 ${date} ${slot}(${hm}) · 본 종목 ${r.scanned}(상위 ${top100.length} + 관심 ${pool.size - top100.length}) · 후보 ${r.picks.length} · 요청 ${requests} · 성과 채움 ${filled}`);
+console.log(`호가 기준 ${Math.round(r.obMin / 1e6) / 100}억(시장 ×${r.obRatio ?? "—"} · 오늘 ${r.marketAmt ?? "—"}억 · 평균 ${r.marketAvg20 ?? "—"}억) · `); console.log(`검색기 ${date} ${slot}(${hm}) · 본 종목 ${r.scanned}(상위 ${top100.length} + 관심 ${pool.size - top100.length}) · 후보 ${r.picks.length} · 요청 ${requests} · 성과 채움 ${filled}`);
 for (const p of r.picks.slice(0, 10)) console.log(`  ${p.score} ${p.name} [${p.theme}${p.role ? " " + p.role : ""}] ${p.rate}% · 배수 ${p.mult}/${p.prevMult} · ${p.nature}${p.flags.length ? " · " + p.flags.join(" ") : ""}`);
 console.log("주도 테마(쏠림×상승): " + r.topThemes.map((t) => `${t.name} ${t.share}%·${t.rate}%`).join(" / ") + (r.thin.length ? " · 호가 얇아 뺌: " + r.thin.map((x) => x.name).join(",") : ""));
 if (errors.length) console.log("참고(일부 실패):", errors.slice(0, 8).join(" / "));

@@ -13,7 +13,8 @@ export const PICK = {
   RECENT_DAYS: 5,     // R7 최근 5일 안 재급등
   LIMIT_RATE: 29.5,   // R12 상한가 묶임
   BIG_CAP: 20000,     // R10 대형주 = 시총 2조(억 단위)
-  ORDERBOOK_MIN: 1e8, // R5 호가 10단계 합 1억(네이버 10단계 · 못 받으면 그 종목만 보류)
+  ORDERBOOK_MIN: 1e8, // R5 호가 10단계 합 1억 = 평소(최근 20거래일 평균) 시장 거래대금일 때 기준 · 9.29-180 obMinOf 로 그날 시장 거래대금에 맞춰 늘고 줄음
+  OB_RATIO_MIN: 0.5, OB_RATIO_MAX: 2, // 늘고 주는 한계(0.5억~2억)
   CRASH_RATE: -5,     // 지수관련주 급락일
   NEW_LIST_DAYS: 3,   // R11 상장 3거래일 안
   TOP_N: 100,         // R1 두 시장 거래대금 상위 100
@@ -94,6 +95,23 @@ export function flowOf(trend, date, vol) {
   return { frgn: f(r.frgn), inst: f(r.inst), indi: f(r.indi), date: r.date, today };
 }
 
+// 9.29-180 디렉터 「호가는 그날 시장의 거래대금에 따라 유도리있게」: 기준 = 1억 × (오늘 두 시장 거래대금 ÷ 최근 20거래일 평균) · 장중은 지난 시간 비율로 하루치 환산 · 0.5억~2억 안
+// today = 오늘 코스피+코스닥 거래대금(억 · 지금까지) · avg20 = 최근 20거래일 하루 평균(억) · elapsed = 정규장 지난 비율(0~1 · 15:30 뒤 1)
+export function obMinOf(today, avg20, elapsed = 1) {
+  if (!(today > 0) || !(avg20 > 0) || !(elapsed > 0)) return { min: PICK.ORDERBOOK_MIN, ratio: null };
+  const ratio = Math.round(Math.min(PICK.OB_RATIO_MAX, Math.max(PICK.OB_RATIO_MIN, today / Math.min(1, elapsed) / avg20)) * 100) / 100;
+  return { min: Math.round(PICK.ORDERBOOK_MIN * ratio), ratio };
+}
+// 오늘 시장 거래대금·지난 비율 정하기(게이트 180 r1·r2): ① 오늘 장 마감 값(날짜 파일 close) = 하루치 ② 실시간 자료 시각 15:30 뒤 = 하루치(묵어도 씀 · 15:40 값 = 최종의 0.92~1.00배 실측) ③ 장중 자료 = 자료 시각으로 환산 · 실행 시각보다 30분 넘게 묵으면 버림(1억)
+// closeAmt = 날짜 파일 코스피+코스닥(억|null) · live = { date, at:"HH:MM", amount } | null · hm = 실행 시각
+export function marketToday({ date, hm, closeAmt = null, live = null }) {
+  const m = (t) => Number(String(t).slice(0, 2)) * 60 + Number(String(t).slice(3, 5));
+  if (closeAmt > 0) return { amount: closeAmt, elapsed: 1, src: "마감" };
+  if (!live || live.date !== date || !(live.amount > 0) || !/^\d\d:\d\d/.test(String(live.at || ""))) return { amount: null, elapsed: 0, src: "없음" };
+  if (live.at >= "15:30") return { amount: live.amount, elapsed: 1, src: "장 마감 뒤 실시간" };
+  if (m(hm) - m(live.at) > 30) return { amount: null, elapsed: 0, src: "묵음 " + live.at };
+  return { amount: live.amount, elapsed: Math.max(0, Math.min(390, m(live.at) - 540)) / 390, src: "장중 " + live.at };
+}
 // 9.29-179 R5 호가: ① 네이버 10단계(stock.naver.com …/order-book?depth=10 · askLevels·bidLevels) = 가격×잔량 합 정확값 · ② 없으면 askingPrice(5단계 가격 + 10단계 잔량 합) 추정(매도 = 합×1호가 · 매수 = 합×5호가 · 0~0.6% 크게 나올 수 있음 · 게이트 179 실측)
 export function orderbookOf(j) {
   if (j && Array.isArray(j.askLevels) && Array.isArray(j.bidLevels)) {
@@ -160,7 +178,7 @@ export function rankAndScore(cands, { closing = false } = {}) {
 }
 
 // 한 회차 전부: stocks = [{ code, name, cap(억|null), bars, trend, live?:{value원, rate, high, nxtRate} }]
-export function pick(stocks, { date, slot = null, interest = {}, map = null, indexNames = ["SK하이닉스", "삼성전자", "삼성전기"], nasdaq = null } = {}) {
+export function pick(stocks, { date, slot = null, interest = {}, map = null, indexNames = ["SK하이닉스", "삼성전자", "삼성전기"], nasdaq = null, obMin = PICK.ORDERBOOK_MIN } = {}) {
   const closing = slot === "15:20" || slot === "19:30";
   const idx = new Set(indexNames);
   const all = [];
@@ -173,7 +191,7 @@ export function pick(stocks, { date, slot = null, interest = {}, map = null, ind
   }
   // R5 호가(9.29-179 · 네이버 askingPrice): 매수·매도 10호가 합이 각각 1억 미만이면 탈락 · 호가 못 받은 종목 = 판정 보류(그대로 둠)
   const thin = [];
-  for (const c of all) if (c.ok && c.ob && (c.ob.sell < PICK.ORDERBOOK_MIN || c.ob.buy < PICK.ORDERBOOK_MIN)) { c.ok = false; thin.push({ code: c.code, name: c.name, sell: c.ob.sell, buy: c.ob.buy }); }
+  for (const c of all) if (c.ok && c.ob && (c.ob.sell < obMin || c.ob.buy < obMin)) { c.ok = false; thin.push({ code: c.code, name: c.name, sell: c.ob.sell, buy: c.ob.buy }); }
   // 테마는 지수관련주 뺀 본 종목 전부에 붙임(주도 테마 = 거래대금 쏠림 × 상승 · 디렉터 11-25) · 대장·후속·점수는 후보끼리
   const body = all.filter((c) => !c.isIndex);
   assignThemes(body, { interest, map }); rankAndScore(body, { closing });
@@ -191,7 +209,7 @@ export function pick(stocks, { date, slot = null, interest = {}, map = null, ind
     rate: c.m.rate, prevRate: c.m.prevRate, nxtRate: c.nxtRate, valueEok: c.m.valueEok, mult: c.m.mult, prevMult: c.m.prevMult, new60: c.m.new60, breakout: c.m.breakout,
     nature: c.nature, up10N: c.m.up10N, cap: c.cap, flow: c.flow, flowScored: c.flowScored, mateOf: c.mateOf || null, close: c.m.close,
     orderbook: c.ob || null, chart: c.m.chart });
-  return { date, slot, picks: pool.map(card), topThemes, index, nasdaq, newList, thin, scanned: all.length };
+  return { date, slot, picks: pool.map(card), topThemes, index, nasdaq, newList, thin, obMin, scanned: all.length };
 }
 
 // 성과 기록: 지난 회차 picks 에 다음 거래일 시가·고가·종가(그날 종가 대비 %) 붙이기 — bars 는 코드별 일봉

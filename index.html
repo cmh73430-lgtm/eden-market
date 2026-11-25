@@ -499,6 +499,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .futlist.fcore .frow .fn, .futlist.fcore .frow .fq { font-size: 16px; } /* 핵심 4줄 = 위 · 크게 */
 .futref, .sigin { margin-top: 8px; } .futref > summary, .sigin > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); padding: 6px 0; } .futref > summary small, .sigin > summary small { font-weight: 400; }
 .usfutline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 2px 0 6px; padding: 7px 10px; border-radius: 8px; background: var(--note); font-size: 14px; } .usfutline b { font-weight: 600; } .usfutline .pill { font-size: 13px; }
+.usmap { margin: 8px 0; font-size: 13px; } .usmap h3 { font-size: 13px; margin: 8px 0 4px; } .usmap h3 small { font-weight: 400; color: var(--muted); font-size: 12px; } .usmap ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; } .usmap li { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 8px; } .usmap li span { overflow-wrap: anywhere; } .usmap li b { font-weight: 600; font-variant-numeric: tabular-nums; } .usmap .up { color: var(--up); } .usmap .dn { color: var(--down); }
 .usfutdetail { display: grid; gap: 4px; margin: 0 0 8px; font-size: 13px; } .usfutdetail .ufd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; } .usfutdetail .ufn { min-width: 6.5em; color: var(--muted); } .usfutdetail .up { color: var(--up); } .usfutdetail .dn { color: var(--down); } .usfutdetail:empty { display: none; }
 .usfutline .golink { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
 .refcard { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; background: var(--surface); display: grid; gap: 2px; }
@@ -1382,6 +1383,8 @@ header .tools { flex-direction: row; flex-wrap: wrap; align-items: center; justi
     <div class="autobtns" hidden><button class="btn" type="button" data-pull>🔄 지금 받아오기</button><a class="btn" data-collect href="https://github.com/cmh73430-lgtm/eden-market/actions/workflows/collect.yml" target="_blank" rel="noopener" title="열린 GitHub 화면에서 Run workflow → 초록 Run workflow">⚡ 지금 새로 수집 ↗</a><span class="autobtnmsg" data-msg></span></div>
     <div class="usidx" id="usIdx"></div>
     <div id="usList"></div>
+    <div id="usMap"></div> <!-- 9.29-180 Finviz 업종 지도 자동 받기(auto/us-map.json · 아침 06:20·07:20) -->
+    <div class="links">열어서 보기 <a class="lk" href="https://finviz.com/map?t=sec_all" target="_blank" rel="noopener">Finviz 미국 업종 지도 ↗</a></div> <!-- 9.29-180 디렉터 「finviz.com/map?t=sec_all 여기서도 연동할건해」: 링크만 · 값 자동 받기는 안 함(약관 페이지 finviz.com/terms 가 스크립트로 그려져 자동 수집 허용 여부 실측 못 함 · robots.txt 는 /export·/screener 막음 · 미국 테마 값은 지금 수집 그대로) -->
     <details class="howto" data-howto="usleg"><summary>기호·기준 설명</summary><div class="hint">🇰🇷 = 한국 전일·오늘 주도 테마도 오름 · 🇰🇷🇺🇸 = 한국·미국 둘 다 오름 (판단 근거·매매 일지 주도 테마와 서로 이어져요). 기준보다 많이 오르면 "우선 관심", 많이 내리면 "후순위"예요. 여러 종목이면 대충 평균을 넣어요. 비트코인·금·구리는 그 주식을 살 생각이 있는 날만 보면 돼요.</div></details>
     <details class="howto" data-howto="usfwd"><summary>전진 기록 (매일 신호 → 한국 결과)</summary><div class="hint" id="usFwd">아직 기록 없음 · 매일 저녁 마감 확정 수집이 한 줄씩 쌓아요</div></details> <!-- 9.29-105 원장 [2132] ③ -->
   </section>
@@ -3736,7 +3739,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-179";
+  const APP_VER = "9.29-180";
   /* 9.29-152 원장 [집2619][집2620] 수급 범위 표시(실측 2026-11-04 · work/도구/152 · gate [집2632]: NXT 프리·애프터 포함은 미실측 → 「KRX+NXT 통합」 만 말함): 시장 전체 = 키움 ka10051·ka90004 통합(집 PC · 수집기 investAll) · 없으면 네이버(= 키움 KRX 값과 같음 · 16:00 뒤 값은 KRX 애프터 포함 → 「KRX만」) · 종목·테마·C = ka10063(거래소 구분 없는 장중 잠정 · stex 1·2·3 값 같음) */
   const SUP_ALL = "KRX+NXT 통합", SUP_REG = "정규만", SUP_KRX = "KRX만(NXT 제외)", SUP_EST = "장중 잠정(거래소 구분 없음)";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
@@ -4393,7 +4396,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     $("jMorning").innerHTML = morningSummary(r).html; // 9.29-110 TF 합의: 장전 판단은 📰 마감 시황 ① 한 곳만(매매 일지 쪽 접힘 칸 없앰)
     paintPrevClose(); // 9.29-94 원장 [1718] ① 전날 장 마감 카드
     paintIntraIdx(); paintCloseIdx(); // 9.29-130 [집2468] ④·⑤ 지수·수급 상자
-    paintIntraFut(); paintNewsRail(); newsBind(); pickBind(); // 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸
+    paintIntraFut(); paintNewsRail(); newsBind(); pickBind(); if (!paintUsMap.h) { paintUsMap.h = 1; usMapPull(); } // 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸
     paintNowChk(); // 9.29-146 [집2586] ④ 지금 확인할 것
     return r;
   }
@@ -4692,9 +4695,21 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const list = P.picks.length ? `<h3>후보 ${P.picks.length}</h3><div class="pklist">${P.picks.slice(0, 15).map(card).join("")}</div>${P.picks.length > 15 ? `<details><summary>나머지 ${P.picks.length - 15}</summary><div class="pklist">${P.picks.slice(15).map(card).join("")}</div></details>` : ""}` : `<div class="muted">조건 맞는 종목 없음 (평소 3배↑ 거래대금 + 오늘 상승)</div>`;
     const ix = (P.index || []).length ? `<h3>지수관련주</h3><ul class="pkthemes">${P.index.map((x) => `<li><span>${esc(x.name)}${x.crash ? " · 급락일" : ""}</span><small>${pkPct(x.rate)}</small></li>`).join("")}<li><span>나스닥 선물</span><small>${P.nasdaq ? pkPct(P.nasdaq.rate) + (P.nasdaq.at ? " · " + esc(P.nasdaq.at) : "") : "자료 없음"}</small></li></ul>` : "";
     const nl = (P.newList || []).length ? `<h3>신규 상장(3일 안)</h3><ul class="pkthemes">${P.newList.map((x) => `<li><span>${esc(x.name)} · ${x.day}일째</span><small>${pkPct(x.rate)}</small></li>`).join("")}</ul>` : "";
-    const tn = (P.thin || []).length ? `<h3>호가 얇아 뺀 종목 <small>10호가 1억 미만</small></h3><div class="muted">${P.thin.map((x) => esc(x.name)).join(" · ")}</div>` : "";
+    const obTxt = (typeof P.obMin === "number" ? (Math.round(P.obMin / 1e6) / 100) + "억" : "1억") + " 미만" + (typeof P.obRatio === "number" ? " (오늘 시장 거래대금 평소의 " + P.obRatio + "배)" : "");
+    const tn = (P.thin || []).length ? `<h3>호가 얇아 뺀 종목 <small>10호가 ${esc(obTxt)}</small></h3><div class="muted">${P.thin.map((x) => esc(x.name)).join(" · ")}</div>` : "";
     body.innerHTML = th + list + tn + ix + nl;
   }
+  /* 9.29-180 디렉터 「finviz … 연동」→「자동받기해」: ② 뉴욕증시 카드에 Finviz 미국 업종 지도(섹터 11 · 오른 업종·내린 업종 위 5) · auto/us-map.json(아침 자동) · 값 그대로 */
+  const US_SEC_KO = { "Technology": "기술", "Financial": "금융", "Healthcare": "헬스케어", "Consumer Cyclical": "경기소비재", "Communication Services": "통신·미디어", "Industrials": "산업재", "Energy": "에너지", "Basic Materials": "소재", "Consumer Defensive": "필수소비재", "Real Estate": "부동산", "Utilities": "유틸리티" };
+  let USMAP = null;
+  function paintUsMap() {
+    const box = $("usMap"); if (!box) return; const M = USMAP;
+    if (!M || !Array.isArray(M.sectors) || !M.sectors.length) { box.innerHTML = ""; return; }
+    const cls = (x) => (x > 0 ? "up" : x < 0 ? "dn" : ""), li = (n, r) => `<li><span>${esc(n)}</span><b class="${cls(r)}">${pkPct(r)}</b></li>`;
+    box.innerHTML = `<div class="usmap"><h3>Finviz 미국 업종 <small>${esc(mdw(M.date))} ${esc(M.at || "")} 받음 · 시총 가중</small></h3><ul>${M.sectors.map((s) => li(US_SEC_KO[s.name] || s.name, s.rate)).join("")}</ul>`
+      + `<h3>오른 업종</h3><ul>${(M.indUp || []).slice(0, 5).map((x) => li(x.name, x.rate)).join("")}</ul><h3>내린 업종</h3><ul>${(M.indDn || []).slice(0, 5).map((x) => li(x.name, x.rate)).join("")}</ul></div>`;
+  }
+  async function usMapPull() { try { const j = await pubGet(PUB_RAW + "us-map.json"); if (j && j.sectors) USMAP = j; } catch (e) {} paintUsMap(); }
   async function pickPull() { try { const j = await pubGet(PUB_RAW + "picks.json"); if (j && j.date) PICKS = j; } catch (e) {} paintPicks(); }
   function pickBind() {
     const btn = $("pickBtn"), card = $("pickCard"), x = $("pickClose"); if (!btn || !card || pickBind.h) return; pickBind.h = 1;

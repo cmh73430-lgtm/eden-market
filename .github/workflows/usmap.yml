@@ -1,0 +1,32 @@
+# 9.29-180 Finviz 미국 업종 지도 자동 받기 — 평일 아침 06:20·07:20 KST(미국장 마감 뒤) · 결과 auto/us-map.json
+# 원본 = 앱 저장소 eden/usmap.yml → scripts/sync-eden-market.sh 가 eden-market/.github/workflows/usmap.yml 로 복사
+# GitHub 예약은 늦을 수 있음 → 회사 PC 깨우기(E:\에덴_cockpit\도구\깨우기\dispatch.ps1 · usmap0620·usmap0720 칸)가 직접 부름 · 예약은 대비용
+name: usmap
+on:
+  schedule:
+    - cron: "20 21 * * 0-4"   # 06:20 KST 화~토 아침(월~금 미국장 다음 날)
+    - cron: "20 22 * * 0-4"   # 07:20 KST
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: usmap
+  cancel-in-progress: false
+jobs:
+  usmap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Finviz 업종 지도 받고 저장
+        run: |
+          node scripts/us-map.mjs --dir=.
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add auto/us-map.json
+          if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          git commit -q -m "Finviz 업종 지도 $(TZ=Asia/Seoul date '+%F %H:%M')"
+          for i in 1 2 3 4 5; do git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0; sleep $((i*5)); done
+          echo "푸시 실패"; exit 1
