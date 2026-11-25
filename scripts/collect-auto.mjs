@@ -7,6 +7,7 @@
 //   옵션: --after (시각·기존 기록과 관계없이 계산) · --afterout=파일 (--dry 결과 저장)
 // 결과는 GITHUB_REPOSITORY 의 AUTO_BRANCH(기본 cockpit-data, 공개 저장소 eden-market 은 main) 브랜치 auto/<날짜>.json 과 auto/latest.json 에 둔다.
 // 옵션: --when=morning|intraday|close|themes|live|afterlive (afterlive = 16:00~20:05 애프터 실시간 → auto/live-after.json 만 · 기본: 지금 시각으로 판단 · live = 장중 실시간 주도 테마 → auto/live.json 만 · themes = 미국장 테마 값만 아침 기록에 채워 넣기, 새 테마를 추가한 날) --date=YYYY-MM-DD (기본: 오늘 KST) --dry (저장 안 함) --force (주말·휴장도 실행)
+//       --trial (live --dry 에서도 9.29-162 시험 기록 · 창 무시) --trialout=폴더 (--dry 시험 기록 파일을 그 폴더에)
 //       --final (close: 실행 시각과 관계없이 확정 run — 수급·일봉 포함). 오늘이 아닌 --date 로 손으로 백필하는 close run 도 확정으로 돈다 (잠정 결과가 확정을 덮지 않게)
 // 관찰 기록 (9.29-82 원장 [1556] · [1558]): 마감 확정 run 이 400종목 중 「급락일 외국인·기관 동반 매수」 종목과 그 뒤 결과를 auto/observe/crash-cobuy.json 에 쌓는다
 //   (대상 목록 auto/observe/universe.json 은 7일마다 다시 만듦 · 기록만 · 날짜 파일·앱 무변경 · --dry 는 목록만 출력)
@@ -42,6 +43,7 @@ import upbit from "../server/sources/upbit.js";
 import kis from "../server/sources/kis.js";
 import { kiwoomFlows, kwMask, kwText, kwKeys, kwFromHome, kwMarketFromHome, kwMarketText, KW_HOME_FILE } from "../server/sources/kiwoom.js"; /* 9.29-111 원장 [2343] ②안 키움 장중 수급(키 = env KIWOOM_APP_KEY·KIWOOM_APP_SECRET · 없으면 건너뜀 · 토큰 출력 0 · Actions 면 ::add-mask::) */
 import tradingview from "../server/sources/tradingview.js";
+import { trialStep, trialText } from "../server/trial162.js"; /* 9.29-162 원장 [집2668] 장 초반 식별 시험 기록 */
 
 const arg = (name, def) => { const a = process.argv.find((x) => x.startsWith("--" + name + "=")); return a ? a.slice(name.length + 3) : def; };
 const has = (name) => process.argv.includes("--" + name);
@@ -202,6 +204,18 @@ if (when === "live") {
     const kwT = (live.themes || []).filter((t) => t.flow && t.flow.src).length; /* 9.29-111 */
     console.log(`C 방식(v7 테마수급 ∩ 수익률): ${live.rankC ? (live.rankC.themesC.length ? live.rankC.themesC.map((t) => `${t.name} 외인 ${t.foreign}억 · 기관 ${t.inst}억 · ${t.rate}%${t.tags.length ? "(" + t.tags.join("·") + ")" : ""}`).join(" / ") : "C " + live.rankC.none) : "없음"} · A 테마 중 키움 수급 붙음 ${kwT}/${(live.themes || []).length} · 선정 수급 키움 종목 ${live.kiwoom ? live.kiwoom.flowN : 0} · ④ 테마 수급 ${(live.themes || []).filter((t) => t.tflow).map((t) => `${t.name} 외인 ${t.tflow.foreign}억·기관 ${t.tflow.inst}억(${t.tflow.n}/${t.tflow.of}종목)`).join(" / ") || "없음"} · 주도주 수급 키움 ${(live.themes || []).flatMap((t) => t.slots || []).filter((x) => x.flow && x.flow.src === "kiwoom").length}종목`); } // 선정 실패(구성표·순위 못 받음)면 저장 안 함 · 09:30 전(wait)·완화 끝까지 0개(short)는 그대로 저장
   if (save) { await writeFile(AUTO_DIR + "/live.json", live, `실시간 ${date} ${live.at}`); console.log(`저장: ${AUTO_DIR}/live.json (${BRANCH})`); } else console.log(has("dry") ? "(--dry: 저장 안 함)" : "(GITHUB_TOKEN/GITHUB_REPOSITORY 없음: 저장 안 함)");
+  /* 9.29-162 원장 [집2668] 장 초반 식별 시험 기록(server/trial162.js · 사전 등록 docs/trial-162.md): 09:05~10:30 회차만 auto/trial/ 에 따로(live.json 무접촉 · 앱 안 읽음) · live.json 저장 「뒤」 · 실패해도 위 저장 그대로(로그만 · 종료 코드 0)
+     --dry 는 --trial 줄 때만(창 무시 · 공개 저장소 읽기 · --trialout=폴더 면 그 폴더에 「경로의 / → _」 이름으로 씀 · 다음 --dry 가 그 폴더를 먼저 읽음) */
+  if (save || has("trial")) {
+    try {
+      const tdir = arg("trialout"), tloc = (p) => tdir + "/" + p.replace(/\//g, "_");
+      const tr = await trialStep({ live, date, map: tmap.map, get: nvGet, ranAt: kstTime(now), force: has("trial"),
+        rd: save ? (p) => readFile(p).then((x) => x.json) : async (p) => { if (tdir) { try { return JSON.parse(readFileSync(tloc(p), "utf8")); } catch (e) {} } return readPublic(p); },
+        wr: save ? (p, o, m) => writeFile(p, o, m) : async (p, o) => { if (tdir) writeFileSync(tloc(p), JSON.stringify(o)); },
+        prevDays: (d, n) => { const out = []; let x = d; for (let i = 0; i < n; i++) { x = prevBusinessDay(x, cfg.holidays); out.push(x); } return out; } });
+      console.log(trialText(tr));
+    } catch (e) { console.log("시험 162 기록 실패(본 수집 무관 · live.json 은 그대로):", String((e && e.message) || e).slice(0, 200)); }
+  }
   process.exit(0);
 }
 // ---- 애프터 실시간 (afterlive): 16:00~20:05 평일 · auto/live-after.json 한 파일에만 저장 (날짜 파일·live.json·latest 무접촉) ----

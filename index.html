@@ -857,6 +857,18 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 .topld .tll li.tlbx .cwhy { display: block; font-size: 12px; }
 @media (max-width: 600px) { .topld.ab3 .tlcols { grid-template-columns: minmax(0, 1fr); row-gap: 10px; } .topld.ab3 :is(.tlcolb, .tlcolc)::before { display: none; } .topld.ab3 :is(.tlcolb, .tlcolc) { border-top: 1px solid var(--line); padding-top: 8px; } }
 /* 9.29-144 원장 [집2511][집2575][집2576] 오른쪽 고정 뉴스 칸 · [집2510][집2577] ④ 선물 카드 · [집2583] ④ 접힌 테마 종목 칩 · [집2584] 외국인 흐름 좋음/나쁨/중립 */
+/* 9.29-177 검색기 카드 — 휴대폰 390px 가로 스크롤 0 · 종목마다 세로 카드(칸 2개) */
+.pickcard .pkh { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; row-gap: 2px; } .pickcard .pkh b { font-size: 15px; } .pickcard .pkh small { flex: 1 1 auto; min-width: 0; font-size: 12px; color: var(--muted); }
+.pickcard h3 { font-size: 13px; margin: 12px 0 6px; }
+.pickcard .pkthemes { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.pickcard .pkthemes li { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 8px; } .pickcard .pkthemes li span { overflow-wrap: anywhere; } .pickcard .pkthemes li small { font-variant-numeric: tabular-nums; color: var(--muted); }
+.pickcard .pklist { display: grid; gap: 8px; }
+.pickcard .pk { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.pickcard .pk .pkt { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; row-gap: 2px; } .pickcard .pk .pkt b { font-size: 15px; overflow-wrap: anywhere; } .pickcard .pk .pkt .sc { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pickcard .pk .pkf { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; } .pickcard .pk .pkf span { font-size: 12px; border-radius: 999px; padding: 1px 8px; background: var(--note); }
+.pickcard .pk .pkf .star { color: var(--up); font-weight: 600; } .pickcard .pk .pkf .warn { color: var(--a); font-weight: 600; }
+.pickcard .pk dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 10px; row-gap: 2px; margin: 0; font-size: 13px; } .pickcard .pk dt { color: var(--muted); } .pickcard .pk dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.pickcard .pksrc { margin-top: 10px; font-size: 12px; color: var(--muted); }
 .newsrail { display: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
 .newsrail.open { display: block; }
 .newsrail .nrh { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; row-gap: 2px; } .newsrail .nrh b { font-size: 15px; } .newsrail .nrh small { flex: 1 1 auto; min-width: 0; font-size: 12px; color: var(--muted); }
@@ -1301,13 +1313,19 @@ header .tools { flex-direction: row; flex-wrap: wrap; align-items: center; justi
     </div>
     <div class="tools"><div class="row"><button class="btn" id="simpleBtn" type="button">🧹 간단 보기 ✓</button><button class="btn" id="reset" type="button">이 날 초기화</button><span id="resetAsk" class="row" hidden><button class="btn danger" id="resetYes" type="button">정말 지우기</button><button class="btn" id="resetNo" type="button">취소</button></span><button class="btn" id="undo" type="button" hidden>↩ 되돌리기</button></div><div class="sync" id="sync"></div></div>
   </header>
-  <div class="jumps"><button class="btn docbtn" id="docOpen" type="button">📘 내 매매기법</button><button class="btn docbtn" type="button" data-jump="marketCard">📰 시황일지</button><button class="btn docbtn" type="button" data-jump="journal">📓 매매일지</button><button class="btn docbtn newsbtn" id="newsBtn" type="button" aria-expanded="false" aria-controls="newsRail">📰 뉴스</button></div>
+  <div class="jumps"><button class="btn docbtn" id="docOpen" type="button">📘 내 매매기법</button><button class="btn docbtn" type="button" data-jump="marketCard">📰 시황일지</button><button class="btn docbtn" type="button" data-jump="journal">📓 매매일지</button><button class="btn docbtn pickbtn" id="pickBtn" type="button" aria-expanded="false" aria-controls="pickCard">🔎 검색기</button><button class="btn docbtn newsbtn" id="newsBtn" type="button" aria-expanded="false" aria-controls="newsRail">📰 뉴스</button></div>
   <!-- 9.29-144 원장 [집2511][집2575][집2576] 「화면 오른쪽 고정」 뉴스 칸: 넓은 화면(1100px↑) = 오른쪽에 늘 떠 있음(본문은 왼쪽으로 비켜 남 · 가림 0) · 휴대폰 = 맨 위 「📰 뉴스」 버튼으로 열고 닫기(이 자리에 펼침) -->
   <aside class="newsrail" id="newsRail" aria-label="실시간 뉴스">
     <div class="nrh"><b>📰 실시간 뉴스</b><small id="newsAt"></small><button class="btn nrx" id="newsClose" type="button">닫기</button></div>
     <div id="newsBody"><div class="muted">기록 없음</div></div>
     <div class="nrsrc">네이버 증권 뉴스 · 제목만 · 누르면 원문</div>
   </aside>
+  <!-- 9.29-177 검색기(주도주 후보): 맨 위 「🔎 검색기」 버튼으로 열고 닫기 · 하루 흐름 카드는 그대로 · 자료 = auto/picks.json(15:20·19:30 자동) · 후보 표시만(주문 0 · 투자 권유 아님) -->
+  <section class="card pickcard" id="pickCard" hidden aria-label="검색기">
+    <div class="pkh"><b>🔎 검색기 · 주도주 후보</b><small id="pickAt"></small><button class="btn nrx" id="pickClose" type="button">닫기</button></div>
+    <div id="pickBody"><div class="muted">불러오는 중…</div></div>
+    <div class="pksrc">거래대금 폭증(평소 3배↑) + 오늘 상승 종목을 테마로 묶어 대장·후속 점수순 · 15:20·19:30 자동 · 후보 표시만, 투자 권유 아님</div>
+  </section>
 
   <div class="card linknotice" id="linkNotice" hidden>
     <b>📌 지금 보는 곳은 Claude 링크라 자동 입력이 안 돼요</b>
@@ -3717,7 +3735,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-174";
+  const APP_VER = "9.29-177";
   /* 9.29-152 원장 [집2619][집2620] 수급 범위 표시(실측 2026-11-04 · work/도구/152 · gate [집2632]: NXT 프리·애프터 포함은 미실측 → 「KRX+NXT 통합」 만 말함): 시장 전체 = 키움 ka10051·ka90004 통합(집 PC · 수집기 investAll) · 없으면 네이버(= 키움 KRX 값과 같음 · 16:00 뒤 값은 KRX 애프터 포함 → 「KRX만」) · 종목·테마·C = ka10063(거래소 구분 없는 장중 잠정 · stex 1·2·3 값 같음) */
   const SUP_ALL = "KRX+NXT 통합", SUP_REG = "정규만", SUP_KRX = "KRX만(NXT 제외)", SUP_EST = "장중 잠정(거래소 구분 없음)";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
@@ -4374,7 +4392,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     $("jMorning").innerHTML = morningSummary(r).html; // 9.29-110 TF 합의: 장전 판단은 📰 마감 시황 ① 한 곳만(매매 일지 쪽 접힘 칸 없앰)
     paintPrevClose(); // 9.29-94 원장 [1718] ① 전날 장 마감 카드
     paintIntraIdx(); paintCloseIdx(); // 9.29-130 [집2468] ④·⑤ 지수·수급 상자
-    paintIntraFut(); paintNewsRail(); newsBind(); // 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸
+    paintIntraFut(); paintNewsRail(); newsBind(); pickBind(); // 9.29-144 [집2510][집2511] ④ 선물 카드 · 오른쪽 뉴스 칸
     paintNowChk(); // 9.29-146 [집2586] ④ 지금 확인할 것
     return r;
   }
@@ -4645,6 +4663,36 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const open = LIVE.date === today && isBusinessDay(today, CAL.holidays) && kstHM() >= "09:00" && kstHM() <= "15:40";
     if (at) at.textContent = (LIVE.date === today ? "" : mdw(LIVE.date) + " ") + (N.at ? N.at + " 받음 · " : "") + (open ? "5분마다" : "장중 5분마다 새로");
     body.innerHTML = newsSec("⚡ 속보", N.flash, "flash", today) + newsSec("📌 주요 뉴스", N.main, "main", today);
+  }
+  /* 9.29-177 검색기(주도주 후보) 카드: auto/picks.json(scripts/pick-leaders.mjs · 15:20·19:30) · 열려 있을 때만 받음(처음 + 1분마다) · 값은 파일 그대로(지어내기 0) · 후보 표시만 */
+  let PICKS = null, pickTimer = null;
+  const pkNum = (x, unit = "") => (typeof x === "number" ? x.toLocaleString("ko-KR") + unit : "—");
+  const pkPct = (x) => (typeof x === "number" ? (x > 0 ? "+" : "") + x + "%" : "—");
+  function paintPicks() {
+    const body = $("pickBody"), at = $("pickAt"); if (!body) return;
+    const P = PICKS;
+    if (!P || !Array.isArray(P.picks)) { if (at) at.textContent = ""; body.innerHTML = `<div class="muted">기록 없음 · 평일 15:20·19:30 자동</div>`; return; }
+    if (at) at.textContent = (P.date === kstDate() ? "오늘 " : mdw(P.date) + " ") + (P.slot || "") + (P.at && !String(P.slot || "").includes(P.at) ? " (" + P.at + " 받음)" : "") + " · 본 종목 " + (P.scanned ?? "—");
+    const th = (P.topThemes || []).length ? `<h3>오늘 주도 테마</h3><ul class="pkthemes">${P.topThemes.map((t) => `<li><span>${esc(t.name)}</span><small>${pkNum(t.valueEok, "억")} · ${pkPct(t.rate)}</small></li>`).join("")}</ul>` : "";
+    const fl = (f) => `<span class="${f.startsWith("★") ? "star" : f.startsWith("⚠") ? "warn" : ""}">${esc(f)}</span>`;
+    const flow = (p) => !p.flow ? "자료 없음" : `외 ${pkPct(p.flow.frgn)} · 기 ${pkPct(p.flow.inst)} · 개 ${pkPct(p.flow.indi)}${p.flowScored ? "" : " (중소형 · 점수 안 넣음)"}`;
+    const card = (p) => `<div class="pk"><div class="pkt"><b>${esc(p.name)}</b><small>${esc(p.theme || "")}${p.role ? " · " + esc(p.role) : ""}</small><span class="sc">${p.score}점</span></div>`
+      + (p.flags && p.flags.length ? `<div class="pkf">${p.flags.map(fl).join("")}</div>` : "")
+      + `<dl><dt>등락</dt><dd>오늘 ${pkPct(p.rate)} · 전날 ${pkPct(p.prevRate)}${typeof p.nxtRate === "number" ? " · NXT " + pkPct(p.nxtRate) : ""}</dd>`
+      + `<dt>거래대금</dt><dd>${pkNum(p.valueEok, "억")} · 평소 ×${p.mult ?? "—"} (전날 ×${p.prevMult ?? "—"})</dd>`
+      + `<dt>성격</dt><dd>${esc(p.nature || "—")}${p.new60 ? " · 60일 신고가" : ""}${p.mateOf ? " · 상한가 " + esc(p.mateOf.join("·")) + " 다음" : ""}</dd>`
+      + `<dt>수급</dt><dd>${flow(p)}</dd><dt>호가</dt><dd>자료 없음(보류)</dd></dl></div>`;
+    const list = P.picks.length ? `<h3>후보 ${P.picks.length}</h3><div class="pklist">${P.picks.slice(0, 15).map(card).join("")}</div>${P.picks.length > 15 ? `<details><summary>나머지 ${P.picks.length - 15}</summary><div class="pklist">${P.picks.slice(15).map(card).join("")}</div></details>` : ""}` : `<div class="muted">조건 맞는 종목 없음 (평소 3배↑ 거래대금 + 오늘 상승)</div>`;
+    const ix = (P.index || []).length ? `<h3>지수관련주</h3><ul class="pkthemes">${P.index.map((x) => `<li><span>${esc(x.name)}${x.crash ? " · 급락일" : ""}</span><small>${pkPct(x.rate)}</small></li>`).join("")}<li><span>나스닥 선물</span><small>${P.nasdaq ? pkPct(P.nasdaq.rate) + (P.nasdaq.at ? " · " + esc(P.nasdaq.at) : "") : "자료 없음"}</small></li></ul>` : "";
+    const nl = (P.newList || []).length ? `<h3>신규 상장(3일 안)</h3><ul class="pkthemes">${P.newList.map((x) => `<li><span>${esc(x.name)} · ${x.day}일째</span><small>${pkPct(x.rate)}</small></li>`).join("")}</ul>` : "";
+    body.innerHTML = th + list + ix + nl;
+  }
+  async function pickPull() { try { const j = await pubGet(PUB_RAW + "picks.json"); if (j && j.date) PICKS = j; } catch (e) {} paintPicks(); }
+  function pickBind() {
+    const btn = $("pickBtn"), card = $("pickCard"), x = $("pickClose"); if (!btn || !card || pickBind.h) return; pickBind.h = 1;
+    const set = (on) => { card.hidden = !on; btn.setAttribute("aria-expanded", on ? "true" : "false"); btn.textContent = on ? "🔎 검색기 닫기" : "🔎 검색기"; clearInterval(pickTimer); pickTimer = on ? setInterval(pickPull, 60000) : null; if (on) pickPull(); };
+    btn.addEventListener("click", () => { const on = card.hidden; set(on); if (on) card.scrollIntoView({ block: "nearest" }); });
+    if (x) x.addEventListener("click", () => { set(false); btn.focus(); });
   }
   function newsBind() {
     const btn = $("newsBtn"), rail = $("newsRail"), x = $("newsClose"); if (!btn || !rail || newsBind.h) return; newsBind.h = 1;

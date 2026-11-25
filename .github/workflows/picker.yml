@@ -1,0 +1,45 @@
+# 9.29-177 검색기(주도주 후보) — 평일 15:20(정규장 종배) · 19:30(NXT 종배) KST · 결과 auto/picks.json + auto/observe/picks-log.json
+# 원본 = 앱 저장소 eden/picker.yml → scripts/sync-eden-market.sh 가 eden-market/.github/workflows/picker.yml 로 복사
+# GitHub 예약은 늦을 수 있음(실측 3~10시간) → 회사 PC 깨우기(E:\에덴_cockpit\도구\깨우기\dispatch.ps1)가 15:20·19:30 에 이 작업을 직접 부름(picker 칸) · 예약은 대비용
+# 늦게 돌아 자정을 넘기면 스크립트가 「시세 날짜 ≠ 실행 날」로 저장 안 함
+# 주말·휴장은 스크립트가 건너뜀. 자동 주문 0 · 키·토큰 0(네이버 공개 주소만 · 저장소 쓰기는 GITHUB_TOKEN)
+name: picker
+on:
+  schedule:
+    - cron: "20 6 * * 1-5"    # 15:20 KST
+    - cron: "30 10 * * 1-5"   # 19:30 KST
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "15:20 · 19:30 — 비우면 지금 시각으로(그 밖 시각 = 수시)"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: picker   # 게이트 177 REJECT ①: collect 묶음에 넣으면 5분마다 오는 수집이 대기 중인 검색기를 밀어냄(대기 1개 규칙) → 따로 · 푸시 겹침은 pull --rebase 재시도
+  cancel-in-progress: false
+jobs:
+  pick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 검색기 돌리고 저장
+        env:
+          IN_SLOT: ${{ github.event.inputs.slot }}
+          SCHED: ${{ github.event.schedule }}
+        run: |
+          ARGS=(--dir=.)
+          if [ -n "$IN_SLOT" ]; then ARGS+=("--slot=$IN_SLOT"); fi
+          # 예약 칸이 늦게 돌면 이름을 억지로 15:20·19:30 으로 붙이지 않음 → 스크립트가 실제 시각으로 정함(창 밖 = 「수시 HH:MM」)
+          node scripts/pick-leaders.mjs "${ARGS[@]}"
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add auto/picks.json auto/observe/picks-log.json auto/observe/picker-codes.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          git commit -q -m "검색기 $(TZ=Asia/Seoul date +%F) ${IN_SLOT:-$(TZ=Asia/Seoul date +%H:%M)}"
+          for i in 1 2 3 4 5; do git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0; sleep $((i*5)); done
+          echo "푸시 실패"; exit 1
