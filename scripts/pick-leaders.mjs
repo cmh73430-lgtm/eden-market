@@ -4,7 +4,7 @@
 // 쓰기는 로컬 파일만(커밋·푸시는 eden/picker.yml 이 함). 자동 주문 0 · 투자 권유 아님 · 실행 중 LLM 0 · 키·토큰 0(네이버 공개 주소만).
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { pick, fillNext, PICK } from "../shared/picker.js";
+import { pick, fillNext, orderbookOf, PICK } from "../shared/picker.js";
 
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const m = /^--([^=]+)(?:=(.*))?$/.exec(a); return m ? [m[1], m[2] ?? true] : [a, true]; }));
 const DIR = args.dir || process.cwd();
@@ -86,8 +86,14 @@ for (const s of pool.values()) {
 let nasdaq = null;
 try { const j = await get("https://query1.finance.yahoo.com/v8/finance/chart/NQ=F?range=1d&interval=5m"); const m = j.chart.result[0].meta; const p = m.regularMarketPrice, pc = m.previousClose ?? m.chartPreviousClose; if (p > 0 && pc > 0) nasdaq = { rate: Math.round((p / pc - 1) * 1000) / 10, at: m.regularMarketTime ? new Date(m.regularMarketTime * 1000 + 9 * 3600e3).toISOString().slice(11, 16) : null }; } catch (e) { errors.push(`나스닥 선물: ${e.message || e}`); }
 
+// 9.29-179 R5 호가: 1차 후보(최대 40)만 네이버 askingPrice 받아 금액 추정 → 다시 계산(1억 미만 탈락 · 못 받으면 보류)
+const first = pick(stocks, { date, slot, interest: cfg.themes, map, indexNames: cfg.index, nasdaq });
+for (const p of first.picks.slice(0, 40)) {
+  try { let ob = null; try { ob = orderbookOf(await get(`https://stock.naver.com/api/stockSecurity/items/v2/domestic/${p.code}/order-book?depth=10`, { tries: 2 })); } catch (e) {} if (!ob) ob = orderbookOf(await get(`https://m.stock.naver.com/api/stock/${p.code}/askingPrice`)); const s = stocks.find((x) => x.code === p.code); if (ob && s) s.ob = Object.assign(ob, { at: hm }); } catch (e) { errors.push(`호가 ${p.name}: ${e.message || e}`); }
+  await sleep(120);
+}
 const r = pick(stocks, { date, slot, interest: cfg.themes, map, indexNames: cfg.index, nasdaq });
-const out = { app: "jangjeon-cockpit", kind: "picks", v: 1, date, slot, at: hm, ...r, pool: { top: top100.length, interest: pool.size - top100.length }, requests, errors: errors.slice(0, 30), note: "후보 표시 도구 · 자동 주문 0 · 투자 권유 아님 · 호가 10단계(R5) 자료 없음 = 보류", updatedAt: Date.now() };
+const out = { app: "jangjeon-cockpit", kind: "picks", v: 1, date, slot, at: hm, ...r, pool: { top: top100.length, interest: pool.size - top100.length }, requests, errors: errors.slice(0, 30), note: "후보 표시 도구 · 자동 주문 0 · 투자 권유 아님 · 호가 10단계(R5) 1억 미만 = 탈락 · 못 받은 종목 = 보류", updatedAt: Date.now() };
 
 // 성과 기록: 같은 날·같은 회차는 그 줄만 바꿈 · 지난 줄에 다음 거래일 값 붙임(그 종목 일봉 다시 받음 · 최대 40종목)
 const log = readJson("auto/observe/picks-log.json", { app: "jangjeon-cockpit", kind: "picks-log", v: 1, rows: [] });
@@ -100,7 +106,7 @@ const filled = fillNext(log.rows, barsByCode); log.updatedAt = Date.now();
 
 console.log(`검색기 ${date} ${slot}(${hm}) · 본 종목 ${r.scanned}(상위 ${top100.length} + 관심 ${pool.size - top100.length}) · 후보 ${r.picks.length} · 요청 ${requests} · 성과 채움 ${filled}`);
 for (const p of r.picks.slice(0, 10)) console.log(`  ${p.score} ${p.name} [${p.theme}${p.role ? " " + p.role : ""}] ${p.rate}% · 배수 ${p.mult}/${p.prevMult} · ${p.nature}${p.flags.length ? " · " + p.flags.join(" ") : ""}`);
-console.log("주도 테마: " + r.topThemes.map((t) => `${t.name} ${t.valueEok}억 ${t.rate}%`).join(" / "));
+console.log("주도 테마(쏠림×상승): " + r.topThemes.map((t) => `${t.name} ${t.share}%·${t.rate}%`).join(" / ") + (r.thin.length ? " · 호가 얇아 뺌: " + r.thin.map((x) => x.name).join(",") : ""));
 if (errors.length) console.log("참고(일부 실패):", errors.slice(0, 8).join(" / "));
 if (args.dry) { console.log("(--dry: 저장 안 함)"); process.exit(0); }
 writeJson("auto/picks.json", out); writeJson("auto/observe/picks-log.json", log); writeJson("auto/observe/picker-codes.json", codeCache);

@@ -13,7 +13,7 @@ export const PICK = {
   RECENT_DAYS: 5,     // R7 최근 5일 안 재급등
   LIMIT_RATE: 29.5,   // R12 상한가 묶임
   BIG_CAP: 20000,     // R10 대형주 = 시총 2조(억 단위)
-  ORDERBOOK_MIN: 1e8, // R5 호가 10단계 합 1억(자료 받는 길 없음 → 「보류」)
+  ORDERBOOK_MIN: 1e8, // R5 호가 10단계 합 1억(네이버 10단계 · 못 받으면 그 종목만 보류)
   CRASH_RATE: -5,     // 지수관련주 급락일
   NEW_LIST_DAYS: 3,   // R11 상장 3거래일 안
   TOP_N: 100,         // R1 두 시장 거래대금 상위 100
@@ -43,7 +43,20 @@ export function metricsOf(bars, date, { todayValue = null, todayRate = null, tod
   const new60 = h60.length ? high > Math.max(...h60) : null;
   const peak20 = h20.length ? Math.max(...h20) : null;
   const next = B[i + 1] || null;
+  // 9.29-179 차트 조건(디렉터 「차트 조건도 점수에」 · 보고서 근거 없음 → 계산·기록만 · 점수 반영은 기록 쌓고 검증 뒤)
+  const closeNow = todayRate !== null && p ? p[4] * (1 + todayRate / 100) : t[4];
+  const ma = (n) => { const w = B.slice(Math.max(0, i - n + 1), i).map((b) => b[4]).concat([closeNow]); return w.length >= n ? w.reduce((a, x) => a + x, 0) / n : null; };
+  const ma5 = ma(5), ma20 = ma(20), rng = high - t[3], body = closeNow - t[1];
+  const c20 = win(i, PICK.PEAK_DAYS).map((b) => b[4]);
+  const chart = {
+    aligned: ma5 !== null && ma20 !== null ? closeNow > ma5 && ma5 > ma20 : null,          // 정배열(종가 > 5일선 > 20일선)
+    longBull: t[1] > 0 && rng > 0 ? body / t[1] >= 0.05 && (high - closeNow) / rng <= 0.3 : null, // 장대양봉(몸통 +5%↑ · 윗꼬리 30%↓)
+    longWick: rng > 0 ? (high - Math.max(closeNow, t[1])) / rng >= 0.5 : null,                // 윗꼬리 길다(범위의 절반↑ · 경고)
+    box20: c20.length ? closeNow > Math.max(...c20) : null,                                    // 20일 종가 박스 돌파
+  };
+  chart.score = (chart.aligned ? 5 : 0) + (chart.longBull ? 5 : 0) + (chart.box20 ? 5 : 0) - (chart.longWick ? 5 : 0);
   return {
+    chart,
     date, close: t[4], rate: r1(rate), prevRate: r1(prevRate),
     valueEok: val === null ? null : Math.round(val / 1e8), prevValueEok: pval === null ? null : Math.round(pval / 1e8),
     mult: val !== null && a20 ? r1(val / a20) : null, prevMult: pval !== null && a20 ? r1(pval / a20) : null,
@@ -70,12 +83,30 @@ const isCont = (n) => n === "연속 급등" || n === "5일 내 재급등" || n =
 export const qualifies = (m) => !!m && ((m.mult ?? 0) >= PICK.MULT_MIN || (m.prevMult ?? 0) >= PICK.MULT_MIN) && (m.rate ?? 0) > 0;
 
 // 수급 비율(그날 거래량 대비 순매수 % · 보고서 6절과 같은 자) — trend 한 줄 {date, frgn, inst, indi, vol}
+// 9.29-179: 그날 줄이 없으면(네이버 = 장중엔 어제까지만 · 11-25 11:2x 실측) 그 앞 가장 최근 줄 = 「전날 수급」(date 칸으로 표시 · R10 점수는 그날 줄일 때만)
 export function flowOf(trend, date, vol) {
-  const r = (Array.isArray(trend) ? trend : []).find((x) => x && x.date === date);
-  const v = vol > 0 ? vol : r && r.vol > 0 ? r.vol : null;
-  if (!r || !v) return null;
+  const rows = (Array.isArray(trend) ? trend : []).filter((x) => x && x.date && x.date <= date).sort((a, b) => (a.date < b.date ? 1 : -1));
+  const r = rows[0]; if (!r) return null;
+  const today = r.date === date;
+  const v = today && vol > 0 ? vol : r.vol > 0 ? r.vol : null;
+  if (!v) return null;
   const f = (x) => (typeof x === "number" ? r1((x / v) * 100) : null);
-  return { frgn: f(r.frgn), inst: f(r.inst), indi: f(r.indi) };
+  return { frgn: f(r.frgn), inst: f(r.inst), indi: f(r.indi), date: r.date, today };
+}
+
+// 9.29-179 R5 호가: ① 네이버 10단계(stock.naver.com …/order-book?depth=10 · askLevels·bidLevels) = 가격×잔량 합 정확값 · ② 없으면 askingPrice(5단계 가격 + 10단계 잔량 합) 추정(매도 = 합×1호가 · 매수 = 합×5호가 · 0~0.6% 크게 나올 수 있음 · 게이트 179 실측)
+export function orderbookOf(j) {
+  if (j && Array.isArray(j.askLevels) && Array.isArray(j.bidLevels)) {
+    const n = (x) => { const v = Number(String(x ?? "").replace(/,/g, "")); return Number.isFinite(v) ? v : null; };
+    const sum = (L) => L.reduce((a, x) => a + (n(x.price) || 0) * (n(x.volume) || 0), 0);
+    return j.askLevels.length && j.bidLevels.length ? { sell: Math.round(sum(j.askLevels)), buy: Math.round(sum(j.bidLevels)), exact: true } : null;
+  }
+  if (!j || !Array.isArray(j.sellInfo) || !Array.isArray(j.buyInfos)) return null;
+  const n = (x) => { const v = Number(String(x ?? "").replace(/,/g, "")); return Number.isFinite(v) ? v : null; };
+  const ts = n(j.totalSell), tb = n(j.totalBuy);
+  const sp = j.sellInfo.map((x) => n(x.price)).filter((x) => x > 0), bp = j.buyInfos.map((x) => n(x.price)).filter((x) => x > 0);
+  if (ts === null || tb === null || !sp.length || !bp.length) return null;
+  return { sell: Math.round(ts * Math.min(...sp)), buy: Math.round(tb * Math.min(...bp)) };
 }
 
 // 테마 정하기: 관심 테마(설정 · 먼저) → 네이버 테마 구성표(후보끼리 가장 많이 겹치는 테마 · 넓은 이름 제외) → 「미분류 급등」
@@ -99,7 +130,8 @@ export function rankAndScore(cands, { closing = false } = {}) {
   for (const [th, g] of groups) {
     const ok = g.filter((c) => c.ok).sort((a, b) => (b.m.valueEok ?? 0) - (a.m.valueEok ?? 0));
     ok.forEach((c, k) => { c.role = th === "미분류 급등" ? null : k === 0 ? "대장" : k <= 2 ? "후속" : null; c.rank = k + 1; });
-    const limit = g.filter((c) => (c.m.rate ?? 0) >= PICK.LIMIT_RATE);
+    if (ok.length >= 2 && th !== "미분류 급등") { const byRate = ok.slice().sort((a, b) => (b.m.rate ?? 0) - (a.m.rate ?? 0))[0]; if (byRate === ok[0]) ok[0].sameTop = true; } // 조사 #3(홍인기 강의 등 · 검증 근거 없음 → 표시만)
+    const limit = g.filter((c) => (c.m.rate ?? 0) >= PICK.LIMIT_RATE && qualifies(c.m)); // 게이트 179 참고: 거래대금 배수 미달 상한가는 대장 아님 → 짝꿍 안 만듦
     if (limit.length && th !== "미분류 급등") {
       const mate = ok.filter((c) => (c.m.rate ?? 0) < PICK.LIMIT_RATE).sort((a, b) => (b.m.rate ?? 0) - (a.m.rate ?? 0) || (b.m.valueEok ?? 0) - (a.m.valueEok ?? 0))[0];
       if (mate) mate.mateOf = limit.map((x) => x.name);
@@ -108,18 +140,20 @@ export function rankAndScore(cands, { closing = false } = {}) {
   for (const c of cands) {
     if (!c.ok) continue;
     const m = c.m, n = c.nature, big = (c.cap ?? 0) >= PICK.BIG_CAP, f = c.flow;
-    const cobuy = big && f && f.frgn > 0 && f.inst > 0;
+    const cobuy = big && f && f.today && f.frgn > 0 && f.inst > 0; // R10 = 그날 수급일 때만(전날 줄은 표시만)
     const strong = (m.rate ?? 0) >= PICK.RATE_STRONG || (m.prevRate ?? 0) >= PICK.RATE_STRONG;
     const star = isCont(n) && c.role === "대장" && (m.new60 === true || m.breakout === true);
     const warn = isFirst(n) && closing;
+    // 9.29-179 조사 #1(재무관리연구 2017 · 자본시장연구원): 급등 다음 날 개인만 사고 외국인·기관이 팔면 이후 수익률 낮음 → 전날 +10%↑ · 전날 수급 개인+ 외국인− 기관− = 감점·표시
+    const retailOnly = (m.prevRate ?? 0) >= PICK.RATE_STRONG && !!f && f.today === false && f.indi > 0 && f.frgn < 0 && f.inst < 0;
     const parts = {
       mult: Math.round(30 * Math.min(Math.max(m.mult ?? 0, m.prevMult ?? 0) / 10, 1)),
       strong: strong ? 20 : 0, new60: m.new60 ? 15 : 0,
       role: c.role === "대장" ? 15 : c.role === "후속" ? 8 : 0,
-      star: star ? 10 : 0, cobuy: cobuy ? 10 : 0, warn: warn ? -10 : 0,
+      star: star ? 10 : 0, cobuy: cobuy ? 10 : 0, warn: warn ? -10 : 0, retail: retailOnly ? -10 : 0,
     };
     c.score = Object.values(parts).reduce((s, x) => s + x, 0); c.parts = parts;
-    c.flags = [star && "★ 대장 돌파", warn && "⚠ 첫급등 종배 주의", c.mateOf && "짝꿍 후보"].filter(Boolean);
+    c.flags = [star && "★ 대장 돌파", warn && "⚠ 첫급등 종배 주의", c.mateOf && "짝꿍 후보", retailOnly && "⚠ 개인만 매수(외·기 매도)", c.sameTop && "대장 일치(상승·대금 1위)"].filter(Boolean);
     c.flowScored = big; // R10 중소형은 표시만
   }
   return cands;
@@ -135,21 +169,29 @@ export function pick(stocks, { date, slot = null, interest = {}, map = null, ind
     const m = metricsOf(s.bars, date, { todayValue: lv.value ?? null, todayRate: lv.rate ?? null, todayHigh: lv.high ?? null, nxtPrice: lv.nxtPrice ?? null });
     if (!m) continue;
     const vol = (s.bars.find((b) => b[0] === date) || [])[5];
-    all.push({ code: s.code, name: s.name, cap: s.cap ?? null, m, nature: natureOf(m), flow: flowOf(s.trend, date, vol), nxtRate: lv.nxtRate ?? null, ok: !idx.has(s.name) && qualifies(m), isIndex: idx.has(s.name), firstBar: (s.bars[0] || [])[0] || null });
+    all.push({ code: s.code, name: s.name, cap: s.cap ?? null, m, nature: natureOf(m), flow: flowOf(s.trend, date, vol), nxtRate: lv.nxtRate ?? null, ob: s.ob || null, ok: !idx.has(s.name) && qualifies(m), isIndex: idx.has(s.name), firstBar: (s.bars[0] || [])[0] || null });
   }
-  const pool = all.filter((c) => c.ok);
-  assignThemes(pool, { interest, map }); rankAndScore(pool, { closing });
+  // R5 호가(9.29-179 · 네이버 askingPrice): 매수·매도 10호가 합이 각각 1억 미만이면 탈락 · 호가 못 받은 종목 = 판정 보류(그대로 둠)
+  const thin = [];
+  for (const c of all) if (c.ok && c.ob && (c.ob.sell < PICK.ORDERBOOK_MIN || c.ob.buy < PICK.ORDERBOOK_MIN)) { c.ok = false; thin.push({ code: c.code, name: c.name, sell: c.ob.sell, buy: c.ob.buy }); }
+  // 테마는 지수관련주 뺀 본 종목 전부에 붙임(주도 테마 = 거래대금 쏠림 × 상승 · 디렉터 11-25) · 대장·후속·점수는 후보끼리
+  const body = all.filter((c) => !c.isIndex);
+  assignThemes(body, { interest, map }); rankAndScore(body, { closing });
+  const pool = body.filter((c) => c.ok);
   pool.sort((a, b) => b.score - a.score || (b.m.valueEok ?? 0) - (a.m.valueEok ?? 0));
-  const themes = new Map();
-  for (const c of pool) if (c.theme !== "미분류 급등") { const t = themes.get(c.theme) || { name: c.theme, value: 0, rates: [], n: 0 }; t.value += c.m.valueEok ?? 0; if (c.m.rate !== null) t.rates.push(c.m.rate); t.n++; themes.set(c.theme, t); }
-  const topThemes = [...themes.values()].map((t) => ({ name: t.name, valueEok: t.value, rate: r1(avg(t.rates)), n: t.n })).sort((a, b) => b.valueEok - a.valueEok).slice(0, PICK.THEME_TOP);
+  // 주도 테마(디렉터 11-25 「거래대금 쏠리고 상승이 테마중 제일 좋은거」): 테마별 본 종목 거래대금 합 × 평균 등락률(플러스만) 큰 순 · 두 숫자 다 표시
+  const themes = new Map(), totalV = body.reduce((a, c) => a + (c.m.valueEok ?? 0), 0) || 1;
+  for (const c of body) if (c.theme !== "미분류 급등") { const t = themes.get(c.theme) || { name: c.theme, value: 0, rates: [], n: 0, cand: 0 }; t.value += c.m.valueEok ?? 0; if (c.m.rate !== null) t.rates.push(c.m.rate); t.n++; if (c.ok) t.cand++; themes.set(c.theme, t); }
+  const topThemes = [...themes.values()].map((t) => { const rate = r1(avg(t.rates)); return { name: t.name, valueEok: t.value, share: r1((t.value / totalV) * 100), rate, n: t.n, cand: t.cand, upRatio: t.rates.length ? Math.round((t.rates.filter((x) => x > 0).length / t.rates.length) * 100) : null, /* 조사 #2 테마 안 오른 종목 비율(키움 테마그룹 화면 기준 · 표시만) */ power: rate > 0 ? Math.round((t.value / totalV) * 100 * rate * 10) / 10 : 0 }; })
+    .filter((t) => t.rate > 0 && t.n >= 2).sort((a, b) => b.power - a.power || b.valueEok - a.valueEok).slice(0, PICK.THEME_TOP);
   const index = all.filter((c) => c.isIndex).map((c) => ({ code: c.code, name: c.name, rate: c.m.rate, crash: (c.m.rate ?? 0) <= PICK.CRASH_RATE, flow: c.flow, valueEok: c.m.valueEok, mult: c.m.mult }));
   // R11: 받은 일봉이 상장일부터 시작(첫 줄이 받은 범위 시작보다 늦음)하고 그날이 상장 3거래일 안
   const newList = all.filter((c) => c.m.listedDays <= PICK.NEW_LIST_DAYS && c.firstBar && c.firstBar > (stocks.find((s) => s.code === c.code).from || "")).map((c) => ({ code: c.code, name: c.name, day: c.m.listedDays, rate: c.m.rate, valueEok: c.m.valueEok }));
   const card = (c) => ({ code: c.code, name: c.name, theme: c.theme, themeSrc: c.themeSrc, role: c.role, score: c.score, parts: c.parts, flags: c.flags,
     rate: c.m.rate, prevRate: c.m.prevRate, nxtRate: c.nxtRate, valueEok: c.m.valueEok, mult: c.m.mult, prevMult: c.m.prevMult, new60: c.m.new60, breakout: c.m.breakout,
-    nature: c.nature, up10N: c.m.up10N, cap: c.cap, flow: c.flow, flowScored: c.flowScored, mateOf: c.mateOf || null, close: c.m.close, orderbook: "보류" });
-  return { date, slot, picks: pool.map(card), topThemes, index, nasdaq, newList, scanned: all.length };
+    nature: c.nature, up10N: c.m.up10N, cap: c.cap, flow: c.flow, flowScored: c.flowScored, mateOf: c.mateOf || null, close: c.m.close,
+    orderbook: c.ob || null, chart: c.m.chart });
+  return { date, slot, picks: pool.map(card), topThemes, index, nasdaq, newList, thin, scanned: all.length };
 }
 
 // 성과 기록: 지난 회차 picks 에 다음 거래일 시가·고가·종가(그날 종가 대비 %) 붙이기 — bars 는 코드별 일봉

@@ -499,6 +499,7 @@ details.learn { min-width: 0; max-width: 100%; box-sizing: border-box; } /* 넓�
 .futlist.fcore .frow .fn, .futlist.fcore .frow .fq { font-size: 16px; } /* 핵심 4줄 = 위 · 크게 */
 .futref, .sigin { margin-top: 8px; } .futref > summary, .sigin > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); padding: 6px 0; } .futref > summary small, .sigin > summary small { font-weight: 400; }
 .usfutline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 2px 0 6px; padding: 7px 10px; border-radius: 8px; background: var(--note); font-size: 14px; } .usfutline b { font-weight: 600; } .usfutline .pill { font-size: 13px; }
+.usfutdetail { display: grid; gap: 4px; margin: 0 0 8px; font-size: 13px; } .usfutdetail .ufd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; } .usfutdetail .ufn { min-width: 6.5em; color: var(--muted); } .usfutdetail .up { color: var(--up); } .usfutdetail .dn { color: var(--down); } .usfutdetail:empty { display: none; }
 .usfutline .golink { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
 .refcard { margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; background: var(--surface); display: grid; gap: 2px; }
 .refcard .rhead { display: grid; gap: 1px; margin-bottom: 4px; } .refcard .rhead b { font-size: 15px; } .refcard .rhead span { font-size: 12px; color: var(--muted); }
@@ -864,7 +865,7 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 .pickcard .pkthemes li { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 8px; } .pickcard .pkthemes li span { overflow-wrap: anywhere; } .pickcard .pkthemes li small { font-variant-numeric: tabular-nums; color: var(--muted); }
 .pickcard .pklist { display: grid; gap: 8px; }
 .pickcard .pk { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
-.pickcard .pk .pkt { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; row-gap: 2px; } .pickcard .pk .pkt b { font-size: 15px; overflow-wrap: anywhere; } .pickcard .pk .pkt .sc { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pickcard .pk .pkt { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; row-gap: 2px; } .pickcard .pk .pkt b { font-size: 15px; overflow-wrap: anywhere; } .pickcard .pk .pkt b a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; } .pickcard h3 small { font-weight: 400; color: var(--muted); font-size: 12px; } .pickcard .pk .pkt .sc { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pickcard .pk .pkf { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; } .pickcard .pk .pkf span { font-size: 12px; border-radius: 999px; padding: 1px 8px; background: var(--note); }
 .pickcard .pk .pkf .star { color: var(--up); font-weight: 600; } .pickcard .pk .pkf .warn { color: var(--a); font-weight: 600; }
 .pickcard .pk dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 10px; row-gap: 2px; margin: 0; font-size: 13px; } .pickcard .pk dt { color: var(--muted); } .pickcard .pk dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
@@ -1412,7 +1413,7 @@ header .tools { flex-direction: row; flex-wrap: wrap; align-items: center; justi
 
   <section class="card" data-nav="장전 지표 (환율·일정)">
     <h2>장전 지표 (환율·일정) <small>미국 지표는 ② · 선물은 ②-2 · 여기는 한국 지표</small></h2>
-    <div class="usfutline" id="usFutLine"></div> <!-- 9.29-115 원장 [집2369]: 「미국·선물: 좋음 n · 주의 n · 나쁨 n (②·②-2 에서 보기)」 한 줄 -->
+    <div class="usfutline" id="usFutLine"></div><div class="usfutdetail" id="usFutDetail"></div> <!-- 9.29-115 원장 [집2369]: 「미국·선물: 좋음 n · 주의 n · 나쁨 n (②·②-2 에서 보기)」 한 줄 -->
     <div class="futlist" id="krSigSum"></div>
     <div class="autoline" id="autoSig" hidden></div>
     <div class="autobtns" id="autoBtns" hidden>
@@ -3735,7 +3736,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-177";
+  const APP_VER = "9.29-179";
   /* 9.29-152 원장 [집2619][집2620] 수급 범위 표시(실측 2026-11-04 · work/도구/152 · gate [집2632]: NXT 프리·애프터 포함은 미실측 → 「KRX+NXT 통합」 만 말함): 시장 전체 = 키움 ka10051·ka90004 통합(집 PC · 수집기 investAll) · 없으면 네이버(= 키움 KRX 값과 같음 · 16:00 뒤 값은 KRX 애프터 포함 → 「KRX만」) · 종목·테마·C = ka10063(거래소 구분 없는 장중 잠정 · stex 1·2·3 값 같음) */
   const SUP_ALL = "KRX+NXT 통합", SUP_REG = "정규만", SUP_KRX = "KRX만(NXT 제외)", SUP_EST = "장중 잠정(거래소 구분 없음)";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
@@ -4673,19 +4674,26 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const P = PICKS;
     if (!P || !Array.isArray(P.picks)) { if (at) at.textContent = ""; body.innerHTML = `<div class="muted">기록 없음 · 평일 15:20·19:30 자동</div>`; return; }
     if (at) at.textContent = (P.date === kstDate() ? "오늘 " : mdw(P.date) + " ") + (P.slot || "") + (P.at && !String(P.slot || "").includes(P.at) ? " (" + P.at + " 받음)" : "") + " · 본 종목 " + (P.scanned ?? "—");
-    const th = (P.topThemes || []).length ? `<h3>오늘 주도 테마</h3><ul class="pkthemes">${P.topThemes.map((t) => `<li><span>${esc(t.name)}</span><small>${pkNum(t.valueEok, "억")} · ${pkPct(t.rate)}</small></li>`).join("")}</ul>` : "";
+    /* 9.29-179 디렉터 「검색기 주도테마가 실시간주도테마와 겹치거나 협력할건?」: ④ 실시간 주도 테마(live.json · 같은 날)와 이름 같은 테마 = 「④ 겹침」 · 두 선정 방식은 그대로 */
+    const live4 = new Set(LIVE && LIVE.date === P.date && Array.isArray(LIVE.themes) ? LIVE.themes.map((t) => t && t.name).filter(Boolean) : []);
+    const both4 = (name) => live4.has(name) ? ` <span class="pill g">④ 겹침</span>` : "";
+    const th = (P.topThemes || []).length ? `<h3>오늘 주도 테마 <small>돈 쏠림 × 상승</small></h3><ul class="pkthemes">${P.topThemes.map((t) => `<li><span>${esc(t.name)}${both4(t.name)}</span><small>대금 ${typeof t.share === "number" ? t.share + "%" : pkNum(t.valueEok, "억")} · ${pkPct(t.rate)}${typeof t.upRatio === "number" ? " · 오른 종목 " + t.upRatio + "%" : ""}</small></li>`).join("")}</ul>` : "";
     const fl = (f) => `<span class="${f.startsWith("★") ? "star" : f.startsWith("⚠") ? "warn" : ""}">${esc(f)}</span>`;
-    const flow = (p) => !p.flow ? "자료 없음" : `외 ${pkPct(p.flow.frgn)} · 기 ${pkPct(p.flow.inst)} · 개 ${pkPct(p.flow.indi)}${p.flowScored ? "" : " (중소형 · 점수 안 넣음)"}`;
-    const card = (p) => `<div class="pk"><div class="pkt"><b>${esc(p.name)}</b><small>${esc(p.theme || "")}${p.role ? " · " + esc(p.role) : ""}</small><span class="sc">${p.score}점</span></div>`
+    const flow = (p) => !p.flow ? "자료 없음" : `${p.flow.today === false && p.flow.date ? "전날(" + mdw(p.flow.date) + ") " : ""}외 ${pkPct(p.flow.frgn)} · 기 ${pkPct(p.flow.inst)} · 개 ${pkPct(p.flow.indi)}${p.flowScored ? "" : " (중소형 · 점수 안 넣음)"}`;
+    const ob = (p) => !p.orderbook ? "자료 없음(보류)" : `매도 ${pkNum(Math.round(p.orderbook.sell / 1e6) / 100, "억")} · 매수 ${pkNum(Math.round(p.orderbook.buy / 1e6) / 100, "억")}${p.orderbook.at ? " (" + esc(p.orderbook.at) + ")" : ""}`;
+    const ch = (p) => { const c = p.chart; if (!c) return "—"; const t = [c.aligned && "정배열", c.longBull && "장대양봉", c.box20 && "20일 박스 돌파", c.longWick && "윗꼬리 김"].filter(Boolean); return (t.length ? t.join(" · ") : "해당 없음") + " (점수 미반영 · 검증 중)"; };
+    const nv = (p) => "https://m.stock.naver.com/fchart/domestic/stock/" + encodeURIComponent(p.code); // 게이트 179 F1: stock.naver.com 은 휴대폰에서 /total(오늘 분 차트)로 넘어감 → fchart = 휴대폰 「일」 일봉 캔들
+    const card = (p) => `<div class="pk"><div class="pkt"><b><a href="${nv(p)}" target="_blank" rel="noopener" title="네이버 증권 일봉 차트">${esc(p.name)} ↗</a></b><small>${esc(p.theme || "")}${p.role ? " · " + esc(p.role) : ""}${both4(p.theme)}</small><span class="sc">${p.score}점</span></div>`
       + (p.flags && p.flags.length ? `<div class="pkf">${p.flags.map(fl).join("")}</div>` : "")
       + `<dl><dt>등락</dt><dd>오늘 ${pkPct(p.rate)} · 전날 ${pkPct(p.prevRate)}${typeof p.nxtRate === "number" ? " · NXT " + pkPct(p.nxtRate) : ""}</dd>`
       + `<dt>거래대금</dt><dd>${pkNum(p.valueEok, "억")} · 평소 ×${p.mult ?? "—"} (전날 ×${p.prevMult ?? "—"})</dd>`
       + `<dt>성격</dt><dd>${esc(p.nature || "—")}${p.new60 ? " · 60일 신고가" : ""}${p.mateOf ? " · 상한가 " + esc(p.mateOf.join("·")) + " 다음" : ""}</dd>`
-      + `<dt>수급</dt><dd>${flow(p)}</dd><dt>호가</dt><dd>자료 없음(보류)</dd></dl></div>`;
+      + `<dt>수급</dt><dd>${flow(p)}</dd><dt>호가</dt><dd>${ob(p)}</dd><dt>차트</dt><dd>${ch(p)}</dd></dl></div>`;
     const list = P.picks.length ? `<h3>후보 ${P.picks.length}</h3><div class="pklist">${P.picks.slice(0, 15).map(card).join("")}</div>${P.picks.length > 15 ? `<details><summary>나머지 ${P.picks.length - 15}</summary><div class="pklist">${P.picks.slice(15).map(card).join("")}</div></details>` : ""}` : `<div class="muted">조건 맞는 종목 없음 (평소 3배↑ 거래대금 + 오늘 상승)</div>`;
     const ix = (P.index || []).length ? `<h3>지수관련주</h3><ul class="pkthemes">${P.index.map((x) => `<li><span>${esc(x.name)}${x.crash ? " · 급락일" : ""}</span><small>${pkPct(x.rate)}</small></li>`).join("")}<li><span>나스닥 선물</span><small>${P.nasdaq ? pkPct(P.nasdaq.rate) + (P.nasdaq.at ? " · " + esc(P.nasdaq.at) : "") : "자료 없음"}</small></li></ul>` : "";
     const nl = (P.newList || []).length ? `<h3>신규 상장(3일 안)</h3><ul class="pkthemes">${P.newList.map((x) => `<li><span>${esc(x.name)} · ${x.day}일째</span><small>${pkPct(x.rate)}</small></li>`).join("")}</ul>` : "";
-    body.innerHTML = th + list + ix + nl;
+    const tn = (P.thin || []).length ? `<h3>호가 얇아 뺀 종목 <small>10호가 1억 미만</small></h3><div class="muted">${P.thin.map((x) => esc(x.name)).join(" · ")}</div>` : "";
+    body.innerHTML = th + list + tn + ix + nl;
   }
   async function pickPull() { try { const j = await pubGet(PUB_RAW + "picks.json"); if (j && j.date) PICKS = j; } catch (e) {} paintPicks(); }
   function pickBind() {
@@ -4969,10 +4977,16 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const c = usFutCounts(r), n = c.g + c.a + c.r;
     return `<b>미국·선물:</b> ` + (n ? `<span class="pill g">좋음 ${c.g}</span> · <span class="pill a">주의 ${c.a}</span> · <span class="pill r">나쁨 ${c.r}</span>` : `<span class="muted">아직 값 없음</span>`) + ` <span class="muted">(<button type="button" class="golink" data-go="grp2">②</button>·<button type="button" class="golink" data-go="grp2f">②-2</button> 에서 보기)</span>`;
   }
+  // 9.29-179: 미국·선물 판정 항목(야간선물·나스닥·SOX·VIX·금리)을 장전 지표 카드에 바로 — 이름 · 값 · 좋음/주의/나쁨(빠진 것 = 참고) · 값·판정은 futRowOf 그대로
+  function usFutDetailHtml(r) {
+    const xs = USFUT_JUDGE.map((k) => futRowOf(S, r, k)).filter((x) => x.raw !== null);
+    if (!xs.length) return "";
+    return xs.map((x) => `<span class="ufd"><span class="ufn">${esc(x.name)}</span> <span class="${x.dir}">${esc(x.pct || x.price || "—")}</span>${x.lbl ? ` <span class="pill ${x.st === "ref" ? "" : x.st}">${esc(x.lbl)}</span>` : ""}</span>`).join("");
+  }
   function paintFut(r) {
     const rows = (ks, core) => ks.map((k) => futRowHtml(futRowOf(S, r, k), core)).join("");
     $("futCore").innerHTML = rows(FUT_CORE, true); $("futRefList").innerHTML = rows(FUT_REF, false);
-    $("usSigSum").innerHTML = rows(US_SIG, false); $("krSigSum").innerHTML = rows(KR_SIG, false); $("usFutLine").innerHTML = usFutLineHtml(r);
+    $("usSigSum").innerHTML = rows(US_SIG, false); $("krSigSum").innerHTML = rows(KR_SIG, false); $("usFutLine").innerHTML = usFutLineHtml(r); { const d = $("usFutDetail"); if (d) d.innerHTML = usFutDetailHtml(r); } /* 9.29-179 디렉터 「이거는 그냥 여기에 표시해줘」: 항목 내용도 이 카드에 */
   }
   // 9.29-105 [2134] ④: 어젯밤 미국 지수 마감 4줄(.usixb 칸 · 9.29-96 [1772][1781] · 9.29-98 [1815] 그대로) → 뉴욕증시 카드 맨 위 #usIdx
   function usIdxHtml() {
