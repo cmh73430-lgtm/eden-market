@@ -92,7 +92,9 @@ export function flowOf(trend, date, vol) {
   const v = today && vol > 0 ? vol : r.vol > 0 ? r.vol : null;
   if (!v) return null;
   const f = (x) => (typeof x === "number" ? r1((x / v) * 100) : null);
-  return { frgn: f(r.frgn), inst: f(r.inst), indi: f(r.indi), date: r.date, today };
+  // 9.29-181 디렉터 「외인기관 퍼센트 말고 순매수수량으로 보여줘」: 화면은 주 수(q) · 점수는 % 그대로
+  const q = (x) => (typeof x === "number" ? x : null);
+  return { frgn: f(r.frgn), inst: f(r.inst), indi: f(r.indi), frgnQ: q(r.frgn), instQ: q(r.inst), indiQ: q(r.indi), date: r.date, today };
 }
 
 // 9.29-180 디렉터 「호가는 그날 시장의 거래대금에 따라 유도리있게」: 기준 = 1억 × (오늘 두 시장 거래대금 ÷ 최근 20거래일 평균) · 장중은 지난 시간 비율로 하루치 환산 · 0.5억~2억 안
