@@ -3741,7 +3741,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-181";
+  const APP_VER = "9.29-182";
   /* 9.29-152 원장 [집2619][집2620] 수급 범위 표시(실측 2026-11-04 · work/도구/152 · gate [집2632]: NXT 프리·애프터 포함은 미실측 → 「KRX+NXT 통합」 만 말함): 시장 전체 = 키움 ka10051·ka90004 통합(집 PC · 수집기 investAll) · 없으면 네이버(= 키움 KRX 값과 같음 · 16:00 뒤 값은 KRX 애프터 포함 → 「KRX만」) · 종목·테마·C = ka10063(거래소 구분 없는 장중 잠정 · stex 1·2·3 값 같음) */
   const SUP_ALL = "KRX+NXT 통합", SUP_REG = "정규만", SUP_KRX = "KRX만(NXT 제외)", SUP_EST = "장중 잠정(거래소 구분 없음)";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
@@ -4693,7 +4693,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
     const th = (P.topThemes || []).length ? `<h3>오늘 주도 테마 <small>돈 쏠림 × 상승</small></h3><ul class="pkthemes">${P.topThemes.map((t) => `<li><span>${esc(t.name)}${both4(t.name)}</span><small>대금 ${typeof t.share === "number" ? t.share + "%" : pkNum(t.valueEok, "억")} · ${pkPct(t.rate)}${typeof t.upRatio === "number" ? " · 오른 종목 " + t.upRatio + "%" : ""}</small></li>`).join("")}</ul>` : "";
     const fl = (f) => `<span class="${f.startsWith("★") ? "star" : f.startsWith("⚠") ? "warn" : "key"}">${esc(f)}</span>`;
     const flow = (p) => !p.flow ? "자료 없음" : `${p.flow.today === false && p.flow.date ? "전날(" + mdw(p.flow.date) + ") " : ""}외 ${pkC(p.flow.frgnQ ?? p.flow.frgn, pkQty(p.flow.frgnQ, p.flow.frgn))} · 기 ${pkC(p.flow.instQ ?? p.flow.inst, pkQty(p.flow.instQ, p.flow.inst))} · 개 ${pkC(p.flow.indiQ ?? p.flow.indi, pkQty(p.flow.indiQ, p.flow.indi))}${(p.flow.frgnQ ?? p.flow.frgn) > 0 && (p.flow.instQ ?? p.flow.inst) > 0 ? ' <span class="key">외·기 동시 매수</span>' : ""}${p.flowScored ? "" : " (중소형 · 점수 안 넣음)"}`;
-    const ob = (p) => !p.orderbook ? "자료 없음(보류)" : `<span class="dn">매도 ${pkNum(Math.round(p.orderbook.sell / 1e6) / 100, "억")}</span> · <span class="up">매수 ${pkNum(Math.round(p.orderbook.buy / 1e6) / 100, "억")}</span>${p.orderbook.at ? " (" + esc(p.orderbook.at) + ")" : ""}`;
+    const ob = (p) => !p.orderbook || typeof p.orderbook !== "object" || !(p.orderbook.sell >= 0) || !(p.orderbook.buy >= 0) ? "자료 없음(보류)" : /* 9.29-182 게이트 181 별개 결함: 옛 자료 orderbook = 문자열 "보류" → NaN 억 표시 막음 */ `<span class="dn">매도 ${pkNum(Math.round(p.orderbook.sell / 1e6) / 100, "억")}</span> · <span class="up">매수 ${pkNum(Math.round(p.orderbook.buy / 1e6) / 100, "억")}</span>${p.orderbook.at ? " (" + esc(p.orderbook.at) + ")" : ""}`;
     const ch = (p) => { const c = p.chart; if (!c) return "—"; const t = [c.aligned && '<span class="up">정배열</span>', c.longBull && '<span class="up">장대양봉</span>', c.box20 && '<span class="key">20일 박스 돌파</span>', c.longWick && '<span class="wn">윗꼬리 김</span>'].filter(Boolean); return (t.length ? t.join(" · ") : "해당 없음") + " (점수 미반영 · 검증 중)"; };
     const nv = (p) => "https://m.stock.naver.com/fchart/domestic/stock/" + encodeURIComponent(p.code); // 게이트 179 F1: stock.naver.com 은 휴대폰에서 /total(오늘 분 차트)로 넘어감 → fchart = 휴대폰 「일」 일봉 캔들
     const card = (p) => `<div class="pk"><div class="pkt"><b><a href="https://stock.naver.com/domestic/stock/${encodeURIComponent(p.code)}/price" target="_blank" rel="noopener" title="네이버 증권 차트·시세(종목 상세)">${esc(p.name)} ↗</a></b><a class="pkd" href="${nv(p)}" target="_blank" rel="noopener" title="네이버 증권 일봉 차트(휴대폰용)">일봉 ↗</a><small>${esc(p.theme || "")}${p.role ? " · " + esc(p.role) : ""}${both4(p.theme)}</small><span class="sc${p.score >= 60 ? " hi" : ""}">${p.score}점</span></div>`
