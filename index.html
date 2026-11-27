@@ -870,7 +870,8 @@ body.simple #usList .ugbox.open .urow.usb { display: grid; }
 .pickcard .pk .pkf { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; } .pickcard .pk .pkf span { font-size: 12px; border-radius: 999px; padding: 1px 8px; background: var(--note); }
 .pickcard .pk .pkf .star { color: var(--up); font-weight: 600; } .pickcard .pk .pkf .warn { color: var(--a); font-weight: 600; }
 .pickcard .pk .up { color: var(--up); font-weight: 600; } .pickcard .pk .dn { color: var(--down); font-weight: 600; } .pickcard .pk .wn { color: var(--a); font-weight: 600; } .pickcard .pk .key { color: var(--up); background: var(--up-bg); font-weight: 700; border-radius: 4px; padding: 0 4px; } .pickcard .pk .pkf .key { border-radius: 999px; padding: 1px 8px; } .pickcard .pk .pkt .sc.hi { color: var(--up); font-weight: 700; } /* 9.29-181 매수 빨강 · 매도 파랑 · 중요 빨강 바탕 */
-.pickcard .pk .pkt .pkd { font-size: 12px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; } /* 9.29-181 디렉터 「차트연결할때 종목상세보기도」「이화면으로연결」: 이름 = stock.naver.com …/price(PC 차트·시세+종목 정보 · 휴대폰은 네이버가 m…/total 로 넘김 · 11-26 curl 실측 307) · 일봉 = fchart */
+.pickcard .pk .pkt .pkd { font-size: 12px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; } .pickcard .pk .pkt .pkm { font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--muted); white-space: nowrap; } /* 9.29-183 시장(코스피·코스닥) 표시 */
+/* 9.29-181 디렉터 「차트연결할때 종목상세보기도」「이화면으로연결」: 이름 = stock.naver.com …/price(PC 차트·시세+종목 정보 · 휴대폰은 네이버가 m…/total 로 넘김 · 11-26 curl 실측 307) · 일봉 = fchart */
 .pickcard .pk dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 10px; row-gap: 2px; margin: 0; font-size: 13px; } .pickcard .pk dt { color: var(--muted); } .pickcard .pk dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .pickcard .pksrc { margin-top: 10px; font-size: 12px; color: var(--muted); }
 .newsrail { display: none; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
@@ -3741,7 +3742,7 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   const LABEL = { g: "좋음", a: "주의", r: "나쁨" };
   // 맨 위 판정 아래 '오늘 할 일' (쉬운 말)
   // 화면·복사 글이 어느 버전인지 확인용. 바꿀 때마다 올린다.
-  const APP_VER = "9.29-182";
+  const APP_VER = "9.29-183";
   /* 9.29-152 원장 [집2619][집2620] 수급 범위 표시(실측 2026-11-04 · work/도구/152 · gate [집2632]: NXT 프리·애프터 포함은 미실측 → 「KRX+NXT 통합」 만 말함): 시장 전체 = 키움 ka10051·ka90004 통합(집 PC · 수집기 investAll) · 없으면 네이버(= 키움 KRX 값과 같음 · 16:00 뒤 값은 KRX 애프터 포함 → 「KRX만」) · 종목·테마·C = ka10063(거래소 구분 없는 장중 잠정 · stex 1·2·3 값 같음) */
   const SUP_ALL = "KRX+NXT 통합", SUP_REG = "정규만", SUP_KRX = "KRX만(NXT 제외)", SUP_EST = "장중 잠정(거래소 구분 없음)";
   let LVF_OPEN = false; /* 9.29-132 ④ 「지수·수급」 접기 펼침 기억(다시 그려도 그대로) */
@@ -4685,18 +4686,18 @@ const DATA = {"events":{"_note":"연 1회 갱신. 날짜는 '주의'로 볼 한�
   function paintPicks() {
     const body = $("pickBody"), at = $("pickAt"); if (!body) return;
     const P = PICKS;
-    if (!P || !Array.isArray(P.picks)) { if (at) at.textContent = ""; body.innerHTML = `<div class="muted">기록 없음 · 평일 15:20·19:30 자동</div>`; return; }
+    if (!P || !Array.isArray(P.picks)) { if (at) at.textContent = ""; body.innerHTML = `<div class="muted">기록 없음 · 평일 장중 5분마다 · 15:20·19:30 자동</div>`; return; }
     if (at) at.textContent = (P.date === kstDate() ? "오늘 " : mdw(P.date) + " ") + (P.slot || "") + (P.at && !String(P.slot || "").includes(P.at) ? " (" + P.at + " 받음)" : "") + " · 본 종목 " + (P.scanned ?? "—");
     /* 9.29-179 디렉터 「검색기 주도테마가 실시간주도테마와 겹치거나 협력할건?」: ④ 실시간 주도 테마(live.json · 같은 날)와 이름 같은 테마 = 「④ 겹침」 · 두 선정 방식은 그대로 */
     const live4 = new Set(LIVE && LIVE.date === P.date && Array.isArray(LIVE.themes) ? LIVE.themes.map((t) => t && t.name).filter(Boolean) : []);
     const both4 = (name) => live4.has(name) ? ` <span class="pill g">④ 겹침</span>` : "";
-    const th = (P.topThemes || []).length ? `<h3>오늘 주도 테마 <small>돈 쏠림 × 상승</small></h3><ul class="pkthemes">${P.topThemes.map((t) => `<li><span>${esc(t.name)}${both4(t.name)}</span><small>대금 ${typeof t.share === "number" ? t.share + "%" : pkNum(t.valueEok, "억")} · ${pkPct(t.rate)}${typeof t.upRatio === "number" ? " · 오른 종목 " + t.upRatio + "%" : ""}</small></li>`).join("")}</ul>` : "";
+    const th = (P.topThemes || []).length ? `<h3>${P.date === kstDate() ? "오늘" : esc(mdw(P.date))} 주도 테마 <small>돈 쏠림 × 상승${P.slot ? " · " + esc(P.slot) : ""}</small></h3><ul class="pkthemes">${P.topThemes.map((t) => `<li><span>${esc(t.name)}${both4(t.name)}</span><small>대금 ${typeof t.share === "number" ? t.share + "%" : pkNum(t.valueEok, "억")} · ${pkPct(t.rate)}${typeof t.upRatio === "number" ? " · 오른 종목 " + t.upRatio + "%" : ""}</small></li>`).join("")}</ul>` : "";
     const fl = (f) => `<span class="${f.startsWith("★") ? "star" : f.startsWith("⚠") ? "warn" : "key"}">${esc(f)}</span>`;
     const flow = (p) => !p.flow ? "자료 없음" : `${p.flow.today === false && p.flow.date ? "전날(" + mdw(p.flow.date) + ") " : ""}외 ${pkC(p.flow.frgnQ ?? p.flow.frgn, pkQty(p.flow.frgnQ, p.flow.frgn))} · 기 ${pkC(p.flow.instQ ?? p.flow.inst, pkQty(p.flow.instQ, p.flow.inst))} · 개 ${pkC(p.flow.indiQ ?? p.flow.indi, pkQty(p.flow.indiQ, p.flow.indi))}${(p.flow.frgnQ ?? p.flow.frgn) > 0 && (p.flow.instQ ?? p.flow.inst) > 0 ? ' <span class="key">외·기 동시 매수</span>' : ""}${p.flowScored ? "" : " (중소형 · 점수 안 넣음)"}`;
     const ob = (p) => !p.orderbook || typeof p.orderbook !== "object" || !(p.orderbook.sell >= 0) || !(p.orderbook.buy >= 0) ? "자료 없음(보류)" : /* 9.29-182 게이트 181 별개 결함: 옛 자료 orderbook = 문자열 "보류" → NaN 억 표시 막음 */ `<span class="dn">매도 ${pkNum(Math.round(p.orderbook.sell / 1e6) / 100, "억")}</span> · <span class="up">매수 ${pkNum(Math.round(p.orderbook.buy / 1e6) / 100, "억")}</span>${p.orderbook.at ? " (" + esc(p.orderbook.at) + ")" : ""}`;
     const ch = (p) => { const c = p.chart; if (!c) return "—"; const t = [c.aligned && '<span class="up">정배열</span>', c.longBull && '<span class="up">장대양봉</span>', c.box20 && '<span class="key">20일 박스 돌파</span>', c.longWick && '<span class="wn">윗꼬리 김</span>'].filter(Boolean); return (t.length ? t.join(" · ") : "해당 없음") + " (점수 미반영 · 검증 중)"; };
     const nv = (p) => "https://m.stock.naver.com/fchart/domestic/stock/" + encodeURIComponent(p.code); // 게이트 179 F1: stock.naver.com 은 휴대폰에서 /total(오늘 분 차트)로 넘어감 → fchart = 휴대폰 「일」 일봉 캔들
-    const card = (p) => `<div class="pk"><div class="pkt"><b><a href="https://stock.naver.com/domestic/stock/${encodeURIComponent(p.code)}/price" target="_blank" rel="noopener" title="네이버 증권 차트·시세(종목 상세)">${esc(p.name)} ↗</a></b><a class="pkd" href="${nv(p)}" target="_blank" rel="noopener" title="네이버 증권 일봉 차트(휴대폰용)">일봉 ↗</a><small>${esc(p.theme || "")}${p.role ? " · " + esc(p.role) : ""}${both4(p.theme)}</small><span class="sc${p.score >= 60 ? " hi" : ""}">${p.score}점</span></div>`
+    const card = (p) => `<div class="pk"><div class="pkt"><b><a href="https://stock.naver.com/domestic/stock/${encodeURIComponent(p.code)}/price" target="_blank" rel="noopener" title="네이버 증권 차트·시세(종목 상세)">${esc(p.name)} ↗</a></b><a class="pkd" href="${nv(p)}" target="_blank" rel="noopener" title="네이버 증권 일봉 차트(휴대폰용)">일봉 ↗</a>${p.market ? `<span class="pkm">${esc(p.market)}</span>` : ""}<small>${esc(p.theme || "")}${p.role ? " · " + esc(p.role) : ""}${both4(p.theme)}</small><span class="sc${p.score >= 60 ? " hi" : ""}">${p.score}점</span></div>`
       + (p.flags && p.flags.length ? `<div class="pkf">${p.flags.map(fl).join("")}</div>` : "")
       + `<dl><dt>등락</dt><dd>오늘 ${pkC(p.rate, pkPct(p.rate))} · 전날 ${pkC(p.prevRate, pkPct(p.prevRate))}${typeof p.nxtRate === "number" ? " · NXT " + pkC(p.nxtRate, pkPct(p.nxtRate)) : ""}</dd>`
       + `<dt>거래대금</dt><dd>${pkNum(p.valueEok, "억")} · 평소 ×${p.mult ?? "—"} (전날 ×${p.prevMult ?? "—"})</dd>`

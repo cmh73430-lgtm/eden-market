@@ -44,7 +44,7 @@ for (const mkt of ["KOSPI", "KOSDAQ"]) {
     for (const s of (j && j.stocks) || []) {
       if (!s || !s.itemCode || isExcluded(s)) continue;
       const ov = s.overMarketPriceInfo || {};
-      top.set(String(s.itemCode), { code: String(s.itemCode), name: String(s.stockName), cap: num(s.marketValue), value: num(s.accumulatedTradingValue) === null ? null : num(s.accumulatedTradingValue) * 1e6, rate: num(s.fluctuationsRatio), price: num(s.closePrice), vol: num(s.accumulatedTradingVolume), tradedAt: s.localTradedAt || null,
+      top.set(String(s.itemCode), { code: String(s.itemCode), name: String(s.stockName), market: mkt === "KOSPI" ? "코스피" : "코스닥", cap: num(s.marketValue), value: num(s.accumulatedTradingValue) === null ? null : num(s.accumulatedTradingValue) * 1e6, rate: num(s.fluctuationsRatio), price: num(s.closePrice), vol: num(s.accumulatedTradingVolume), tradedAt: s.localTradedAt || null,
         nxtPrice: ov.tradingSessionType && ov.tradingSessionType !== "REGULAR_MARKET" ? num(ov.overPrice) : null, nxtRate: ov.tradingSessionType && ov.tradingSessionType !== "REGULAR_MARKET" ? num(ov.fluctuationsRatio) : null, nxtSession: ov.tradingSessionType || null });
     }
   } catch (e) { errors.push(`거래대금 상위 ${mkt}: ${e.message || e}`); }
@@ -78,7 +78,7 @@ for (const s of pool.values()) {
   try { const tr = await get(`https://m.stock.naver.com/api/stock/${s.code}/trend?pageSize=3&bizdate=${d8(date)}`); trend = (Array.isArray(tr) ? tr : []).map((r) => ({ date: String(r.bizdate).slice(0, 4) + "-" + String(r.bizdate).slice(4, 6) + "-" + String(r.bizdate).slice(6, 8), frgn: num(r.foreignerPureBuyQuant), inst: num(r.organPureBuyQuant), indi: num(r.individualPureBuyQuant), vol: num(r.accumulatedTradingVolume) })); } catch (e) { errors.push(`수급 ${s.name}: ${e.message || e}`); }
   // 오늘 일봉이 아직 없으면 거래대금 상위 값으로 한 줄 채움(고가 모름 = 현재가)
   if (!bars.some((b) => b[0] === date) && s.price > 0 && s.vol >= 0 && String(s.tradedAt || "").slice(0, 10) === date) bars.push([date, s.price, s.price, s.price, s.price, s.vol]); // 그 종목 체결 날짜가 오늘일 때만
-  stocks.push({ code: s.code, name: s.name, cap: s.cap, bars, trend, from, live: { value: s.value, rate: s.rate, nxtPrice: slot === "19:30" ? s.nxtPrice : null, nxtRate: s.nxtRate } });
+  stocks.push({ code: s.code, name: s.name, market: s.market || null, cap: s.cap, bars, trend, from, live: { value: s.value, rate: s.rate, nxtPrice: slot === "19:30" ? s.nxtPrice : null, nxtRate: s.nxtRate } });
   await sleep(120);
 }
 
@@ -104,21 +104,25 @@ for (const p of first.picks.slice(0, 40)) {
   await sleep(120);
 }
 const r = pick(stocks, { date, slot, interest: cfg.themes, map, indexNames: cfg.index, nasdaq, obMin: ob.min }); r.obRatio = ob.ratio; r.marketAmt = todayAmt; r.marketAvg20 = hist.length ? Math.round(hist.reduce((a, x) => a + x, 0) / hist.length) : null;
+// 9.29-183 디렉터 「종목옆에 어디지수소속인지」: 상위 100 = 받은 시장 · 관심 종목(시장 모름)만 네이버 basic 의 stockExchangeType 으로(후보만 · 최대 20)
+for (const p of r.picks.filter((x) => !x.market).slice(0, 20)) { try { const b = await get(`https://m.stock.naver.com/api/stock/${p.code}/basic`); const t = b && b.stockExchangeType && (b.stockExchangeType.nameKor || b.stockExchangeType.code); p.market = /코스닥|KOSDAQ|KQ/i.test(String(t)) ? "코스닥" : /코스피|유가|KOSPI|KS/i.test(String(t)) ? "코스피" : t ? String(t) : null; } catch (e) { errors.push(`시장 ${p.name}: ${e.message || e}`); } await sleep(120); }
 const out = { app: "jangjeon-cockpit", kind: "picks", v: 1, date, slot, at: hm, ...r, pool: { top: top100.length, interest: pool.size - top100.length }, requests, errors: errors.slice(0, 30), note: "후보 표시 도구 · 자동 주문 0 · 투자 권유 아님 · 호가 10단계(R5) 1억 미만 = 탈락 · 못 받은 종목 = 보류", updatedAt: Date.now() };
 
 // 성과 기록: 같은 날·같은 회차는 그 줄만 바꿈 · 지난 줄에 다음 거래일 값 붙임(그 종목 일봉 다시 받음 · 최대 40종목)
+// 9.29-183 디렉터 「5분마다」: 장중 수시(5분마다) 결과는 picks.json 만 바꿈 · 성과 기록(picks-log)은 15:20·19:30 만(수시 줄이 하루 70여 줄 쌓여 400줄 한도로 옛 기록을 밀어내지 않게)
+const isLive = String(slot).startsWith("수시");
 const log = readJson("auto/observe/picks-log.json", { app: "jangjeon-cockpit", kind: "picks-log", v: 1, rows: [] });
 const row = { date, slot, at: hm, picks: r.picks.slice(0, 20).map((p) => ({ code: p.code, name: p.name, score: p.score, role: p.role, theme: p.theme, flags: p.flags, nature: p.nature, close: p.close })) };
-log.rows = log.rows.filter((x) => !(x.date === date && x.slot === slot)).concat([row]).slice(-400);
-const need = [...new Set(log.rows.filter((x) => x.date < date).flatMap((x) => x.picks.filter((p) => !p.next).map((p) => p.code)))].slice(0, 40);
+if (!isLive) log.rows = log.rows.filter((x) => !(x.date === date && x.slot === slot)).concat([row]).slice(-400);
+const need = isLive ? [] : [...new Set(log.rows.filter((x) => x.date < date).flatMap((x) => x.picks.filter((p) => !p.next).map((p) => p.code)))].slice(0, 40);
 const barsByCode = Object.fromEntries(stocks.map((s) => [s.code, s.bars]));
 for (const c of need) { if (barsByCode[c]) continue; try { barsByCode[c] = parseSise(await get(`https://api.finance.naver.com/siseJson.naver?symbol=${c}&requestType=1&startTime=${d8(addDays(date, -40))}&endTime=${d8(date)}&timeframe=day`, { json: false })); } catch (e) { errors.push(`성과 일봉 ${c}: ${e.message || e}`); } await sleep(120); }
-const filled = fillNext(log.rows, barsByCode); log.updatedAt = Date.now();
+const filled = isLive ? 0 : fillNext(log.rows, barsByCode); log.updatedAt = Date.now();
 
 console.log(`호가 기준 ${Math.round(r.obMin / 1e6) / 100}억(시장 ×${r.obRatio ?? "—"} · 오늘 ${r.marketAmt ?? "—"}억 · 평균 ${r.marketAvg20 ?? "—"}억) · `); console.log(`검색기 ${date} ${slot}(${hm}) · 본 종목 ${r.scanned}(상위 ${top100.length} + 관심 ${pool.size - top100.length}) · 후보 ${r.picks.length} · 요청 ${requests} · 성과 채움 ${filled}`);
 for (const p of r.picks.slice(0, 10)) console.log(`  ${p.score} ${p.name} [${p.theme}${p.role ? " " + p.role : ""}] ${p.rate}% · 배수 ${p.mult}/${p.prevMult} · ${p.nature}${p.flags.length ? " · " + p.flags.join(" ") : ""}`);
 console.log("주도 테마(쏠림×상승): " + r.topThemes.map((t) => `${t.name} ${t.share}%·${t.rate}%`).join(" / ") + (r.thin.length ? " · 호가 얇아 뺌: " + r.thin.map((x) => x.name).join(",") : ""));
 if (errors.length) console.log("참고(일부 실패):", errors.slice(0, 8).join(" / "));
 if (args.dry) { console.log("(--dry: 저장 안 함)"); process.exit(0); }
-writeJson("auto/picks.json", out); writeJson("auto/observe/picks-log.json", log); writeJson("auto/observe/picker-codes.json", codeCache);
+writeJson("auto/picks.json", out); if (!isLive) writeJson("auto/observe/picks-log.json", log); writeJson("auto/observe/picker-codes.json", codeCache);
 console.log("저장: auto/picks.json · auto/observe/picks-log.json");

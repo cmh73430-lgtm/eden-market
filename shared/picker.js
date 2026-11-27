@@ -189,7 +189,7 @@ export function pick(stocks, { date, slot = null, interest = {}, map = null, ind
     const m = metricsOf(s.bars, date, { todayValue: lv.value ?? null, todayRate: lv.rate ?? null, todayHigh: lv.high ?? null, nxtPrice: lv.nxtPrice ?? null });
     if (!m) continue;
     const vol = (s.bars.find((b) => b[0] === date) || [])[5];
-    all.push({ code: s.code, name: s.name, cap: s.cap ?? null, m, nature: natureOf(m), flow: flowOf(s.trend, date, vol), nxtRate: lv.nxtRate ?? null, ob: s.ob || null, ok: !idx.has(s.name) && qualifies(m), isIndex: idx.has(s.name), firstBar: (s.bars[0] || [])[0] || null });
+    all.push({ code: s.code, name: s.name, market: s.market || null, cap: s.cap ?? null, m, nature: natureOf(m), flow: flowOf(s.trend, date, vol), nxtRate: lv.nxtRate ?? null, ob: s.ob || null, ok: !idx.has(s.name) && qualifies(m), isIndex: idx.has(s.name), firstBar: (s.bars[0] || [])[0] || null });
   }
   // R5 호가(9.29-179 · 네이버 askingPrice): 매수·매도 10호가 합이 각각 1억 미만이면 탈락 · 호가 못 받은 종목 = 판정 보류(그대로 둠)
   const thin = [];
@@ -209,7 +209,7 @@ export function pick(stocks, { date, slot = null, interest = {}, map = null, ind
   const newList = all.filter((c) => c.m.listedDays <= PICK.NEW_LIST_DAYS && c.firstBar && c.firstBar > (stocks.find((s) => s.code === c.code).from || "")).map((c) => ({ code: c.code, name: c.name, day: c.m.listedDays, rate: c.m.rate, valueEok: c.m.valueEok }));
   const card = (c) => ({ code: c.code, name: c.name, theme: c.theme, themeSrc: c.themeSrc, role: c.role, score: c.score, parts: c.parts, flags: c.flags,
     rate: c.m.rate, prevRate: c.m.prevRate, nxtRate: c.nxtRate, valueEok: c.m.valueEok, mult: c.m.mult, prevMult: c.m.prevMult, new60: c.m.new60, breakout: c.m.breakout,
-    nature: c.nature, up10N: c.m.up10N, cap: c.cap, flow: c.flow, flowScored: c.flowScored, mateOf: c.mateOf || null, close: c.m.close,
+    nature: c.nature, up10N: c.m.up10N, market: c.market, cap: c.cap, flow: c.flow, flowScored: c.flowScored, mateOf: c.mateOf || null, close: c.m.close,
     orderbook: c.ob || null, chart: c.m.chart });
   return { date, slot, picks: pool.map(card), topThemes, index, nasdaq, newList, thin, obMin, scanned: all.length };
 }
