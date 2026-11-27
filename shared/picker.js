@@ -135,8 +135,12 @@ export function assignThemes(cands, { interest = {}, map = null, generic = /지�
   const codeThemes = new Map();
   for (const t of (map && Array.isArray(map.themes) ? map.themes : [])) { if (generic.test(t.name)) continue; for (const c of t.codes || []) { if (!codeThemes.has(c)) codeThemes.set(c, []); codeThemes.get(c).push(t.name); } }
   const inPool = new Map(); for (const c of cands) for (const th of codeThemes.get(c.code) || []) inPool.set(th, (inPool.get(th) || 0) + 1);
+  // 9.29-184 디렉터 「합쳐」: 관심 테마 이름이 네이버 테마 「이름(…)」 꼴과 같은 뜻이면 네이버 이름으로 합침(예: 로봇 → 로봇(산업용/협동로봇 등)) · 여럿이면 본 종목에 많이 걸린 쪽 · 없으면 그대로
+  const naverNames = [...new Set([...codeThemes.values()].flat())];
+  const canon = new Map();
+  const canonOf = (th) => { if (canon.has(th)) return canon.get(th); const hit = naverNames.includes(th) ? th : naverNames.filter((n) => n.startsWith(th + "(")).sort((a, b) => (inPool.get(b) || 0) - (inPool.get(a) || 0) || a.localeCompare(b))[0] || th; canon.set(th, hit); return hit; };
   for (const c of cands) {
-    if (byName.has(c.name)) { c.theme = byName.get(c.name); c.themeSrc = "관심"; continue; }
+    if (byName.has(c.name)) { c.theme = canonOf(byName.get(c.name)); c.themeSrc = "관심"; continue; }
     const ths = (codeThemes.get(c.code) || []).slice().sort((a, b) => (inPool.get(b) || 0) - (inPool.get(a) || 0) || a.localeCompare(b));
     if (ths.length && (inPool.get(ths[0]) || 0) >= 2) { c.theme = ths[0]; c.themeSrc = "네이버"; } else { c.theme = "미분류 급등"; c.themeSrc = null; }
   }
